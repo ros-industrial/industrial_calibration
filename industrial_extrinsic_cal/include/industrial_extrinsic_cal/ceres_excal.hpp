@@ -1,4 +1,20 @@
-#include <industrial_extrinsic_cal/Swri_IRD_license.h>
+/*
+ * Software License Agreement (Apache License)
+ *
+ * Copyright (c) 2013, Southwest Research Institute
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef CERES_EXCAL_HPP_
 #define CERES_EXCAL_HPP_
 namespace industrial_extrinsic_cal {
@@ -22,7 +38,7 @@ typedef struct {
       double y;
       double z;
     };
-    double PB[3];		
+    double pb[3];		
   };
 }Point3d;
 
@@ -41,11 +57,11 @@ typedef struct {
       double az;		/** angle axis z value */ 
     };
     struct{		
-      double PB_loc[3];		/** parameter block for position */
-      double PB_aa[3];          /** parameter block for rotation */
+      double pb_loc[3];		/** parameter block for position */
+      double pb_aa[3];          /** parameter block for rotation */
     };
     struct{
-      double PB_pose[6];	/** a third option with a single block for 6dof pose
+      double pb_pose[6];	/** a third option with a single block for 6dof pose
     };
   };
 }Pose6d;
@@ -68,11 +84,11 @@ typedef struct{
       double p2;                      /** 2nd tangential distortion parameter */
     };
     struct{ /** parameter blocks for ceres */
-      double PB_extrinsics[6];	      /** parameter block for intrinsics */
-      double PB_intrinsics[9];        /** parameter block for extrinsics */
+      double pb_extrinsics[6];	      /** parameter block for intrinsics */
+      double pb_intrinsics[9];        /** parameter block for extrinsics */
     };
     struct{
-      double PB_all[15];         /** parameter block for both */
+      double pb_all[15];         /** parameter block for both */
     };
   };
 }CameraParameters;
@@ -96,10 +112,10 @@ typedef struct{
       double aa[3];		      /** angle axis data */
     };
     struct{ /** parameter blocks for ceres */
-      double PB_extrinsics[6];	      /** parameter block for intrinsics */
+      double pb_extrinsics[6];	      /** parameter block for intrinsics */
     };
   };
 }CameraExParameters;
-    } \\end of namespace
+} \\end of namespace
 
 #endif
