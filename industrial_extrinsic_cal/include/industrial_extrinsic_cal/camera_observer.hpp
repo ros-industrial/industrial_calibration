@@ -1,7 +1,11 @@
-#ifndef CAMERA_OBSERVER_HPP
-#define CAMERA_OBSERVER_HPP
+#include <industrial_extrinsic_cal/Swri_IRD_license.h>
+
+#ifndef CAMERA_OBSERVER_HPP_
+#define CAMERA_OBSERVER_HPP_
 
 #include <industrial_extrinsic_cal/basic_types.h> /** needed for target,Roi, & Observation */
+
+namespace industrial_extrinsic_cal {
 
 typedef struct { /** Structure returned by Camera Observer */
   std::vector<Observation> obs;
@@ -20,5 +24,5 @@ public:
                                                  /** @param output all observations */
 };
 
-
+} // end of namespace
 #endif

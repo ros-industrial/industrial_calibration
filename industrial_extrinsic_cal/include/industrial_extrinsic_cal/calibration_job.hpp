@@ -1,11 +1,15 @@
-#ifndef CALIBRATION_JOB_HPP
-#define CALIBRATION_JOB_HPP
+#include <industrial_extrinsic_cal/Swri_IRD_license.h>
+
+#ifndef CALIBRATION_JOB_HPP_
+#define CALIBRATION_JOB_HPP_
 
 #include <industrial_extrinsic_cal/basic_types.h> /** needed for Roi */
 #include <industrial_extrinsic_cal/camera_observer.hpp> /** needed for CameraObserver */
 #include <industrial_extrinsic_cal/ceres_excal.hpp> /** needed */
 
 #using std::string;
+
+namespace industrial_extrinsic_cal {
 
 class Camera{
 public:
@@ -45,7 +49,6 @@ Class ObservationFrame{
  public:
   clear();
   add_camera_observation(Camera * C ,Observation O);
- private:
   std::vector<Camera*,Observation> CO;
 };
 
@@ -130,4 +133,5 @@ int main(int argc, char** argv)
   return 0;
 }
 
+} // end of namespace
 #endif

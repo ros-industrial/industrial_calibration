@@ -22,7 +22,8 @@ bool CalibrationJob::run_opimization()
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
-  BOOST_FOREACH(ObservationList OL_, ol);
+  BOOST_FOREACH(ObservationFrame F, OF_){
+    BOOST_FOREACH(O
 
     // Each Residual block takes a point and a camera as input and outputs a 2
     // dimensional residual. Internally, the cost function stores the observed
