@@ -29,6 +29,46 @@ bool CalibrationJob::run_observations()
 {
   BOOST_FOREACH(ObservationCommand);
 }
+bool CeresBlocks::addStaticCamera(Camera camera_to_add)
+{
+  BOOST_FOREACH(Camera cam, static_cameras_){
+    if(cam.name == camera_to_add.name) return(false); // camera already exists
+  }
+  static_cameras->pushback(camera_to_add);
+  return(true);
+}
+bool CeresBlocks::addStaticTarget(Target target_to_add)
+{
+  BOOST_FOREACH(Target targ, static_targets_){
+    if(targ.name == target_to_add.name) return(false); // target already exists
+  }
+  static_targets->pushback(target_to_add);
+  return(true);
+}
+bool CeresBlocks::addMovingCamera(Camera camera_to_add, int scene_id)
+{
+  BOOST_FOREACH(Camera cam, moving_cameras_){
+    if(cam.cam.name == camera_to_add.name &&
+       cam.scene_id == scene_id) return(false); // camera already exists
+  }
+  MovingCamera Temp;
+  Temp.cam = camera_to_add;
+  Temp.scene_id = scene_id;
+  static_cameras->pushback(Temp);
+  return(true);
+}
+bool CeresBlocks::addMovingTarget(Target target_to_add, int scene_id)
+{
+  BOOST_FOREACH(Target targ, moving_targets_){
+    if(targ.targ.name == target_to_add.name &&
+       targ.scene_id == scene_id) return(false); // target already exists
+  }
+  MovingTarget Temp;
+  Temp.targ = target_to_add;
+  Temp.scene_id = scene_id;
+  static_targets->pushback(Temp);
+  return(true);
+}
 
 bool CalibrationJob::run_opimization()
 {
@@ -40,11 +80,34 @@ bool CalibrationJob::run_opimization()
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
-  /* TODO
-  BOOST_FOREACH(ObservationFrame F, OF_){
-    BOOST_FOREACH(O
 
-    // Each Residual block takes a point and a camera as input and outputs a 2
+  // need a block of cameras 
+  // need a block of targets
+  // these two lists need to be able to search for an existing item by name
+  // and also an existing item by both name and scene id
+  
+  BOOST_FOREACH(ObservationScene Scene, os_){
+    BOOST_FOREACH(CameraObservation CO, Scene.co){
+      // determine if this is a new camera
+      // Important Cases where we need to add a new camera: 
+      // 1. first time a fixed camera is observed 
+      // 2. First time in the scene a moving camera is observed 
+      // ADD camera if necessary
+      BOOST_FOREACH(Observation O, CO.o)
+	// determine if this is a new target
+	// Important Cases where we need to add a new target: 
+	// 1. first time a fixed target is observed 
+	// 2. First time in the scene a moving target is observed 
+ 
+        // ADD all target points if necessary
+   
+	
+
+ 
+       
+       
+
+   // Each Residual block takes a point and a camera as input and outputs a 2
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =  Camera_reprj_error::Create(Ob[i].x,Ob[i].y);
@@ -67,5 +130,5 @@ bool CalibrationJob::run_opimization()
 
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
-  */
+
 }

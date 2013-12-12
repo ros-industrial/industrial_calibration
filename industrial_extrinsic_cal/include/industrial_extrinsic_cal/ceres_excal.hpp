@@ -30,42 +30,6 @@ namespace industrial_extrinsic_cal {
  *   together further reducing the number of parameters pointers sent to a cost function
  */
 
-/*! Brief Point3d defines a ceres_structure for a point in 3D space */
-typedef struct { 
-  union{
-    struct{ 
-      double x;
-      double y;
-      double z;
-    };
-    double pb[3];		
-  };
-}Point3d;
-
-/*! Brief Pose6d defines a ceres_structure for a pose in 3D space 
- *   x,y,z have their natrual meangin
- *   ax,ay,az define the rotation part of the pose using angle axis notation
-*/
-typedef struct { 
-  union{
-    struct{
-      double x;			/** position x */ 
-      double y;			/** position y */ 
-      double z;			/** position z */ 
-      double ax;		/** angle axis x value */ 
-      double ay;		/** angle axis y value */ 
-      double az;		/** angle axis z value */ 
-    };
-    struct{		
-      double pb_loc[3];		/** parameter block for position */
-      double pb_aa[3];          /** parameter block for rotation */
-    };
-    struct{
-      double pb_pose[6];	/** a third option with a single block for 6dof pose
-    };
-  };
-}Pose6d;
-
 /*! Brief CameraParameters defines both the intrinsic and extrinsic parameters of a camera
  */
 typedef struct{ 
@@ -116,6 +80,35 @@ typedef struct{
     };
   };
 }CameraExParameters;
+
+/*! \brief this class keeps the ceres parameter blocks for a target as a single unit*/
+class TargetParameters{
+public:
+  /*! \brief constructor (must know how many points are on target) 
+   *  \param number_of_points The number of key-points on the target */
+  TargetParameters(int number_of_points){
+    pts_.resize(number_of_points);
+  };
+  /*! \brief gets the pose parameter block for ceres */ 
+  double* getPoseParameterBlock() { return(pose_.pb); };
+
+  /*! \brief gets the point parameter block for ceres */ 
+  double* getPointParameterBlock( unsigned int i){
+    if(i<(unsigned int) pts_.size()) return(pts_[i].pb);
+    return(NULL); 
+  };
+  /*! \brief sets the location of a point */ 
+  bool set_point(Point3d input_point, unsigned int point_id){
+    if(point_id>(unsigned int) pts.size()) return(false);
+    pts_[i].x = input_point.x;
+    pts_[i].y = input_point.y;
+    pts_[i].z = input_point.z;
+  };
+private:  
+  Pose6d pose_;
+  std::vector<Point3d> pts_;
+}TargetParameters;
+
 } \\end of namespace
 
 #endif
