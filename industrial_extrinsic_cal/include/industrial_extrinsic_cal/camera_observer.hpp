@@ -20,29 +20,37 @@
 #ifndef CAMERA_OBSERVER_HPP_
 #define CAMERA_OBSERVER_HPP_
 
-#include <industrial_extrinsic_cal/basic_types.h> /** needed for target,Roi, & Observation */
+#include <industrial_extrinsic_cal/basic_types.h> /* Target,Roi,Observation,CameraObservations */
 #include <boost/shared_ptr.h>
 
 namespace industrial_extrinsic_cal {
 
-using boost::shared_ptr;
-typedef struct { /** Structure returned by Camera Observer */
-  std::vector<Observation> obs;
-}Camera_Observations;
+  using boost::shared_ptr;
 
-class CameraObserver{ 
-public:
-  CameraObserver(std::string source_name); /** @brief constructor */
-                                           /** @param source_name name of image topic */
-  virtual void addTarget(shared_pter<Target> T, Roi R);/** @brief add a target to look for */
-                                            /** @param T a target to look for */
-                                            /** @param R Region of interest for target */
-  virtual void clearTargets();	/** @brief remove all targets */
-  virtual void clearObservations(); /** @brief clear all previous observations */
-  virtual int getObservations(Observation &CO); /** @brief perform the observation */
-                                                 /** @param output all observations */
-  virtual ::std::ostream& operator<<(::std::ostream& os, const CameraObserver& C);
-};
+  class CameraObserver{ 
+  public:
+    /** @brief constructor */
+    /** @param source_name name of image topic */
+    CameraObserver(std::string source_name); 
+
+    /** @brief add a target to look for */
+    /** @param targ a target to look for */
+    /** @param roi Region of interest for target */
+    virtual void addTarget(shared_ptr<Target> targ, Roi roi);
+
+    /** @brief remove all targets */
+    virtual void clearTargets();	
+
+    /** @brief clear all previous observations */
+    virtual void clearObservations(); 
+  
+    /** @brief return observations */
+    /** @param output all observations of targets defined */
+    virtual int getObservations(CameraObservations &camera_observations); 
+
+    /** @brief print this object TODO */
+    virtual ::std::ostream& operator<<(::std::ostream& os, const CameraObserver& camera);
+  };
 
 } // end of namespace
 #endif
