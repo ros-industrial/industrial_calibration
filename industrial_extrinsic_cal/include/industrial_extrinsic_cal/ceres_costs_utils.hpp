@@ -71,7 +71,7 @@ void printCameraParameters(CameraParameters C, std::string words);
  *  \param  C both intrinsic and extrinsic camera parameters
  *  \param  P the point to be projected into image
 */
-observation projectPoint(CameraParameters camera_parameters, Point3d point);
+Observation projectPoint(CameraParameters camera_parameters, Point3d point);
 
 } // end of namespace
 #endif

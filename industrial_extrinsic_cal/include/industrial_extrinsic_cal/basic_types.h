@@ -19,8 +19,9 @@
 #ifndef BASIC_TYPES_H_
 #define BASIC_TYPES_H_
 
-#include <boost/shared_ptr>
-#include <industrial_extrinsic_cal/ceres_excal.hpp> // needed for Point3d
+#include <vector>
+#include <boost/shared_ptr.hpp>
+#include <industrial_extrinsic_cal/basic_types.h>
 
 namespace industrial_extrinsic_cal {
 
@@ -40,7 +41,7 @@ namespace industrial_extrinsic_cal {
 	double y;		/**< position y */ 
 	double z;		/**< position z */ 
       };
-      double pb[3];		/**< a parameter block with all three elements
+      double pb[3];		/**< a parameter block with all three elements */
     };
   }Point3d;
   
@@ -71,7 +72,7 @@ namespace industrial_extrinsic_cal {
   /*! \brief A target's information */
   typedef struct{
     std::string target_name;
-    std::target_type;
+    int target_type;
     bool is_moving;  /** observed in multiple locations or it fixed to ref frame */
     Pose6d pose;
     std::vector<Point3d> pts; /** an array of points expressed relative to Pose p. */
