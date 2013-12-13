@@ -95,17 +95,17 @@ namespace industrial_extrinsic_cal {
 typedef struct{ 
   union{
     struct{ 
-      double aa[3];		      /** angle axis data */
-      double pos[3];		      /** position data */
-      double fx;		      /** focal length in x */
-      double fy;		      /** focal length in y */
-      double cx;                      /** central pixel x value */
-      double cy;                      /** central pixel y value */
-      double k1;                      /** 2nd order radial distortion parameter */
-      double k2;                      /** 4th order radial distortion parameter */
-      double k3;                      /** 6th order radial distortion parameter */
-      double p1;                      /** 1st tangential distortion parameter */
-      double p2;                      /** 2nd tangential distortion parameter */
+      double angle_axis[3];	/**< angle axis data */
+      double position[3];	/**< position data */
+      double focal_length_x;	/**< focal length in x */
+      double focal_length_y;	/**< focal length in y */
+      double center_x;		/**< central pixel x value */
+      double center_y;		/**< central pixel y value */
+      double distortion_k1;	/**< 2nd order radial distortion parameter */
+      double distortion_k2;	/**< 4th order radial distortion parameter */
+      double distortion_k3;	/**< 6th order radial distortion parameter */
+      double distortion_p1;	/**< 1st tangential distortion parameter */
+      double distortion_p2;	/**< 2nd tangential distortion parameter */
     };
     struct{ /** parameter blocks for ceres */
       double pb_extrinsics[6];	      /** parameter block for intrinsics */

@@ -286,7 +286,7 @@ namespace industrial_extrinsic_cal {
     /** @brief select active scene for modification  
      *  @return true if sucessful
      */
-    bool selectScene(int id);
+    bool selectScene(int scene_id);
 
     /** @brief adds an observation from a particular camera to current scene  
      *  @param camera_observer a pointer to the camera observer

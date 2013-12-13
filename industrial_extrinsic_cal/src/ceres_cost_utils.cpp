@@ -107,7 +107,7 @@ namespace industrial_calibration{
 
       T xp2 = xp*xp; /** temporary variables square of others */
       T yp2 = yp*yp;
-      /**apply the distortion coefficients to refine pixel location */
+      /*apply the distortion coefficients to refine pixel location */
       T xpp = xp + k1*r2*xp + k2*r4*xp + k3*r6*xp + p2*(r2 + T(2.0)*xp2) + T(2.0)*p1*xp*yp;
       T ypp = yp + k1*r2*yp + k2*r4*yp + k3*r6*yp + p1*(r2 + T(2.0)*yp2) + T(2.0)*p2*xp*yp;
       /** perform projection using focal length and camera center into image plane */
