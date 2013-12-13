@@ -42,22 +42,25 @@ void printQTasH(double qx, double qy, double qz, double qw, double tx, double ty
  *  \param ty position y value
  *  \param tz position z value
  */
-void printAATasH(double x, double y, double z, double tx, double ty, double tz);
+void printAATasH(double ax, double ay, double az, double tx, double ty, double tz);
+
 /*! \brief print angle axis to homogeneous transform inverse
- *  \param x angle axis x value
- *  \param y angle axis y value
- *  \param z angle axis z value
+ *  \param ax angle axis x value
+ *  \param ay angle axis y value
+ *  \param az angle axis z value
  *  \param tx position x value
  *  \param ty position y value
  *  \param tz position z value
  */
-void printAATasHI(double x, double y, double z, double tx, double ty, double tz);
+void printAATasHI(double ax, double ay, double az, double tx, double ty, double tz);
+
 /*! \brief print angle axis as euler angles
- *  \param x angle axis x value
- *  \param y angle axis y value
- *  \param z angle axis z value
+ *  \param ax angle axis x value
+ *  \param ay angle axis y value
+ *  \param az angle axis z value
  */
-void printAAasEuler(double x, double y, double z);
+void printAAasEuler(double ax, double ay, double az);
+
 /*! \brief print Camera Parameters
  *  \param CameraParameters include intrinsic and extrinsic
  *  \param words to provide as a header
@@ -68,7 +71,7 @@ void printCameraParameters(CameraParameters C, std::string words);
  *  \param  C both intrinsic and extrinsic camera parameters
  *  \param  P the point to be projected into image
 */
-observation projectPoint(CameraParameters C, Point3d P);
+observation projectPoint(CameraParameters camera_parameters, Point3d point);
 
 } // end of namespace
 #endif

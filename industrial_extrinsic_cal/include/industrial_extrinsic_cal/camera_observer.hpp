@@ -33,6 +33,9 @@ namespace industrial_extrinsic_cal {
     /** @param source_name name of image topic */
     CameraObserver(std::string source_name); 
 
+    /** @brief Destructor */
+    ~CameraObserver();
+
     /** @brief add a target to look for */
     /** @param targ a target to look for */
     /** @param roi Region of interest for target */

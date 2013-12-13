@@ -73,22 +73,50 @@ namespace industrial_extrinsic_cal {
     std::string target_name;
     std::target_type;
     bool is_moving;  /** observed in multiple locations or it fixed to ref frame */
-    Pose6d p;
+    Pose6d pose;
     std::vector<Point3d> pts; /** an array of points expressed relative to Pose p. */
   } Target;
 
   /*! \brief An observation is the x,y image location of a target's point in an image*/
   typedef struct { 
     boost::shared_ptr<Target> target; /**< pointer to target who's point is observed */
-    int p_id;			/**< point's id in target's point array */
-    double x;			/**< image location x */
-    double y;			/**< image location y */
+    int point_id;			/**< point's id in target's point array */
+    double image_loc_x;			/**< target point was found at image location x */
+    double image_loc_y;			/**< target point image location y */
   }Observation;
 
   /*! \brief A vector of observations made by a single camera of posibly multiple targets */
   typedef struct { 
     std::vector<Observation> observation;
   }CameraObservations;
+
+/*! Brief CameraParameters defines both the intrinsic and extrinsic parameters of a camera
+ */
+typedef struct{ 
+  union{
+    struct{ 
+      double aa[3];		      /** angle axis data */
+      double pos[3];		      /** position data */
+      double fx;		      /** focal length in x */
+      double fy;		      /** focal length in y */
+      double cx;                      /** central pixel x value */
+      double cy;                      /** central pixel y value */
+      double k1;                      /** 2nd order radial distortion parameter */
+      double k2;                      /** 4th order radial distortion parameter */
+      double k3;                      /** 6th order radial distortion parameter */
+      double p1;                      /** 1st tangential distortion parameter */
+      double p2;                      /** 2nd tangential distortion parameter */
+    };
+    struct{ /** parameter blocks for ceres */
+      double pb_extrinsics[6];	      /** parameter block for intrinsics */
+      double pb_intrinsics[9];        /** parameter block for extrinsics */
+    };
+    struct{
+      double pb_all[15];         /** parameter block for both */
+    };
+  };
+}CameraParameters;
+
 
 }
 #endif
