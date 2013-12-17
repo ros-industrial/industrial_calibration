@@ -236,7 +236,10 @@ namespace industrial_extrinsic_cal {
   class CalibrationJob{
   public:
     /** @brief constructor */ 
-    CalibrationJob(std::string camera_fn, std::string target_fn, std::string job_fn){}; 
+    CalibrationJob(std::string camera_fn, std::string target_fn, std::string caljob_fn):
+      camera_def_file_name_(camera_fn), 
+      target_def_file_name_(target_fn), 
+      caljob_def_file_name_(caljob_fn){}; 
 
     /** @brief default destructor */ 
     ~CalibrationJob(){};
@@ -321,8 +324,8 @@ namespace industrial_extrinsic_cal {
     //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
   private:
     std::string camera_def_file_name_; /*!< this file describes all cameras in job */
-    std::string target_def_file_name_;/*!< this file describes all targets in job */
-    std::string job_def_file_name_; /*< this file describes all observations in job */
+    std::string target_def_file_name_; /*!< this file describes all targets in job */
+    std::string caljob_def_file_name_; /*!< this file describes all observations in job */
     std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
     int current_scene_;    /*!< id of current scene under review or construction */
     std::vector<DummyCameraObserver>  camera_observers_; /*!< interface to images from cameras */

@@ -96,7 +96,7 @@ add_executable(cal_job src/calibration_job.cpp)
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
-target_link_libraries(cal_job ${CERES_LIBRARIES} )
+target_link_libraries(cal_job ${CERES_LIBRARIES} yaml-cpp )
 
 #############
 ## Install ##
