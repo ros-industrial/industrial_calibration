@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <ostream>
 #include <stdio.h>
 #include <fstream>
 #include <yaml-cpp/yaml.h>
@@ -81,7 +82,7 @@ namespace industrial_extrinsic_cal {
 	// read in all static cameras
 	if(const YAML::Node *camera_parameters = camera_doc.FindValue("static_cameras")){
 
-	  printf("Found %d cameras\n",camera_parameters->size());
+	  printf("Found %d static cameras\n",camera_parameters->size());
 	  for(unsigned int i=0; i<camera_parameters->size();i++){
 	    (*camera_parameters)[i]["camera_name"]    >> temp_name;
 	    (*camera_parameters)[i]["angle_axis_ax"]  >> temp_parameters.angle_axis[0];
@@ -175,35 +176,24 @@ namespace industrial_extrinsic_cal {
 	    (*target_parameters)[i]["position_y"]     >> temp_target.pose.y;
 	    (*target_parameters)[i]["position_z"]     >> temp_target.pose.z;
 	    (*target_parameters)[i]["num_points"]     >> temp_target.num_points;
-	    printf("num_points = %d\n",temp_target.num_points);
-	    const YAML::Node *target_points = target_parameters->FindValue("points");
-	    printf("size of target_points = %d\n",target_points->size());
-	    for(int j=0;j<temp_target.num_points;j++){
-	      Point3d temp_point;
-	      (*target_points)[j][0] >> temp_point.x;
-	      (*target_points)[j][1] >> temp_point.y;
-	      (*target_points)[j][2] >> temp_point.z;
-	      temp_target.pts.push_back(temp_point);
-	    }
+	    const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
+	    for(int j=0;j<points_node->size();j++){
+	      const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
+	      std::vector<float> temp_pnt;
+	      (*pnt_node) >> temp_pnt;
+	      Point3d temp_pnt3d;
+	      temp_pnt3d.x = temp_pnt[0];
+	      temp_pnt3d.y = temp_pnt[1];
+	      temp_pnt3d.z = temp_pnt[2];
+	      temp_target.pts.push_back(temp_pnt3d);
+	    }	    
 	    blocks_for_ceres_.addStaticTarget(temp_target);
 	  }
 	}
-      } // end try
-    catch(...)
-      {
-	printf("load() Failed to read in static targets from  yaml file\n");
-	printf("target_name = %s \n",temp_target.target_name.c_str());
-	//	ROS_ERROR("load() Failed to read in cameras yaml file");
-	return(false);
-      }
-
-    try
-      {
-	YAML::Parser target_parser(target_input_file);
-	YAML::Node target_doc;
 
 	// read in all moving targets
-	if(const YAML::Node *target_parameters = target_doc.FindValue("static_targets")){
+	if(const YAML::Node *target_parameters = target_doc.FindValue("moving_targets")){
+	  printf("Found %d moving targets\n",target_parameters->size());
 	  Target temp_target;
 	  unsigned int scene_id;
 	  temp_target.is_moving = true;
@@ -217,21 +207,25 @@ namespace industrial_extrinsic_cal {
 	    (*target_parameters)[i]["position_z"]     >> temp_target.pose.z;
 	    (*target_parameters)[i]["scene_id"]       >> scene_id;
 	    (*target_parameters)[i]["num_points"]     >> temp_target.num_points;
-	    const YAML::Node *target_points = target_parameters->FindValue("points");
-	    for(int j=0;j<temp_target.num_points;j++){
-	      Point3d temp_point;
-	      (*target_points)[j][0] >> temp_point.x;
-	      (*target_points)[j][1] >> temp_point.y;
-	      (*target_points)[j][2] >> temp_point.z;
-	      temp_target.pts.push_back(temp_point);
-	    }
+	    const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
+	    for(int j=0;j<points_node->size();j++){
+	      const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
+	      std::vector<float> temp_pnt;
+	      (*pnt_node) >> temp_pnt;
+	      Point3d temp_pnt3d;
+	      temp_pnt3d.x = temp_pnt[0];
+	      temp_pnt3d.y = temp_pnt[1];
+	      temp_pnt3d.z = temp_pnt[2];
+	      temp_target.pts.push_back(temp_pnt3d);
+	    }	    
 	    blocks_for_ceres_.addMovingTarget(temp_target,scene_id);
 	  }
 	}
+	printf("Successfully read targets\n");
       }// end try
     catch(...)
       {
-	printf("load() Failed to read in cameras yaml file\n");
+	printf("load() Failed to read in targets yaml file\n");
 	//	ROS_ERROR("load() Failed to read in cameras yaml file");
 	return(false);
       }
