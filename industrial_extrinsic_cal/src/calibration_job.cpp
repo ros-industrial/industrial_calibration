@@ -16,7 +16,10 @@
  * limitations under the License.
  */
 
+#include <ostream>
 #include <stdio.h>
+#include <fstream>
+#include <yaml-cpp/yaml.h>
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
@@ -25,7 +28,15 @@
 #include <industrial_extrinsic_cal/camera_observer.hpp>
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
 
+// ROS includes
+#include <ros/ros.h>
+#include <camera_info_manager/camera_info_manager.h>
+
+
+
 namespace industrial_extrinsic_cal {
+
+  using std::string;
 
   bool CalibrationJob::run()
   {
@@ -37,6 +48,190 @@ namespace industrial_extrinsic_cal {
   {
     //  BOOST_FOREACH(ObservationCommand);
   }
+
+  bool CalibrationJob::load()
+  {
+    std::ifstream camera_input_file(camera_def_file_name_.c_str());
+    std::ifstream target_input_file(target_def_file_name_.c_str());
+    std::ifstream caljob_input_file(caljob_def_file_name_.c_str());
+    if(camera_input_file.fail()){
+      printf("ERROR CalibrationJob::load(), couldn't open camera_input_file: %s\n",
+	     camera_def_file_name_.c_str());
+      return(false);
+    }
+    if( target_input_file.fail() ){
+      printf("ERROR CalibrationJob::load(), couldn't open target_input_file: %s\n",
+	     target_def_file_name_.c_str());
+      return(false);
+    }
+    if(caljob_input_file.fail() ){
+      printf("ERROR CalibrationJob::load(), couldn't open caljob_input_file: %s\n",
+	     caljob_def_file_name_.c_str());
+      return(false);
+    }
+
+    string temp_name;
+    CameraParameters temp_parameters;
+    unsigned int scene_id;
+    try
+      {
+	YAML::Parser camera_parser(camera_input_file);
+	YAML::Node camera_doc;
+	camera_parser.GetNextDocument(camera_doc);
+
+	// read in all static cameras
+	if(const YAML::Node *camera_parameters = camera_doc.FindValue("static_cameras")){
+
+	  printf("Found %d static cameras\n",camera_parameters->size());
+	  for(unsigned int i=0; i<camera_parameters->size();i++){
+	    (*camera_parameters)[i]["camera_name"]    >> temp_name;
+	    (*camera_parameters)[i]["angle_axis_ax"]  >> temp_parameters.angle_axis[0];
+	    (*camera_parameters)[i]["angle_axis_ay"]  >> temp_parameters.angle_axis[1];
+	    (*camera_parameters)[i]["angle_axis_az"]  >> temp_parameters.angle_axis[2];
+	    (*camera_parameters)[i]["position_x"]     >> temp_parameters.position[0];
+	    (*camera_parameters)[i]["position_y"]     >> temp_parameters.position[1];
+	    (*camera_parameters)[i]["position_z"]     >> temp_parameters.position[2];
+	    (*camera_parameters)[i]["focal_length_x"] >> temp_parameters.focal_length_x;
+	    (*camera_parameters)[i]["focal_length_y"] >> temp_parameters.focal_length_y;
+	    (*camera_parameters)[i]["center_x"]       >> temp_parameters.center_x;
+	    (*camera_parameters)[i]["center_y"]       >> temp_parameters.center_y;
+	    (*camera_parameters)[i]["distortion_k1"]  >> temp_parameters.distortion_k1;
+	    (*camera_parameters)[i]["distortion_k2"]  >> temp_parameters.distortion_k2;
+	    (*camera_parameters)[i]["distortion_k3"]  >> temp_parameters.distortion_k3;
+	    (*camera_parameters)[i]["distortion_p1"]  >> temp_parameters.distortion_p1;
+	    (*camera_parameters)[i]["distortion_p2"]  >> temp_parameters.distortion_p2;
+	    Camera temp_camera(temp_name,temp_parameters,false); // create a static camera
+	    blocks_for_ceres_.addStaticCamera(temp_camera);
+	  }
+	}
+
+	// read in all moving cameras
+	if(const YAML::Node *camera_parameters = camera_doc.FindValue("moving_cameras")){
+	  printf("Found %d moving cameras\n",camera_parameters->size());
+	  for(unsigned int i=0; i<camera_parameters->size();i++){
+	    (*camera_parameters)[i]["camera_name"]    >> temp_name;
+	    (*camera_parameters)[i]["angle_axis_ax"]  >> temp_parameters.angle_axis[0];
+	    (*camera_parameters)[i]["angle_axis_ay"]  >> temp_parameters.angle_axis[1];
+	    (*camera_parameters)[i]["angle_axis_az"]  >> temp_parameters.angle_axis[2];
+	    (*camera_parameters)[i]["position_x"]     >> temp_parameters.position[0];
+	    (*camera_parameters)[i]["position_y"]     >> temp_parameters.position[1];
+	    (*camera_parameters)[i]["position_z"]     >> temp_parameters.position[2];
+	    (*camera_parameters)[i]["focal_length_x"] >> temp_parameters.focal_length_x;
+	    (*camera_parameters)[i]["focal_length_y"] >> temp_parameters.focal_length_y;
+	    (*camera_parameters)[i]["center_x"]       >> temp_parameters.center_x;
+	    (*camera_parameters)[i]["center_y"]       >> temp_parameters.center_y;
+	    (*camera_parameters)[i]["distortion_k1"]  >> temp_parameters.distortion_k1;
+	    (*camera_parameters)[i]["distortion_k2"]  >> temp_parameters.distortion_k2;
+	    (*camera_parameters)[i]["distortion_k3"]  >> temp_parameters.distortion_k3;
+	    (*camera_parameters)[i]["distortion_p1"]  >> temp_parameters.distortion_p1;
+	    (*camera_parameters)[i]["distortion_p2"]  >> temp_parameters.distortion_p2;
+	    (*camera_parameters)[i]["scene_id"]       >> scene_id;
+	    Camera temp_camera(temp_name,temp_parameters,true);
+	    blocks_for_ceres_.addMovingCamera(temp_camera,scene_id);
+	  }
+	}   
+      } // end try
+    catch(...)
+      {
+	printf("load() Failed to read in moving cameras from  yaml file\n");
+	printf("camera name = %s \n",temp_name.c_str());
+	printf("angle_axis_ax = %lf \n",temp_parameters.angle_axis[0]);
+	printf("angle_axis_ay = %lf \n",temp_parameters.angle_axis[1]);
+	printf("angle_axis_az = %lf \n",temp_parameters.angle_axis[2]);
+	printf("position_x = %lf \n",temp_parameters.position[0]);
+	printf("position_y = %lf \n",temp_parameters.position[1]);
+	printf("position_z = %lf \n",temp_parameters.position[2]);
+	printf("focal_length_x = %lf \n",temp_parameters.focal_length_x);
+	printf("focal_length_y = %lf \n",temp_parameters.focal_length_y);
+	printf("center_x = %lf \n",temp_parameters.center_x);
+	printf("center_y = %lf \n",temp_parameters.center_y);
+	printf("distortion_k1 = %lf \n",temp_parameters.distortion_k1);
+	printf("distortion_k2 = %lf \n",temp_parameters.distortion_k2);
+	printf("distortion_k3 = %lf \n",temp_parameters.distortion_k3);
+	printf("distortion_p1 = %lf \n",temp_parameters.distortion_p1);
+	printf("distortion_p2 = %lf \n",temp_parameters.distortion_p2);
+	printf("scene_id = %u \n",scene_id);
+	//	ROS_ERROR("load() Failed to read in cameras yaml file");
+	return(false);
+      }
+    printf("Successfully read in cameras\n");
+
+    Target temp_target;
+    try
+      {
+	YAML::Parser target_parser(target_input_file);
+	YAML::Node target_doc;
+	target_parser.GetNextDocument(target_doc);
+	
+	// read in all static targets
+	if(const YAML::Node *target_parameters = target_doc.FindValue("static_targets")){
+	  printf("Found %d static targets\n",target_parameters->size());
+	  temp_target.is_moving = false;
+	  for(unsigned int i=0; i<target_parameters->size();i++){
+	    (*target_parameters)[i]["target_name"]    >> temp_target.target_name;
+	    (*target_parameters)[i]["angle_axis_ax"]  >> temp_target.pose.ax;
+	    (*target_parameters)[i]["angle_axis_ax"]  >> temp_target.pose.ay;
+	    (*target_parameters)[i]["angle_axis_ay"]  >> temp_target.pose.az;
+	    (*target_parameters)[i]["position_x"]     >> temp_target.pose.x;
+	    (*target_parameters)[i]["position_y"]     >> temp_target.pose.y;
+	    (*target_parameters)[i]["position_z"]     >> temp_target.pose.z;
+	    (*target_parameters)[i]["num_points"]     >> temp_target.num_points;
+	    const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
+	    for(int j=0;j<points_node->size();j++){
+	      const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
+	      std::vector<float> temp_pnt;
+	      (*pnt_node) >> temp_pnt;
+	      Point3d temp_pnt3d;
+	      temp_pnt3d.x = temp_pnt[0];
+	      temp_pnt3d.y = temp_pnt[1];
+	      temp_pnt3d.z = temp_pnt[2];
+	      temp_target.pts.push_back(temp_pnt3d);
+	    }	    
+	    blocks_for_ceres_.addStaticTarget(temp_target);
+	  }
+	}
+
+	// read in all moving targets
+	if(const YAML::Node *target_parameters = target_doc.FindValue("moving_targets")){
+	  printf("Found %d moving targets\n",target_parameters->size());
+	  Target temp_target;
+	  unsigned int scene_id;
+	  temp_target.is_moving = true;
+	  for(unsigned int i=0; i<target_parameters->size();i++){
+	    (*target_parameters)[i]["target_name"]    >> temp_target.target_name;
+	    (*target_parameters)[i]["angle_axis_ax"]  >> temp_target.pose.ax;
+	    (*target_parameters)[i]["angle_axis_ax"]  >> temp_target.pose.ay;
+	    (*target_parameters)[i]["angle_axis_ay"]  >> temp_target.pose.az;
+	    (*target_parameters)[i]["position_x"]     >> temp_target.pose.x;
+	    (*target_parameters)[i]["position_y"]     >> temp_target.pose.y;
+	    (*target_parameters)[i]["position_z"]     >> temp_target.pose.z;
+	    (*target_parameters)[i]["scene_id"]       >> scene_id;
+	    (*target_parameters)[i]["num_points"]     >> temp_target.num_points;
+	    const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
+	    for(int j=0;j<points_node->size();j++){
+	      const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
+	      std::vector<float> temp_pnt;
+	      (*pnt_node) >> temp_pnt;
+	      Point3d temp_pnt3d;
+	      temp_pnt3d.x = temp_pnt[0];
+	      temp_pnt3d.y = temp_pnt[1];
+	      temp_pnt3d.z = temp_pnt[2];
+	      temp_target.pts.push_back(temp_pnt3d);
+	    }	    
+	    blocks_for_ceres_.addMovingTarget(temp_target,scene_id);
+	  }
+	}
+	printf("Successfully read targets\n");
+      }// end try
+    catch(...)
+      {
+	printf("load() Failed to read in targets yaml file\n");
+	//	ROS_ERROR("load() Failed to read in cameras yaml file");
+	return(false);
+      }
+    //    ROS_INFO("successfuly read in cameras");
+    return(true);
+  }// end load()
 
   bool CeresBlocks::addStaticCamera(Camera camera_to_add)
   {
@@ -147,9 +342,10 @@ using industrial_extrinsic_cal::CalibrationJob;
 using std::string;
 int main()
 {
-  string camera_file_name("junk1");
-  string target_file_name("junk2");
-  string caljob_file_name("junk3");
-  CalibrationJob Calib_job(camera_file_name,target_file_name,caljob_file_name);
+  string camera_file_name("camera_def.yaml");
+  string target_file_name("target_def.yaml");
+  string caljob_file_name("caljob_def.yaml");
+  CalibrationJob Cal_job(camera_file_name,target_file_name,caljob_file_name);
   printf("hello world\n");
+  Cal_job.load();
 }

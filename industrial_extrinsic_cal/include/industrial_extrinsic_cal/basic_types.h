@@ -68,14 +68,24 @@ namespace industrial_extrinsic_cal {
       };
     };
   }Pose6d;
+  
+  /* TODO create three parameter types 
+     CheckerboardParameters, CircleGridParameters, and ARTargetParameters 
+  */
 				    
   /*! \brief A target's information */
   typedef struct{
     std::string target_name;
     int target_type;
-    bool is_moving;  /** observed in multiple locations or it fixed to ref frame */
+    union{
+      CheckerBoardParameters checker_board_parameters;
+      CircleGridParameters   circle_grid_parameters;
+      ARTargetParameters   ar_target_parameters;
+    }
+    bool is_moving;  /**< observed in multiple locations or it fixed to ref frame */
     Pose6d pose;
-    std::vector<Point3d> pts; /** an array of points expressed relative to Pose p. */
+    unsigned int num_points; /**< number of points in the point array */
+    std::vector<Point3d> pts; /**< an array of points expressed relative to Pose p. */
   } Target;
 
   /*! \brief An observation is the x,y image location of a target's point in an image*/
