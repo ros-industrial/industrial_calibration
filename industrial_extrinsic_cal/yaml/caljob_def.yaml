@@ -1,0 +1,26 @@
+---
+reference_frame: some_name
+scenes:
+-
+     scene_id:  xxxx
+     trigger_type: xxxx
+     observations: 
+     -
+          camera:camera_name
+          target:target_name
+     -
+          camera:camera_name
+          target:target_name
+-
+     scene_id:
+     observatons:
+     -
+          camera:camera_name
+          target:target_name
+-
+     scene_id:
+     observations:
+          camera:camera_name
+          target:target_name
+
+optimization_paramerters:
