@@ -2,7 +2,35 @@
  * ros_camera_observer.cpp
  *
  *  Created on: Dec 18, 2013
- *      Author: cgomez
+ *
+ * Software License Agreement (BSD License)
+ *
+ * Copyright (c) 2011, Southwest Research Institute
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of the Southwest Research Institute, nor the names
+ * of its contributors may be used to endorse or promote products derived
+ * from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 
@@ -11,39 +39,57 @@
 namespace industrial_extrinsic_cal {
 
 
-ROSCameraObserver::ROSCameraObserver(std::string camera_topic)
+ROSCameraObserver::ROSCameraObserver(std::string camera_topic):
+		sym_circle_(true),	pattern_(Chessboard), pattern_rows_(0), pattern_cols_(0)
 {
 	image_topic_=camera_topic;
-	image_sub_ = nh_.subscribe(camera_topic, 1, &ROSCameraObserver::infoCallback, this);
-	ROS_INFO_STREAM("ROSCameraObserver subscribing to image on "<<camera_topic);
-
 	results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
-	pattern_ = Chessboard;
 }
 
-void ROSCameraObserver::infoCallback(const sensor_msgs::ImageConstPtr& image_msg)
-{
-	sensor_msgs::ImageConstPtr recent_image =  ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
-	if (!recent_image)
-	{
-		ROS_ERROR("Failed to input image from topic");
-		return;
-	}
-}
 
 void ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi roi)
 {
+	//set pattern based on target
 	ROS_INFO_STREAM("Target type: "<<targ->target_type);
 	instance_target_=targ;
-	ROSCameraObserver::pattern_ == targ->target_type;
-
-	if (targ->target_type !=0 && targ->target_type !=1 && targ->target_type!= 2)
+	if (targ->target_type==0)
 	{
-		ROS_WARN_STREAM("Unknown pattern, based on target_type");
-		ROSCameraObserver::pattern_ = Chessboard;
+		pattern_=Chessboard;
+	}
+	else if (targ->target_type==1)
+	{
+		pattern_=CircleGrid;
+	}
+	else if (targ->target_type==2)
+	{
+		pattern_=ARtag;
+	}
+	else
+		ROS_ERROR_STREAM("Unknown target_type");
+
+	if (pattern_ !=0 && pattern_ !=1 && pattern_!= 2)
+	{
+		ROS_ERROR_STREAM("Unknown pattern, based on target_type");
 	}
 
-	sensor_msgs::ImageConstPtr recent_image =  ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
+	//set pattern rows/cols based on target
+	switch (pattern_)
+	{
+	case Chessboard:
+		pattern_rows_=targ->checker_board_parameters.pattern_rows;
+		pattern_cols_=targ->checker_board_parameters.pattern_cols;
+		break;
+	case CircleGrid:
+		pattern_rows_=targ->circle_grid_parameters.pattern_rows;
+		pattern_cols_=targ->circle_grid_parameters.pattern_cols;
+		sym_circle_=targ->circle_grid_parameters.is_symmetric;
+		break;
+	case ARtag:
+
+		break;
+	}
+
+	sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
 	try
 	{
 		input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
@@ -75,12 +121,12 @@ void ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi roi)
 
 void ROSCameraObserver::clearTargets()
 {
-
+	//instance_target_.reset();
 }
 
 void ROSCameraObserver::clearObservations()
 {
-
+	//camera_obs_
 }
 
 int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
@@ -90,29 +136,39 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	switch (pattern_)
 	{
 	case Chessboard:
-		successful_find = cv::findChessboardCorners(image_roi_, cv::Size(11,11), observation_pts_, cv::CALIB_CB_ADAPTIVE_THRESH);
+		ROS_INFO_STREAM("Finding Chessboard Corners...");
+		successful_find = cv::findChessboardCorners(image_roi_, cv::Size(pattern_rows_,pattern_cols_), observation_pts_, cv::CALIB_CB_ADAPTIVE_THRESH);
 		break;
 	case CircleGrid:
-		successful_find = cv::findCirclesGrid(image_roi_, cv::Size(11,11), observation_pts_, cv::CALIB_CB_SYMMETRIC_GRID);
-		break;
-	case AsymmetricCircleGrid:
-		successful_find= cv::findCirclesGrid(image_roi_, cv::Size(11,11), observation_pts_,
+		if (sym_circle_)
+		{
+			ROS_INFO_STREAM("Finding Circles in grid, symmetric...");
+		successful_find = cv::findCirclesGrid(image_roi_, cv::Size(pattern_rows_,pattern_cols_), observation_pts_, cv::CALIB_CB_SYMMETRIC_GRID);
+		}
+		else
+		{
+			ROS_INFO_STREAM("Finding Circles in grid, asymmetric...");
+		successful_find= cv::findCirclesGrid(image_roi_, cv::Size(pattern_rows_,pattern_cols_), observation_pts_,
 				cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING);
+		}
 		break;
 	}
-
+	if (!successful_find)
+		{
+			ROS_WARN_STREAM("Pattern not found for pattern: "<<pattern_ <<" with symmetry: "<< sym_circle_);
+		}
 
 	ROS_INFO_STREAM("Number of points found on board: "<<observation_pts_.size());
-	cam_obs.observation.resize(observation_pts_.size());
+	camera_obs_.observation.resize(observation_pts_.size());
 	for (int i = 0; i<observation_pts_.size() ; i++)
 	{
-		ROS_INFO_STREAM("i="<<i);
-		cam_obs.observation.at(i).target=instance_target_;
-		cam_obs.observation.at(i).point_id=i;
-		cam_obs.observation.at(i).image_loc_x=observation_pts_.at(i).x;
-		cam_obs.observation.at(i).image_loc_y=observation_pts_.at(i).y;
+		camera_obs_.observation.at(i).target=instance_target_;
+		camera_obs_.observation.at(i).point_id=i;
+		camera_obs_.observation.at(i).image_loc_x=observation_pts_.at(i).x;
+		camera_obs_.observation.at(i).image_loc_y=observation_pts_.at(i).y;
 	}
 
+	cam_obs=camera_obs_;
 	if (successful_find)
 	{
 		return 1;
