@@ -97,13 +97,10 @@ add_executable(test_obs src/test_ros_cam_obs.cpp)
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
-<<<<<<< HEAD
 target_link_libraries(cal_job ${CERES_LIBRARIES} )
 target_link_libraries(industrial_extrinsic_cal ${catkin_LIBRARIES})
 target_link_libraries(test_obs industrial_extrinsic_cal)
-=======
 target_link_libraries(cal_job ${CERES_LIBRARIES} yaml-cpp )
->>>>>>> upstream/master
 
 #############
 ## Install ##
