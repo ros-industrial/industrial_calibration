@@ -29,11 +29,8 @@
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
 
 // ROS includes
-#include <ros/ros.h>
 #include <ros/console.h>
 #include <camera_info_manager/camera_info_manager.h>
-
-
 
 namespace industrial_extrinsic_cal {
 
