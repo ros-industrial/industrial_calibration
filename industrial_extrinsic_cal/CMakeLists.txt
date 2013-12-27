@@ -4,7 +4,7 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs rosconsole)
 
 # Ceres
 FIND_PACKAGE(Ceres REQUIRED)
@@ -63,7 +63,7 @@ ENDIF (EIGEN_FOUND)
 catkin_package(
    INCLUDE_DIRS include
 #  LIBRARIES industrial_extrinsic_cal
-#  CATKIN_DEPENDS roscpp std_msg
+   CATKIN_DEPENDS roscpp std_msgs rosconsole
 #  DEPENDS system_lib
 )
 
@@ -96,7 +96,7 @@ add_executable(cal_job src/calibration_job.cpp)
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
-target_link_libraries(cal_job ${CERES_LIBRARIES} yaml-cpp )
+target_link_libraries(cal_job ${CERES_LIBRARIES} yaml-cpp ${catkin_LIBRARIES})
 
 #############
 ## Install ##

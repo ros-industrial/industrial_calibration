@@ -2,25 +2,27 @@
 reference_frame: some_name
 scenes:
 -
-     scene_id:  xxxx
+     scene_id: xxxx
      trigger_type: xxxx
      observations: 
      -
-          camera:camera_name
-          target:target_name
+          camera: camera_name
+          target: target_name
      -
-          camera:camera_name
-          target:target_name
+          camera: camera_name
+          target: target_name
 -
-     scene_id:
-     observatons:
-     -
-          camera:camera_name
-          target:target_name
--
-     scene_id:
+     scene_id: scene1
+     trigger_type: xxxx
      observations:
-          camera:camera_name
-          target:target_name
-
-optimization_paramerters:
+     -
+          camera: camera_name
+          target: target_name
+-
+     scene_id: xxx
+     trigger_type: xxxx
+     observations:
+     -
+          camera: camera_name
+          target: target_name
+optimization_parameters: xx
