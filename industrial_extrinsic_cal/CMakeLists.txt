@@ -7,10 +7,10 @@ project(industrial_extrinsic_cal)
 find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf image_transport roslint)
 
 # Ceres
-FIND_PACKAGE(Ceres REQUIRED)
-IF (CERES_FOUND)
-  MESSAGE("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
-ENDIF (CERES_FOUND)
+##FIND_PACKAGE(Ceres REQUIRED)
+##IF (CERES_FOUND)
+##  MESSAGE("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
+##ENDIF (CERES_FOUND)
 
 # Eigen
 FIND_PACKAGE(Eigen REQUIRED)
@@ -84,8 +84,8 @@ include_directories(include
 
 ## Declare a cpp executable
 # add_executable(industrial_extrinsic_cal_node src/industrial_extrinsic_cal_node.cpp)
-add_executable(mono_ex_cal src/mono_ex_cal.cpp)
-add_executable(cal_job src/calibration_job.cpp)
+##add_executable(mono_ex_cal src/mono_ex_cal.cpp)
+##add_executable(cal_job src/calibration_job.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -95,8 +95,8 @@ add_executable(cal_job src/calibration_job.cpp)
 # target_link_libraries(industrial_extrinsic_cal_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
-target_link_libraries(cal_job ${CERES_LIBRARIES} )
+##target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
+##target_link_libraries(cal_job ${CERES_LIBRARIES} )
 
 #############
 ## Install ##
