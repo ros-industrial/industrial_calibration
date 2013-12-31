@@ -4,7 +4,7 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs roslint)
 
 # Ceres
 FIND_PACKAGE(Ceres REQUIRED)
@@ -145,3 +145,7 @@ target_link_libraries(cal_job ${CERES_LIBRARIES} )
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+file(GLOB_RECURSE ${PROJECT_NAME}_LINT_SRCS 
+     RELATIVE ${PROJECT_SOURCE_DIR} src/*.cpp include/*.h)
+roslint_cpp(${${PROJECT_NAME}_LINT_SRCS})
