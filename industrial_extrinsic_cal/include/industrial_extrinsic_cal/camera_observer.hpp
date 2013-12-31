@@ -44,6 +44,14 @@ namespace industrial_extrinsic_cal {
     /** @param output all observations of targets defined */
     virtual int getObservations(CameraObservations &camera_observations)=0; 
 
+    /** @brief tells observer to process next incomming image to find the targets in list */
+    virtual void triggerCamera()=0;
+
+    /** @brief tells when camera has completed its observations */
+    virtual bool observationsDone();
+
+    std::string camera_name_; /*!< string camera_name_ unique name of a camera */
+
     /** @brief print this object TODO */
     //    virtual ::std::ostream& operator<<(::std::ostream& os, const CameraObserver& camera);
   };
@@ -72,6 +80,9 @@ namespace industrial_extrinsic_cal {
     /** @brief return observations */
     /** @param output all observations of targets defined */
     int getObservations(CameraObservations &camera_observations){return(1);}; 
+
+    /** @brief tells observer to process next incomming image to find the targets in list */
+    void trigger_camera(){};
   };
 } // end of namespace
 #endif

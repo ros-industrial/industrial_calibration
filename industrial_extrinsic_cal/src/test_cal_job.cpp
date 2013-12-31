@@ -21,4 +21,7 @@ int main()
   {
     ROS_INFO_STREAM("Calibration job (cal_job, target and camera) yaml parameters loaded.");
   }
+  if(Cal_job.runObservations()){
+	  ROS_INFO_STREAM("Calibration job observations run");
+  }
 }

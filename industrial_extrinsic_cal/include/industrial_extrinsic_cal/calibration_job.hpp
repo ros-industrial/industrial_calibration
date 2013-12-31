@@ -20,8 +20,9 @@
 #define CALIBRATION_JOB_HPP_
 
 #include <iostream>
-#include <industrial_extrinsic_cal/basic_types.h>
-#include <industrial_extrinsic_cal/camera_observer.hpp>
+#include <industrial_extrinsic_cal/basic_types.h> /** needed for Roi */
+#include <industrial_extrinsic_cal/camera_observer.hpp> /** needed for CameraObserver */
+#include <boost/shared_ptr.hpp>
 
 //ROS include, for ROS macros (ROS_INFO etc.)
 #include <ros/console.h>
@@ -49,14 +50,14 @@ public:
   Camera(std::string name, CameraParameters camera_parameters, bool is_moving) :
       camera_name_(name), camera_parameters_(camera_parameters_), is_moving_(is_moving)
   {
-  }
-  ;
+  };
+
 
   /*! \brief default destructor, nothing to do really */
   ~Camera()
   {
-  }
-  ;
+  };
+
 
   /*!  is the camera's location fixed or not?
    moving cameras get multiple pose parameters
@@ -65,8 +66,9 @@ public:
   bool isMoving()
   {
     return (is_moving_);
-  }
-  ;
+  };
+
+
   boost::shared_ptr<DummyCameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
   CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
   //    ::std::ostream& operator<<(::std::ostream& os, const Camera& C){ return os<< "TODO";};
@@ -87,7 +89,7 @@ typedef struct
 /*! @brief unique observation command */
 typedef struct
 {
-  boost::shared_ptr<DummyCameraObserver> camera;
+  boost::shared_ptr<Camera> camera;
   boost::shared_ptr<Target> target;
   Roi roi;
 } ObservationCmd;
@@ -109,8 +111,9 @@ public:
   ObservationScene()
   {
     observation_command_list_.clear();
-  }
-  ;
+    cameras_in_scene_.clear();
+  };
+
 
   /*! \brief  Clears all observations from the command */
   void clear();
@@ -121,8 +124,24 @@ public:
    *  \param roi:    the region of interest in the camera's field of view to look for target
    */
   void addObservationToScene(ObservationCmd observation_command);
-private:
+  /*! \brief gets the id of this scene */
+  int get_id()
+  {
+    return (scene_id_);
+  };
+
+
+  /*! \brief gets the trigger of this scene */
+  Trigger get_trigger()
+  {
+    return (trig_);
+  };
+
+
   std::vector<ObservationCmd> observation_command_list_; /*!< list of observations for a scene */
+  std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scened */
+
+private:
   Trigger trig_; /*!< event to trigger the observations in this command */
   int scene_id_; /*!< unique identifier of this scene */
 };
@@ -131,16 +150,91 @@ private:
 /*! \brief moving cameras need a new pose with each scene in which they are used */
 typedef struct MovingCamera
 {
-  Camera cam;			// must hold a copy of the camera extrinsic parameters
-  int scene_id;		// but copy of intrinsics may be and unused duplicate
+  Camera cam; // must hold a copy of the camera extrinsic parameters
+  int scene_id; // but copy of intrinsics may be and unused duplicate
 } MovingCamera;
 
 /*! \brief moving  need a new pose with each scene in which they are used */
 typedef struct MovingTarget
 {
-  Target targ;		// must hold a copy of the target pose parameters,
-  int scene_id;		// but point parameters may be unused duplicates
+  Target targ; // must hold a copy of the target pose parameters,
+  int scene_id; // but point parameters may be unused duplicates
 } MovingTarget;
+
+class ObservationDataPoint
+{
+public:
+
+  /**
+   *
+   * @param c_name camera name
+   * @param t_name target name
+   * @param s_id   scene id
+   * @param c_intrinsics  camera's intrinsic parameter block
+   * @param c_extrinsics  camera's extrinsic parameter block
+   * @param point_id      id of point in target's list of points
+   * @param t_pose        targets pose parameter block
+   * @param p_position    position of point parameter block
+   * @param image_x       image location x
+   * @param image_y       image location y
+   */
+  ObservationDataPoint(std::string c_name, std::string t_name, int s_id, boost::shared_ptr<double> c_intrinsics,
+                       boost::shared_ptr<double> c_extrinsics, int point_id, boost::shared_ptr<double> t_pose,
+                       boost::shared_ptr<double> p_position, double image_x, double image_y)
+  {
+    camera_name_       = c_name;
+    target_name_       = t_name;
+    scene_id_          = s_id;
+    camera_intrinsics_ = c_intrinsics;
+    camera_extrinsics_ = c_extrinsics;
+    target_pose_        = t_pose;
+    point_id_          = point_id;
+    point_position_    = p_position;
+    image_x_           = image_x;
+    image_y_           = image_y;
+  };
+
+  ~ObservationDataPoint()
+  {
+  };
+
+private:
+  std::string camera_name_;
+  std::string target_name_;
+  int scene_id_;
+  int point_id_;
+  boost::shared_ptr<double> camera_extrinsics_;
+  boost::shared_ptr<double> camera_intrinsics_;
+  boost::shared_ptr<double> target_pose_;
+  boost::shared_ptr<double> point_position_;
+  double image_x_;
+  double image_y_;
+};
+// end of class ObservationDataPoint
+
+/**
+ * @brief a list of observation data points which allows all the collected information about the observations to be easily submitted to ceres
+ *        It also allows the problem data to be printed to files for debugging and external analysis
+ */
+class ObservationDataPointList
+{
+public:
+  ObservationDataPointList()
+  {
+  };
+
+  ~ObservationDataPointList()
+  {
+  };
+
+  void addObservationPoint(ObservationDataPoint new_data_point)
+  {
+    items.push_back(new_data_point);
+  };
+
+private:
+  std::vector<ObservationDataPoint> items;
+};
 
 /** \brief These blocks of data hold the ceres parameters upon which the optimizaition proceeds
  *   Static cameras have a block of parameters for their 6Dof Pose
@@ -156,6 +250,7 @@ public:
   {
   }
   ;
+
   /** \brief Destructor */
   ~CeresBlocks()
   {
@@ -166,37 +261,40 @@ public:
   }
   ;
 
+  /*! \brief clear all static and moving cameras and targets */
+  void clearCamerasTargets();
+
   /*! \brief adds a static camera to job's list of cameras
    *  \param camera_to_add this is the camera added to the list
    *  \return true on success
    */
-  bool addStaticCamera(Camera camera_to_add);
+  bool addStaticCamera(boost::shared_ptr<Camera> camera_to_add);
 
   /*! \brief adds a static target to job's list of static targets
    *  \param target_to_add this is the target added to the list
    *  \return true on success
    */
-  bool addStaticTarget(Target target_to_add);
+  bool addStaticTarget(boost::shared_ptr<Target> target_to_add);
 
   /*! \brief adds a moving camera to job's list of cameras
    *  \param camera_to_add this is the camera added to the list
    *  \param scene_id the scene's id, only one camera of given name existe in each scene
    *  \return true on success
    */
-  bool addMovingCamera(Camera camera_to_add, int scene_id);
+  bool addMovingCamera(boost::shared_ptr<Camera> camera_to_add, int scene_id);
 
   /*! \brief adds a static target to job's list of static targets
    *  \param target_to_add this is the target added to the list
    *  \param scene_id the scene's id, only one target of given name exist in each scene
    *  \return true on success
    */
-  bool addMovingTarget(Target target_to_add, int scene_id);
+  bool addMovingTarget(boost::shared_ptr<Target> target_to_add, int scene_id);
 
   /*! @brief gets a pointer to the intrinsic parameters of a static camera
    *  @param camera_name the camera's name
    *  @return pointer to the only existing set of intrinsics for this camera
    */
-  double * getStaticCameraParameterBlockIntrinsics(std::string camera_name);
+  boost::shared_ptr<double>  getStaticCameraParameterBlockIntrinsics(std::string camera_name);
 
   /*! @brief gets a pointer to the intrinsic parameters of a moving camera
    *  @param camera_name the camera's name
@@ -206,13 +304,13 @@ public:
    *          however, the first scene in which the camera was used contains the
    *          only set of intrinsics to be adjusted, and therefore is the only one returned
    */
-  double * getMovingCameraParameterBlockIntrinsics(std::string camera_name);
+  boost::shared_ptr<double> getMovingCameraParameterBlockIntrinsics(std::string camera_name);
 
   /*! @brief gets a pointer to the extrinsics parameters of a static camera
    *  @param camera_name the camera's name
    *  @return pointer to the only existing set of extrinsics for this camera
    */
-  double * getStaticCameraParameterBlockExtrinsics(std::string camera_name);
+  boost::shared_ptr<double> getStaticCameraParameterBlockExtrinsics(std::string camera_name);
 
   /*! @brief gets a pointer to the extrisic parameters of a moving camera
    *  @param camera_name the camera's name
@@ -222,20 +320,20 @@ public:
    *          Therefore, the extrinsic parameters must be the ones from
    *          the correct scene.
    */
-  double * getMovingCameraParameterBlockExtrinsics(std::string camera_name, int scene_id);
+  boost::shared_ptr<double> getMovingCameraParameterBlockExtrinsics(std::string camera_name, int scene_id);
 
   /*! @brief gets a pointer to the pose parameters of a static target
    *  @param target_name the target's name
    *  @return pointer to the only existing set of pose parameters for this target
    */
-  double * getStaticTargetPoseParameterBlock(std::string target_name);
+  boost::shared_ptr<double> getStaticTargetPoseParameterBlock(std::string target_name);
 
   /*! @brief gets a pointer to the position parameters of a static target's point
    *  @param target_name the target's name
    *  @param point_id id of point on target
    *  @return pointer to the only existing set of position parameters for this point
    */
-  double * getStaticTargetPointParameterBlock(std::string target_name, int point_id);
+  boost::shared_ptr<double> getStaticTargetPointParameterBlock(std::string target_name, int point_id);
 
   /*! @brief gets a pointer to the targets pose parameters
    *  @param target_name moving target's name
@@ -246,7 +344,7 @@ public:
    *          because the target was duplicated in each scene it was observed.
    *          Therefore, the desired set is the only copy with the given scene_id
    */
-  double * getMovingTargetPoseParameterBlock(std::string target_name, int scene_id);
+  boost::shared_ptr<double> getMovingTargetPoseParameterBlock(std::string target_name, int scene_id);
 
   /*! @brief gets a pointer to the point's position parameters
    *  @param target_name moving target's name
@@ -257,7 +355,7 @@ public:
    *          However, the coordinates of the point in the target frame should not change
    *          Therefore, only the first occurance (first scene) is used
    */
-  double * getMovingTargetPointParameterBlock(std::string target_name, int point_id, int scene_id);
+  boost::shared_ptr<double> getMovingTargetPointParameterBlock(std::string target_name, int point_id, int scene_id);
 
 private:
   std::vector<Camera> static_cameras_; /*!< all non-moving cameras in job */
@@ -359,6 +457,8 @@ public:
    */
   bool appendNewScene(Trigger trig);
 
+  ObservationDataPointList observation_data_point_list;
+
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 private:
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
@@ -368,7 +468,8 @@ private:
   int current_scene_; /*!< id of current scene under review or construction */
   std::vector<DummyCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
-  CeresBlocks blocks_for_ceres_; /*!< This structure maintains the parameter sets for ceres */
+  CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
+  ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
 
 };
 //end class CalibrationJob

@@ -106,7 +106,7 @@ namespace industrial_extrinsic_cal {
 
   /*! \brief A vector of observations made by a single camera of posibly multiple targets */
   typedef struct { 
-    std::vector<Observation> observation;
+    std::vector<Observation> observations;
   }CameraObservations;
 
 /*! Brief CameraParameters defines both the intrinsic and extrinsic parameters of a camera
