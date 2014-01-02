@@ -1,0 +1,15 @@
+---
+reference_frame: some_name
+scenes:
+-
+     scene_id: 0
+     trigger_type: 1
+     observations: 
+     -
+          camera: Asus1
+          target: Checkerboard
+     -
+          camera: Asus2
+          target: Checkerboard
+
+optimization_parameters: xx
