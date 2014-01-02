@@ -4,7 +4,7 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs rosconsole)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs rosconsole cv_bridge roslint)
 
 # Ceres
 FIND_PACKAGE(Ceres REQUIRED)
@@ -81,22 +81,28 @@ include_directories(include
 # add_library(industrial_extrinsic_cal
 #   src/${PROJECT_NAME}/industrial_extrinsic_cal.cpp
 # )
-add_library(industrial_extrinsic_cal src/calibration_job.cpp)
+add_library(industrial_extrinsic_cal_ceres
+   src/calibration_job.cpp
+)
+add_library(industrial_extrinsic_cal
+   src/ros_camera_observer.cpp
+)
 
 ## Declare a cpp executable
 # add_executable(industrial_extrinsic_cal_node src/industrial_extrinsic_cal_node.cpp)
 add_executable(mono_ex_cal src/mono_ex_cal.cpp)
 add_executable(cal_job src/test_cal_job.cpp)
+add_executable(test_obs src/test_ros_cam_obs.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(industrial_extrinsic_cal_node industrial_extrinsic_cal_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES})
-
-target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
-target_link_libraries(cal_job industrial_extrinsic_cal ${CERES_LIBRARIES})
+target_link_libraries(industrial_extrinsic_cal_ceres yaml-cpp ${catkin_LIBRARIES})
+target_link_libraries(mono_ex_cal ${CERES_LIBRARIES})
+target_link_libraries(test_obs industrial_extrinsic_cal ${catkin_LIBRARIES})
+target_link_libraries(cal_job industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
 
 #############
 ## Install ##
@@ -145,3 +151,19 @@ target_link_libraries(cal_job industrial_extrinsic_cal ${CERES_LIBRARIES})
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+## ROSlint checks
+## For more information see: http://wiki.ros.org/roslint
+##
+## CPPlint options justifications
+## - whitespace/* - errors are ignored, it is assumed that the follwing eclipse
+##   format file has been applied: 
+##   http://wiki.ros.org/IDEs?action=AttachFile&do=get&target=ROS_format.xml
+## - build/header_guard - #ifdef/#ifndef naming doesn't match ROS sytle
+## - readability/stream - does not apply to logging (the typical use in ROS)
+## - runtime/references - pass by reference is allowed for output parameters
+set(ROSLINT_CPP_OPTS 
+"--filter=-whitespace,-build/header_guard,-build/include_order,-readability/streams,-runtime/references")
+file(GLOB_RECURSE ${PROJECT_NAME}_LINT_SRCS 
+     RELATIVE ${PROJECT_SOURCE_DIR} src/*.cpp include/*.h)
+roslint_cpp(${${PROJECT_NAME}_LINT_SRCS})

@@ -54,8 +54,7 @@ bool CalibrationJob::load()
   std::ifstream caljob_input_file(caljob_def_file_name_.c_str());
   if (camera_input_file.fail())
   {
-    ROS_ERROR_STREAM(
-        "ERROR CalibrationJob::load(), couldn't open camera_input_file:    "<< camera_def_file_name_.c_str());
+    ROS_ERROR_STREAM("ERROR CalibrationJob::load(), couldn't open camera_input_file:    "<< camera_def_file_name_.c_str());
     return (false);
   }
   if (target_input_file.fail())
@@ -236,7 +235,7 @@ bool CalibrationJob::load()
   } // end try
   catch (YAML::ParserException& e)
   {
-    ROS_ERROR("load() Failed to read in cameras yaml file");
+    ROS_ERROR("load() Failed to read in target yaml file");
     ROS_ERROR_STREAM("Failed with exception "<< e.what());
     return (false);
   }
@@ -279,9 +278,9 @@ bool CalibrationJob::load()
     ROS_ERROR_STREAM("Failed with exception "<< e.what());
     return (false);
   }
-
+  //    ROS_INFO("successfuly read in cameras");
   return (true);
-}	// end load()
+} // end load()
 
 bool CeresBlocks::addStaticCamera(Camera camera_to_add)
 {
