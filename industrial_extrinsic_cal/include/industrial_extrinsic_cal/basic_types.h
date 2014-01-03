@@ -25,6 +25,8 @@
 
 namespace industrial_extrinsic_cal {
 
+  typedef double* P_BLOCK ;
+
   /*! \brief A region of interest in an image */
   typedef struct{
     int x_min;
@@ -94,6 +96,8 @@ namespace industrial_extrinsic_cal {
     Pose6d pose;
     unsigned int num_points; /**< number of points in the point array */
     std::vector<Point3d> pts; /**< an array of points expressed relative to Pose p. */
+    bool fixed_pose; /**< is the location of the target known? **/
+    bool fixed_points; /**< are the locations of the points within the target known */
   } Target;
 
   /*! \brief An observation is the x,y image location of a target's point in an image*/
