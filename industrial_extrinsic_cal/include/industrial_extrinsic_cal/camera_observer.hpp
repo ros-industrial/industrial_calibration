@@ -93,7 +93,7 @@ class CameraObserver
     return (1);
   }
     /** @brief tells observer to process next incomming image to find the targets in list */
-    void trigger_camera(){};
+    void triggerCamera(){};
   };
 } // end of namespace
 #endif

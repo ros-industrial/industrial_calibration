@@ -19,9 +19,10 @@
 #ifndef CERES_COSTS_UTILS_HPP_
 #define CERES_COSTS_UTILS_HPP_
 
-namespace industrial_extrinsic_cal {
+namespace industrial_extrinsic_cal
+{
 
-  /* local prototypes of helper functions */
+/* local prototypes of helper functions */
 
 /*! \brief print a quaternion plus position as a homogeneous transform 
  *  \param qx quaternion x value
@@ -70,7 +71,7 @@ void printCameraParameters(CameraParameters C, std::string words);
 /*! \brief  computes image of point in cameras image plane 
  *  \param  C both intrinsic and extrinsic camera parameters
  *  \param  P the point to be projected into image
-*/
+ */
 Observation projectPoint(CameraParameters camera_parameters, Point3d point);
 
 } // end of namespace

@@ -170,4 +170,4 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     return 0;
 }
 
-}	//industrial_extrinsic_cal
+} //industrial_extrinsic_cal

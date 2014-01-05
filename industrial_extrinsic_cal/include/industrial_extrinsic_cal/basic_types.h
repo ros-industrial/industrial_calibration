@@ -25,7 +25,7 @@
 
 namespace industrial_extrinsic_cal {
 
-  typedef double* P_BLOCK ;
+  typedef double* P_BLOCK;
 
   /*! \brief A region of interest in an image */
   typedef struct{
@@ -70,7 +70,7 @@ namespace industrial_extrinsic_cal {
       };
     };
   }Pose6d;
-  
+
   /** @brief Parameters defining checker board target   */
   typedef struct{
 	  int pattern_rows;
@@ -87,7 +87,7 @@ namespace industrial_extrinsic_cal {
 	  //std::string marker_pattern;
 	  double marker_width;
   }ARTargetParameters;
-				    
+
   /*! \brief A target's information */
   typedef struct{
     std::string target_name;
