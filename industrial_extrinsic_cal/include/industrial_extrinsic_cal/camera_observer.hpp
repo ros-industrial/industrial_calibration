@@ -22,17 +22,22 @@
 
 #include <industrial_extrinsic_cal/basic_types.h> /* Target,Roi,Observation,CameraObservations */
 
-namespace industrial_extrinsic_cal {
+namespace industrial_extrinsic_cal
+{
 
-  class CameraObserver{ 
+class CameraObserver
+{
   public:
     /** @brief Default destructor */
-    virtual ~CameraObserver(){};
+  virtual ~CameraObserver()
+  {
+  }
+  ;
 
     /** @brief add a target to look for */
     /** @param targ a target to look for */
     /** @param roi Region of interest for target */
-    virtual void addTarget(boost::shared_ptr<Target> targ, Roi roi)=0;
+  virtual bool addTarget(boost::shared_ptr<Target> targ, Roi &roi)=0;
 
     /** @brief remove all targets */
     virtual void clearTargets()=0;	
@@ -69,7 +74,11 @@ namespace industrial_extrinsic_cal {
     /** @brief add a target to look for */
     /** @param targ a target to look for */
     /** @param roi Region of interest for target */
-    void addTarget(boost::shared_ptr<Target> targ, Roi roi){};
+  bool addTarget(boost::shared_ptr<Target> targ, Roi &roi)
+  {
+    return true;
+  }
+  ;
 
     /** @brief remove all targets */
     void clearTargets(){};	
@@ -79,8 +88,10 @@ namespace industrial_extrinsic_cal {
   
     /** @brief return observations */
     /** @param output all observations of targets defined */
-    int getObservations(CameraObservations &camera_observations){return(1);}; 
-
+    int getObservations(CameraObservations &camera_observations)
+  {
+    return (1);
+  }
     /** @brief tells observer to process next incomming image to find the targets in list */
     void trigger_camera(){};
   };

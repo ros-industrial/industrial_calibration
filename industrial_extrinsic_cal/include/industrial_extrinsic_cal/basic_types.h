@@ -71,18 +71,23 @@ namespace industrial_extrinsic_cal {
     };
   }Pose6d;
   
-  /* TODO create three parameter types 
-     CheckerboardParameters, CircleGridParameters, and ARTargetParameters 
-  */
+  /** @brief Parameters defining checker board target   */
   typedef struct{
-
+	  int pattern_rows;
+	  int pattern_cols;
   }CheckerBoardParameters;
+  /** @brief Parameters defining circle grid target  */
   typedef struct{
-
+	  int pattern_rows;
+	  int pattern_cols;
+	  bool is_symmetric;
   }CircleGridParameters;
+  /** @brief Parameters defining AR target */
   typedef struct{
-
+	  //std::string marker_pattern;
+	  double marker_width;
   }ARTargetParameters;
+				    
   /*! \brief A target's information */
   typedef struct{
     std::string target_name;
