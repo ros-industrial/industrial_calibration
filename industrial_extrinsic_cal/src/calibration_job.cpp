@@ -510,7 +510,7 @@ bool CalibrationJob::load()
     ROS_ERROR_STREAM("Failed with exception "<< e.what());
     return (false);
   }
-
+  //	ROS_ERROR("load() Failed to read in cameras yaml file");
   //Target temp_target;
   //Read in cal job parameters
   try

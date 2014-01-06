@@ -4,7 +4,8 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs rosconsole cv_bridge roslint)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf image_transport roslint)
+
 
 # Ceres
 FIND_PACKAGE(Ceres REQUIRED)
@@ -105,7 +106,7 @@ add_executable(test_obs src/test_ros_cam_obs.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(industrial_extrinsic_cal_ceres yaml-cpp ${catkin_LIBRARIES})
-target_link_libraries(mono_ex_cal ${CERES_LIBRARIES})
+target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
 target_link_libraries(test_obs industrial_extrinsic_cal ${catkin_LIBRARIES})
 target_link_libraries(cal_job industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
 
