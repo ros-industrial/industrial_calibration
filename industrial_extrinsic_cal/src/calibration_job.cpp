@@ -613,58 +613,82 @@ bool CalibrationJob::runOptimization()
 
   BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list.items)
   {
-    // the following is an example taken from some working code. Clearly it won't work with
-    // our data structures, but I included it here as an example
+    // take all the data collected and create a Ceres optimization problem and run it
 
-    // Create residuals for each observation in the bundle adjustment problem. The
-    // parameters for cameras and points are added automatically.
-    ceres::Problem problem;
+    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list.items){
+      // create cost function
+      // there are several options
+      // 1. the complete reprojection error cost function "Create(obs_x,obs_y)"
+      //    this cost function has the following parameters:
+      //      a. camera intrinsics
+      //      b. camera extrinsics
+      //      c. target pose
+      //      d. point location in target frame
+      // 2. the same as 1, but without d  "Create(obs_x,obs_y,t_pnt_x, t_pnt_y, t_pnt_z)
+      // 3. the same as 1, but without a  "Create(obs_x,obs_y,fx,fy,cx,cy,cz)"
+      //    Note that this one assumes we are using rectified images to compute the observations
+      // 4. the same as 3, point location fixed too "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z)"
+      // 5. the same as 4, but with target in known location
+      //    "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z,p_tx,p_ty,p_tz,p_ax,p_ay,p_az)"
 
     // need a block of cameras 
     // need a block of targets
     // these two lists need to be able to search for an existing item by name
     // and also an existing item by both name and scene id
 
-    //  BOOST_FOREACH(ObservationScene Scene, os_){
-    //    BOOST_FOREACH(CameraObservation CO, Scene.co){
-    // determine if this is a new camera
-    // Important Cases where we need to add a new camera: 
-    // 1. first time a fixed camera is observed 
-    // 2. First time in the scene a moving camera is observed 
-    // ADD camera if necessary
-    //      BOOST_FOREACH(Observation O, CO.o)
-    // determine if this is a new target
-    // Important Cases where we need to add a new target: 
-    // 1. first time a fixed target is observed 
-    // 2. First time in the scene a moving target is observed 
+      // pull out the constants from the observation point data
+      double focal_length_x = ODP.camera_intrinsics_[0]; // TODO, make this not so ugly
+      double focal_length_y = ODP.camera_intrinsics_[1];
+      double center_pnt_x   = ODP.camera_intrinsics_[2];
+      double center_pnt_y   = ODP.camera_intrinsics_[3];
+      double image_x        = ODP.image_x_;
+      double image_y        = ODP.image_y_;
+      double point_x        = ODP.point_position_[0];// location of point within target frame
+      double point_y        = ODP.point_position_[1];
+      double point_z        = ODP.point_position_[2];
+      
+      // create the cost function
+      CostFunction* cost_function = TargetCameraReprjErrorNoDistortion::Create(image_x, image_y,
+									       focal_length_x, 
+									       focal_length_y,
+									       center_pnt_x,
+									       center_pnt_y,
+									       point_x,
+									       point_y,
+									       point_z);
 
-    // ADD all target points if necessary
+      // pull out pointers to the parameter blocks in the observation point data
+      P_BLOCK extrinsics    = ODP.camera_extrinsics_;
+      P_BLOCK target_pose   = ODP.target_pose_;
 
-    /*
-     // Each Residual block takes a point and a camera as input and outputs a 2
-     // dimensional residual. Internally, the cost function stores the observed
-     // image location and compares the reprojection against the observation.
-     ceres::CostFunction* cost_function =  Camera_reprj_error::Create(Ob[i].x,Ob[i].y);
+      // add it as a residual using parameter blocks
+      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
 
-     problem.AddResidualBlock(cost_function, NULL ,
-     C.PB_extrinsics,
-     C.PB_intrinsics,
-     Pts[i].PB);
-     problem.SetParameterBlockConstant(C.PB_intrinsics);
-     problem.SetParameterBlockConstant(Pts[i].PB);
-     }
+    }
 
-     // Make Ceres automatically detect the bundle structure. Note that the
-     // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
-     // for standard bundle adjustment problems.
-     ceres::Solver::Options options;
-     options.linear_solver_type = ceres::DENSE_SCHUR;
-     options.minimizer_progress_to_stdout = true;
-     options.max_num_iterations = 1000;
+    //    ceres::CostFunction* cost_function =  Camera_reprj_error::Create(Ob[i].x,Ob[i].y);
 
-     ceres::Solver::Summary summary;
-     ceres::Solve(options, &problem, &summary);
-     */
+    //    problem_.AddResidualBlock(cost_function, NULL ,
+    //    C.PB_extrinsics,
+    //    C.PB_intrinsics,
+    //    Pts[i].PB);
+    //    problem.SetParameterBlockConstant(C.PB_intrinsics);
+    //    problem.SetParameterBlockConstant(Pts[i].PB);
+
+
+    // Make Ceres automatically detect the bundle structure. Note that the
+    // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
+    // for standard bundle adjustment problems.
+    ceres::Solver::Options options;
+    options.linear_solver_type = ceres::DENSE_SCHUR;
+    options.minimizer_progress_to_stdout = true;
+    options.max_num_iterations = 1000;
+
+    ceres::Solver::Summary summary;
+    //    ceres::Solve(options, &problem, &summary);
+
+
+    return true;
   }
   return true;
 }
