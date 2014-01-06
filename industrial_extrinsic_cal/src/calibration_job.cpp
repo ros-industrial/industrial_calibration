@@ -506,7 +506,7 @@ bool CalibrationJob::load()
   } // end try
   catch (YAML::ParserException& e)
   {
-    ROS_ERROR("load() Failed to read in cameras yaml file");
+    ROS_ERROR("load() Failed to read in target yaml file");
     ROS_ERROR_STREAM("Failed with exception "<< e.what());
     return (false);
   }

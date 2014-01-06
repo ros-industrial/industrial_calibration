@@ -1,0 +1,38 @@
+---
+
+static_cameras:
+ -
+    camera_name: Asus1
+    angle_axis_ax: 1.0
+    angle_axis_ay: 1.1
+    angle_axis_az: 1.2
+    position_x: 1.3
+    position_y: 1.4
+    position_z: 1.5
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 563
+    center_y: 463
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01
+ -
+    camera_name: Asus2
+    angle_axis_ax: 1.990
+    angle_axis_ay: 1.001
+    angle_axis_az: 1.992
+    position_x: 1.399
+    position_y: 1.994
+    position_z: 1.599
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 563
+    center_y: 463
+    distortion_k1: 0.001
+    distortion_k2: 0.009
+    distortion_k3: 0.009
+    distortion_p1: 0.009
+    distortion_p2: 0.007
+

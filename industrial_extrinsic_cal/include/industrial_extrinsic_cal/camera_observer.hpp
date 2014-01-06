@@ -48,11 +48,11 @@ public:
   /** @param output all observations of targets defined */
   virtual int getObservations(CameraObservations &camera_observations)=0;
 
-  /** @brief tells observer to process next incomming image to find the targets in list */
+  /** @brief print this object TODO */
   virtual void triggerCamera()=0;
 
   /** @brief tells when camera has completed its observations */
-  virtual bool observationsDone();
+  virtual bool observationsDone()=0;
 
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
 

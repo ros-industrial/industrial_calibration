@@ -79,8 +79,8 @@ typedef struct
       double pb_pose[6]; /**< a third option with a single block for 6dof pose */
     };
   };
-} Pose6d;
-
+}Pose6d;
+  
 /** @brief Parameters defining checker board target   */
 typedef struct
 {
