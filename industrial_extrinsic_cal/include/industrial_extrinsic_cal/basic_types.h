@@ -26,6 +26,8 @@
 namespace industrial_extrinsic_cal
 {
 
+typedef double* P_BLOCK;
+
 /*! \brief A region of interest in an image */
 typedef struct
 {
@@ -114,6 +116,8 @@ typedef struct
   Pose6d pose;
   unsigned int num_points; /**< number of points in the point array */
   std::vector<Point3d> pts; /**< an array of points expressed relative to Pose p. */
+  bool fixed_pose; /**< is the location of the target known? **/
+  bool fixed_points; /**< are the locations of the points within the target known */
 } Target;
 
 /*! \brief An observation is the x,y image location of a target's point in an image*/
@@ -128,7 +132,7 @@ typedef struct
 /*! \brief A vector of observations made by a single camera of posibly multiple targets */
 typedef struct
 {
-  std::vector<Observation> observation;
+  std::vector<Observation> observations;
 } CameraObservations;
 
 /*! Brief CameraParameters defines both the intrinsic and extrinsic parameters of a camera

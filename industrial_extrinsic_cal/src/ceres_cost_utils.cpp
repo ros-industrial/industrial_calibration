@@ -178,8 +178,8 @@ struct CameraReprjErrorNoDistortion
       T yp = yp1 / zp1;
 
       /** perform projection using focal length and camera center into image plane */
-      resid[0] = fx * xp + cx - T(ox_);
-      resid[1] = fy * yp + cy - T(oy_);
+      resid[0] = T(fx_) * xp + T(cx_) - T(ox_);
+      resid[1] = T(fy_) * yp + T(cy_) - T(oy_);
 
       return true;
     } /** end of operator() */
@@ -192,6 +192,10 @@ struct CameraReprjErrorNoDistortion
   }
   double ox_; /** observed x location of object in image */
   double oy_; /** observed y location of object in image */
+  double fx_; /*!< known focal length of camera in x */
+  double fy_; /*!< known focal length of camera in y */
+  double cx_; /*!< known optical center of camera in x */
+  double cy_; /*!< known optical center of camera in y */
 };
 
 struct TargetCameraReprjErrorNoDistortion
@@ -313,6 +317,13 @@ struct TargetCameraReprjErrorProjModelAsClassVars
       const T& target_az = c_p2[q++]; /**  target's az angle axis value */
 
       /** rotate and translate points into world frame */
+      // create a vector from the location of the point in the target's frame
+      T point[3];
+      point[0] = pnt_x_;
+      point[1] = pnt_y_;
+      point[2] = pnt_z_;
+
+      /** rotate and translate points into world frame */
       T target_aa[3];/** angle axis  */
       T world_point_loc[3]; /** point rotated */
       target_aa[0] = target_ax;
@@ -363,6 +374,9 @@ struct TargetCameraReprjErrorProjModelAsClassVars
   double fy_; /** focal length in x pixels */
   double cx_; /** optical center x */
   double cy_; /** optical center y */
+  double pnt_x_;/*!< known location of point in target's reference frame x */
+  double pnt_y_;/*!< known location of point in target's reference frame y */
+  double pnt_z_;/*!< known location of point in target's reference frame z */
 };
 
 void printQTasH(double qx, double qy, double qz, double qw, double tx, double ty, double tz)

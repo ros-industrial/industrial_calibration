@@ -29,12 +29,193 @@
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
 
 // ROS includes
+#include <ros/ros.h>
 #include <camera_info_manager/camera_info_manager.h>
 
 namespace industrial_extrinsic_cal
 {
 
 using std::string;
+using boost::shared_ptr;
+using boost::make_shared;
+using ceres::CostFunction;
+Camera::Camera()
+{
+  camera_name_ = "NONE";
+  is_moving_ = false;
+}
+
+Camera::Camera(string name, CameraParameters camera_parameters, bool is_moving) :
+    camera_name_(name), camera_parameters_(camera_parameters_), is_moving_(is_moving)
+{
+}
+
+Camera::~Camera()
+{
+}
+
+bool Camera::isMoving()
+{
+  return (is_moving_);
+}
+
+void ObservationScene::addObservationToScene(ObservationCmd new_obs_cmd)
+{
+  // this next block of code maintains a list of the cameras in a scene
+  bool camera_already_in_scene = false;
+  BOOST_FOREACH(ObservationCmd command, observation_command_list_)
+  {
+    BOOST_FOREACH(shared_ptr<Camera> camera, cameras_in_scene_)
+    {
+      if (camera->camera_name_ == new_obs_cmd.camera->camera_name_)
+      {
+        camera_already_in_scene = true;
+      }
+    }
+  }
+  if (!camera_already_in_scene)
+  {
+    cameras_in_scene_.push_back(new_obs_cmd.camera);
+  }
+  // end of code block to maintain list of cameras in scene
+
+  // add observation
+  observation_command_list_.push_back(new_obs_cmd);
+}
+CeresBlocks::CeresBlocks()
+{
+}
+CeresBlocks::~CeresBlocks()
+{
+  clearCamerasTargets();
+}
+void CeresBlocks::clearCamerasTargets()
+{
+  static_cameras_.clear();
+  static_targets_.clear();
+  moving_cameras_.clear();
+  moving_targets_.clear();
+}
+P_BLOCK CeresBlocks::getStaticCameraParameterBlockIntrinsics(string camera_name)
+{
+  // static cameras should have unique name
+  BOOST_FOREACH(shared_ptr<Camera> camera, static_cameras_)
+  {
+    if (camera_name == camera->camera_name_)
+    {
+      P_BLOCK intrinsics = &(camera->camera_parameters_.pb_intrinsics[0]);
+      return (intrinsics);
+    }
+  }
+  return (NULL);
+}
+P_BLOCK CeresBlocks::getMovingCameraParameterBlockIntrinsics(string camera_name)
+{
+  // we use the intrinsic parameters from the first time the camera appears in the list
+  // subsequent cameras with this name also have intrinsic parameters, but these are
+  // never used as parameter blocks, only their extrinsics are used
+  BOOST_FOREACH(shared_ptr<MovingCamera> moving_camera, moving_cameras_)
+  {
+    if (camera_name == moving_camera->cam->camera_name_)
+    {
+      P_BLOCK intrinsics = &(moving_camera->cam->camera_parameters_.pb_intrinsics[0]);
+      return (intrinsics);
+    }
+  }
+  return (NULL);
+}
+P_BLOCK CeresBlocks::getStaticCameraParameterBlockExtrinsics(string camera_name)
+{
+  // static cameras should have unique name
+  BOOST_FOREACH(shared_ptr<Camera> camera, static_cameras_)
+  {
+    if (camera_name == camera->camera_name_)
+    {
+      P_BLOCK extrinsics = &(camera->camera_parameters_.pb_extrinsics[0]);
+      return (extrinsics);
+    }
+  }
+  return (NULL);
+
+}
+P_BLOCK CeresBlocks::getMovingCameraParameterBlockExtrinsics(string camera_name, int scene_id)
+{
+  BOOST_FOREACH(shared_ptr<MovingCamera> camera, moving_cameras_)
+  {
+    if (camera_name == camera->cam->camera_name_ && scene_id == camera->scene_id)
+    {
+      P_BLOCK extrinsics = &(camera->cam->camera_parameters_.pb_extrinsics[0]);
+      return (extrinsics);
+    }
+  }
+  return (NULL);
+
+}
+P_BLOCK CeresBlocks::getStaticTargetPoseParameterBlock(string target_name)
+{
+  BOOST_FOREACH(shared_ptr<Target> target, static_targets_)
+  {
+    if (target_name == target->target_name)
+    {
+      P_BLOCK pose = &(target->pose.pb_pose[0]);
+      return (pose);
+    }
+  }
+  return (NULL);
+}
+P_BLOCK CeresBlocks::getStaticTargetPointParameterBlock(string target_name, int point_id)
+{
+  BOOST_FOREACH(shared_ptr<Target> target, static_targets_)
+  {
+    if (target_name == target->target_name)
+    {
+      P_BLOCK point_position = &(target->pts[point_id].pb[0]);
+      return (point_position);
+    }
+  }
+  return (NULL);
+}
+P_BLOCK CeresBlocks::getMovingTargetPoseParameterBlock(string target_name, int scene_id)
+{
+  BOOST_FOREACH(shared_ptr<MovingTarget> moving_target, moving_targets_)
+  {
+    if (target_name == moving_target->targ->target_name && scene_id == moving_target->scene_id)
+    {
+      P_BLOCK pose = &(moving_target->targ->pose.pb_pose[0]);
+      return (pose);
+    }
+  }
+  return (NULL);
+}
+P_BLOCK CeresBlocks::getMovingTargetPointParameterBlock(string target_name, int pnt_id)
+{
+  // note scene_id unnecessary here since regarless of scene th point's location relative to
+  // the target frame does not change
+  BOOST_FOREACH(shared_ptr<MovingTarget> moving_target, moving_targets_)
+  {
+    if (target_name == moving_target->targ->target_name)
+    {
+      P_BLOCK point_position = &(moving_target->targ->pts[pnt_id].pb[0]);
+      return (point_position);
+    }
+  }
+  return (NULL);
+}
+
+ObservationDataPointList::ObservationDataPointList()
+{
+}
+;
+
+ObservationDataPointList::~ObservationDataPointList()
+{
+}
+;
+
+void ObservationDataPointList::addObservationPoint(ObservationDataPoint new_data_point)
+{
+  items.push_back(new_data_point);
+}
 
 bool CalibrationJob::run()
 {
@@ -44,7 +225,93 @@ bool CalibrationJob::run()
 
 bool CalibrationJob::runObservations()
 {
-  //  BOOST_FOREACH(ObservationCommand);
+  this->ceres_blocks_.clearCamerasTargets();
+  // For each scene
+  BOOST_FOREACH(ObservationScene current_scene, scene_list_)
+  {
+    int scene_id = current_scene.get_id();
+
+    // clear all observations from every camera
+    ROS_INFO_STREAM("Processing Scene " << scene_id);
+
+    // add observations to every camera
+    BOOST_FOREACH(shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
+    {
+      current_camera->camera_observer_->clearObservations(); // clear any recorded data
+      current_camera->camera_observer_->clearTargets(); // clear all targets
+    }
+
+    // add each target to each cameras observations
+    BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
+    {
+      // configure to find target in roi
+      o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi);
+    }
+    // trigger the cameras
+    BOOST_FOREACH( shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
+    {
+      current_camera->camera_observer_->triggerCamera();
+    }
+    // collect results
+    P_BLOCK intrinsics;
+    P_BLOCK extrinsics;
+    P_BLOCK target_pose;
+    P_BLOCK pnt_pos;
+    std::string camera_name;
+    std::string target_name;
+
+    // for each camera in scene
+    BOOST_FOREACH( shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
+    {
+      // wait until observation is done
+      while (!camera->camera_observer_->observationsDone())
+        ;
+
+      camera_name = camera->camera_name_;
+      if (camera->isMoving())
+      {
+        // next line does nothing if camera already exist in blocks
+        ceres_blocks_.addMovingCamera(camera, scene_id);
+        intrinsics = ceres_blocks_.getMovingCameraParameterBlockIntrinsics(camera_name);
+        extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(camera_name, scene_id);
+      }
+      else
+      {
+        // next line does nothing if camera already exist in blocks
+        ceres_blocks_.addStaticCamera(camera);
+        intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(camera_name);
+        extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(camera_name);
+      }
+
+      // Get the observations
+      CameraObservations camera_observations;
+      int number_returned;
+      number_returned = camera->camera_observer_->getObservations(camera_observations);
+
+      BOOST_FOREACH(Observation observation, camera_observations.observations)
+      {
+        target_name = observation.target->target_name;
+        int pnt_id = observation.point_id;
+        double observation_x = observation.image_loc_x;
+        double observation_y = observation.image_loc_y;
+        if (observation.target->is_moving)
+        {
+          ceres_blocks_.addMovingTarget(observation.target, scene_id);
+          target_pose = ceres_blocks_.getMovingTargetPoseParameterBlock(target_name, scene_id);
+          pnt_pos = ceres_blocks_.getMovingTargetPointParameterBlock(target_name, pnt_id);
+        }
+        else
+        {
+          ceres_blocks_.addStaticTarget(observation.target); // if exist, does nothing
+          target_pose = ceres_blocks_.getStaticTargetPoseParameterBlock(target_name);
+          pnt_pos = ceres_blocks_.getStaticTargetPointParameterBlock(target_name, pnt_id);
+        }
+        ObservationDataPoint temp_ODP(camera_name, target_name, scene_id, intrinsics, extrinsics, pnt_id, target_pose,
+                                      pnt_pos, observation_x, observation_y);
+        observation_data_point_list.addObservationPoint(temp_ODP);
+      }
+    }
+  } // end for each scene
 }
 
 bool CalibrationJob::load()
@@ -54,7 +321,8 @@ bool CalibrationJob::load()
   std::ifstream caljob_input_file(caljob_def_file_name_.c_str());
   if (camera_input_file.fail())
   {
-    ROS_ERROR_STREAM("ERROR CalibrationJob::load(), couldn't open camera_input_file:    "<< camera_def_file_name_.c_str());
+    ROS_ERROR_STREAM(
+        "ERROR CalibrationJob::load(), couldn't open camera_input_file:    "<< camera_def_file_name_.c_str());
     return (false);
   }
   if (target_input_file.fail())
@@ -101,8 +369,10 @@ bool CalibrationJob::load()
         (*camera_parameters)[i]["distortion_k3"] >> temp_parameters.distortion_k3;
         (*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
         (*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
-        Camera temp_camera(temp_name, temp_parameters, false); // create a static camera
-        blocks_for_ceres_.addStaticCamera(temp_camera);
+        // create a static camera
+        shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
+
+        ceres_blocks_.addStaticCamera(temp_camera);
       }
     }
 
@@ -129,8 +399,8 @@ bool CalibrationJob::load()
         (*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
         (*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
         (*camera_parameters)[i]["scene_id"] >> scene_id;
-        Camera temp_camera(temp_name, temp_parameters, true);
-        blocks_for_ceres_.addMovingCamera(temp_camera, scene_id);
+        shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, true);
+        ceres_blocks_.addMovingCamera(temp_camera, scene_id);
       }
     }
   } // end try
@@ -171,17 +441,18 @@ bool CalibrationJob::load()
     if (const YAML::Node *target_parameters = target_doc.FindValue("static_targets"))
     {
       ROS_INFO_STREAM("Found "<<target_parameters->size() <<" targets ");
-      temp_target.is_moving = false;
+      shared_ptr<Target> temp_target = make_shared<Target>();
+      temp_target->is_moving = false;
       for (unsigned int i = 0; i < target_parameters->size(); i++)
       {
-        (*target_parameters)[i]["target_name"] >> temp_target.target_name;
-        (*target_parameters)[i]["angle_axis_ax"] >> temp_target.pose.ax;
-        (*target_parameters)[i]["angle_axis_ay"] >> temp_target.pose.ay;
-        (*target_parameters)[i]["angle_axis_az"] >> temp_target.pose.az;
-        (*target_parameters)[i]["position_x"] >> temp_target.pose.x;
-        (*target_parameters)[i]["position_y"] >> temp_target.pose.y;
-        (*target_parameters)[i]["position_z"] >> temp_target.pose.z;
-        (*target_parameters)[i]["num_points"] >> temp_target.num_points;
+        (*target_parameters)[i]["target_name"] >> temp_target->target_name;
+        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
+        (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.ay;
+        (*target_parameters)[i]["angle_axis_az"] >> temp_target->pose.az;
+        (*target_parameters)[i]["position_x"] >> temp_target->pose.x;
+        (*target_parameters)[i]["position_y"] >> temp_target->pose.y;
+        (*target_parameters)[i]["position_z"] >> temp_target->pose.z;
+        (*target_parameters)[i]["num_points"] >> temp_target->num_points;
         const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
         for (int j = 0; j < points_node->size(); j++)
         {
@@ -192,9 +463,9 @@ bool CalibrationJob::load()
           temp_pnt3d.x = temp_pnt[0];
           temp_pnt3d.y = temp_pnt[1];
           temp_pnt3d.z = temp_pnt[2];
-          temp_target.pts.push_back(temp_pnt3d);
+          temp_target->pts.push_back(temp_pnt3d);
         }
-        blocks_for_ceres_.addStaticTarget(temp_target);
+        ceres_blocks_.addStaticTarget(temp_target);
       }
     }
 
@@ -202,20 +473,20 @@ bool CalibrationJob::load()
     if (const YAML::Node *target_parameters = target_doc.FindValue("moving_targets"))
     {
       ROS_INFO_STREAM("Found "<<target_parameters->size() <<"  moving targets ");
-      Target temp_target;
+      shared_ptr<Target> temp_target = make_shared<Target>();
       unsigned int scene_id;
-      temp_target.is_moving = true;
+      temp_target->is_moving = true;
       for (unsigned int i = 0; i < target_parameters->size(); i++)
       {
-        (*target_parameters)[i]["target_name"] >> temp_target.target_name;
-        (*target_parameters)[i]["angle_axis_ax"] >> temp_target.pose.ax;
-        (*target_parameters)[i]["angle_axis_ax"] >> temp_target.pose.ay;
-        (*target_parameters)[i]["angle_axis_ay"] >> temp_target.pose.az;
-        (*target_parameters)[i]["position_x"] >> temp_target.pose.x;
-        (*target_parameters)[i]["position_y"] >> temp_target.pose.y;
-        (*target_parameters)[i]["position_z"] >> temp_target.pose.z;
+        (*target_parameters)[i]["target_name"] >> temp_target->target_name;
+        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
+        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ay;
+        (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.az;
+        (*target_parameters)[i]["position_x"] >> temp_target->pose.x;
+        (*target_parameters)[i]["position_y"] >> temp_target->pose.y;
+        (*target_parameters)[i]["position_z"] >> temp_target->pose.z;
         (*target_parameters)[i]["scene_id"] >> scene_id;
-        (*target_parameters)[i]["num_points"] >> temp_target.num_points;
+        (*target_parameters)[i]["num_points"] >> temp_target->num_points;
         const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
         for (int j = 0; j < points_node->size(); j++)
         {
@@ -226,9 +497,9 @@ bool CalibrationJob::load()
           temp_pnt3d.x = temp_pnt[0];
           temp_pnt3d.y = temp_pnt[1];
           temp_pnt3d.z = temp_pnt[2];
-          temp_target.pts.push_back(temp_pnt3d);
+          temp_target->pts.push_back(temp_pnt3d);
         }
-        blocks_for_ceres_.addMovingTarget(temp_target, scene_id);
+        ceres_blocks_.addMovingTarget(temp_target, scene_id);
       }
     }
     ROS_INFO_STREAM("Successfully read targets ");
@@ -248,30 +519,32 @@ bool CalibrationJob::load()
     YAML::Node caljob_doc;
     caljob_parser.GetNextDocument(caljob_doc);
 
-    caljob_doc["reference_frame"] >> temp_target.target_name;
-    caljob_doc["optimization_parameters"] >> temp_target.target_name;
+    shared_ptr<Target> temp_target = make_shared<Target>();
+
+    caljob_doc["reference_frame"] >> temp_target->target_name;
+    caljob_doc["optimization_parameters"] >> temp_target->target_name;
     // read in all scenes
     if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
     {
       ROS_INFO_STREAM("Found "<<caljob_scenes->size() <<" scenes");
       for (unsigned int i = 0; i < caljob_scenes->size(); i++)
       {
-        (*caljob_scenes)[i]["scene_id"] >> temp_target.target_name;
-        //ROS_INFO_STREAM("scene "<<temp_target.target_name);
-        (*caljob_scenes)[i]["trigger_type"] >> temp_target.target_name;
-        //ROS_INFO_STREAM("trig type "<<temp_target.target_name);
+        (*caljob_scenes)[i]["scene_id"] >> temp_target->target_name;
+        //ROS_INFO_STREAM("scene "<<temp_target->target_name);
+        (*caljob_scenes)[i]["trigger_type"] >> temp_target->target_name;
+        //ROS_INFO_STREAM("trig type "<<temp_target->target_name);
         const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
         ROS_INFO_STREAM("Found "<<obs_node->size() <<" observations within scene "<<i);
         for (unsigned int j = 0; j < obs_node->size(); j++)
         {
           ROS_INFO_STREAM("For obs "<<j);
-          (*obs_node)[j]["camera"] >> temp_target.target_name;
-          (*obs_node)[j]["target"] >> temp_target.target_name;
+          (*obs_node)[j]["camera"] >> temp_target->target_name;
+          (*obs_node)[j]["target"] >> temp_target->target_name;
         }
       }
     }
     ROS_INFO_STREAM("Successfully read caljob  ");
-  }	// end try
+  } // end try
   catch (YAML::ParserException& e)
   {
     ROS_ERROR("load() Failed to read in caljob yaml file");
@@ -282,103 +555,129 @@ bool CalibrationJob::load()
   return (true);
 } // end load()
 
-bool CeresBlocks::addStaticCamera(Camera camera_to_add)
+bool CeresBlocks::addStaticCamera(shared_ptr<Camera> camera_to_add)
 {
-  BOOST_FOREACH(Camera cam, static_cameras_){
-    if(cam.camera_name_ == camera_to_add.camera_name_) return(false); // camera already exists
+  BOOST_FOREACH(shared_ptr<Camera> cam, static_cameras_)
+  {
+    if (cam->camera_name_ == camera_to_add->camera_name_)
+      return (false); // camera already exists
   }
   static_cameras_.push_back(camera_to_add);
-  return(true);
+  return (true);
 }
-bool CeresBlocks::addStaticTarget(Target target_to_add)
+bool CeresBlocks::addStaticTarget(shared_ptr<Target> target_to_add)
 {
-  BOOST_FOREACH(Target targ, static_targets_){
-    if(targ.target_name == target_to_add.target_name) return(false); // target already exists
+  BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
+  {
+    if (targ->target_name == target_to_add->target_name)
+      return (false); // target already exists
   }
   static_targets_.push_back(target_to_add);
-  return(true);
+  return (true);
 }
-bool CeresBlocks::addMovingCamera(Camera camera_to_add, int scene_id)
+bool CeresBlocks::addMovingCamera(shared_ptr<Camera> camera_to_add, int scene_id)
 {
-  BOOST_FOREACH(MovingCamera cam, moving_cameras_){
-    if(cam.cam.camera_name_ == camera_to_add.camera_name_ &&
-        cam.scene_id == scene_id) return(false); // camera already exists
+  BOOST_FOREACH(shared_ptr<MovingCamera> cam, moving_cameras_)
+  {
+    if (cam->cam->camera_name_ == camera_to_add->camera_name_ && cam->scene_id == scene_id)
+      return (false); // camera already exists
   }
-  MovingCamera Temp;
-  Temp.cam = camera_to_add;
-  Temp.scene_id = scene_id;
-  moving_cameras_.push_back(Temp);
-  return(true);
+  // this next line allocates the memory for a moving camera
+  shared_ptr<MovingCamera> temp_moving_camera = make_shared<MovingCamera>();
+  // this next line allocates the memory for the actual camera
+  shared_ptr<Camera> temp_camera = make_shared<Camera>(camera_to_add->camera_name_, camera_to_add->camera_parameters_,
+                                                       true);
+  temp_moving_camera->cam = temp_camera;
+  temp_moving_camera->scene_id = scene_id;
+  moving_cameras_.push_back(temp_moving_camera);
+  return (true);
 }
-bool CeresBlocks::addMovingTarget(Target target_to_add, int scene_id)
+bool CeresBlocks::addMovingTarget(shared_ptr<Target> target_to_add, int scene_id)
 {
-  BOOST_FOREACH(MovingTarget targ, moving_targets_){
-    if(targ.targ.target_name == target_to_add.target_name &&
-        targ.scene_id == scene_id) return(false); // target already exists
+  BOOST_FOREACH(shared_ptr<MovingTarget> targ, moving_targets_)
+  {
+    if (targ->targ->target_name == target_to_add->target_name && targ->scene_id == scene_id)
+      return (false); // target already exists
   }
-  MovingTarget Temp;
-  Temp.targ = target_to_add;
-  Temp.scene_id = scene_id;
-  moving_targets_.push_back(Temp);
-  return(true);
+  shared_ptr<MovingTarget> temp_moving_target = make_shared<MovingTarget>();
+  shared_ptr<Target> temp_camera = make_shared<Target>();
+  temp_moving_target->targ = target_to_add;
+  temp_moving_target->scene_id = scene_id;
+  moving_targets_.push_back(temp_moving_target);
+  return (true);
 }
 
 bool CalibrationJob::runOptimization()
 {
   // take all the data collected and create a Ceres optimization problem and run it
 
-  // the following is an example taken from some working code. Clearly it won't work with
-  // our data structures, but I included it here as an example
+  BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list.items)
+  {
+    // the following is an example taken from some working code. Clearly it won't work with
+    // our data structures, but I included it here as an example
 
-  // Create residuals for each observation in the bundle adjustment problem. The
-  // parameters for cameras and points are added automatically.
-  ceres::Problem problem;
+    // Create residuals for each observation in the bundle adjustment problem. The
+    // parameters for cameras and points are added automatically.
+    ceres::Problem problem;
 
-  // need a block of cameras
-  // need a block of targets
-  // these two lists need to be able to search for an existing item by name
-  // and also an existing item by both name and scene id
+    // need a block of cameras 
+    // need a block of targets
+    // these two lists need to be able to search for an existing item by name
+    // and also an existing item by both name and scene id
 
-  //  BOOST_FOREACH(ObservationScene Scene, os_){
-  //    BOOST_FOREACH(CameraObservation CO, Scene.co){
-  // determine if this is a new camera
-  // Important Cases where we need to add a new camera:
-  // 1. first time a fixed camera is observed
-  // 2. First time in the scene a moving camera is observed
-  // ADD camera if necessary
-  //      BOOST_FOREACH(Observation O, CO.o)
-  // determine if this is a new target
-  // Important Cases where we need to add a new target:
-  // 1. first time a fixed target is observed
-  // 2. First time in the scene a moving target is observed
+    //  BOOST_FOREACH(ObservationScene Scene, os_){
+    //    BOOST_FOREACH(CameraObservation CO, Scene.co){
+    // determine if this is a new camera
+    // Important Cases where we need to add a new camera: 
+    // 1. first time a fixed camera is observed 
+    // 2. First time in the scene a moving camera is observed 
+    // ADD camera if necessary
+    //      BOOST_FOREACH(Observation O, CO.o)
+    // determine if this is a new target
+    // Important Cases where we need to add a new target: 
+    // 1. first time a fixed target is observed 
+    // 2. First time in the scene a moving target is observed 
 
-  // ADD all target points if necessary
+    // ADD all target points if necessary
 
-  /*
-   // Each Residual block takes a point and a camera as input and outputs a 2
-   // dimensional residual. Internally, the cost function stores the observed
-   // image location and compares the reprojection against the observation.
-   ceres::CostFunction* cost_function =  Camera_reprj_error::Create(Ob[i].x,Ob[i].y);
+    /*
+     // Each Residual block takes a point and a camera as input and outputs a 2
+     // dimensional residual. Internally, the cost function stores the observed
+     // image location and compares the reprojection against the observation.
+     ceres::CostFunction* cost_function =  Camera_reprj_error::Create(Ob[i].x,Ob[i].y);
 
-   problem.AddResidualBlock(cost_function, NULL ,
-   C.PB_extrinsics,
-   C.PB_intrinsics,
-   Pts[i].PB);
-   problem.SetParameterBlockConstant(C.PB_intrinsics);
-   problem.SetParameterBlockConstant(Pts[i].PB);
-   }
+     problem.AddResidualBlock(cost_function, NULL ,
+     C.PB_extrinsics,
+     C.PB_intrinsics,
+     Pts[i].PB);
+     problem.SetParameterBlockConstant(C.PB_intrinsics);
+     problem.SetParameterBlockConstant(Pts[i].PB);
+     }
 
-   // Make Ceres automatically detect the bundle structure. Note that the
-   // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
-   // for standard bundle adjustment problems.
-   ceres::Solver::Options options;
-   options.linear_solver_type = ceres::DENSE_SCHUR;
-   options.minimizer_progress_to_stdout = true;
-   options.max_num_iterations = 1000;
+     // Make Ceres automatically detect the bundle structure. Note that the
+     // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
+     // for standard bundle adjustment problems.
+     ceres::Solver::Options options;
+     options.linear_solver_type = ceres::DENSE_SCHUR;
+     options.minimizer_progress_to_stdout = true;
+     options.max_num_iterations = 1000;
 
-   ceres::Solver::Summary summary;
-   ceres::Solve(options, &problem, &summary);
-   */
+     ceres::Solver::Summary summary;
+     ceres::Solve(options, &problem, &summary);
+     */
+  }
   return true;
 }
 } // end of namespace
+
+using industrial_extrinsic_cal::CalibrationJob;
+using std::string;
+int main()
+{
+  string camera_file_name("camera_def.yaml");
+  string target_file_name("target_def.yaml");
+  string caljob_file_name("caljob_def.yaml");
+  CalibrationJob Cal_job(camera_file_name, target_file_name, caljob_file_name);
+  printf("hello world\n");
+  Cal_job.load();
+}

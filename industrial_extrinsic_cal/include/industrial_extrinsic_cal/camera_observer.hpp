@@ -48,6 +48,14 @@ public:
   /** @param output all observations of targets defined */
   virtual int getObservations(CameraObservations &camera_observations)=0;
 
+  /** @brief tells observer to process next incomming image to find the targets in list */
+  virtual void triggerCamera()=0;
+
+  /** @brief tells when camera has completed its observations */
+  virtual bool observationsDone()=0;
+
+  std::string camera_name_; /*!< string camera_name_ unique name of a camera */
+
   /** @brief print this object TODO */
   //    virtual ::std::ostream& operator<<(::std::ostream& os, const CameraObserver& camera);
 };
@@ -95,6 +103,10 @@ public:
   int getObservations(CameraObservations &camera_observations)
   {
     return (1);
+  }
+  /** @brief tells observer to process next incomming image to find the targets in list */
+  void triggerCamera()
+  {
   }
   ;
 };
