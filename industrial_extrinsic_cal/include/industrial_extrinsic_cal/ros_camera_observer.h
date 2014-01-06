@@ -98,6 +98,12 @@ public:
    */
   int getObservations(CameraObservations &camera_observations);
 
+  /** @brief tells observer to process next incomming image to find the targets in list */
+  void triggerCamera(){};
+
+  /** @brief tells when camera has completed its observations */
+  bool observationsDone(){};
+
 private:
 
   PatternOption pattern_;

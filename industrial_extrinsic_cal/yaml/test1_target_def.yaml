@@ -1,0 +1,18 @@
+---
+
+static_targets:
+-
+    target_name: Checkerboard11
+    angle_axis_ax: 1.1
+    angle_axis_ay: 2.2
+    angle_axis_az: 2.2
+    position_x: 2.2
+    position_y: 2.2
+    position_z: 2.2
+    num_points: 121
+    points: 	
+    - pnt: [1.0, 2.0, 3.0]
+    - pnt: [1.4, 2.0, 3.0]
+    - pnt: [1.5, 2.0, 3.0]
+    - pnt: [1.6, 2.0, 3.0]
+
