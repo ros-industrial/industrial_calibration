@@ -140,6 +140,5 @@ typedef struct{
   };
 }CameraParameters;
 
-
 }
 #endif

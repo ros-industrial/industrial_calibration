@@ -595,21 +595,36 @@ namespace industrial_extrinsic_cal
       // 4. the same as 3, point location fixed too "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z)"
       // 5. the same as 4, but with target in known location
       //    "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z,p_tx,p_ty,p_tz,p_ax,p_ay,p_az)"
-      // 
-      /*      
-      if(ODP.
-      P_BLOCK extrinsics = ;
-      P_BLOCK intrinsics;
-      P_BLOCK pnt_location;
-      P_BLOCK target_pose;
+
+
+      // pull out the constants from the observation point data
+      double focal_length_x = ODP.camera_intrinsics_[0]; // TODO, make this not so ugly
+      double focal_length_y = ODP.camera_intrinsics_[1];
+      double center_pnt_x   = ODP.camera_intrinsics_[2];
+      double center_pnt_y   = ODP.camera_intrinsics_[3];
+      double image_x        = ODP.image_x_;
+      double image_y        = ODP.image_y_;
+      double point_x        = ODP.point_position_[0];// location of point within target frame
+      double point_y        = ODP.point_position_[1];
+      double point_z        = ODP.point_position_[2];
       
-      CostFunction* cost_function = TargetCameraReprjErrorNoDistortion::Create(Ob[i].x,Ob[i].y,
-									       fx, fy, cx, cy,
-									       pnt_x,pnt_y,pnt_z);
-      // add it as a residual
-      problem_.AddResidualBlock();
-      //
-      */
+      // create the cost function
+      CostFunction* cost_function = TargetCameraReprjErrorNoDistortion::Create(image_x, image_y,
+									       focal_length_x, 
+									       focal_length_y,
+									       center_pnt_x,
+									       center_pnt_y,
+									       point_x,
+									       point_y,
+									       point_z);
+
+      // pull out pointers to the parameter blocks in the observation point data
+      P_BLOCK extrinsics    = ODP.camera_extrinsics_;
+      P_BLOCK target_pose   = ODP.target_pose_;
+
+      // add it as a residual using parameter blocks
+      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+
     }
 
     //    ceres::CostFunction* cost_function =  Camera_reprj_error::Create(Ob[i].x,Ob[i].y);

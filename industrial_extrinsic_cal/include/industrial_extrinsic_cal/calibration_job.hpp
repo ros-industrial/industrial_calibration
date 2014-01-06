@@ -190,7 +190,6 @@ public:
   {
   };
 
-private:
   std::string camera_name_;
   std::string target_name_;
   int scene_id_;
