@@ -167,5 +167,19 @@ typedef struct
   };
 } CameraParameters;
 
-}
+/*! @brief what kind of trigger initiates the collection of data for this scene */
+typedef struct
+{ /** Trigger */
+  int trigger_type;
+  std::string trigger_popup_msg;
+} Trigger;
+
+/*! \brief moving  need a new pose with each scene in which they are used */
+typedef struct MovingTarget
+{
+  boost::shared_ptr<Target> targ; // must hold a copy of the target pose parameters,
+  int scene_id; // but point parameters may be unused duplicates
+} MovingTarget;
+
+}//end namespace industrial_extrinsiac_cal
 #endif
