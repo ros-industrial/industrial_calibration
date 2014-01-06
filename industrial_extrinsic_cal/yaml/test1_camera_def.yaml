@@ -2,14 +2,14 @@
 
 static_cameras:
  -
-    camera_name: Basler-21135423
+    camera_name: Asus1
     angle_axis_ax: 1.0
     angle_axis_ay: 1.1
     angle_axis_az: 1.2
     position_x: 1.3
     position_y: 1.4
     position_z: 1.5
-    focal_length_x: 529.4
+    focal_length_x: 525
     focal_length_y: 525
     center_x: 563
     center_y: 463
@@ -19,15 +19,15 @@ static_cameras:
     distortion_p1: 0.01
     distortion_p2: 0.01
  -
-    camera_name: Basler-21135424
+    camera_name: Asus2
     angle_axis_ax: 1.990
     angle_axis_ay: 1.001
     angle_axis_az: 1.992
     position_x: 1.399
     position_y: 1.994
     position_z: 1.599
-    focal_length_x: 529.49
-    focal_length_y: 529.29
+    focal_length_x: 525
+    focal_length_y: 525
     center_x: 563
     center_y: 463
     distortion_k1: 0.001
