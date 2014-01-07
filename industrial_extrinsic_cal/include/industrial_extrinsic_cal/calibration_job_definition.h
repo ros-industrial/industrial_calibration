@@ -16,16 +16,17 @@
  * limitations under the License.
  */
 
-#ifndef CALIBRATION_JOB_CLASS_H_
-#define CALIBRATION_JOB_CLASS_H_
+#ifndef CALIBRATION_JOB_DEFINITION_H_
+#define CALIBRATION_JOB_DEFINITION_H_
 
 
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/camera_observer.hpp>
-#include <industrial_extrinsic_cal/camera_class.h>
+#include <industrial_extrinsic_cal/camera_definition.h>
 #include <industrial_extrinsic_cal/observation_scene.h>
 #include <industrial_extrinsic_cal/observation_data_point.h>
 #include <industrial_extrinsic_cal/ceres_blocks.h>
+#include <industrial_extrinsic_cal/ros_camera_observer.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
@@ -117,7 +118,7 @@ public:
    *  @param target a pointer to the target
    *  @return true if sucessful
    */
-  bool addObservationToCurrentScene(boost::shared_ptr<DummyCameraObserver> camera_observer,
+  bool addObservationToCurrentScene(boost::shared_ptr<ROSCameraObserver> camera_observer,
                                     boost::shared_ptr<Target> target);
 
   /** @brief removes all cameras and targets from current scene
@@ -140,7 +141,7 @@ private:
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
   std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
   int current_scene_; /*!< id of current scene under review or construction */
-  std::vector<DummyCameraObserver> camera_observers_; /*!< interface to images from cameras */
+  std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
   CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
   ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
@@ -149,4 +150,4 @@ private:
 
 }//end namespace industrial_extrinsic_cal
 
-#endif /* CALIBRATION_JOB_CLASS_H_ */
+#endif /* CALIBRATION_JOB_DEFINITION_H_ */

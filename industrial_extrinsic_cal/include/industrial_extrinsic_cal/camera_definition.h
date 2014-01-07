@@ -22,6 +22,7 @@
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <ros/console.h>
 #include <industrial_extrinsic_cal/camera_observer.hpp>
+#include <industrial_extrinsic_cal/ros_camera_observer.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
@@ -52,7 +53,7 @@ public:
    static cameras get but one set of pose parameters
    */
   bool isMoving();
-  boost::shared_ptr<DummyCameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
+  boost::shared_ptr<ROSCameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
   CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
   //    ::std::ostream& operator<<(::std::ostream& os, const Camera& C){ return os<< "TODO";};
 

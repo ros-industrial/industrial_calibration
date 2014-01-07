@@ -21,7 +21,7 @@
 
 #include <ros/console.h>
 #include <industrial_extrinsic_cal/basic_types.h>
-#include <industrial_extrinsic_cal/camera_class.h>
+#include <industrial_extrinsic_cal/camera_definition.h>
 #include "boost/make_shared.hpp"
 
 namespace industrial_extrinsic_cal

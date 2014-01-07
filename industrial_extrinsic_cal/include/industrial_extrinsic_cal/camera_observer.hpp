@@ -60,55 +60,5 @@ public:
   //    virtual ::std::ostream& operator<<(::std::ostream& os, const CameraObserver& camera);
 };
 
-class DummyCameraObserver : public CameraObserver
-{
-public:
-
-  /** @brief constructor */
-  /** @param source_name name of image topic */
-  DummyCameraObserver(std::string camera_topic = "NONE")
-  {
-  }
-  ;
-
-  /** @brief Default destructor */
-  ~DummyCameraObserver()
-  {
-  }
-  ;
-
-  /** @brief add a target to look for */
-  /** @param targ a target to look for */
-  /** @param roi Region of interest for target */
-  bool addTarget(boost::shared_ptr<Target> targ, Roi &roi)
-  {
-    return true;
-  }
-  ;
-
-  /** @brief remove all targets */
-  void clearTargets()
-  {
-  }
-  ;
-
-  /** @brief clear all previous observations */
-  void clearObservations()
-  {
-  }
-  ;
-
-  /** @brief return observations */
-  /** @param output all observations of targets defined */
-  int getObservations(CameraObservations &camera_observations)
-  {
-    return (1);
-  }
-  /** @brief tells observer to process next incomming image to find the targets in list */
-  void triggerCamera()
-  {
-  }
-  ;
-};
 } // end of namespace
 #endif
