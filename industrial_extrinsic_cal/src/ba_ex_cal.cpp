@@ -80,7 +80,7 @@ void print_AATasH(double x, double y, double z, double tx, double ty, double tz)
 void print_AATasHI(double x, double y, double z, double tx, double ty, double tz);
 void print_AAasEuler(double x, double y, double z);
 void print_camera(Camera C, string words);
-void AAT2HI(double ax, double ay, double ay, double tx, double ty, double tz, HI[3][3])
+void AAT2HI(double ax, double ay, double ay, double tx, double ty, double tz, HI[4][4])
 {
   double R[9];
   double aa[3];
@@ -269,25 +269,24 @@ int main(int argc, char** argv)
 	  if(rotation_node->size() != 9){
 	    ROS_ERROR_STREAM("Rotation " << i << " should have 9 pts, has " << (int)rotation_node->size());
 	  }
-	  // read in the transform, transposed since camera parameters
-          // project world points into camera frame, not camera to world
-	  double R[9],tx,ty,tz;
-	  (*rotation_node)[0]  >> R[0];
-	  (*rotation_node)[1]  >> R[3];
-	  (*rotation_node)[2]  >> R[6];
-	  (*rotation_node)[3]  >> R[1];
-	  (*rotation_node)[4]  >> R[4];
-	  (*rotation_node)[5]  >> R[7];
-	  (*rotation_node)[6]  >> R[2];
-	  (*rotation_node)[7]  >> R[5];
-	  (*rotation_node)[8]  >> R[8];
+	  // read in the transform, and invert, camera objects keeps world to camera data
+	  double R[9],tx,ty,tz,angle_axis[3];
+	  for(i=0;i<9;i++){
+	  (*rotation_node)[i]  >> R[i];
+	  }
 	  (*camera_parameters)[i]["position_x"]     >> tx;
 	  (*camera_parameters)[i]["position_y"]     >> ty;
 	  (*camera_parameters)[i]["position_z"]     >> tz;
-	  temp_camera.position[0] = -(tx * R[0] + ty * R[3] + tz * R[6]);
-	  temp_camera.position[1] = -(tx * R[1] + ty * R[4] + tz * R[7]);
-	  temp_camera.position[2] = -(tx * R[2] + ty * R[5] + tz * R[8]);
-	  ceres::RotationMatrixToAngleAxis(R,temp_camera.angle_axis);
+	  ceres::RotationMatrixToAngleAxis(R,angle_axis);
+	  double HI[4][4];
+	  AAT2HI(angle_axis[0],angle_axis[1],angle_axis[2],tx,ty,tz,HI);
+	  temp_camera.position[0] = HI[0][3];
+	  temp_camera.position[1] = HI[1][3];
+	  temp_camera.position[2] = HI[2][3];
+	  R[0] = HI[0][0]; R[1] = HI[1][0]; R[2] = HI[2][0];
+	  R[3] = HI[0][1]; R[4] = HI[1][1]; R[5] = HI[2][0];
+	  R[6] = HI[0][2]; R[7] = HI[1][2]; R[8] = HI[2][0];
+	  ceres::RotationMatrixToAngleAxis(R,angle_axis);
 	  (*camera_parameters)[i]["focal_length_x"] >> temp_camera.focal_length_x;
 	  (*camera_parameters)[i]["focal_length_y"] >> temp_camera.focal_length_y;
 	  (*camera_parameters)[i]["center_x"]       >> temp_camera.center_x;

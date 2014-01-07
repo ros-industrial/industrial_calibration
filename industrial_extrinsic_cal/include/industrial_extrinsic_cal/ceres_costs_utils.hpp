@@ -19,6 +19,9 @@
 #ifndef CERES_COSTS_UTILS_HPP_
 #define CERES_COSTS_UTILS_HPP_
 
+#include "ceres/ceres.h"
+#include "ceres/rotation.h"
+
 namespace industrial_extrinsic_cal
 {
 

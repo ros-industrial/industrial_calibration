@@ -51,7 +51,7 @@ public:
    static cameras get but one set of pose parameters
    */
   bool isMoving();
-  boost::shared_ptr<CameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
+  boost::shared_ptr<DummyCameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
   CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
   //    ::std::ostream& operator<<(::std::ostream& os, const Camera& C){ return os<< "TODO";};
 
