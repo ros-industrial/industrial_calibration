@@ -83,11 +83,11 @@ include_directories(include
 #   src/${PROJECT_NAME}/industrial_extrinsic_cal.cpp
 # )
 add_library(industrial_extrinsic_cal_ceres
-   src/calibration_job_class.cpp
+   src/calibration_job_definition.cpp
 )
 add_library(industrial_extrinsic_cal
    src/ros_camera_observer.cpp
-   src/camera_class.cpp
+   src/camera_definition.cpp
    src/observation_scene.cpp
    src/observation_data_point.cpp
    src/ceres_blocks.cpp

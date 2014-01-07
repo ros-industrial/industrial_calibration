@@ -20,7 +20,7 @@
 #define OBSERVATION_SCENE_H_
 
 #include <industrial_extrinsic_cal/basic_types.h>
-#include <industrial_extrinsic_cal/camera_class.h>
+#include <industrial_extrinsic_cal/camera_definition.h>
 #include <ros/console.h>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
