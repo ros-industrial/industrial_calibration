@@ -324,7 +324,7 @@ bool CalibrationJob::load()
   }
 
   //Read in cal job parameters
-  std::string trigger_message;//TODO what's in the message?
+  std::string trigger_message="triggered";//TODO what's in the message?
   int scene_id_num;
   int trig_type;
   Trigger cal_trig;
@@ -344,12 +344,13 @@ bool CalibrationJob::load()
     if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
     {
       ROS_INFO_STREAM("Found "<<caljob_scenes->size() <<" scenes");
+      this->scene_list_.resize(caljob_scenes->size() );
       for (unsigned int i = 0; i < caljob_scenes->size(); i++)
       {
         (*caljob_scenes)[i]["scene_id"] >> scene_id_num;
-        //ROS_INFO_STREAM("scene "<<temp_target->target_name);
+        ROS_INFO_STREAM("scene "<<scene_id_num);
         (*caljob_scenes)[i]["trigger_type"] >> trig_type;
-        //ROS_INFO_STREAM("trig type "<<temp_target->target_name);
+        ROS_INFO_STREAM("trig type "<<trig_type);
         cal_trig.trigger_type=trig_type;
         this->scene_list_.at(i).setTrig(cal_trig);
         this->scene_list_.at(i).setSceneId(scene_id_num);

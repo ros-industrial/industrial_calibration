@@ -8,6 +8,10 @@ scenes:
      -
           camera: Asus1
           target: Checkerboard
+-
+     scene_id: 1
+     trigger_type: 1
+     observations: 
      -
           camera: Asus2
           target: Checkerboard
