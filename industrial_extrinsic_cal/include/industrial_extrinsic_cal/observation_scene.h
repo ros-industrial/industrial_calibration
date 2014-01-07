@@ -71,6 +71,22 @@ public:
     return (trig_);
   }
   ;
+  /*!
+   * \brief set scene_id for this scene
+   * @param sceneId
+   */
+  void setSceneId(int sceneId)
+  {
+    scene_id_ = sceneId;
+  };
+  /*!
+   * \brief set the trigger for this scene
+   * @param trig
+   */
+  void setTrig(const Trigger& trig)
+  {
+    trig_ = trig;
+  };
 
   std::vector<ObservationCmd> observation_command_list_; /*!< list of observations for a scene */
   std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scened */

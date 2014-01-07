@@ -323,8 +323,13 @@ bool CalibrationJob::load()
     return (false);
   }
 
-  //Target temp_target;
   //Read in cal job parameters
+  std::string trigger_message;//TODO what's in the message?
+  int scene_id_num;
+  int trig_type;
+  Trigger cal_trig;
+  cal_trig.trigger_popup_msg=trigger_message;
+
   try
   {
     YAML::Parser caljob_parser(caljob_input_file);
@@ -341,10 +346,13 @@ bool CalibrationJob::load()
       ROS_INFO_STREAM("Found "<<caljob_scenes->size() <<" scenes");
       for (unsigned int i = 0; i < caljob_scenes->size(); i++)
       {
-        (*caljob_scenes)[i]["scene_id"] >> temp_target->target_name;
+        (*caljob_scenes)[i]["scene_id"] >> scene_id_num;
         //ROS_INFO_STREAM("scene "<<temp_target->target_name);
-        (*caljob_scenes)[i]["trigger_type"] >> temp_target->target_name;
+        (*caljob_scenes)[i]["trigger_type"] >> trig_type;
         //ROS_INFO_STREAM("trig type "<<temp_target->target_name);
+        cal_trig.trigger_type=trig_type;
+        this->scene_list_.at(i).setTrig(cal_trig);
+        this->scene_list_.at(i).setSceneId(scene_id_num);
         const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
         ROS_INFO_STREAM("Found "<<obs_node->size() <<" observations within scene "<<i);
         for (unsigned int j = 0; j < obs_node->size(); j++)
