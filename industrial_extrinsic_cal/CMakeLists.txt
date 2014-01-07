@@ -83,10 +83,15 @@ include_directories(include
 #   src/${PROJECT_NAME}/industrial_extrinsic_cal.cpp
 # )
 add_library(industrial_extrinsic_cal_ceres
-   src/calibration_job.cpp
+   src/calibration_job_definition.cpp
 )
 add_library(industrial_extrinsic_cal
    src/ros_camera_observer.cpp
+   src/camera_definition.cpp
+   src/observation_scene.cpp
+   src/observation_data_point.cpp
+   src/ceres_blocks.cpp
+#   src/calibration_job_class.cpp
 )
 
 ## Declare a cpp executable
@@ -103,7 +108,7 @@ add_executable(test_obs src/test_ros_cam_obs.cpp)
 target_link_libraries(industrial_extrinsic_cal_ceres yaml-cpp ${catkin_LIBRARIES})
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
 target_link_libraries(test_obs industrial_extrinsic_cal ${catkin_LIBRARIES})
-target_link_libraries(cal_job industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
+target_link_libraries(cal_job industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
 
 #############
 ## Install ##

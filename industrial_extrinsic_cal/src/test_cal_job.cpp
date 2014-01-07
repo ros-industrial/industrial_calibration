@@ -5,7 +5,7 @@
  *      Author: cgomez
  */
 
-#include <industrial_extrinsic_cal/calibration_job.hpp>
+#include <industrial_extrinsic_cal/calibration_job_definition.h>
 
 using industrial_extrinsic_cal::CalibrationJob;
 using std::string;
