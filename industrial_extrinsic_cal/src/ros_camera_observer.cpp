@@ -77,37 +77,7 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
       return false;
       break;
   }
-/*
-  sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
-  try
-  {
-    input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
-    output_bridge_ = cv_bridge::toCvCopy(recent_image, "bgr8");
-    out_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
-    ROS_INFO_STREAM("cv image created based on ros image");
-  }
-  catch (cv_bridge::Exception& ex)
-  {
-    ROS_ERROR("Failed to convert image");
-    ROS_WARN_STREAM("cv_bridge exception: "<<ex.what());
-    return false;
-  }
 
-
-  cv::Rect input_ROI(roi.x_min, roi.y_min, roi.x_max - roi.x_min, roi.y_max - roi.y_min); //Rect takes in x,y,width,height
-  //ROS_INFO_STREAM("image ROI region created");
-  if (input_bridge_->image.cols < input_ROI.width || input_bridge_->image.rows < input_ROI.height)
-  {
-    ROS_ERROR_STREAM("ROI too big for image size");
-    return false;
-  }
-
-  image_roi_ = input_bridge_->image(input_ROI);
-
-  output_bridge_->image = output_bridge_->image(input_ROI);
-  out_bridge_->image = image_roi_;
-  ROS_INFO_STREAM("output image size: " <<output_bridge_->image.rows<<" x "<<output_bridge_->image.cols);
-  results_pub_.publish(out_bridge_->toImageMsg());*/
   input_roi_.x=roi.x_min;
   input_roi_.y= roi.y_min;
   input_roi_.width= roi.x_max - roi.x_min;
@@ -119,41 +89,20 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
 
 void ROSCameraObserver::clearTargets()
 {
-  //ROS_INFO_STREAM("Attempting to clear targets from observer");
-  if (!instance_target_)
-    {
-      ROS_WARN_STREAM("No observer targets to clear");
-    }
-    else
-    {
-      instance_target_.reset();
-      ROS_INFO_STREAM("Targets cleared from observer");
-    }
-
-  //ROS_INFO_STREAM("Targets cleared from observer");
+  instance_target_.reset();
+  ROS_INFO_STREAM("Targets cleared from observer");
 }
 
 void ROSCameraObserver::clearObservations()
 {
-  //ROS_INFO_STREAM("Attempting to clear obs from observer");
-  //camera_obs_.observations.clear();
-  if (camera_obs_.observations.size()==0)
-    {
-      ROS_WARN_STREAM("No observer observations to clear");
-    }
-    else
-    {
-      camera_obs_.observations.clear();
-      ROS_INFO_STREAM("Observations cleared from observer");
-    }
-  //ROS_INFO_STREAM("Observations cleared from observer");
+  camera_obs_.observations.clear();
+  ROS_INFO_STREAM("Observations cleared from observer");
 }
 
 int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 {
   bool successful_find = false;
 
-  //cv::Rect input_ROI(roi.x_min, roi.y_min, roi.x_max - roi.x_min, roi.y_max - roi.y_min); //Rect takes in x,y,width,height
   ROS_INFO_STREAM("image ROI region created: "<<input_roi_.x<<" "<<input_roi_.y<<" "<<input_roi_.width<<" "<<input_roi_.height);
   if (input_bridge_->image.cols < input_roi_.width || input_bridge_->image.rows < input_roi_.height)
   {
@@ -232,22 +181,7 @@ void ROSCameraObserver::triggerCamera()
     //return false;
     return;
   }
-/*
-  cv::Rect input_ROI(roi.x_min, roi.y_min, roi.x_max - roi.x_min, roi.y_max - roi.y_min); //Rect takes in x,y,width,height
-  //ROS_INFO_STREAM("image ROI region created");
-  if (input_bridge_->image.cols < input_ROI.width || input_bridge_->image.rows < input_ROI.height)
-  {
-    ROS_ERROR_STREAM("ROI too big for image size");
-    //return false;
-    return;
-  }
 
-  image_roi_ = input_bridge_->image(input_ROI);
-
-  output_bridge_->image = output_bridge_->image(input_ROI);
-  out_bridge_->image = image_roi_;
-  ROS_INFO_STREAM("output image size: " <<output_bridge_->image.rows<<" x "<<output_bridge_->image.cols);
-  results_pub_.publish(out_bridge_->toImageMsg());*/
 }
 
 bool ROSCameraObserver::observationsDone()
