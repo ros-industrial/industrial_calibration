@@ -8,6 +8,10 @@ scenes:
      -
           camera: Asus1
           target: Checkerboard
+          roi_x_min: 0
+          roi_x_max: 460
+          roi_y_min: 0
+          roi_y_max: 430
 -
      scene_id: 1
      trigger_type: 1
@@ -15,5 +19,9 @@ scenes:
      -
           camera: Asus2
           target: Checkerboard
+          roi_x_min: 0
+          roi_x_max: 460
+          roi_y_min: 0
+          roi_y_max: 430
 
 optimization_parameters: xx
