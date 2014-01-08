@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (Apache License)
  *
- * Copyright (c) 2013, Southwest Research Institute
+ * Copyright (c) 2014, Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,19 @@ public:
    *  \param roi:    the region of interest in the camera's field of view to look for target
    */
   void addObservationToScene(ObservationCmd observation_command);
+  /*!
+   * \brief Adds a camera to the scene
+   * @param cameras_in_scene
+   */
+  void addCameraToScene(boost::shared_ptr<Camera> cameras_in_scene);
+
+  /*!
+   * \brief will populate the observation_command_list_
+   * @param camera the camera for this observation command
+   * @param target the target for this observation command
+   * @param roi the region of interest for this observation command
+   */
+  void populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi);
   /*! \brief gets the id of this scene */
   int get_id()
   {
@@ -89,7 +102,7 @@ public:
   };
 
   std::vector<ObservationCmd> observation_command_list_; /*!< list of observations for a scene */
-  std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scened */
+  std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scene */
 
 private:
   Trigger trig_; /*!< event to trigger the observations in this command */
