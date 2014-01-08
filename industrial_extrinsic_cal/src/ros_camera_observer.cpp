@@ -92,7 +92,7 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
     ROS_WARN_STREAM("cv_bridge exception: "<<ex.what());
     return false;
   }
-*/
+
 
   cv::Rect input_ROI(roi.x_min, roi.y_min, roi.x_max - roi.x_min, roi.y_max - roi.y_min); //Rect takes in x,y,width,height
   //ROS_INFO_STREAM("image ROI region created");
@@ -107,27 +107,66 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
   output_bridge_->image = output_bridge_->image(input_ROI);
   out_bridge_->image = image_roi_;
   ROS_INFO_STREAM("output image size: " <<output_bridge_->image.rows<<" x "<<output_bridge_->image.cols);
-  results_pub_.publish(out_bridge_->toImageMsg());
+  results_pub_.publish(out_bridge_->toImageMsg());*/
+  input_roi_.x=roi.x_min;
+  input_roi_.y= roi.y_min;
+  input_roi_.width= roi.x_max - roi.x_min;
+  input_roi_.height= roi.y_max - roi.y_min;
+  ROS_INFO_STREAM("ROSCameraObserver added target and roi");
+
   return true;
 }
 
 void ROSCameraObserver::clearTargets()
 {
-  ROS_INFO_STREAM("Attempting to clear targets from observer");
-  instance_target_.reset();
-  ROS_INFO_STREAM("Targets cleared from observer");
+  //ROS_INFO_STREAM("Attempting to clear targets from observer");
+  if (!instance_target_)
+    {
+      ROS_WARN_STREAM("No observer targets to clear");
+    }
+    else
+    {
+      instance_target_.reset();
+      ROS_INFO_STREAM("Targets cleared from observer");
+    }
+
+  //ROS_INFO_STREAM("Targets cleared from observer");
 }
 
 void ROSCameraObserver::clearObservations()
 {
-  ROS_INFO_STREAM("Attempting to clear obs from observer");
-  camera_obs_.observations.clear();
-  ROS_INFO_STREAM("Observations cleared from observer");
+  //ROS_INFO_STREAM("Attempting to clear obs from observer");
+  //camera_obs_.observations.clear();
+  if (camera_obs_.observations.size()==0)
+    {
+      ROS_WARN_STREAM("No observer observations to clear");
+    }
+    else
+    {
+      camera_obs_.observations.clear();
+      ROS_INFO_STREAM("Observations cleared from observer");
+    }
+  //ROS_INFO_STREAM("Observations cleared from observer");
 }
 
 int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 {
   bool successful_find = false;
+
+  //cv::Rect input_ROI(roi.x_min, roi.y_min, roi.x_max - roi.x_min, roi.y_max - roi.y_min); //Rect takes in x,y,width,height
+  ROS_INFO_STREAM("image ROI region created: "<<input_roi_.x<<" "<<input_roi_.y<<" "<<input_roi_.width<<" "<<input_roi_.height);
+  if (input_bridge_->image.cols < input_roi_.width || input_bridge_->image.rows < input_roi_.height)
+  {
+    ROS_ERROR_STREAM("ROI too big for image size");
+    return false;
+  }
+
+  image_roi_ = input_bridge_->image(input_roi_);
+
+  output_bridge_->image = output_bridge_->image(input_roi_);
+  out_bridge_->image = image_roi_;
+  ROS_INFO_STREAM("output image size: " <<output_bridge_->image.rows<<" x "<<output_bridge_->image.cols);
+  results_pub_.publish(out_bridge_->toImageMsg());
 
   switch (pattern_)
   {
@@ -213,9 +252,10 @@ void ROSCameraObserver::triggerCamera()
 
 bool ROSCameraObserver::observationsDone()
 {
-  if (camera_obs_.observations.size() != 0)
+  //if (camera_obs_.observations.size() != 0)
+  if(!input_bridge_)
   {
-    return true;
+    return false;
   }
   return true;
 }

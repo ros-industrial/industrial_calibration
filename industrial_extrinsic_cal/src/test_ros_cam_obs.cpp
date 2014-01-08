@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	 {
 		 ROS_INFO_STREAM("Added target successfully");
 	 }
-
+	 cam_observer.triggerCamera();
 	 industrial_extrinsic_cal::CameraObservations camera_obs;
 	 //cam_observer.getObservations(camera_obs);
 	 if (cam_observer.getObservations(camera_obs))
