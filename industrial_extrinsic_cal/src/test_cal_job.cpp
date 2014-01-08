@@ -9,8 +9,9 @@
 
 using industrial_extrinsic_cal::CalibrationJob;
 using std::string;
-int main()
+int main(int argc, char **argv)
 {
+  ros::init(argc, argv, "my_node_name");
   string camera_file_name(
       "/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/test1_camera_def.yaml");
   string target_file_name(
