@@ -71,6 +71,43 @@ public:
    */
   bool run();
 
+  /** @brief removes all camera observers from job
+   *  @return true if successful
+   */
+  bool clearJobCameraObservers();
+
+  /** @brief removes all targets from job
+   *  @return true if successful
+   */
+  bool clearJobTargets();
+
+  /** @brief clears all previously collected data
+   *  @return true if successful
+   */
+  bool clearObservationData();
+
+  ObservationDataPointList observation_data_point_list;
+
+  //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
+private:
+  /*!
+   * \brief reads target input files to create static and moving targets
+   * @return true if successfully loaded target file
+   */
+  bool loadTarget();
+
+  /*!
+   * \brief reads camera input files to create static and moving cameras
+   * @return true if successfully loaded camera file
+   */
+  bool loadCamera();
+
+  /*!
+   * \brief reads target input files to create a calibration job
+   * @return true if successfully loaded caljob file
+   */
+  bool loadCalJob();
+
   /** @brief runs the data collection portion of the job
    * @return true if successful
    */
@@ -93,36 +130,21 @@ public:
    */
   bool addTarget(Target target_to_add);
 
-  /** @brief removes all camera observers from job
-   *  @return true if successful
-   */
-  bool clearJobCameraObservers();
-
-  /** @brief removes all targets from job
-   *  @return true if successful
-   */
-  bool clearJobTargets();
-
-  /** @brief clears all previously collected data
-   *  @return true if successful
-   */
-  bool clearObservationData();
-
   /** @brief select active scene for modification
-   *  @return true if sucessful
+   *  @return true if successful
    */
   bool selectScene(int scene_id);
 
   /** @brief adds an observation from a particular camera to current scene
    *  @param camera_observer a pointer to the camera observer
    *  @param target a pointer to the target
-   *  @return true if sucessful
+   *  @return true if successful
    */
   bool addObservationToCurrentScene(boost::shared_ptr<ROSCameraObserver> camera_observer,
                                     boost::shared_ptr<Target> target);
 
   /** @brief removes all cameras and targets from current scene
-   *  @return true if sucessful
+   *  @return true if successful
    */
   bool clearCurrentScene();
 
@@ -132,10 +154,6 @@ public:
    */
   bool appendNewScene(Trigger trig);
 
-  ObservationDataPointList observation_data_point_list;
-
-  //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
-private:
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */

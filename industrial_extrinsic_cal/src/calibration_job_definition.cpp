@@ -140,7 +140,34 @@ bool CalibrationJob::runObservations()
 
 bool CalibrationJob::load()
 {
-  std::ifstream camera_input_file(camera_def_file_name_.c_str());
+  if(CalibrationJob::loadCamera())
+  {
+    ROS_INFO_STREAM("Successfully read in cameras ");
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Camera file parsing failed");
+    return false;
+  }
+  if(CalibrationJob::loadTarget())
+  {
+    ROS_INFO_STREAM("Successfully read in targets");
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Target file parsing failed");
+    return false;
+  }
+  if(CalibrationJob::loadCalJob())
+  {
+    ROS_INFO_STREAM("Successfully read in CalJob");
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Calibration Job file parsing failed");
+    return false;
+  }
+  /*std::ifstream camera_input_file(camera_def_file_name_.c_str());
   std::ifstream target_input_file(target_def_file_name_.c_str());
   std::ifstream caljob_input_file(caljob_def_file_name_.c_str());
   if (camera_input_file.fail())
@@ -160,8 +187,8 @@ bool CalibrationJob::load()
     ROS_ERROR_STREAM(
         "ERROR CalibrationJob::load(), couldn't open caljob_input_file:    "<< caljob_def_file_name_.c_str());
     return (false);
-  }
-
+  }*/
+/*
   string temp_name;
   string temp_topic;
   CameraParameters temp_parameters;
@@ -259,8 +286,8 @@ bool CalibrationJob::load()
     return (false);
   }
   ROS_INFO_STREAM("Successfully read in cameras ");
-
-  Target temp_target;
+*/
+  /*Target temp_target;
   try
   {
     YAML::Parser target_parser(target_input_file);
@@ -341,8 +368,8 @@ bool CalibrationJob::load()
     ROS_ERROR("load() Failed to read in target yaml file");
     ROS_ERROR_STREAM("Failed with exception "<< e.what());
     return (false);
-  }
-
+  }*/
+/*
   //Read in cal job parameters
   std::string trigger_message="triggered";//TODO what's in the message?
   std::string reference_frame;
@@ -408,10 +435,290 @@ bool CalibrationJob::load()
     ROS_ERROR("load() Failed to read in caljob yaml file");
     ROS_ERROR_STREAM("Failed with exception "<< e.what());
     return (false);
-  }
+  }*/
   return (true);
 } // end load()
 
+bool CalibrationJob::loadCamera()
+{
+  std::ifstream camera_input_file(camera_def_file_name_.c_str());
+  if (camera_input_file.fail())
+    {
+      ROS_ERROR_STREAM(
+          "ERROR CalibrationJob::load(), couldn't open camera_input_file:    "
+          << camera_def_file_name_.c_str());
+      return (false);
+    }
+
+  string temp_name;
+  string temp_topic;
+  CameraParameters temp_parameters;
+  //shared_ptr<Camera> temp_camera = make_shared<Camera>();
+
+  unsigned int scene_id;
+  try
+  {
+    YAML::Parser camera_parser(camera_input_file);
+    YAML::Node camera_doc;
+    camera_parser.GetNextDocument(camera_doc);
+
+    // read in all static cameras
+    if (const YAML::Node *camera_parameters = camera_doc.FindValue("static_cameras"))
+    {
+      ROS_DEBUG_STREAM("Found "<<camera_parameters->size()<<" static cameras ");
+      for (unsigned int i = 0; i < camera_parameters->size(); i++)
+      {
+        (*camera_parameters)[i]["camera_name"] >> temp_name;
+        (*camera_parameters)[i]["image_topic"] >> temp_topic;
+        (*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
+        (*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
+        (*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
+        (*camera_parameters)[i]["position_x"] >> temp_parameters.position[0];
+        (*camera_parameters)[i]["position_y"] >> temp_parameters.position[1];
+        (*camera_parameters)[i]["position_z"] >> temp_parameters.position[2];
+        (*camera_parameters)[i]["focal_length_x"] >> temp_parameters.focal_length_x;
+        (*camera_parameters)[i]["focal_length_y"] >> temp_parameters.focal_length_y;
+        (*camera_parameters)[i]["center_x"] >> temp_parameters.center_x;
+        (*camera_parameters)[i]["center_y"] >> temp_parameters.center_y;
+        (*camera_parameters)[i]["distortion_k1"] >> temp_parameters.distortion_k1;
+        (*camera_parameters)[i]["distortion_k2"] >> temp_parameters.distortion_k2;
+        (*camera_parameters)[i]["distortion_k3"] >> temp_parameters.distortion_k3;
+        (*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
+        (*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
+        // create a static camera
+        shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
+        temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
+        ceres_blocks_.addStaticCamera(temp_camera);
+      }
+    }
+
+    // read in all moving cameras
+    if (const YAML::Node *camera_parameters = camera_doc.FindValue("moving_cameras"))
+    {
+      ROS_DEBUG_STREAM("Found "<<camera_parameters->size() << " moving cameras ");
+      for (unsigned int i = 0; i < camera_parameters->size(); i++)
+      {
+        (*camera_parameters)[i]["camera_name"] >> temp_name;
+        (*camera_parameters)[i]["image_topic"] >> temp_topic;
+        (*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
+        (*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
+        (*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
+        (*camera_parameters)[i]["position_x"] >> temp_parameters.position[0];
+        (*camera_parameters)[i]["position_y"] >> temp_parameters.position[1];
+        (*camera_parameters)[i]["position_z"] >> temp_parameters.position[2];
+        (*camera_parameters)[i]["focal_length_x"] >> temp_parameters.focal_length_x;
+        (*camera_parameters)[i]["focal_length_y"] >> temp_parameters.focal_length_y;
+        (*camera_parameters)[i]["center_x"] >> temp_parameters.center_x;
+        (*camera_parameters)[i]["center_y"] >> temp_parameters.center_y;
+        (*camera_parameters)[i]["distortion_k1"] >> temp_parameters.distortion_k1;
+        (*camera_parameters)[i]["distortion_k2"] >> temp_parameters.distortion_k2;
+        (*camera_parameters)[i]["distortion_k3"] >> temp_parameters.distortion_k3;
+        (*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
+        (*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
+        (*camera_parameters)[i]["scene_id"] >> scene_id;
+        shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, true);
+        temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
+        ceres_blocks_.addMovingCamera(temp_camera, scene_id);
+      }
+    }
+  } // end try
+  catch (YAML::ParserException& e)
+  {
+    ROS_INFO_STREAM("load() Failed to read in moving cameras from  yaml file ");
+    /*ROS_INFO_STREAM("camera name =     "<<temp_name.c_str());
+    ROS_INFO_STREAM("angle_axis_ax =  "<<temp_parameters.angle_axis[0]);
+    ROS_INFO_STREAM("angle_axis_ay = "<<temp_parameters.angle_axis[1]);
+    ROS_INFO_STREAM("angle_axis_az =  "<<temp_parameters.angle_axis[2]);
+    ROS_INFO_STREAM("position_x =  "<<temp_parameters.position[0]);
+    ROS_INFO_STREAM("position_y =  "<<temp_parameters.position[1]);
+    ROS_INFO_STREAM("position_z =  "<<temp_parameters.position[2]);
+    ROS_INFO_STREAM("focal_length_x =  "<<temp_parameters.focal_length_x);
+    ROS_INFO_STREAM("focal_length_y =  "<<temp_parameters.focal_length_y);
+    ROS_INFO_STREAM("center_x = "<<temp_parameters.center_x);
+    ROS_INFO_STREAM("center_y =  "<<temp_parameters.center_y);
+    ROS_INFO_STREAM("distortion_k1 =  "<<temp_parameters.distortion_k1);
+    ROS_INFO_STREAM("distortion_k2 =  "<<temp_parameters.distortion_k2);
+    ROS_INFO_STREAM("distortion_k3 =  "<<temp_parameters.distortion_k3);
+    ROS_INFO_STREAM("distortion_p1 =  "<<temp_parameters.distortion_p1);
+    ROS_INFO_STREAM("distortion_p2 =  "<<temp_parameters.distortion_p2);
+    ROS_INFO_STREAM("scene_id = "<<scene_id);*/
+    ROS_ERROR("load() Failed to read in cameras yaml file");
+    ROS_ERROR_STREAM("Failed with exception "<< e.what());
+    return (false);
+  }
+  return true;
+}
+
+bool CalibrationJob::loadTarget()
+{
+  std::ifstream target_input_file(target_def_file_name_.c_str());
+  if (target_input_file.fail())
+  {
+    ROS_ERROR_STREAM(
+        "ERROR CalibrationJob::load(), couldn't open target_input_file: "
+        << target_def_file_name_.c_str());
+    return (false);
+  }
+  Target temp_target;
+  try
+  {
+    YAML::Parser target_parser(target_input_file);
+    YAML::Node target_doc;
+    target_parser.GetNextDocument(target_doc);
+
+    // read in all static targets
+    if (const YAML::Node *target_parameters = target_doc.FindValue("static_targets"))
+    {
+      ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<" targets ");
+      shared_ptr<Target> temp_target = make_shared<Target>();
+      temp_target->is_moving = false;
+      for (unsigned int i = 0; i < target_parameters->size(); i++)
+      {
+        (*target_parameters)[i]["target_name"] >> temp_target->target_name;
+        (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
+        (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
+        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
+        (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.ay;
+        (*target_parameters)[i]["angle_axis_az"] >> temp_target->pose.az;
+        (*target_parameters)[i]["position_x"] >> temp_target->pose.x;
+        (*target_parameters)[i]["position_y"] >> temp_target->pose.y;
+        (*target_parameters)[i]["position_z"] >> temp_target->pose.z;
+        (*target_parameters)[i]["num_points"] >> temp_target->num_points;
+        const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
+        for (int j = 0; j < points_node->size(); j++)
+        {
+          const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
+          std::vector<float> temp_pnt;
+          (*pnt_node) >> temp_pnt;
+          Point3d temp_pnt3d;
+          temp_pnt3d.x = temp_pnt[0];
+          temp_pnt3d.y = temp_pnt[1];
+          temp_pnt3d.z = temp_pnt[2];
+          temp_target->pts.push_back(temp_pnt3d);
+        }
+        ceres_blocks_.addStaticTarget(temp_target);
+      }
+    }
+
+    // read in all moving targets
+    if (const YAML::Node *target_parameters = target_doc.FindValue("moving_targets"))
+    {
+      ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<"  moving targets ");
+      shared_ptr<Target> temp_target = make_shared<Target>();
+      unsigned int scene_id;
+      temp_target->is_moving = true;
+      for (unsigned int i = 0; i < target_parameters->size(); i++)
+      {
+        (*target_parameters)[i]["target_name"] >> temp_target->target_name;
+        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
+        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ay;
+        (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.az;
+        (*target_parameters)[i]["position_x"] >> temp_target->pose.x;
+        (*target_parameters)[i]["position_y"] >> temp_target->pose.y;
+        (*target_parameters)[i]["position_z"] >> temp_target->pose.z;
+        (*target_parameters)[i]["scene_id"] >> scene_id;
+        (*target_parameters)[i]["num_points"] >> temp_target->num_points;
+        const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
+        for (int j = 0; j < points_node->size(); j++)
+        {
+          const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
+          std::vector<float> temp_pnt;
+          (*pnt_node) >> temp_pnt;
+          Point3d temp_pnt3d;
+          temp_pnt3d.x = temp_pnt[0];
+          temp_pnt3d.y = temp_pnt[1];
+          temp_pnt3d.z = temp_pnt[2];
+          temp_target->pts.push_back(temp_pnt3d);
+        }
+        ceres_blocks_.addMovingTarget(temp_target, scene_id);
+      }
+    }
+  } // end try
+  catch (YAML::ParserException& e)
+  {
+    ROS_ERROR("load() Failed to read in target yaml file");
+    ROS_ERROR_STREAM("Failed with exception "<< e.what());
+    return (false);
+  }
+  return true;
+
+}
+
+bool CalibrationJob::loadCalJob()
+{
+  std::ifstream caljob_input_file(caljob_def_file_name_.c_str());
+  if (caljob_input_file.fail())
+  {
+    ROS_ERROR_STREAM(
+        "ERROR CalibrationJob::load(), couldn't open caljob_input_file:    "<< caljob_def_file_name_.c_str());
+    return (false);
+  }
+
+  std::string trigger_message="triggered";//TODO what's in the message?
+  std::string reference_frame;
+  int scene_id_num;
+  int trig_type;
+  Trigger cal_trig;
+  cal_trig.trigger_popup_msg=trigger_message;
+  std::string camera_name;
+  shared_ptr<Camera> temp_cam = make_shared<Camera>();
+  shared_ptr<Target> temp_targ = make_shared<Target>();
+  //Target temp_targ;
+  Roi temp_roi;
+
+  try
+  {
+    YAML::Parser caljob_parser(caljob_input_file);
+    YAML::Node caljob_doc;
+    caljob_parser.GetNextDocument(caljob_doc);
+
+    caljob_doc["reference_frame"] >> reference_frame;
+    caljob_doc["optimization_parameters"] >> reference_frame;
+    // read in all scenes
+    if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
+    {
+      ROS_DEBUG_STREAM("Found "<<caljob_scenes->size() <<" scenes");
+      scene_list_.resize(caljob_scenes->size() );
+      for (unsigned int i = 0; i < caljob_scenes->size(); i++)
+      {
+        (*caljob_scenes)[i]["scene_id"] >> scene_id_num;
+        //ROS_INFO_STREAM("scene "<<scene_id_num);
+        (*caljob_scenes)[i]["trigger_type"] >> trig_type;
+        //ROS_INFO_STREAM("trig type "<<trig_type);
+        cal_trig.trigger_type=trig_type;
+        scene_list_.at(i).setTrig(cal_trig);
+        scene_list_.at(i).setSceneId(scene_id_num);
+        const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
+        ROS_DEBUG_STREAM("Found "<<obs_node->size() <<" observations within scene "<<i);
+        for (unsigned int j = 0; j < obs_node->size(); j++)
+        {
+          //ROS_INFO_STREAM("For obs "<<j);
+          (*obs_node)[j]["camera"] >> camera_name;
+          temp_cam = ceres_blocks_.getCameraByName(camera_name);
+
+          scene_list_.at(i).addCameraToScene(temp_cam);
+
+
+          (*obs_node)[j]["roi_x_min"] >> temp_roi.x_min;
+          (*obs_node)[j]["roi_x_max"] >> temp_roi.x_max;
+          (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
+          (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
+          (*obs_node)[j]["target"] >> temp_targ->target_name;
+          temp_targ = ceres_blocks_.getTargetByName(temp_targ->target_name);
+
+          scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi);
+        }
+      }
+    }
+  } // end try
+  catch (YAML::ParserException& e)
+  {
+    ROS_ERROR("load() Failed to read in caljob yaml file");
+    ROS_ERROR_STREAM("Failed with exception "<< e.what());
+    return (false);
+  }
+  return true;
+}
 
 bool CalibrationJob::runOptimization()
 {
