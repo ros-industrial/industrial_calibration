@@ -76,14 +76,14 @@ public:
    *  \param camera this is the camera from the list, either moving or static
    *  \return true on success
    */
-  const boost::shared_ptr<Camera> getCameraByName(std::string camera_name);
+  const boost::shared_ptr<Camera> getCameraByName(const std::string &camera_name);
   /*!
    * \brief grabs a target from the target list given the target name
    * @param target_name is the name of the target
    * @param target is the target from the list, either moving or static
    * @return true if target found
    */
-  const boost::shared_ptr<Target>  getTargetByName(std::string target_name);
+  const boost::shared_ptr<Target>  getTargetByName(const std::string &target_name);
 
   P_BLOCK getStaticCameraParameterBlockIntrinsics(std::string camera_name);
 

@@ -203,7 +203,7 @@ bool CeresBlocks::addMovingTarget(shared_ptr<Target> target_to_add, int scene_id
   return (true);
 }
 
-const boost::shared_ptr<Camera> CeresBlocks::getCameraByName(std::string camera_name)
+const boost::shared_ptr<Camera> CeresBlocks::getCameraByName(const std::string &camera_name)
 {
   boost::shared_ptr<Camera> cam = boost::make_shared<Camera>();
   //ROS_INFO_STREAM("Found "<<static_cameras_.size() <<" static cameras");
@@ -232,7 +232,7 @@ const boost::shared_ptr<Camera> CeresBlocks::getCameraByName(std::string camera_
   //return true;
 }
 
-const boost::shared_ptr<Target> CeresBlocks::getTargetByName(std::string target_name)
+const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string &target_name)
 {
   boost::shared_ptr<Target> target = boost::make_shared<Target>();
   //ROS_INFO_STREAM("Found "<<static_cameras_.size() <<" static cameras");
