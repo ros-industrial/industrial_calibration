@@ -107,7 +107,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   if (input_bridge_->image.cols < input_roi_.width || input_bridge_->image.rows < input_roi_.height)
   {
     ROS_ERROR_STREAM("ROI too big for image size");
-    return false;
+    return 0;
   }
 
   image_roi_ = input_bridge_->image(input_roi_);
@@ -142,6 +142,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   if (!successful_find)
   {
     ROS_WARN_STREAM("Pattern not found for pattern: "<<pattern_ <<" with symmetry: "<< sym_circle_);
+    return 0;
   }
 
   ROS_INFO_STREAM("Number of points found on board: "<<observation_pts_.size());
@@ -155,12 +156,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   }
 
   cam_obs = camera_obs_;
-  if (successful_find)
-  {
-    return 1;
-  }
-  else
-    return 0;
+  return 1;
 }
 
 void ROSCameraObserver::triggerCamera()
