@@ -38,7 +38,7 @@ bool CalibrationJob::run()
 bool CalibrationJob::runObservations()
 {
   ROS_INFO_STREAM("Running observations...");
-
+  ROS_DEBUG_STREAM("Debug is working");
   this->ceres_blocks_.clearCamerasTargets();
   // For each scene
   BOOST_FOREACH(ObservationScene current_scene, scene_list_)
