@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (Apache License)
  *
- * Copyright (c) 2013, Southwest Research Institute
+ * Copyright (c) 2014, Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,10 +34,15 @@ CeresBlocks::~CeresBlocks()
 }
 void CeresBlocks::clearCamerasTargets()
 {
-  static_cameras_.clear();
+  //ROS_INFO_STREAM("Attempting to clear cameras and targets from ceresBlocks");
   static_targets_.clear();
-  moving_cameras_.clear();
+  //ROS_INFO_STREAM("Moving Targets "<<moving_targets_.size());
   moving_targets_.clear();
+  //ROS_INFO_STREAM("Static cameras "<<static_cameras_.size());
+  static_cameras_.clear();
+  //ROS_INFO_STREAM("Moving cameras "<<moving_cameras_.size());
+  moving_cameras_.clear();
+  //ROS_INFO_STREAM("Cameras and Targets cleared from CeresBlocks");
 }
 P_BLOCK CeresBlocks::getStaticCameraParameterBlockIntrinsics(string camera_name)
 {
@@ -153,6 +158,7 @@ bool CeresBlocks::addStaticCamera(shared_ptr<Camera> camera_to_add)
       return (false); // camera already exists
   }
   static_cameras_.push_back(camera_to_add);
+  //ROS_INFO_STREAM("Camera added to static_cameras_");
   return (true);
 }
 bool CeresBlocks::addStaticTarget(shared_ptr<Target> target_to_add)
@@ -195,6 +201,63 @@ bool CeresBlocks::addMovingTarget(shared_ptr<Target> target_to_add, int scene_id
   temp_moving_target->scene_id = scene_id;
   moving_targets_.push_back(temp_moving_target);
   return (true);
+}
+
+const boost::shared_ptr<Camera> CeresBlocks::getCameraByName(const std::string &camera_name)
+{
+  boost::shared_ptr<Camera> cam = boost::make_shared<Camera>();
+  //ROS_INFO_STREAM("Found "<<static_cameras_.size() <<" static cameras");
+  for (int i=0; i< static_cameras_.size() ; i++ )
+  {
+    if (static_cameras_.at(i)->camera_name_==camera_name)
+    {
+      cam= static_cameras_.at(i);
+      ROS_INFO_STREAM("Found static camera with name: "<<static_cameras_.at(i)->camera_name_);
+    }
+  }
+  //ROS_INFO_STREAM("Found "<<moving_cameras_.size() <<" moving cameras");
+  for (int i=0; i< moving_cameras_.size() ; i++ )
+  {
+    if (moving_cameras_.at(i)->cam->camera_name_==camera_name)
+    {
+      cam= moving_cameras_.at(i)->cam;
+      ROS_INFO_STREAM("Found moving camera with name: "<<camera_name);
+    }
+  }
+  if (!cam)
+  {
+    ROS_ERROR_STREAM("Fail");
+  }
+  return cam;
+  //return true;
+}
+
+const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string &target_name)
+{
+  boost::shared_ptr<Target> target = boost::make_shared<Target>();
+  //ROS_INFO_STREAM("Found "<<static_cameras_.size() <<" static cameras");
+  for (int i=0; i< static_targets_.size() ; i++ )
+  {
+    if (static_targets_.at(i)->target_name==target_name)
+    {
+      target=static_targets_.at(i);
+      ROS_INFO_STREAM("Found static target with name: "<<target_name);
+    }
+  }
+  //ROS_INFO_STREAM("Found "<<moving_cameras_.size() <<" static cameras");
+  for (int i=0; i< moving_targets_.size() ; i++ )
+  {
+    if (moving_targets_.at(i)->targ->target_name==target_name)
+    {
+      target=moving_targets_.at(i)->targ;
+      ROS_INFO_STREAM("Found moving target with name: "<<target_name);
+    }
+  }
+  if (!target)
+  {
+    ROS_ERROR_STREAM("Fail");
+  }
+  return target;
 }
 
 

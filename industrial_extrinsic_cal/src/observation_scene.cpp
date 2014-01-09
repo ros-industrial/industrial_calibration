@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (Apache License)
  *
- * Copyright (c) 2013, Southwest Research Institute
+ * Copyright (c) 2014, Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,22 @@ void ObservationScene::addObservationToScene(ObservationCmd new_obs_cmd)
 
   // add observation
   observation_command_list_.push_back(new_obs_cmd);
+}
+
+void ObservationScene::addCameraToScene(boost::shared_ptr<Camera> camera_in_scene)
+{
+  cameras_in_scene_.push_back(camera_in_scene);
+  ROS_INFO_STREAM("Added camera "<<camera_in_scene->camera_name_<<" to cameras_in_scene list of size: "<<cameras_in_scene_.size());
+}
+
+void ObservationScene::populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi)
+{
+  ObservationCmd current_obs_cmd;
+  current_obs_cmd.camera=camera;
+  current_obs_cmd.target=target;
+  current_obs_cmd.roi=roi;
+
+  observation_command_list_.push_back(current_obs_cmd);
 }
 
 }//end namespace industrial_extrinsic_cal

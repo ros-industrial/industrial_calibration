@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (Apache License)
  *
- * Copyright (c) 2013, Southwest Research Institute
+ * Copyright (c) 2014, Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ public:
 
   /*! \brief adds a moving camera to job's list of cameras
    *  \param camera_to_add this is the camera added to the list
-   *  \param scene_id the scene's id, only one camera of given name existe in each scene
+   *  \param scene_id the scene's id, only one camera of given name exist in each scene
    *  \return true on success
    */
   bool addMovingCamera(boost::shared_ptr<Camera> camera_to_add, int scene_id);
@@ -70,10 +70,21 @@ public:
    */
   bool addMovingTarget(boost::shared_ptr<Target> target_to_add, int scene_id);
 
-  /*! @brief gets a pointer to the intrinsic parameters of a static camera
-   *  @param camera_name the camera's name
-   *  @return pointer to the only existing set of intrinsics for this camera
+
+  /*! \brief grabs a camera from the camera list given the camera name
+   *  \param camera_name is the name of the camera
+   *  \param camera this is the camera from the list, either moving or static
+   *  \return true on success
    */
+  const boost::shared_ptr<Camera> getCameraByName(const std::string &camera_name);
+  /*!
+   * \brief grabs a target from the target list given the target name
+   * @param target_name is the name of the target
+   * @param target is the target from the list, either moving or static
+   * @return true if target found
+   */
+  const boost::shared_ptr<Target>  getTargetByName(const std::string &target_name);
+
   P_BLOCK getStaticCameraParameterBlockIntrinsics(std::string camera_name);
 
   /*! @brief gets a pointer to the intrinsic parameters of a moving camera

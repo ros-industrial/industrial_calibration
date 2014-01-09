@@ -3,6 +3,7 @@
 static_cameras:
  -
     camera_name: Asus1
+    image_topic: /camera/rgb/image_rect_color
     angle_axis_ax: 1.0
     angle_axis_ay: 1.1
     angle_axis_az: 1.2
@@ -20,6 +21,7 @@ static_cameras:
     distortion_p2: 0.01
  -
     camera_name: Asus2
+    image_topic: /camera/rgb/image_rect_color
     angle_axis_ax: 1.990
     angle_axis_ay: 1.001
     angle_axis_az: 1.992

@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (Apache License)
  *
- * Copyright (c) 2013, Southwest Research Institute
+ * Copyright (c) 2014, Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,8 @@ bool CalibrationJob::run()
 
 bool CalibrationJob::runObservations()
 {
+  ROS_INFO_STREAM("Running observations...");
+
   this->ceres_blocks_.clearCamerasTargets();
   // For each scene
   BOOST_FOREACH(ObservationScene current_scene, scene_list_)
@@ -44,19 +46,26 @@ bool CalibrationJob::runObservations()
     int scene_id = current_scene.get_id();
 
     // clear all observations from every camera
-    ROS_INFO_STREAM("Processing Scene " << scene_id);
+    ROS_INFO_STREAM("Processing Scene " << scene_id<<" of "<< scene_list_.size());
 
     // add observations to every camera
+    ROS_INFO_STREAM("Processing " << current_scene.cameras_in_scene_.size() <<" Cameras ");
     BOOST_FOREACH(shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
     {
+      ROS_INFO_STREAM("Current Camera name: "<<current_camera->camera_name_);
       current_camera->camera_observer_->clearObservations(); // clear any recorded data
       current_camera->camera_observer_->clearTargets(); // clear all targets
     }
 
     // add each target to each cameras observations
+    ROS_INFO_STREAM("Processing " << current_scene.observation_command_list_.size() <<" Observation Commands");
     BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
     {
       // configure to find target in roi
+      ROS_INFO_STREAM("Current Camera name: "<<o_command.camera->camera_name_);
+      ROS_INFO_STREAM("Current Target name: "<<o_command.target->target_name);
+      ROS_INFO_STREAM("Current roi xmin: "<<o_command.roi.x_min);
+
       o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi);
     }
     // trigger the cameras
@@ -72,9 +81,11 @@ bool CalibrationJob::runObservations()
     std::string camera_name;
     std::string target_name;
 
+
     // for each camera in scene
     BOOST_FOREACH( shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
     {
+
       // wait until observation is done
       while (!camera->camera_observer_->observationsDone())
         ;
@@ -121,9 +132,10 @@ bool CalibrationJob::runObservations()
         ObservationDataPoint temp_ODP(camera_name, target_name, scene_id, intrinsics, extrinsics, pnt_id, target_pose,
                                       pnt_pos, observation_x, observation_y);
         observation_data_point_list.addObservationPoint(temp_ODP);
-      }
-    }
+      }//end for each observed point
+    }//end for each camera
   } // end for each scene
+  return true;
 }
 
 bool CalibrationJob::load()
@@ -151,7 +163,10 @@ bool CalibrationJob::load()
   }
 
   string temp_name;
+  string temp_topic;
   CameraParameters temp_parameters;
+  //shared_ptr<Camera> temp_camera = make_shared<Camera>();
+
   unsigned int scene_id;
   try
   {
@@ -166,6 +181,7 @@ bool CalibrationJob::load()
       for (unsigned int i = 0; i < camera_parameters->size(); i++)
       {
         (*camera_parameters)[i]["camera_name"] >> temp_name;
+        (*camera_parameters)[i]["image_topic"] >> temp_topic;
         (*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
         (*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
         (*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
@@ -182,8 +198,9 @@ bool CalibrationJob::load()
         (*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
         (*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
         // create a static camera
-        shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
-
+        shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);//make_shared constructs object by running constructor
+        //temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
+        temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
         ceres_blocks_.addStaticCamera(temp_camera);
       }
     }
@@ -195,6 +212,7 @@ bool CalibrationJob::load()
       for (unsigned int i = 0; i < camera_parameters->size(); i++)
       {
         (*camera_parameters)[i]["camera_name"] >> temp_name;
+        (*camera_parameters)[i]["image_topic"] >> temp_topic;
         (*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
         (*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
         (*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
@@ -258,6 +276,8 @@ bool CalibrationJob::load()
       for (unsigned int i = 0; i < target_parameters->size(); i++)
       {
         (*target_parameters)[i]["target_name"] >> temp_target->target_name;
+        (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
+        (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
         (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
         (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.ay;
         (*target_parameters)[i]["angle_axis_az"] >> temp_target->pose.az;
@@ -323,35 +343,61 @@ bool CalibrationJob::load()
     return (false);
   }
 
-  //Target temp_target;
   //Read in cal job parameters
+  std::string trigger_message="triggered";//TODO what's in the message?
+  std::string reference_frame;
+  int scene_id_num;
+  int trig_type;
+  Trigger cal_trig;
+  cal_trig.trigger_popup_msg=trigger_message;
+  std::string camera_name;
+  shared_ptr<Camera> temp_cam = make_shared<Camera>();
+  shared_ptr<Target> temp_targ = make_shared<Target>();
+  //Target temp_targ;
+  Roi temp_roi;
+
   try
   {
     YAML::Parser caljob_parser(caljob_input_file);
     YAML::Node caljob_doc;
     caljob_parser.GetNextDocument(caljob_doc);
 
-    shared_ptr<Target> temp_target = make_shared<Target>();
-
-    caljob_doc["reference_frame"] >> temp_target->target_name;
-    caljob_doc["optimization_parameters"] >> temp_target->target_name;
+    caljob_doc["reference_frame"] >> reference_frame;
+    caljob_doc["optimization_parameters"] >> reference_frame;
     // read in all scenes
     if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
     {
       ROS_INFO_STREAM("Found "<<caljob_scenes->size() <<" scenes");
+      scene_list_.resize(caljob_scenes->size() );
       for (unsigned int i = 0; i < caljob_scenes->size(); i++)
       {
-        (*caljob_scenes)[i]["scene_id"] >> temp_target->target_name;
-        //ROS_INFO_STREAM("scene "<<temp_target->target_name);
-        (*caljob_scenes)[i]["trigger_type"] >> temp_target->target_name;
-        //ROS_INFO_STREAM("trig type "<<temp_target->target_name);
+        (*caljob_scenes)[i]["scene_id"] >> scene_id_num;
+        ROS_INFO_STREAM("scene "<<scene_id_num);
+        (*caljob_scenes)[i]["trigger_type"] >> trig_type;
+        ROS_INFO_STREAM("trig type "<<trig_type);
+        cal_trig.trigger_type=trig_type;
+        scene_list_.at(i).setTrig(cal_trig);
+        scene_list_.at(i).setSceneId(scene_id_num);
         const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
         ROS_INFO_STREAM("Found "<<obs_node->size() <<" observations within scene "<<i);
+        //scene_list_.at(i).cameras_in_scene_.resize(obs_node->size());
         for (unsigned int j = 0; j < obs_node->size(); j++)
         {
           ROS_INFO_STREAM("For obs "<<j);
-          (*obs_node)[j]["camera"] >> temp_target->target_name;
-          (*obs_node)[j]["target"] >> temp_target->target_name;
+          (*obs_node)[j]["camera"] >> camera_name;
+          temp_cam = ceres_blocks_.getCameraByName(camera_name);
+
+          scene_list_.at(i).addCameraToScene(temp_cam);
+
+
+          (*obs_node)[j]["roi_x_min"] >> temp_roi.x_min;
+          (*obs_node)[j]["roi_x_max"] >> temp_roi.x_max;
+          (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
+          (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
+          (*obs_node)[j]["target"] >> temp_targ->target_name;
+          temp_targ = ceres_blocks_.getTargetByName(temp_targ->target_name);
+
+          scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi);
         }
       }
     }
@@ -363,7 +409,6 @@ bool CalibrationJob::load()
     ROS_ERROR_STREAM("Failed with exception "<< e.what());
     return (false);
   }
-  //    ROS_INFO("successfuly read in cameras");
   return (true);
 } // end load()
 
