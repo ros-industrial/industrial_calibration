@@ -17,6 +17,7 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/generator_iterator.hpp>
 
+using std::ifstream;
 using std::string;
 using std::vector;
 using industrial_extrinsic_cal::Point3d;
@@ -106,6 +107,10 @@ void copy_cameras_wo_history(vector<Camera> &original_cameras, vector<Camera> & 
 void copy_points(vector<Point3d> &original_points, vector<Point3d> & points);
 void add_pose_to_history(vector<Camera> &cameras, vector<Camera> &original_cameras);
 void compute_historic_pose_statistics(vector<Camera> &cameras);
+void parse_points(ifstream & points_input_file,vector<Point3d> &original_points);
+void parse_cameras(ifstream & cameras_input_file,vector<Camera> & original_cameras);
+void compare_cameras(vector<Camera> &C1, vector<Camera> &C2);
+void compare_observations(vector<ObservationDataPoint> &O1, vector<ObservationDataPoint> &O2);
 
 // computes image of point in cameras image plane
 Observation project_point_no_distortion(Camera C, Point3d P)
@@ -215,14 +220,16 @@ int main(int argc, char** argv)
   vector<Point3d> original_points;
   vector<Camera>  cameras;
   vector<Camera>  original_cameras;
+  vector<ObservationDataPoint> original_observations;
   vector<ObservationDataPoint> observations;
 
-  // hard coded constants
-  double camera_pos_noise = 3.0; // feet
-  double camera_or_noise = 3.0; // degrees
-  double image_noise = 2.0; // pixels
-  double max_detect_distance = 999999570.0; // feet at which can't detect object
-  int num_test_cases = 100;
+  // TODO use a parameter file for these, or make them arguments
+  // hard coded constants 
+  double camera_pos_noise     = 36.0/12.0; // 36 inches in feet
+  double camera_or_noise      = 3.0; // degrees
+  double image_noise          = .4; // pixels
+  double max_detect_distance  = 999999570.0; // feet at which can't detect object
+  int num_test_cases          = 100;
 
   google::InitGoogleLogging(argv[0]);
   if (argc != 3)
@@ -232,7 +239,7 @@ int main(int argc, char** argv)
     }
 
 
-  std::ifstream points_input_file(argv[1]);
+  ifstream points_input_file(argv[1]);
   if (points_input_file.fail())
     {
       string temp(argv[1]);
@@ -240,7 +247,7 @@ int main(int argc, char** argv)
       return (false);
     }
 
-  std::ifstream cameras_input_file(argv[2]);
+  ifstream cameras_input_file(argv[2]);
   if (cameras_input_file.fail())
     {
       string temp(argv[2]);
@@ -248,122 +255,26 @@ int main(int argc, char** argv)
       return (false);
     }
 
-
-  // parse points
-  try
-    {
-      YAML::Parser points_parser(points_input_file);
-      YAML::Node points_doc;
-      points_parser.GetNextDocument(points_doc);
-
-      // read in all points
-      const YAML::Node *points_node = points_doc.FindValue("points");
-      for (int j = 0; j < points_node->size(); j++){
-	const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
-	vector<float> temp_pnt;
-	(*pnt_node) >> temp_pnt;
-	Point3d temp_pnt3d;
-	temp_pnt3d.x = temp_pnt[0];
-	temp_pnt3d.y = temp_pnt[1];
-	temp_pnt3d.z = temp_pnt[2];
-	points.push_back(temp_pnt3d);
-	original_points.push_back(temp_pnt3d);
-      }
-    }
-  catch (YAML::ParserException& e){
-    ROS_INFO_STREAM("Failed to read points file ");
-  }
-  ROS_INFO_STREAM("Successfully read in " <<(int) points.size() << " points");
-
-
-  Camera temp_camera;
-  // parse cameras
-  try
-    {
-      YAML::Parser camera_parser(cameras_input_file);
-      YAML::Node camera_doc;
-      camera_parser.GetNextDocument(camera_doc);
-
-      // read in all static cameras
-      if (const YAML::Node *camera_parameters = camera_doc.FindValue("cameras")){
-	ROS_INFO_STREAM("Found "<<camera_parameters->size()<<" cameras ");
-	for (unsigned int i = 0; i < camera_parameters->size(); i++){
-	  (*camera_parameters)[i]["camera_name"]    >> temp_camera.camera_name;
-	  // replaced with rotation matrix
-	  //        (*camera_parameters)[i]["angle_axis_ax"]  >> temp_camera.angle_axis[0];
-	  //        (*camera_parameters)[i]["angle_axis_ay"]  >> temp_camera.angle_axis[1];
-	  //        (*camera_parameters)[i]["angle_axis_az"]  >> temp_camera.angle_axis[2];
-	  const YAML::Node *rotation_node = (*camera_parameters)[i].FindValue("rotation");
-	  if(rotation_node->size() != 9){
-	    ROS_ERROR_STREAM("Rotation " << i << " has " << (int)rotation_node->size() << " pts");
-	  }
-	  // read in the transform from world to camera frame
-          // invert it because camera object transforms world points into camera's frame
-	  double R[9],tx,ty,tz,angle_axis[3];
-	  for(int j=0;j<9;j++){
-	    (*rotation_node)[j]  >> R[j];
-	  }
-	  (*camera_parameters)[i]["position_x"]     >> tx;
-	  (*camera_parameters)[i]["position_y"]     >> ty;
-	  (*camera_parameters)[i]["position_z"]     >> tz;
-	  // NOTE: this Ceres function expects R in column major order, but we read R
-	  // in row by row which is effectively the inverse of R
-	  // the inverse is the rotation for transforming world points to camera points
-	  // but the translation portion is from camera to world
-	  double RI[9];
-	  RI[0] = R[0];  RI[1] = R[3]; RI[2] = R[6];
-	  RI[3] = R[1];  RI[4] = R[4]; RI[5] = R[7];
-	  RI[6] = R[2];  RI[7] = R[5]; RI[8] = R[8];
-	  ceres::RotationMatrixToAngleAxis(R,angle_axis);
-	  temp_camera.position[0] = -(tx * RI[0] + ty * RI[1] + tz * RI[2]);
-	  temp_camera.position[1] = -(tx * RI[3] + ty * RI[4] + tz * RI[5]);
-	  temp_camera.position[2] = -(tx * RI[6] + ty * RI[7] + tz * RI[8]);
-
-	  temp_camera.angle_axis[0] = angle_axis[0];
-	  temp_camera.angle_axis[1] = angle_axis[1];
-	  temp_camera.angle_axis[2] = angle_axis[2];
-	  (*camera_parameters)[i]["focal_length_x"] >> temp_camera.focal_length_x;
-	  (*camera_parameters)[i]["focal_length_y"] >> temp_camera.focal_length_y;
-	  (*camera_parameters)[i]["center_x"]       >> temp_camera.center_x;
-	  (*camera_parameters)[i]["center_y"]       >> temp_camera.center_y;
-	  (*camera_parameters)[i]["width"]          >> temp_camera.width;
-	  (*camera_parameters)[i]["height"]         >> temp_camera.height;
-	  temp_camera.num_observations = 0.0; // start out with none
-	  temp_camera.pose_history.clear(); // start out with no history
-	  cameras.push_back(temp_camera);
-	  original_cameras.push_back(temp_camera);
-	}	// end of for each camera in file
-      } // end if there are any cameras in file
-    }
-  catch (YAML::ParserException& e){
-    ROS_INFO_STREAM("Failed to read in moving cameras from yaml file ");
-    ROS_INFO_STREAM("camera name    = " << temp_camera.camera_name.c_str());
-    ROS_INFO_STREAM("angle_axis_ax  = " << temp_camera.angle_axis[0]);
-    ROS_INFO_STREAM("angle_axis_ay  = " << temp_camera.angle_axis[1]);
-    ROS_INFO_STREAM("angle_axis_az  = " << temp_camera.angle_axis[2]);
-    ROS_INFO_STREAM("position_x     = " << temp_camera.position[0]);
-    ROS_INFO_STREAM("position_y     = " << temp_camera.position[1]);
-    ROS_INFO_STREAM("position_z     = " << temp_camera.position[2]);
-    ROS_INFO_STREAM("focal_length_x = " << temp_camera.focal_length_x);
-    ROS_INFO_STREAM("focal_length_y = " << temp_camera.focal_length_y);
-    ROS_INFO_STREAM("center_x       = " << temp_camera.center_x);
-    ROS_INFO_STREAM("center_y       = " << temp_camera.center_y);
-  }
-  ROS_INFO_STREAM("Successfully read in " << (int) cameras.size() << " cameras");
+  // read in the point and camera data from yaml files
+  parse_points(points_input_file,original_points);
+  parse_cameras(cameras_input_file,original_cameras);
 
   // this sets the nominal number of observations for each camera
   // NOTE, it may vary some if the noise is high
-  compute_observations(original_cameras,points,0.0,max_detect_distance,observations);
+  compute_observations(original_cameras,original_points,0.0,max_detect_distance,observations);
 
-  // create nominal observations of points using camera parameters
-  copy_cameras_wo_history(original_cameras,cameras);
-  compute_observations(cameras,points,0.0,max_detect_distance,observations);
-  perturb_cameras(cameras,camera_pos_noise,camera_or_noise);
-
-  // 
   // Setup problem 1 to see if camera extrinsics may be recovered with fixed fiducials
+  // create nominal observations of points using camera parameters
   // perturb camera positions and orientations
-  // submit nominal observations as cost functions
+  // add all observation cost functions to problem
+  // solve
+  copy_cameras_wo_history(original_cameras,cameras);
+  copy_points(original_points,points);
+  compute_observations(cameras,points,0.0,max_detect_distance,original_observations);
+  compute_observations(cameras,points,image_noise,max_detect_distance,observations);
+  compare_observations(original_observations,observations);// shows noise is correct
+  perturb_cameras(cameras,camera_pos_noise,camera_or_noise);
+  compare_cameras(original_cameras,cameras); // shows how far apart they started
 
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
@@ -388,15 +299,17 @@ int main(int argc, char** argv)
   // solve problem
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::DENSE_SCHUR;
-  options.minimizer_progress_to_stdout = true;
+  options.minimizer_progress_to_stdout = false;
   options.max_num_iterations = 1000;
   
   // display results
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem1, &summary);
-  std::cout << summary.FullReport() << "\n";
+  // std::cout << summary.FullReport() << "\n";
 
+  compare_cameras(original_cameras,cameras); // shows that cameras were recovered
 
+  exit(1);
   copy_cameras_wo_history(original_cameras,cameras);
   copy_points(original_points,points);
   compute_observations(cameras,points,image_noise,max_detect_distance,observations);
@@ -558,6 +471,7 @@ void compute_observations(vector<Camera> &cameras,
 			  double max_dist,
 			  vector<ObservationDataPoint> &observations)
 {
+  double pnoise = noise/sqrt(1.58085);// magic number found by trial and error
   int n_observations = 0;
   observations.clear();
 
@@ -574,8 +488,8 @@ void compute_observations(vector<Camera> &cameras,
       double distance = sqrt(dx*dx + dy*dy + dz*dz);
       if(distance < max_dist){
 	Observation obs = project_point_no_distortion(C, P);
-	obs.x += noise*randn(); // add observation noise
-	obs.y += noise*randn();
+	obs.x += pnoise*randn(); // add observation noise
+	obs.y += pnoise*randn();
 	if(obs.x >= 0 && obs.x < C.width && obs.y >= 0 &&obs.y < C.height ){
 	  // save observation
 	  ObservationDataPoint new_obs(&(C),j,&(P.pb[0]),obs);
@@ -590,11 +504,12 @@ void compute_observations(vector<Camera> &cameras,
 
 void perturb_cameras(vector<Camera> &cameras, double position_noise, double degrees_noise)
 {
-  double radian_noise = degrees_noise*3.1415/180.0;
+  double pos_noise    = position_noise/sqrt(2.274625);
+  double radian_noise = degrees_noise*3.1415/(180.0*sqrt(2.58047));
   BOOST_FOREACH(Camera &C, cameras){
-      C.position[0]   += position_noise*randn();	
-      C.position[1]   += position_noise*randn();
-      C.position[2]   += position_noise*randn();
+      C.position[0]   += pos_noise*randn();	
+      C.position[1]   += pos_noise*randn();
+      C.position[2]   += pos_noise*randn();
       C.angle_axis[0] += radian_noise*randn();
       C.angle_axis[1] += radian_noise*randn();
       C.angle_axis[2] += radian_noise*randn();
@@ -684,4 +599,167 @@ void compute_historic_pose_statistics(vector<Camera> & cameras)
     C.pose_position_sigma    = dv;
     C.pose_orientation_sigma = av;
   } // end for each camera
+}
+void parse_points(ifstream &points_input_file,vector<Point3d> &original_points)
+{
+  // parse points
+  try
+    {
+      YAML::Parser points_parser(points_input_file);
+      YAML::Node points_doc;
+      points_parser.GetNextDocument(points_doc);
+
+      // read in all points
+      const YAML::Node *points_node = points_doc.FindValue("points");
+      for (int j = 0; j < points_node->size(); j++){
+	const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
+	vector<float> temp_pnt;
+	(*pnt_node) >> temp_pnt;
+	Point3d temp_pnt3d;
+	temp_pnt3d.x = temp_pnt[0];
+	temp_pnt3d.y = temp_pnt[1];
+	temp_pnt3d.z = temp_pnt[2];
+	original_points.push_back(temp_pnt3d);
+      }
+    }
+  catch (YAML::ParserException& e){
+    ROS_INFO_STREAM("Failed to read points file ");
+  }
+  ROS_INFO_STREAM("Successfully read in " <<(int) original_points.size() << " points");
+}
+
+void parse_cameras(ifstream &cameras_input_file,vector<Camera> & original_cameras)
+{
+  Camera temp_camera;
+  // parse cameras
+  try
+    {
+      YAML::Parser camera_parser(cameras_input_file);
+      YAML::Node camera_doc;
+      camera_parser.GetNextDocument(camera_doc);
+
+      // read in all static cameras
+      if (const YAML::Node *camera_parameters = camera_doc.FindValue("cameras")){
+	ROS_INFO_STREAM("Found "<<camera_parameters->size()<<" cameras ");
+	for (unsigned int i = 0; i < camera_parameters->size(); i++){
+	  (*camera_parameters)[i]["camera_name"]    >> temp_camera.camera_name;
+	  // replaced with rotation matrix
+	  //        (*camera_parameters)[i]["angle_axis_ax"]  >> temp_camera.angle_axis[0];
+	  //        (*camera_parameters)[i]["angle_axis_ay"]  >> temp_camera.angle_axis[1];
+	  //        (*camera_parameters)[i]["angle_axis_az"]  >> temp_camera.angle_axis[2];
+	  const YAML::Node *rotation_node = (*camera_parameters)[i].FindValue("rotation");
+	  if(rotation_node->size() != 9){
+	    ROS_ERROR_STREAM("Rotation " << i << " has " << (int)rotation_node->size() << " pts");
+	  }
+	  // read in the transform from world to camera frame
+          // invert it because camera object transforms world points into camera's frame
+	  double R[9],tx,ty,tz,angle_axis[3];
+	  for(int j=0;j<9;j++){
+	    (*rotation_node)[j]  >> R[j];
+	  }
+	  (*camera_parameters)[i]["position_x"]     >> tx;
+	  (*camera_parameters)[i]["position_y"]     >> ty;
+	  (*camera_parameters)[i]["position_z"]     >> tz;
+	  // NOTE: this Ceres function expects R in column major order, but we read R
+	  // in row by row which is effectively the inverse of R
+	  // the inverse is the rotation for transforming world points to camera points
+	  // but the translation portion is from camera to world
+	  double RI[9];
+	  RI[0] = R[0];  RI[1] = R[3]; RI[2] = R[6];
+	  RI[3] = R[1];  RI[4] = R[4]; RI[5] = R[7];
+	  RI[6] = R[2];  RI[7] = R[5]; RI[8] = R[8];
+	  ceres::RotationMatrixToAngleAxis(R,angle_axis);
+	  temp_camera.position[0] = -(tx * RI[0] + ty * RI[1] + tz * RI[2]);
+	  temp_camera.position[1] = -(tx * RI[3] + ty * RI[4] + tz * RI[5]);
+	  temp_camera.position[2] = -(tx * RI[6] + ty * RI[7] + tz * RI[8]);
+
+	  temp_camera.angle_axis[0] = angle_axis[0];
+	  temp_camera.angle_axis[1] = angle_axis[1];
+	  temp_camera.angle_axis[2] = angle_axis[2];
+	  (*camera_parameters)[i]["focal_length_x"] >> temp_camera.focal_length_x;
+	  (*camera_parameters)[i]["focal_length_y"] >> temp_camera.focal_length_y;
+	  (*camera_parameters)[i]["center_x"]       >> temp_camera.center_x;
+	  (*camera_parameters)[i]["center_y"]       >> temp_camera.center_y;
+	  (*camera_parameters)[i]["width"]          >> temp_camera.width;
+	  (*camera_parameters)[i]["height"]         >> temp_camera.height;
+	  temp_camera.num_observations = 0.0; // start out with none
+	  temp_camera.pose_history.clear(); // start out with no history
+	  original_cameras.push_back(temp_camera);
+	}	// end of for each camera in file
+      } // end if there are any cameras in file
+    }
+  catch (YAML::ParserException& e){
+    ROS_INFO_STREAM("Failed to read in moving cameras from yaml file ");
+    ROS_INFO_STREAM("camera name    = " << temp_camera.camera_name.c_str());
+    ROS_INFO_STREAM("angle_axis_ax  = " << temp_camera.angle_axis[0]);
+    ROS_INFO_STREAM("angle_axis_ay  = " << temp_camera.angle_axis[1]);
+    ROS_INFO_STREAM("angle_axis_az  = " << temp_camera.angle_axis[2]);
+    ROS_INFO_STREAM("position_x     = " << temp_camera.position[0]);
+    ROS_INFO_STREAM("position_y     = " << temp_camera.position[1]);
+    ROS_INFO_STREAM("position_z     = " << temp_camera.position[2]);
+    ROS_INFO_STREAM("focal_length_x = " << temp_camera.focal_length_x);
+    ROS_INFO_STREAM("focal_length_y = " << temp_camera.focal_length_y);
+    ROS_INFO_STREAM("center_x       = " << temp_camera.center_x);
+    ROS_INFO_STREAM("center_y       = " << temp_camera.center_y);
+  }
+  ROS_INFO_STREAM("Successfully read in " << (int) original_cameras.size() << " cameras");
+}
+void compare_cameras(vector<Camera> &C1, vector<Camera> &C2)
+{
+  if(C1.size()!= C2.size()){
+    ROS_ERROR_STREAM("compare_cameras() camera vectors different in length");
+  }
+  double d_x,d_y,d_z,dist;
+  double mean_dist=0;
+  double sigma_dist=0;
+  double d_ax,d_ay,d_az,angle;
+  double mean_angle=0;
+  double sigma_angle=0;
+  for(int i=0;i<(int)C1.size();i++){
+    d_x = C1[i].position[0]-C2[i].position[0];
+    d_y = C1[i].position[1]-C2[i].position[1];
+    d_z = C1[i].position[2]-C2[i].position[2];
+    d_ax = C1[i].angle_axis[0]-C2[i].angle_axis[0];
+    d_ay = C1[i].angle_axis[1]-C2[i].angle_axis[1];
+    d_az = C1[i].angle_axis[2]-C2[i].angle_axis[2];
+    dist = sqrt(d_x*d_x + d_y*d_y + d_z*d_z);
+    angle = sqrt(d_ax*d_ax + d_ay*d_ay + d_az*d_az);
+    mean_dist += dist;
+    mean_angle += angle;
+  }
+  mean_dist = mean_dist/(int)C1.size();
+  mean_angle = mean_angle/(int)C1.size();
+  for(int i=0;i<(int)C1.size();i++){
+    d_x = C1[i].position[0]-C2[i].position[0];
+    d_y = C1[i].position[1]-C2[i].position[1];
+    d_z = C1[i].position[2]-C2[i].position[2];
+    d_ax = C1[i].angle_axis[0]-C2[i].angle_axis[0];
+    d_ay = C1[i].angle_axis[1]-C2[i].angle_axis[1];
+    d_az = C1[i].angle_axis[2]-C2[i].angle_axis[2];
+    dist = sqrt(d_x*d_x + d_y*d_y + d_z*d_z);
+    angle = sqrt(d_ax*d_ax + d_ay*d_ay + d_az*d_az);
+    sigma_dist  += (dist-mean_dist)*(dist-mean_dist);
+    sigma_angle += (angle-mean_angle)*(angle-mean_angle);
+  }
+  sigma_dist = sqrt(sigma_dist/C1.size());
+  sigma_angle = sqrt(sigma_angle/C1.size());
+  ROS_INFO_STREAM("mean distance between camera poses = "<<mean_dist*12 <<" inches " << sigma_dist);
+  ROS_INFO_STREAM("mean angle between camera poses = "<<mean_angle*180/3.1415 << " degrees " << sigma_angle*180/3.1415);
+}
+
+void compare_observations(vector<ObservationDataPoint> &O1, vector<ObservationDataPoint> &O2)
+{
+  if(O1.size()!= O2.size()){
+    ROS_ERROR_STREAM("compare_observations() vectors different in length");
+  }
+  double d_x,d_y,dist;
+  double mean_dist=0.0;
+  for(int i=0;i<(int)O1.size();i++){
+    d_x = O1[i].image_loc_.x - O2[i].image_loc_.x;
+    d_y = O1[i].image_loc_.y - O2[i].image_loc_.y;
+    dist = sqrt(d_x*d_x + d_y*d_y);
+    mean_dist += dist;
+  }
+  mean_dist = mean_dist/(int)O1.size();
+  ROS_INFO_STREAM("mean distance between observations = "<<mean_dist <<" pixels");
 }
