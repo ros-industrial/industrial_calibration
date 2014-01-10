@@ -10,13 +10,23 @@
 #include <ros/ros.h>
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <boost/foreach.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/generator_iterator.hpp>
 
 using std::string;
 using std::vector;
-using std::rand;
 using industrial_extrinsic_cal::Point3d;
+using industrial_extrinsic_cal::Pose6d;
 using industrial_extrinsic_cal::P_BLOCK;
 
+typedef boost::minstd_rand base_gen_type;
+base_gen_type gen(42);
+boost::normal_distribution<> normal_dist(0,1); // zero mean unit variance
+boost::variate_generator<base_gen_type&, boost::normal_distribution<> > randn(gen, normal_dist);
 
 typedef struct
 {
@@ -47,6 +57,10 @@ typedef struct
   string camera_name;
   int height;
   int width;
+  vector<Pose6d> pose_history;
+  double pose_position_sigma;
+  double pose_orientation_sigma;
+  int num_observations;
 } Camera;
 
 class ObservationDataPoint{
@@ -80,52 +94,56 @@ void print_AATasH(double x, double y, double z, double tx, double ty, double tz)
 void print_AATasHI(double x, double y, double z, double tx, double ty, double tz);
 void print_AAasEuler(double x, double y, double z);
 void print_camera(Camera C, string words);
-void AAT2HI(double ax, double ay, double ay, double tx, double ty, double tz, HI[4][4])
-{
-  double R[9];
-  double aa[3];
-  aa[0] = ax;
-  aa[1] = ay;
-  aa[2] = az;
-  ceres::AngleAxisToRotationMatrix(aa, R);
-  HI[0][0]  = R[0];   HI[0][1] = R[1];  HI[0][2] = R[2];
-  HI[1][0]  = R[3];   HI[1][1] = R[4];  HI[1][2] = R[5];
-  HI[2][0]  = R[6];   HI[2][1] = R[7];  HI[2][2] = R[8];
-  HI[3][0]  = 0.0;    HI[3][1] =  0.0;  HI[3][2] = 1.0;
-
-  HI[0][3]  = -(tx * R[0] + ty * R[1] + tz * R[2]);
-  HI[1][3]  = -(tx * R[3] + ty * R[4] + tz * R[5]);
-  HI[2][3]  = -(tx * R[6] + ty * R[7] + tz * R[8]);
-}
 
 Observation project_point_no_distortion(Camera C, Point3d P);
+void compute_observations(vector<Camera> &cameras, 
+			  vector<Point3d> &points, 
+			  double noise,
+			  double max_dist,
+			  vector<ObservationDataPoint> &observations);
+void perturb_cameras(vector<Camera> &cameras, double position_noise, double degrees_noise);
+void copy_cameras_wo_history(vector<Camera> &original_cameras, vector<Camera> & cameras);
+void copy_points(vector<Point3d> &original_points, vector<Point3d> & points);
+void add_pose_to_history(vector<Camera> &cameras, vector<Camera> &original_cameras);
+void compute_historic_pose_statistics(vector<Camera> &cameras);
 
 // computes image of point in cameras image plane
 Observation project_point_no_distortion(Camera C, Point3d P)
 {
-  double p[3];
-  double pt[3];
-  pt[0] = P.x;
-  pt[1] = P.y;
-  pt[2] = P.z;
+  double p[3];			// rotated into camera frame
+  double point[3];		// world location of point
+  double aa[3];			// angle axis representation of camera transform
+  double tx = C.position[0];	// location of origin in camera frame x
+  double ty = C.position[1];    // location of origin in camera frame y
+  double tz = C.position[2];	// location of origin in camera frame z
+  double fx = C.focal_length_x;	// focal length x
+  double fy = C.focal_length_y;	// focal length y
+  double cx = C.center_x;	// optical center x
+  double cy = C.center_y;	// optical center y
 
-  // transform point into camera frame
-  // note, camera transform takes points from camera frame into world frame
+  aa[0] = C.angle_axis[0];
+  aa[1] = C.angle_axis[1];
+  aa[2] = C.angle_axis[2];
+  point[0] = P.x;		
+  point[1] = P.y;
+  point[2] = P.z;
 
-  ceres::AngleAxisRotatePoint(C.angle_axis, pt, p);
-  printf("point %6.3lf %6.3lf %6.3lf rotated: %6.3lf %6.3lf %6.3lf ", P.x, P.y, P.z, p[0], p[1], p[2]);
-  p[0] += C.position[0];
-  p[1] += C.position[1];
-  p[2] += C.position[2];
-  printf("translated: %6.3lf %6.3lf %6.3lf\n", p[0], p[1], p[2]);
-  //  printf("PPP %6.3lf  %6.3lf %6.3lf \n",p[0],p[1],p[2]);
-  double xp = p[0] / p[2];
-  double yp = p[1] / p[2];
+  /** rotate and translate points into camera frame */
+  ceres::AngleAxisRotatePoint(aa, point, p);
+
+  // apply camera translation
+  double xp1 = p[0] + tx;
+  double yp1 = p[1] + ty;
+  double zp1 = p[2] + tz;
+
+  // scale into the image plane by distance away from camera
+  double xp = xp1 / zp1;
+  double yp = yp1 / zp1;
 
   // perform projection using focal length and camera center into image plane
   Observation O;
-  O.x = C.focal_length_x * xp + C.center_x;
-  O.y = C.focal_length_y * yp + C.center_y;
+  O.x = fx * xp + cx;
+  O.y = fy * yp + cy;
   return (O);
 }
 
@@ -194,8 +212,17 @@ struct CameraReprjErrorNoDistortion
 int main(int argc, char** argv)
 {
   vector<Point3d> points;
+  vector<Point3d> original_points;
   vector<Camera>  cameras;
+  vector<Camera>  original_cameras;
   vector<ObservationDataPoint> observations;
+
+  // hard coded constants
+  double camera_pos_noise = 3.0; // feet
+  double camera_or_noise = 3.0; // degrees
+  double image_noise = 2.0; // pixels
+  double max_detect_distance = 999999570.0; // feet at which can't detect object
+  int num_test_cases = 100;
 
   google::InitGoogleLogging(argv[0]);
   if (argc != 3)
@@ -240,6 +267,7 @@ int main(int argc, char** argv)
 	temp_pnt3d.y = temp_pnt[1];
 	temp_pnt3d.z = temp_pnt[2];
 	points.push_back(temp_pnt3d);
+	original_points.push_back(temp_pnt3d);
       }
     }
   catch (YAML::ParserException& e){
@@ -267,33 +295,43 @@ int main(int argc, char** argv)
 	  //        (*camera_parameters)[i]["angle_axis_az"]  >> temp_camera.angle_axis[2];
 	  const YAML::Node *rotation_node = (*camera_parameters)[i].FindValue("rotation");
 	  if(rotation_node->size() != 9){
-	    ROS_ERROR_STREAM("Rotation " << i << " should have 9 pts, has " << (int)rotation_node->size());
+	    ROS_ERROR_STREAM("Rotation " << i << " has " << (int)rotation_node->size() << " pts");
 	  }
-	  // read in the transform, and invert, camera objects keeps world to camera data
+	  // read in the transform from world to camera frame
+          // invert it because camera object transforms world points into camera's frame
 	  double R[9],tx,ty,tz,angle_axis[3];
-	  for(i=0;i<9;i++){
-	  (*rotation_node)[i]  >> R[i];
+	  for(int j=0;j<9;j++){
+	    (*rotation_node)[j]  >> R[j];
 	  }
 	  (*camera_parameters)[i]["position_x"]     >> tx;
 	  (*camera_parameters)[i]["position_y"]     >> ty;
 	  (*camera_parameters)[i]["position_z"]     >> tz;
+	  // NOTE: this Ceres function expects R in column major order, but we read R
+	  // in row by row which is effectively the inverse of R
+	  // the inverse is the rotation for transforming world points to camera points
+	  // but the translation portion is from camera to world
+	  double RI[9];
+	  RI[0] = R[0];  RI[1] = R[3]; RI[2] = R[6];
+	  RI[3] = R[1];  RI[4] = R[4]; RI[5] = R[7];
+	  RI[6] = R[2];  RI[7] = R[5]; RI[8] = R[8];
 	  ceres::RotationMatrixToAngleAxis(R,angle_axis);
-	  double HI[4][4];
-	  AAT2HI(angle_axis[0],angle_axis[1],angle_axis[2],tx,ty,tz,HI);
-	  temp_camera.position[0] = HI[0][3];
-	  temp_camera.position[1] = HI[1][3];
-	  temp_camera.position[2] = HI[2][3];
-	  R[0] = HI[0][0]; R[1] = HI[1][0]; R[2] = HI[2][0];
-	  R[3] = HI[0][1]; R[4] = HI[1][1]; R[5] = HI[2][0];
-	  R[6] = HI[0][2]; R[7] = HI[1][2]; R[8] = HI[2][0];
-	  ceres::RotationMatrixToAngleAxis(R,angle_axis);
+	  temp_camera.position[0] = -(tx * RI[0] + ty * RI[1] + tz * RI[2]);
+	  temp_camera.position[1] = -(tx * RI[3] + ty * RI[4] + tz * RI[5]);
+	  temp_camera.position[2] = -(tx * RI[6] + ty * RI[7] + tz * RI[8]);
+
+	  temp_camera.angle_axis[0] = angle_axis[0];
+	  temp_camera.angle_axis[1] = angle_axis[1];
+	  temp_camera.angle_axis[2] = angle_axis[2];
 	  (*camera_parameters)[i]["focal_length_x"] >> temp_camera.focal_length_x;
 	  (*camera_parameters)[i]["focal_length_y"] >> temp_camera.focal_length_y;
 	  (*camera_parameters)[i]["center_x"]       >> temp_camera.center_x;
 	  (*camera_parameters)[i]["center_y"]       >> temp_camera.center_y;
 	  (*camera_parameters)[i]["width"]          >> temp_camera.width;
 	  (*camera_parameters)[i]["height"]         >> temp_camera.height;
+	  temp_camera.num_observations = 0.0; // start out with none
+	  temp_camera.pose_history.clear(); // start out with no history
 	  cameras.push_back(temp_camera);
+	  original_cameras.push_back(temp_camera);
 	}	// end of for each camera in file
       } // end if there are any cameras in file
     }
@@ -311,26 +349,19 @@ int main(int argc, char** argv)
     ROS_INFO_STREAM("center_x       = " << temp_camera.center_x);
     ROS_INFO_STREAM("center_y       = " << temp_camera.center_y);
   }
-  ROS_INFO_STREAM("Successfully read in %d cameras " << (int) cameras.size());
+  ROS_INFO_STREAM("Successfully read in " << (int) cameras.size() << " cameras");
 
+  // this sets the nominal number of observations for each camera
+  // NOTE, it may vary some if the noise is high
+  compute_observations(original_cameras,points,0.0,max_detect_distance,observations);
 
   // create nominal observations of points using camera parameters
-  for(int i=0; i < (int)cameras.size(); ++i){
-    for(int j=0; j < (int)points.size(); j++){
-      // find image of point in camera
-      Observation observation = project_point_no_distortion(cameras[i], points[j]);
-      if(observation.x>=0 &&observation.x<cameras[i].width &&
-	 observation.y>=0 &&observation.y<cameras[i].height ){
-	// save observation
-	ObservationDataPoint new_obs(&(cameras[i]),j,&(points[i].pb[0]),observation);
-	observations.push_back(new_obs);
-      }
-    }
-  }
-  ROS_INFO_STREAM("found " << observations.size() << " observations");
+  copy_cameras_wo_history(original_cameras,cameras);
+  compute_observations(cameras,points,0.0,max_detect_distance,observations);
+  perturb_cameras(cameras,camera_pos_noise,camera_or_noise);
 
   // 
-  // Setup problem 1
+  // Setup problem 1 to see if camera extrinsics may be recovered with fixed fiducials
   // perturb camera positions and orientations
   // submit nominal observations as cost functions
 
@@ -350,50 +381,91 @@ int main(int argc, char** argv)
     double *extrinsics = obs.camera_->PB_extrinsics;
     double *points     = obs.point_position_;
     problem1.AddResidualBlock(cost_function, NULL, extrinsics, points);
+    problem1.SetParameterBlockConstant(points); // fixed fiducials
 
-    // set extrinsic constant location, because something needs to be set
-    static bool first_camera = true;
-    if(first_camera){
-      first_camera = false;
-      problem1.SetParameterBlockConstant(extrinsics);
-    }
   }
-  BOOST_FOREACH(Camera C, cameras){
-    static bool first_camera = true;
-    if(!first_camera){		// perturb location by as much as 12 inches in any direction
-      C.position[0] += ((double)(std::rand()%24)-12)/12.0;
-      C.position[1] += ((double)(std::rand()%24)-12)/12.0;
-      C.position[2] += ((double)(std::rand()%24)-12)/12.0;
-    }
-  }
+
+  // solve problem
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::DENSE_SCHUR;
   options.minimizer_progress_to_stdout = true;
   options.max_num_iterations = 1000;
   
+  // display results
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem1, &summary);
   std::cout << summary.FullReport() << "\n";
-  for(int i=0;i<(int)cameras.size();i++){
-    char temp[100];
-    sprintf(temp,"Camera %s final parameters",cameras[i].camera_name.c_str());
-    print_camera(cameras[i], temp);
+
+
+  copy_cameras_wo_history(original_cameras,cameras);
+  copy_points(original_points,points);
+  compute_observations(cameras,points,image_noise,max_detect_distance,observations);
+  perturb_cameras(cameras,camera_pos_noise,camera_or_noise);
+
+  ceres::Problem problem2;
+  BOOST_FOREACH(ObservationDataPoint obs, observations){
+    double x  = obs.image_loc_.x;
+    double y  = obs.image_loc_.y;
+    double fx = obs.camera_->focal_length_x;
+    double fy = obs.camera_->focal_length_y;
+    double cx = obs.camera_->center_x;
+    double cy = obs.camera_->center_y;
+
+    ceres::CostFunction* cost_function = CameraReprjErrorNoDistortion::Create(x,y,fx,fy,cx,cy);
+      
+    double *extrinsics = obs.camera_->PB_extrinsics;
+    double *points     = obs.point_position_;
+    problem2.AddResidualBlock(cost_function, NULL, extrinsics, points);
+    problem2.SetParameterBlockConstant(points); // fixed fiducials
+
   }
-  // Setup problem 2
-  // perturb point positions 
-  // submit nominal camera extrinsics
-  // solve and compare to original point values
+  ceres::Solve(options, &problem2, &summary);
+  std::cout << summary.FullReport() << "\n";
 
-  // Setup problem 3
-  // use original point positions, set constant
-  // use original camera poses
-  // for a statistically significant number of iterations:
-  //     perturb observations
-  //     solve and compare to original pose values
-  // end for
-  // calculate statistics on poses as an estimate of pose quality
 
-  return 0;
+  // clear all pose histories of cameras
+  BOOST_FOREACH(Camera &C, original_cameras){
+    C.pose_history.clear();
+  }
+
+  // compute poses for cameras for a bunch of test cases
+  for(int test_case=0; test_case<num_test_cases; test_case++){
+    copy_cameras_wo_history(original_cameras, cameras);
+    copy_points(original_points,points);
+    compute_observations(cameras,points,image_noise,max_detect_distance,observations);
+    perturb_cameras(cameras,camera_pos_noise,camera_or_noise);
+
+    ceres::Problem problem;
+    BOOST_FOREACH(ObservationDataPoint obs, observations){
+      double x  = obs.image_loc_.x;
+      double y  = obs.image_loc_.y;
+      double fx = obs.camera_->focal_length_x;
+      double fy = obs.camera_->focal_length_y;
+      double cx = obs.camera_->center_x;
+      double cy = obs.camera_->center_y;
+
+      ceres::CostFunction* cost_function = CameraReprjErrorNoDistortion::Create(x,y,fx,fy,cx,cy);
+      
+      double *extrinsics = obs.camera_->PB_extrinsics;
+      double *points     = obs.point_position_;
+      problem.AddResidualBlock(cost_function, NULL, extrinsics, points);
+      problem.SetParameterBlockConstant(points); // fixed fiducials
+
+    }
+    ceres::Solve(options, &problem, &summary);
+
+    add_pose_to_history(cameras, original_cameras);
+
+  }// end of test cases
+  compute_historic_pose_statistics(original_cameras);
+  
+  BOOST_FOREACH(Camera &C, original_cameras){
+    printf("%s\t:sigma distance  %lf angular %lf number_observations = %d\n",
+	   C.camera_name.c_str(),
+	   C.pose_position_sigma*12.0,
+	   C.pose_orientation_sigma*180/3.1415,
+	   C.num_observations);
+  } 
 }
 
 // print a quaternion plus position as a homogeneous transform
@@ -466,15 +538,150 @@ void print_AAasEuler(double x, double y, double z)
 void print_camera(Camera C, string words)
 {
   printf("%s\n", words.c_str());
-  printf("Camera to World Transform:\n");
+  printf("Point in Camera frame to points in World frame Transform:\n");
   print_AATasHI(C.angle_axis[0], C.angle_axis[1], C.angle_axis[2], 
 		C.position[0],   C.position[1],   C.position[2]);
 
-  printf("World to Camera\n");
+  printf("Points in World frame to points in Camera frame transform\n");
   print_AATasH(C.angle_axis[0], C.angle_axis[1], C.angle_axis[2], 
 	       C.position[0],   C.position[1],   C.position[2]);
 
   print_AAasEuler(C.angle_axis[0], C.angle_axis[1], C.angle_axis[2]);
   printf("fx = %8.3lf fy = %8.3lf\n", C.focal_length_x, C.focal_length_y);
   printf("cx = %8.3lf cy = %8.3lf\n", C.center_x, C.center_y);
+}
+
+
+void compute_observations(vector<Camera> &cameras, 
+			  vector<Point3d> &points, 
+			  double noise,
+			  double max_dist,
+			  vector<ObservationDataPoint> &observations)
+{
+  int n_observations = 0;
+  observations.clear();
+
+  // create nominal observations of points using camera parameters
+  BOOST_FOREACH(Camera & C, cameras){
+    C.num_observations = 0;
+    int j=0;
+    BOOST_FOREACH(Point3d &P, points){
+      j++;
+      // find image of point in camera
+      double dx = C.position[0] - P.x;
+      double dy = C.position[1] - P.y;
+      double dz = C.position[2] - P.z;
+      double distance = sqrt(dx*dx + dy*dy + dz*dz);
+      if(distance < max_dist){
+	Observation obs = project_point_no_distortion(C, P);
+	obs.x += noise*randn(); // add observation noise
+	obs.y += noise*randn();
+	if(obs.x >= 0 && obs.x < C.width && obs.y >= 0 &&obs.y < C.height ){
+	  // save observation
+	  ObservationDataPoint new_obs(&(C),j,&(P.pb[0]),obs);
+	  observations.push_back(new_obs);
+	  C.num_observations++;
+	  n_observations++;
+	} // end if observation within field of view
+      } // end if point close enough to camera
+    }// end for each fiducial point
+   }// end for each camera
+}// end compute observations
+
+void perturb_cameras(vector<Camera> &cameras, double position_noise, double degrees_noise)
+{
+  double radian_noise = degrees_noise*3.1415/180.0;
+  BOOST_FOREACH(Camera &C, cameras){
+      C.position[0]   += position_noise*randn();	
+      C.position[1]   += position_noise*randn();
+      C.position[2]   += position_noise*randn();
+      C.angle_axis[0] += radian_noise*randn();
+      C.angle_axis[1] += radian_noise*randn();
+      C.angle_axis[2] += radian_noise*randn();
+  }
+}
+
+void copy_cameras_wo_history(vector<Camera> &original_cameras, vector<Camera> & cameras)
+{
+  cameras.clear();
+  BOOST_FOREACH(Camera &C, original_cameras){
+    Camera newC = C;
+    newC.pose_history.clear();
+    newC.pose_position_sigma = 0;
+    newC.pose_orientation_sigma = 0;
+    newC.num_observations = 0;
+    cameras.push_back(newC);
+  }
+}
+
+void copy_points(vector<Point3d> &original_points, vector<Point3d> & points)
+{
+  points.clear();
+  BOOST_FOREACH(Point3d &P, original_points){
+    points.push_back(P);
+  }
+} 
+
+void add_pose_to_history(vector<Camera> &cameras, vector<Camera> & original_cameras)
+{
+  if(cameras.size() != original_cameras.size())
+    ROS_ERROR_STREAM("number of cameras in vectors do not match");
+
+  for(int i=0;i<(int)cameras.size();i++){
+    Pose6d pose;
+    pose.x  = cameras[i].position[0];
+    pose.y  = cameras[i].position[1];
+    pose.z  = cameras[i].position[2];
+    pose.ax = cameras[i].angle_axis[0];
+    pose.ay = cameras[i].angle_axis[1];
+    pose.az = cameras[i].angle_axis[2];
+    original_cameras[i].pose_history.push_back(pose);
+  }
+}
+
+void compute_historic_pose_statistics(vector<Camera> & cameras)
+{
+  // calculate statistics of test case
+  double mean_x, mean_y, mean_z, mean_ax, mean_ay, mean_az;
+  double sigma_x, sigma_y, sigma_z, sigma_ax, sigma_ay, sigma_az;
+  BOOST_FOREACH(Camera &C, cameras){
+    mean_x = mean_y = mean_z = mean_ax = mean_ay = mean_az = 0.0;
+    BOOST_FOREACH(Pose6d &p, C.pose_history){
+      mean_x  += p.x;
+      mean_y  += p.y;
+      mean_z  += p.z;
+      mean_ax += p.ax;
+      mean_ay += p.ay;
+      mean_az += p.az;
+    }
+    int num_poses = (int) C.pose_history.size();
+    mean_x  = mean_x/num_poses;
+    mean_y  = mean_y/num_poses;
+    mean_z  = mean_z/num_poses;
+    mean_ax = mean_ax/num_poses;
+    mean_ay = mean_ay/num_poses;
+    mean_az = mean_az/num_poses;
+
+    sigma_x = sigma_y = sigma_z = sigma_ax = sigma_ay, sigma_az = 0.0;
+    BOOST_FOREACH(Pose6d &p, C.pose_history){
+      sigma_x  += (mean_x - p.x)*(mean_x - p.x);;
+      sigma_y  += (mean_y - p.y)*(mean_y - p.y);;
+      sigma_z  += (mean_z - p.z)*(mean_z - p.z);;
+      sigma_ax += (mean_ax -p.ax)*(mean_ax -p.ax);;
+      sigma_ay += (mean_ay -p.ay)*(mean_ay -p.ay);;
+      sigma_az += (mean_az -p.az)*(mean_az -p.az);;
+    }
+    sigma_x  = sqrt(sigma_x/(num_poses + 1.0));
+    sigma_y  = sqrt(sigma_y/(num_poses + 1.0));
+    sigma_z  = sqrt(sigma_z/(num_poses + 1.0));
+    sigma_ax = sqrt(sigma_ax/(num_poses + 1.0));
+    sigma_ay = sqrt(sigma_ay/(num_poses + 1.0));
+    sigma_az = sqrt(sigma_az/(num_poses + 1.0));
+
+    double dv = sqrt(sigma_x*sigma_x + sigma_y*sigma_y + sigma_z*sigma_z);
+    double av = sqrt(sigma_ax*sigma_ax + sigma_ay*sigma_ay + sigma_az*sigma_az);
+
+    C.pose_position_sigma    = dv;
+    C.pose_orientation_sigma = av;
+  } // end for each camera
 }
