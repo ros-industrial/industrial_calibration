@@ -631,11 +631,6 @@ bool CalibrationJob::runOptimization()
       // 5. the same as 4, but with target in known location
       //    "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z,p_tx,p_ty,p_tz,p_ax,p_ay,p_az)"
 
-    // need a block of cameras 
-    // need a block of targets
-    // these two lists need to be able to search for an existing item by name
-    // and also an existing item by both name and scene id
-
       // pull out the constants from the observation point data
       double focal_length_x = ODP.camera_intrinsics_[0]; // TODO, make this not so ugly
       double focal_length_y = ODP.camera_intrinsics_[1];
