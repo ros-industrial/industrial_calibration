@@ -1,0 +1,632 @@
+---
+cameras:
+# West wall cameras
+-
+   camera_name: mid_west_wall_low
+#  east facing wide horizontal
+   rotation: [ 0.0,  0.0, 1.0,   -1.0,  0.0, 0.0,  0.0, -1.0, 0.0]
+   position_x: 0.0
+   position_y: 160.0
+   position_z: 10.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: mid_west_wall_mid
+#  east facing wide horizontal
+   rotation: [ 0.0,  0.0, 1.0,   -1.0,  0.0, 0.0,  0.0, -1.0, 0.0]
+   position_x: 0.0
+   position_y: 160.0
+   position_z: 35.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+#-
+#   camera_name: mid_west_wall_high
+#  east facing wide horizontal
+#   rotation: [ 0.0,  0.0, 1.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0]
+#   position_x: 0.0
+#   position_y: 160.0
+#   position_z: 70.0
+#   focal_length_x: 2533.705193
+#   focal_length_y: 2535.988493
+#   center_x: 1008.012193
+#   center_y: 537.0131755
+#   width: 2046
+#   height: 1086
+-
+   camera_name: near_west_wall_low
+#  north east facing
+   rotation: [  0.70711, 0.0, 0.70711, -0.70711, 0.0, 0.70711, 0.0,  -1.0, 0.0]
+   position_x: 0.0
+   position_y: 0.0
+   position_z: 10.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: near_west_wall_mid
+#  north east facing
+   rotation: [  0.70711, 0.0, 0.70711, -0.70711, 0.0, 0.70711, 0.0,  -1.0, 0.0]
+   position_x: 0.0
+   position_y: 0.0
+   position_z: 35.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: near_west_wall_high
+#  north east facing
+   rotation: [  0.70711, 0.0, 0.70711, -0.70711, 0.0, 0.70711, 0.0,  -1.0, 0.0]
+   position_x: 0.0
+   position_y: 0.0
+   position_z: 70.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: far_west_wall_low
+#  south east facing
+   rotation: [ -0.70711, 0.0,  0.70711, -0.70711, 0.0, -0.70711, 0.0,     -1.0,  0.0]
+   position_x: 0.0
+   position_y: 260.0
+   position_z: 10.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: far_west_wall_mid
+#  south east facing
+   rotation: [ -0.70711, 0.0,  0.70711, -0.70711, 0.0, -0.70711, 0.0,     -1.0,  0.0]
+   position_x: 0.0
+   position_y: 260.0
+   position_z: 35.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: far_west_wall_high
+#  south east facing
+   rotation: [ -0.70711, 0.0,  0.70711, -0.70711, 0.0, -0.70711, 0.0,     -1.0,  0.0]
+   position_x: 0.0
+   position_y: 260.0
+   position_z: 70.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+
+# East wall
+-
+   camera_name: mid_east_wall_low
+#  west facing wide horizontal
+   rotation: [ 0.0,  0.0, -1.0, 1.0,  0.0,  0.0, 0.0, -1.0,  0.0]
+   position_x: 300.0
+   position_y: 160.0
+   position_z: 10.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: mid_east_wall_mid
+#  west facing wide horizontal
+   rotation: [ 0.0,  0.0, -1.0, 1.0,  0.0,  0.0, 0.0, -1.0,  0.0]
+   position_x: 300.0
+   position_y: 160.0
+   position_z: 35.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+#-
+#   camera_name: mid_east_wall_high
+#  west facing wide horizontal
+#   rotation: [ 0.0,  0.0, -1.0, 1.0,  0.0,  0.0, 0.0, -1.0,  0.0]
+#   position_x: 300.0
+#   position_y: 160.0
+#   position_z: 70.0
+#   focal_length_x: 2533.705193
+#   focal_length_y: 2535.988493
+#   center_x: 1008.012193
+#   center_y: 537.0131755
+#   width: 2046
+#   height: 1086
+-
+   camera_name: near_east_wall_low
+#  north west facing
+   rotation: [  0.70711, 0.0, -0.70711, 0.70711, 0.0,  0.70711, 0.0,     -1.0,  0.0]
+   position_x: 300.0
+   position_y: 0.0
+   position_z: 10.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: near_east_wall_mid
+#  north west facing
+   rotation: [  0.70711, 0.0, -0.70711, 0.70711, 0.0,  0.70711, 0.0,     -1.0,  0.0]
+   position_x: 300.0
+   position_y: 0.0
+   position_z: 35.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: near_east_wall_high
+#  north west facing
+   rotation: [  0.70711, 0.0, -0.70711, 0.70711, 0.0,  0.70711, 0.0,     -1.0,  0.0]
+   position_x: 300.0
+   position_y: 0.0
+   position_z: 70.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: far_east_wall_low
+#  south west facing
+   rotation: [ -0.70711, 0.0, -0.70711, 0.70711, 0.0, -0.70711, 0.0,     -1.0,  0.0]
+   position_x: 300.0
+   position_y: 260.0
+   position_z: 10.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: far_east_wall_mid
+#  south west facing
+   rotation: [ -0.70711, 0.0, -0.70711, 0.70711, 0.0, -0.70711, 0.0,     -1.0,  0.0]
+   position_x: 300.0
+   position_y: 260.0
+   position_z: 35.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: far_east_wall_high
+#  south west facing
+   rotation: [ -0.70711, 0.0, -0.70711, 0.70711, 0.0, -0.70711, 0.0,     -1.0,  0.0]
+   position_x: 300.0
+   position_y: 260.0
+   position_z: 70.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+
+# downward facing east west cameras
+-
+   camera_name: ceiling_10_10
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 10.0
+   position_y: 10.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_10_60
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 10.0
+   position_y: 60.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_10_120
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 10.0
+   position_y: 120.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_10_180
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 10.0
+   position_y: 180.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_10_240
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 10.0
+   position_y: 240.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_70_10
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 70.0
+   position_y: 10.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_70_60
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 70.0
+   position_y: 60.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_70_120
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 70.0
+   position_y: 120.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_70_180
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 70.0
+   position_y: 180.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_70_240
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 70.0
+   position_y: 240.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_130_10
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 130.0
+   position_y: 10.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_130_60
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 130.0
+   position_y: 60.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_130_120
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 130.0
+   position_y: 120.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_130_180
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 130.0
+   position_y: 180.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_130_240
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 130.0
+   position_y: 240.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_190_10
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 190.0
+   position_y: 10.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_190_60
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 190.0
+   position_y: 60.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_190_120
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 190.0
+   position_y: 120.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_190_180
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 190.0
+   position_y: 180.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_190_240
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 190.0
+   position_y: 240.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_250_10
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 250.0
+   position_y: 10.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_250_60
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 250.0
+   position_y: 60.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_250_120
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 250.0
+   position_y: 120.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_250_180
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 250.0
+   position_y: 180.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_250_240
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 250.0
+   position_y: 240.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_290_10
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 290.0
+   position_y: 10.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_290_60
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 290.0
+   position_y: 60.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_290_120
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 290.0
+   position_y: 120.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_290_180
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 290.0
+   position_y: 180.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+-
+   camera_name: ceiling_290_240
+#  downward facing wide east west
+   rotation: [ 1.0,  0.0,  0.0, 0.0, -1.0,  0.0, 0.0,  0.0, -1.0]
+   position_x: 290.0
+   position_y: 240.0
+   position_z: 90.0
+   focal_length_x: 2533.705193
+   focal_length_y: 2535.988493
+   center_x: 1008.012193
+   center_y: 537.0131755
+   width: 2046
+   height: 1086
+

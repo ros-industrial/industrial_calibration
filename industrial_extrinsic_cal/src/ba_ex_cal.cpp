@@ -20,7 +20,7 @@
 using std::ifstream;
 using std::string;
 using std::vector;
-using industrial_extrinsic_cal::Point3d;
+//using industrial_extrinsic_cal::Point3d;
 using industrial_extrinsic_cal::Pose6d;
 using industrial_extrinsic_cal::P_BLOCK;
 
@@ -59,10 +59,37 @@ typedef struct
   int height;
   int width;
   vector<Pose6d> pose_history;
+  double pose_position_mean_error;
   double pose_position_sigma;
+  double pose_orientation_mean_error;
   double pose_orientation_sigma;
   int num_observations;
 } Camera;
+
+/*! Brief Point3d defines a ceres_structure for a point in 3D space */
+typedef struct
+{
+  union
+  {
+    struct
+    {
+      double x; /**< position x */
+      double y; /**< position y */
+      double z; /**< position z */
+    };
+    double pb[3]; /**< a parameter block with all three elements */
+  };
+  vector<double> x_history;
+  vector<double> y_history;
+  vector<double> z_history;
+  double mean_x;
+  double mean_y;
+  double mean_z;
+  double sigma_x;
+  double sigma_y;
+  double sigma_z;
+  int num_observations;
+} Point3d;
 
 class ObservationDataPoint{
 public:
@@ -103,10 +130,13 @@ void compute_observations(vector<Camera> &cameras,
 			  double max_dist,
 			  vector<ObservationDataPoint> &observations);
 void perturb_cameras(vector<Camera> &cameras, double position_noise, double degrees_noise);
+void independently_perturb_cameras(vector<Camera> &cameras);
 void copy_cameras_wo_history(vector<Camera> &original_cameras, vector<Camera> & cameras);
 void copy_points(vector<Point3d> &original_points, vector<Point3d> & points);
 void add_pose_to_history(vector<Camera> &cameras, vector<Camera> &original_cameras);
 void compute_historic_pose_statistics(vector<Camera> &cameras);
+void add_points_to_history(vector<Point3d> &points, vector<Point3d> &original_points);
+void compute_historic_point_statistics(vector<Point3d> & points);
 void parse_points(ifstream & points_input_file,vector<Point3d> &original_points);
 void parse_cameras(ifstream & cameras_input_file,vector<Camera> & original_cameras);
 void compare_cameras(vector<Camera> &C1, vector<Camera> &C2);
@@ -216,25 +246,28 @@ struct CameraReprjErrorNoDistortion
 
 int main(int argc, char** argv)
 {
-  vector<Point3d> points;
-  vector<Point3d> original_points;
-  vector<Camera>  cameras;
-  vector<Camera>  original_cameras;
-  vector<ObservationDataPoint> original_observations;
-  vector<ObservationDataPoint> observations;
+  vector<Point3d> original_points; // control points for calibration
+  vector<Point3d> points; // working copy of original points
+  vector<Point3d> original_field_points;// test points for accuracy estimation
+  vector<Point3d> field_points; // working copy of original field points
+  vector<Camera>  original_cameras; // cameras with given poses
+  vector<Camera>  cameras; // working copy of original cameras
+  vector<ObservationDataPoint> original_observations; // noisless observations of original points
+  vector<ObservationDataPoint> original_field_observations; // noisless observations field points
+  vector<ObservationDataPoint> observations; // working observations
 
   // TODO use a parameter file for these, or make them arguments
   // hard coded constants 
   double camera_pos_noise     = 36.0/12.0; // 36 inches in feet
   double camera_or_noise      = 3.0; // degrees
-  double image_noise          = .4; // pixels
+  double image_noise          = .25; // pixels
   double max_detect_distance  = 999999570.0; // feet at which can't detect object
   int num_test_cases          = 100;
 
   google::InitGoogleLogging(argv[0]);
-  if (argc != 3)
+  if (argc != 4)
     {
-      std::cerr << "usage: BaExCal <3Dpoints_file> <cameras_file>\n";
+      std::cerr << "usage: BaExCal <3Dpoints_file> <cameras_file> <fieldpoints_file\n";
       return 1;
     }
 
@@ -255,9 +288,18 @@ int main(int argc, char** argv)
       return (false);
     }
 
-  // read in the point and camera data from yaml files
+  ifstream field_points_input_file(argv[3]);
+  if (field_points_input_file.fail())
+    {
+      string temp(argv[1]);
+      ROS_ERROR_STREAM("ERROR can't open field_points_input_file:  "<< temp.c_str());
+      return (false);
+    }
+
+  // read in the point and camera data and field points from yaml files
   parse_points(points_input_file,original_points);
   parse_cameras(cameras_input_file,original_cameras);
+  parse_points(field_points_input_file,original_field_points);
 
   // this sets the nominal number of observations for each camera
   // NOTE, it may vary some if the noise is high
@@ -270,10 +312,15 @@ int main(int argc, char** argv)
   // solve
   copy_cameras_wo_history(original_cameras,cameras);
   copy_points(original_points,points);
+  // compute noise free observations
   compute_observations(cameras,points,0.0,max_detect_distance,original_observations);
+  // compute noisy observations
   compute_observations(cameras,points,image_noise,max_detect_distance,observations);
+  // compare noisy observations to noise free observations
   compare_observations(original_observations,observations);// shows noise is correct
+  // perturb cameras 
   perturb_cameras(cameras,camera_pos_noise,camera_or_noise);
+  // compare the original camera's locations to the perturbed ones
   compare_cameras(original_cameras,cameras); // shows how far apart they started
 
   // Create residuals for each observation in the bundle adjustment problem. The
@@ -307,39 +354,34 @@ int main(int argc, char** argv)
   ceres::Solve(options, &problem1, &summary);
   // std::cout << summary.FullReport() << "\n";
 
+  // see how well original camera poses were recoved with noisy observations
   compare_cameras(original_cameras,cameras); // shows that cameras were recovered
 
-  exit(1);
+  // compute observations of cameras at solved poses to original observations
+  compute_observations(cameras,points,0.0,max_detect_distance,observations); 
+  compare_observations(original_observations,observations);// ceres minimized observation noise?
+  // NOTE the results of this last comparison is that the solved camera poses
+  // allow the cameras to generate noise free observations which are very similar to the
+  // original observations.
+
+  // 
   copy_cameras_wo_history(original_cameras,cameras);
   copy_points(original_points,points);
   compute_observations(cameras,points,image_noise,max_detect_distance,observations);
   perturb_cameras(cameras,camera_pos_noise,camera_or_noise);
 
-  ceres::Problem problem2;
-  BOOST_FOREACH(ObservationDataPoint obs, observations){
-    double x  = obs.image_loc_.x;
-    double y  = obs.image_loc_.y;
-    double fx = obs.camera_->focal_length_x;
-    double fy = obs.camera_->focal_length_y;
-    double cx = obs.camera_->center_x;
-    double cy = obs.camera_->center_y;
 
-    ceres::CostFunction* cost_function = CameraReprjErrorNoDistortion::Create(x,y,fx,fy,cx,cy);
-      
-    double *extrinsics = obs.camera_->PB_extrinsics;
-    double *points     = obs.point_position_;
-    problem2.AddResidualBlock(cost_function, NULL, extrinsics, points);
-    problem2.SetParameterBlockConstant(points); // fixed fiducials
-
-  }
-  ceres::Solve(options, &problem2, &summary);
-  std::cout << summary.FullReport() << "\n";
-
+  // Now we are ready to compute each camera's statistics
+  // We answer the following questions
+  // 1. what is the mean error in pose estimate for each camera
+  // 2. what is the variance in pose estimate for each camera
+  // These two values will be stored in camera.pos
 
   // clear all pose histories of cameras
   BOOST_FOREACH(Camera &C, original_cameras){
     C.pose_history.clear();
   }
+
 
   // compute poses for cameras for a bunch of test cases
   for(int test_case=0; test_case<num_test_cases; test_case++){
@@ -373,12 +415,93 @@ int main(int argc, char** argv)
   compute_historic_pose_statistics(original_cameras);
   
   BOOST_FOREACH(Camera &C, original_cameras){
-    printf("%s\t:sigma distance  %lf angular %lf number_observations = %d\n",
+    printf("%s\t:mean_pos_error = %lf sigma=  %lf angular %lf number_observations = %d\n",
 	   C.camera_name.c_str(),
+	   C.pose_position_mean_error*12.0,
 	   C.pose_position_sigma*12.0,
 	   C.pose_orientation_sigma*180/3.1415,
 	   C.num_observations);
   } 
+
+
+  // Now we are ready to compute the field accuracy of the working volume
+  // To to this we do the following.
+  // Create a grid of locations representative of the field accuracy
+  // For this optimization, the points will be solve, while the cameras are fixed
+  // The cameras will be fixed at their original/nominal locations 
+  // But the observations will be made from the perturbed/real locations with each test case
+  // Loop:
+  //    Perturb the cameras using each camera's pose accuracy estimate
+  //    compute noisy observations from those perturbed cameras
+  //    Reset cameras to nominal locations, and hold fixed (at incorrect locations)
+  //    optimize to find locations of all field points
+  // end Loop
+  // Compute point statistics for each field point
+
+  // 
+
+  // Compute noiseless observations of field points
+  // determine how many times each point gets observed (need at least 2 to be triangulated)
+  copy_cameras_wo_history(original_cameras,cameras);
+  compute_observations(cameras,original_field_points,0.0,max_detect_distance,original_field_observations);
+
+  independently_perturb_cameras(cameras);
+  compare_cameras(original_cameras,cameras); // will have some agregate overall statistics
+
+  for(int test_case=0; test_case<num_test_cases; test_case++){
+    copy_points(original_field_points,field_points); // working field points
+    copy_cameras_wo_history(original_cameras,cameras); // working copy of cameras
+    // noisy observations of cameras at their actual locations
+    compute_observations(cameras,field_points,image_noise,max_detect_distance,observations);
+    // fix cameras independently perturbed from their actual locations for triangulation
+    independently_perturb_cameras(cameras); 
+    
+    ceres::Problem problem;
+    options.minimizer_progress_to_stdout = false;
+    BOOST_FOREACH(ObservationDataPoint obs, observations){
+      double x  = obs.image_loc_.x;
+      double y  = obs.image_loc_.y;
+      double fx = obs.camera_->focal_length_x;
+      double fy = obs.camera_->focal_length_y;
+      double cx = obs.camera_->center_x;
+      double cy = obs.camera_->center_y;
+
+      ceres::CostFunction* cost_function = CameraReprjErrorNoDistortion::Create(x,y,fx,fy,cx,cy);
+      
+      double *extrinsics = obs.camera_->PB_extrinsics;
+      double *points     = obs.point_position_;
+      problem.AddResidualBlock(cost_function, NULL, extrinsics, points);
+      problem.SetParameterBlockConstant(extrinsics); // fixed cameras (indpenently perturbed poses)
+    }
+    ceres::Solve(options, &problem, &summary);
+
+    add_points_to_history(field_points, original_field_points);
+  }
+  compute_historic_point_statistics(original_field_points);
+  FILE *fp = fopen("field_results.m","w");
+  fprintf(fp,"field_results = [\n");
+  BOOST_FOREACH(Point3d P, original_field_points){
+    printf("Mean Error = %7.3lf %7.3lf %7.3lf sigma= %7.3lf %7.3lf %7.3lf NO=%d\n",
+	   (P.mean_x-P.x)*12,
+	   (P.mean_y-P.y)*12,
+	   (P.mean_z-P.z)*12,
+	   (P.sigma_x)*12,
+	   (P.sigma_y)*12,
+	   (P.sigma_z)*12,
+	   P.num_observations);
+    fprintf(fp,"%7.3lf %7.3lf %7.3lf %7.3lf %7.3lf %7.3lf %7.3lf %7.3lf %7.3lf;\n",
+	    P.x*12,
+	    P.y*12,
+	    P.z*12,
+	   (P.mean_x-P.x)*12,
+	   (P.mean_y-P.y)*12,
+	   (P.mean_z-P.z)*12,
+	   (P.sigma_x)*12,
+	   (P.sigma_y)*12,
+	   (P.sigma_z)*12);
+  }
+  fprintf(fp,"];\n");
+  fclose(fp);
 }
 
 // print a quaternion plus position as a homogeneous transform
@@ -475,6 +598,11 @@ void compute_observations(vector<Camera> &cameras,
   int n_observations = 0;
   observations.clear();
 
+  // reset number of observations for the points
+  BOOST_FOREACH(Point3d &P, points){
+    P.num_observations = 0;
+  }
+
   // create nominal observations of points using camera parameters
   BOOST_FOREACH(Camera & C, cameras){
     C.num_observations = 0;
@@ -495,6 +623,7 @@ void compute_observations(vector<Camera> &cameras,
 	  ObservationDataPoint new_obs(&(C),j,&(P.pb[0]),obs);
 	  observations.push_back(new_obs);
 	  C.num_observations++;
+	  P.num_observations++;
 	  n_observations++;
 	} // end if observation within field of view
       } // end if point close enough to camera
@@ -516,14 +645,26 @@ void perturb_cameras(vector<Camera> &cameras, double position_noise, double degr
   }
 }
 
+void independently_perturb_cameras(vector<Camera> &cameras)
+{
+  BOOST_FOREACH(Camera &C, cameras){
+    double pos_noise    = C.pose_position_mean_error/sqrt(2.274625);
+    double radian_noise = C.pose_position_mean_error/sqrt(2.58047);
+    C.position[0]   += pos_noise*randn();	
+    C.position[1]   += pos_noise*randn();
+    C.position[2]   += pos_noise*randn();
+    C.angle_axis[0] += radian_noise*randn();
+    C.angle_axis[1] += radian_noise*randn();
+    C.angle_axis[2] += radian_noise*randn();
+  }
+}
+
 void copy_cameras_wo_history(vector<Camera> &original_cameras, vector<Camera> & cameras)
 {
   cameras.clear();
   BOOST_FOREACH(Camera &C, original_cameras){
     Camera newC = C;
     newC.pose_history.clear();
-    newC.pose_position_sigma = 0;
-    newC.pose_orientation_sigma = 0;
     newC.num_observations = 0;
     cameras.push_back(newC);
   }
@@ -577,6 +718,15 @@ void compute_historic_pose_statistics(vector<Camera> & cameras)
     mean_ay = mean_ay/num_poses;
     mean_az = mean_az/num_poses;
 
+    double d_x = mean_x - C.position[0];
+    double d_y = mean_y - C.position[1];
+    double d_z = mean_z - C.position[2];
+    C.pose_position_mean_error = sqrt(d_x*d_x + d_y*d_y + d_z*d_z);
+    double d_ax = mean_ax - C.angle_axis[0];
+    double d_ay = mean_ay - C.angle_axis[1];
+    double d_az = mean_az - C.angle_axis[2];
+    C.pose_orientation_mean_error = sqrt(d_ax*d_ax + d_ay*d_ay + d_z*d_az);
+
     sigma_x = sigma_y = sigma_z = sigma_ax = sigma_ay, sigma_az = 0.0;
     BOOST_FOREACH(Pose6d &p, C.pose_history){
       sigma_x  += (mean_x - p.x)*(mean_x - p.x);;
@@ -586,12 +736,12 @@ void compute_historic_pose_statistics(vector<Camera> & cameras)
       sigma_ay += (mean_ay -p.ay)*(mean_ay -p.ay);;
       sigma_az += (mean_az -p.az)*(mean_az -p.az);;
     }
-    sigma_x  = sqrt(sigma_x/(num_poses + 1.0));
-    sigma_y  = sqrt(sigma_y/(num_poses + 1.0));
-    sigma_z  = sqrt(sigma_z/(num_poses + 1.0));
-    sigma_ax = sqrt(sigma_ax/(num_poses + 1.0));
-    sigma_ay = sqrt(sigma_ay/(num_poses + 1.0));
-    sigma_az = sqrt(sigma_az/(num_poses + 1.0));
+    sigma_x  = sqrt(sigma_x/(num_poses - 1.0));
+    sigma_y  = sqrt(sigma_y/(num_poses - 1.0));
+    sigma_z  = sqrt(sigma_z/(num_poses - 1.0));
+    sigma_ax = sqrt(sigma_ax/(num_poses - 1.0));
+    sigma_ay = sqrt(sigma_ay/(num_poses - 1.0));
+    sigma_az = sqrt(sigma_az/(num_poses - 1.0));
 
     double dv = sqrt(sigma_x*sigma_x + sigma_y*sigma_y + sigma_z*sigma_z);
     double av = sqrt(sigma_ax*sigma_ax + sigma_ay*sigma_ay + sigma_az*sigma_az);
@@ -599,6 +749,43 @@ void compute_historic_pose_statistics(vector<Camera> & cameras)
     C.pose_position_sigma    = dv;
     C.pose_orientation_sigma = av;
   } // end for each camera
+}
+
+void compute_historic_point_statistics(vector<Point3d> & points)
+{
+  // calculate statistics of test case
+  double mean_x, mean_y, mean_z;
+
+  BOOST_FOREACH(Point3d &P, points){
+    P.mean_x = P.mean_y = P.mean_z = 0.0;
+    BOOST_FOREACH(double &p, P.x_history){
+      P.mean_x  += p;
+    }
+    BOOST_FOREACH(double &p, P.y_history){
+      P.mean_y  += p;
+    }
+    BOOST_FOREACH(double &p, P.z_history){
+      P.mean_z  += p;
+    }
+    int num_values = (int) P.x_history.size();
+    P.mean_x  = P.mean_x/num_values;
+    P.mean_y  = P.mean_y/num_values;
+    P.mean_z  = P.mean_z/num_values;
+
+    P.sigma_x = P.sigma_y = P.sigma_z = 0.0;
+    BOOST_FOREACH(double &p, P.x_history){
+      P.sigma_x  += (P.mean_x - p)*(P.mean_x - p);;
+    }
+    BOOST_FOREACH(double &p, P.y_history){
+      P.sigma_y  += (P.mean_y - p)*(P.mean_y - p);;
+    }
+    BOOST_FOREACH(double &p, P.z_history){
+      P.sigma_z  += (P.mean_z - p)*(P.mean_z - p);;
+    }
+    P.sigma_x  = sqrt(P.sigma_x/(num_values - 1.0));
+    P.sigma_y  = sqrt(P.sigma_y/(num_values - 1.0));
+    P.sigma_z  = sqrt(P.sigma_z/(num_values - 1.0));
+  } // end for each point
 }
 void parse_points(ifstream &points_input_file,vector<Point3d> &original_points)
 {
@@ -743,8 +930,8 @@ void compare_cameras(vector<Camera> &C1, vector<Camera> &C2)
   }
   sigma_dist = sqrt(sigma_dist/C1.size());
   sigma_angle = sqrt(sigma_angle/C1.size());
-  ROS_INFO_STREAM("mean distance between camera poses = "<<mean_dist*12 <<" inches " << sigma_dist);
-  ROS_INFO_STREAM("mean angle between camera poses = "<<mean_angle*180/3.1415 << " degrees " << sigma_angle*180/3.1415);
+  ROS_INFO_STREAM("mean distance between camera poses = "<<mean_dist*12 <<" inches  sigma= " << sigma_dist);
+  ROS_INFO_STREAM("mean angle between camera poses = "<<mean_angle*180/3.1415 << " degrees  sigma= " << sigma_angle*180/3.1415);
 }
 
 void compare_observations(vector<ObservationDataPoint> &O1, vector<ObservationDataPoint> &O2)
@@ -754,6 +941,7 @@ void compare_observations(vector<ObservationDataPoint> &O1, vector<ObservationDa
   }
   double d_x,d_y,dist;
   double mean_dist=0.0;
+  double sigma_dist=0.0;
   for(int i=0;i<(int)O1.size();i++){
     d_x = O1[i].image_loc_.x - O2[i].image_loc_.x;
     d_y = O1[i].image_loc_.y - O2[i].image_loc_.y;
@@ -761,5 +949,25 @@ void compare_observations(vector<ObservationDataPoint> &O1, vector<ObservationDa
     mean_dist += dist;
   }
   mean_dist = mean_dist/(int)O1.size();
-  ROS_INFO_STREAM("mean distance between observations = "<<mean_dist <<" pixels");
+  for(int i=0;i<(int)O1.size();i++){
+    d_x = O1[i].image_loc_.x - O2[i].image_loc_.x;
+    d_y = O1[i].image_loc_.y - O2[i].image_loc_.y;
+    dist = sqrt(d_x*d_x + d_y*d_y);
+    sigma_dist += (dist-mean_dist)*(dist-mean_dist);
+  }
+  sigma_dist = sqrt(sigma_dist/(int)O1.size());
+  ROS_INFO_STREAM("mean distance between observations = "<<mean_dist <<" pixels sigma= "<<sigma_dist);
+}
+
+void add_points_to_history(vector<Point3d> &points, vector<Point3d> &original_points)
+{
+  if(points.size() != original_points.size())
+    ROS_ERROR_STREAM("number of points in vectors do not match");
+
+  for(int i=0;i<(int)points.size();i++){
+    original_points[i].x_history.push_back(points[i].x);
+    original_points[i].y_history.push_back(points[i].y);
+    original_points[i].z_history.push_back(points[i].z);
+  }
+
 }
