@@ -54,7 +54,7 @@ void ObservationScene::addObservationToScene(ObservationCmd new_obs_cmd)
 void ObservationScene::addCameraToScene(boost::shared_ptr<Camera> camera_in_scene)
 {
   cameras_in_scene_.push_back(camera_in_scene);
-  ROS_INFO_STREAM("Added camera "<<camera_in_scene->camera_name_<<" to cameras_in_scene list of size: "<<cameras_in_scene_.size());
+  ROS_DEBUG_STREAM("Added camera "<<camera_in_scene->camera_name_<<" to cameras_in_scene list of size: "<<cameras_in_scene_.size());
 }
 
 void ObservationScene::populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi)

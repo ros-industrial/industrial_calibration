@@ -37,8 +37,7 @@ bool CalibrationJob::run()
 
 bool CalibrationJob::runObservations()
 {
-  ROS_INFO_STREAM("Running observations...");
-  ROS_DEBUG_STREAM("Debug is working");
+  ROS_DEBUG_STREAM("Running observations...");
   this->ceres_blocks_.clearCamerasTargets();
   // For each scene
   BOOST_FOREACH(ObservationScene current_scene, scene_list_)
@@ -46,27 +45,27 @@ bool CalibrationJob::runObservations()
     int scene_id = current_scene.get_id();
 
     // clear all observations from every camera
-    ROS_INFO_STREAM("Processing Scene " << scene_id<<" of "<< scene_list_.size());
+    ROS_DEBUG_STREAM("Processing Scene " << scene_id<<" of "<< scene_list_.size());
 
     // add observations to every camera
-    ROS_INFO_STREAM("Processing " << current_scene.cameras_in_scene_.size() <<" Cameras ");
+    //ROS_INFO_STREAM("Processing " << current_scene.cameras_in_scene_.size() <<" Cameras ");
     BOOST_FOREACH(shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
     {
-      ROS_INFO_STREAM("Current Camera name: "<<current_camera->camera_name_);
+      //ROS_INFO_STREAM("Current Camera name: "<<current_camera->camera_name_);
       current_camera->camera_observer_->clearObservations(); // clear any recorded data
       current_camera->camera_observer_->clearTargets(); // clear all targets
     }
 
     // add each target to each cameras observations
-    ROS_INFO_STREAM("Processing " << current_scene.observation_command_list_.size() <<" Observation Commands");
+    ROS_DEBUG_STREAM("Processing " << current_scene.observation_command_list_.size()
+                     <<" Observation Commands");
     BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
     {
       // configure to find target in roi
-      ROS_INFO_STREAM("Current Camera name: "<<o_command.camera->camera_name_);
-      ROS_INFO_STREAM("Current Target name: "<<o_command.target->target_name);
-      ROS_INFO_STREAM("Current roi xmin: "<<o_command.roi.x_min);
-
       o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi);
+      //ROS_INFO_STREAM("Current Camera name: "<<o_command.camera->camera_name_);
+      //ROS_INFO_STREAM("Current Target name: "<<o_command.target->target_name);
+      //ROS_INFO_STREAM("Current roi xmin: "<<o_command.roi.x_min);
     }
     // trigger the cameras
     BOOST_FOREACH( shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
@@ -111,6 +110,8 @@ bool CalibrationJob::runObservations()
       int number_returned;
       number_returned = camera->camera_observer_->getObservations(camera_observations);
 
+      ROS_DEBUG_STREAM("Processing " << camera_observations.observations.size()
+                           <<" Observations");
       BOOST_FOREACH(Observation observation, camera_observations.observations)
       {
         target_name = observation.target->target_name;
@@ -134,7 +135,7 @@ bool CalibrationJob::runObservations()
         observation_data_point_list.addObservationPoint(temp_ODP);
       }//end for each observed point
     }//end for each camera
-  } // end for each scene
+  } //end for each scene
   return true;
 }
 
@@ -650,7 +651,8 @@ bool CalibrationJob::loadCalJob()
   if (caljob_input_file.fail())
   {
     ROS_ERROR_STREAM(
-        "ERROR CalibrationJob::load(), couldn't open caljob_input_file:    "<< caljob_def_file_name_.c_str());
+        "ERROR CalibrationJob::load(), couldn't open caljob_input_file: "
+        << caljob_def_file_name_.c_str());
     return (false);
   }
 

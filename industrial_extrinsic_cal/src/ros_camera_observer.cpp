@@ -90,13 +90,13 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
 void ROSCameraObserver::clearTargets()
 {
   instance_target_.reset();
-  ROS_INFO_STREAM("Targets cleared from observer");
+  //ROS_INFO_STREAM("Targets cleared from observer");
 }
 
 void ROSCameraObserver::clearObservations()
 {
   camera_obs_.observations.clear();
-  ROS_INFO_STREAM("Observations cleared from observer");
+  //ROS_INFO_STREAM("Observations cleared from observer");
 }
 
 int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
