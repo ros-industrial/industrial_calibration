@@ -109,11 +109,11 @@ add_executable(boeing_eval src/ba_ex_cal.cpp)
 target_link_libraries(industrial_extrinsic_cal_ceres yaml-cpp ${catkin_LIBRARIES})
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
 target_link_libraries(boeing_eval ${CERES_LIBRARIES}  ${catkin_LIBRARIES} yaml-cpp)
-target_link_libraries(test_obs industrial_extrinsic_cal ${catkin_LIBRARIES})
+target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES})
 target_link_libraries(cal_job industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
 
 catkin_add_gtest(utest_inds_cal test/utest.cpp)
-target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal_ceres ${catkin_LIBRARIES})
+target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal_ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 #############
 ## Install ##
 #############

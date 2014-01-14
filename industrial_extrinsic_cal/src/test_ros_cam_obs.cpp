@@ -17,9 +17,10 @@
  */
 
 
-
 #include <ros/ros.h>
 #include <industrial_extrinsic_cal/ros_camera_observer.h>
+#include <yaml-cpp/yaml.h>
+#include<fstream>
 
 using industrial_extrinsic_cal::ROSCameraObserver;
 
@@ -60,5 +61,29 @@ int main(int argc, char **argv)
 	 {
 		 ROS_INFO_STREAM("Success!");
 	 }
+/*
+	 YAML::Emitter out;
+	 out << YAML::BeginMap;
+         //out << YAML::Key << "Points";
+         //out << YAML::Value << "f";
+         //out ;
+         out << YAML::Key << "Points";
+         out << YAML::Value;
+         out << YAML::BeginMap;
+	 for (int i=0; i<camera_obs.observations.size(); i++)
+	 {
+         out << YAML::Key << "Point_id" << YAML::Value << i;
+	 out << YAML::Key << "Pnts";
+	 out << YAML::Value << YAML::BeginSeq;
+	 out << camera_obs.observations.at(i).image_loc_x << camera_obs.observations.at(i).image_loc_y;
+         out << YAML::EndSeq;
+	 }
+	 out << YAML::EndMap;
+	 out << YAML::EndMap;
 
+	 std::ofstream fout("observations.txt");
+	 fout << out.c_str();*/
+
+
+	 return 0;
 }
