@@ -86,10 +86,44 @@ public:
    */
   bool clearObservationData();
 
-  ObservationDataPointList observation_data_point_list;
+  /**
+   * @brief get the private member ceres_blocks_
+   * @return the CeresBlocks class member of calibration_job
+   */
+  const CeresBlocks& getCeresBlocks() const
+  {
+    return ceres_blocks_;
+  }
+
+  /**
+   * @brief get the private member observation_data_point_list_
+   * @return a list of observation data points of calibration_job
+   */
+  const ObservationDataPointList& getObservationDataPointList() const
+  {
+    return observation_data_point_list_;
+  }
+
+/**
+ * @brief get the private member scene_list_
+ * @return a vector of observation scenes of calibration_job
+ */
+  const std::vector<ObservationScene>& getSceneList() const
+  {
+    return scene_list_;
+  }
+
+  /**
+   * @brief get the private member extrinsics_
+   * @return a parameter block of the optimized extrinsics of calibration_job
+   */
+  P_BLOCK getExtrinsics() const
+  {
+    return extrinsics_;
+  }
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
-private:
+protected:
   /*!
    * \brief reads target input files to create static and moving targets
    * @return true if successfully loaded target file
@@ -154,15 +188,18 @@ private:
    */
   bool appendNewScene(Trigger trig);
 
+private:
+  ObservationDataPointList observation_data_point_list_;
+  std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
-  std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
   int current_scene_; /*!< id of current scene under review or construction */
   std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
   CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
   ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
+  P_BLOCK extrinsics_; /*!< This is the parameter block which holds the optimized solution */
 
 };//end class
 

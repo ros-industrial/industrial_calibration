@@ -132,7 +132,7 @@ bool CalibrationJob::runObservations()
         }
         ObservationDataPoint temp_ODP(camera_name, target_name, scene_id, intrinsics, extrinsics, pnt_id, target_pose,
                                       pnt_pos, observation_x, observation_y);
-        observation_data_point_list.addObservationPoint(temp_ODP);
+        observation_data_point_list_.addObservationPoint(temp_ODP);
       }//end for each observed point
     }//end for each camera
   } //end for each scene
@@ -700,7 +700,6 @@ bool CalibrationJob::loadCalJob()
 
           scene_list_.at(i).addCameraToScene(temp_cam);
 
-
           (*obs_node)[j]["roi_x_min"] >> temp_roi.x_min;
           (*obs_node)[j]["roi_x_max"] >> temp_roi.x_max;
           (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
@@ -726,12 +725,12 @@ bool CalibrationJob::runOptimization()
 {
   // take all the data collected and create a Ceres optimization problem and run it
 
-  BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list.items)
+  BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.items)
   {
     // take all the data collected and create a Ceres optimization problem and run it
 
-    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list.items)
-        {
+    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.items)
+    {
       // create cost function
       // there are several options
       // 1. the complete reprojection error cost function "Create(obs_x,obs_y)"
@@ -779,7 +778,7 @@ bool CalibrationJob::runOptimization()
 
       // add it as a residual using parameter blocks
       problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
-
+      extrinsics_=extrinsics;
     }
 
     //    ceres::CostFunction* cost_function =  Camera_reprj_error::Create(Ob[i].x,Ob[i].y);
@@ -801,8 +800,7 @@ bool CalibrationJob::runOptimization()
     options.max_num_iterations = 1000;
 
     ceres::Solver::Summary summary;
-    //    ceres::Solve(options, &problem, &summary);
-
+    ceres::Solve(options, &problem_, &summary);
 
     return true;
   }
