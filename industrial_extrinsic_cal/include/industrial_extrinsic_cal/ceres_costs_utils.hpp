@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (Apache License)
  *
- * Copyright (c) 2013, Southwest Research Institute
+ * Copyright (c) 2014, Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
+#include <industrial_extrinsic_cal/basic_types.h>
 
 namespace industrial_extrinsic_cal
 {
@@ -122,8 +123,9 @@ Observation projectPoint(CameraParameters camera_parameters, Point3d point);
       target_aa[0] = target_ax; 
       target_aa[1] = target_ay; 
       target_aa[2] = target_az; 
+      //takes rotation as a Rodriques’ axis-angle vector, and point, returns world_point_loc as rotated point
       ceres::AngleAxisRotatePoint(target_aa,point,world_point_loc);
-    
+
       /** apply target translation */
       world_point_loc[0] = world_point_loc[0] + target_x;
       world_point_loc[1] = world_point_loc[1] + target_y;
@@ -159,14 +161,11 @@ Observation projectPoint(CameraParameters camera_parameters, Point3d point);
     static ceres::CostFunction* Create(const double o_x, const double o_y,
 				       const double fx,  const double fy,
 				       const double cx,  const double cy,
-				       const double pnt_x, const double pnt_y, const double pnt_z
-) {
-      return (
-	      new ceres::AutoDiffCostFunction<TargetCameraReprjErrorNoDistortion, 2,  6, 6>
-	      (
-	       new TargetCameraReprjErrorNoDistortion(o_x, o_y, fx, fy, cx, cy, pnt_x, pnt_y, pnt_z)
-	       )
-	      );
+				       const double pnt_x, const double pnt_y,
+                                       const double pnt_z)
+  {
+    return (new ceres::AutoDiffCostFunction<TargetCameraReprjErrorNoDistortion, 2, 6, 6>(
+        new TargetCameraReprjErrorNoDistortion(o_x, o_y, fx, fy, cx, cy, pnt_x, pnt_y, pnt_z)));
     }
     double ox_; /** observed x location of object in image */
     double oy_; /** observed y location of object in image */
