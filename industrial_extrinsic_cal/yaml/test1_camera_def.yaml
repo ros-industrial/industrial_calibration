@@ -3,7 +3,7 @@
 static_cameras:
  -
     camera_name: Asus1
-    image_topic: /camera/rgb/image_rect_color
+    image_topic: /ns1_kinect/rgb/image_rect_color
     angle_axis_ax: 1.0
     angle_axis_ay: 1.1
     angle_axis_az: 1.2
@@ -21,7 +21,7 @@ static_cameras:
     distortion_p2: 0.01
  -
     camera_name: Asus2
-    image_topic: /camera/rgb/image_rect_color
+    image_topic: /ns2_kinect/rgb/image_rect_color
     angle_axis_ax: 1.990
     angle_axis_ay: 1.001
     angle_axis_az: 1.992
@@ -37,4 +37,3 @@ static_cameras:
     distortion_k3: 0.009
     distortion_p1: 0.009
     distortion_p2: 0.007
-

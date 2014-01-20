@@ -5,12 +5,12 @@ static_targets:
     target_name: Checkerboard
     target_rows: 11
     target_cols: 11
-    angle_axis_ax: 1.1
-    angle_axis_ay: 2.0
-    angle_axis_az: 2.1
-    position_x: 2.2
-    position_y: 2.3
-    position_z: 2.4
+    angle_axis_ax: 0.0
+    angle_axis_ay: 0.0
+    angle_axis_az: 0.0
+    position_x: 0.0
+    position_y: 0.0
+    position_z: 0.0
     num_points: 121
     points: 	
     - pnt: [0.0, 0.0, 0.0]
