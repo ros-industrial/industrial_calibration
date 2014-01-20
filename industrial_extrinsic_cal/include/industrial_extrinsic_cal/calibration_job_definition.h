@@ -99,7 +99,7 @@ public:
    * @brief get the private member observation_data_point_list_
    * @return a list of observation data points of calibration_job
    */
-  const ObservationDataPointList& getObservationDataPointList() const
+  const std::vector<ObservationDataPointList>& getObservationDataPointList() const
   {
     return observation_data_point_list_;
   }
@@ -117,9 +117,27 @@ public:
    * @brief get the private member extrinsics_
    * @return a parameter block of the optimized extrinsics of calibration_job
    */
-  P_BLOCK getExtrinsics() const
+  const std::vector<P_BLOCK> getExtrinsics() const
   {
     return extrinsics_;
+  }
+
+  /**
+   * @brief get the private member original_extrinsics_
+   * @return a parameter block of the original extrinsics of calibration_job
+   */
+  const std::vector<P_BLOCK> getOriginalExtrinsics() const
+  {
+    return original_extrinsics_;
+  }
+
+  /**
+   * @brief get the private member target_pose_
+   * @return a parameter block of the optimized target_pose of calibration_job
+   */
+  const std::vector<P_BLOCK> getTargetPose() const
+  {
+    return target_pose_;
   }
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
@@ -189,7 +207,7 @@ protected:
   bool appendNewScene(Trigger trig);
 
 private:
-  ObservationDataPointList observation_data_point_list_;
+  std::vector<ObservationDataPointList> observation_data_point_list_;
   std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
   std::string target_def_file_name_; /*!< this file describes all targets in job */
@@ -199,7 +217,9 @@ private:
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
   CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
   ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
-  P_BLOCK extrinsics_; /*!< This is the parameter block which holds the optimized solution */
+  std::vector<P_BLOCK> extrinsics_; /*!< This is the parameter block which holds the optimized camera extrinsics solution */
+  std::vector<P_BLOCK> original_extrinsics_; /*!< This is the parameter block which holds the original camera extrinsics */
+  std::vector<P_BLOCK> target_pose_; /*!< This is the parameter block which holds the optimized target pose solution */
 
 };//end class
 
