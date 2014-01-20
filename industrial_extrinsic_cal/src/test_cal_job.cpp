@@ -17,15 +17,32 @@
  */
 
 #include <industrial_extrinsic_cal/calibration_job_definition.h>
-#include <industrial_extrinsic_cal/observation_data_point.h>
+#include <tf/transform_datatypes.h>
+#include <tf/transform_listener.h>
+#include <tf_conversions/tf_eigen.h>
+
+#include <Eigen/Geometry>
+#include <Eigen/Core>
 
 using industrial_extrinsic_cal::CalibrationJob;
 using std::string;
 
-void print_AAtoH(double x, double y, double z, double tx, double ty, double tz);
+void print_AAtoH(double &x, double &y, double &z, double &tx, double &ty, double &tz);
+void generateMessages(std::vector<geometry_msgs::Pose> poses);
+void pblockToPose(industrial_extrinsic_cal::P_BLOCK optimized_input);
+ros::Publisher transform_pub1, transform_pub2, transform_pub3, transform_pub4;
+std::vector<geometry_msgs::Pose> pose_msgs;
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "my_node_name");
+  ros::NodeHandle nh;
+
+  transform_pub1= nh.advertise<geometry_msgs::PoseStamped>("camera1_pose", 1);
+  transform_pub2= nh.advertise<geometry_msgs::PoseStamped>("camera2_pose", 1);
+  transform_pub3= nh.advertise<geometry_msgs::PoseStamped>("target1_pose", 1);
+  transform_pub4= nh.advertise<geometry_msgs::PoseStamped>("target2_pose", 1);
+
   string camera_file_name(
       "/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/test1a_camera_def.yaml");
   string target_file_name(
@@ -38,30 +55,107 @@ int main(int argc, char **argv)
   {
     ROS_INFO_STREAM("Calibration job (cal_job, target and camera) yaml parameters loaded.");
   }
-
-  industrial_extrinsic_cal::CeresBlocks c_blocks = Cal_job.getCeresBlocks();
-  //c_blocks.static_cameras_.at(0)->camera_parameters_.pb_extrinsics;
-  industrial_extrinsic_cal::P_BLOCK original_extrinsics= c_blocks.static_cameras_.at(0)->camera_parameters_.pb_extrinsics;//c_blocks.getStaticCameraParameterBlockExtrinsics("Asus1");
-
   if (Cal_job.run())
   {
     ROS_INFO_STREAM("Calibration job observations and optimization complete");
   }
 
   //industrial_extrinsic_cal::P_BLOCK original_extrinsics= c_blocks.getStaticCameraParameterBlockExtrinsics("Asus1");
-  industrial_extrinsic_cal::P_BLOCK optimized_extrinsics = Cal_job.getExtrinsics();
+  std::vector<industrial_extrinsic_cal::P_BLOCK> opt_extrinsics = Cal_job.getExtrinsics();
+  std::vector<industrial_extrinsic_cal::P_BLOCK> targets = Cal_job.getTargetPose();
+  ROS_DEBUG_STREAM("Size of optimized_extrinsics_: "<<opt_extrinsics.size());
+  ROS_DEBUG_STREAM("Size of targets_: "<<targets.size());
 
-  printf("World to Camera\n");
-  printf("Original Camera\n");
-  print_AAtoH(original_extrinsics[0], original_extrinsics[1], original_extrinsics[2],
-               original_extrinsics[3], original_extrinsics[4], original_extrinsics[5]);
-  printf("Optimized Camera\n");
-  print_AAtoH(optimized_extrinsics[0], optimized_extrinsics[1], optimized_extrinsics[2],
-               optimized_extrinsics[3], optimized_extrinsics[4], optimized_extrinsics[5]);
+  industrial_extrinsic_cal::P_BLOCK optimized_extrinsics;
+  std::vector<geometry_msgs::Pose> camera_pose_msgs;
+  for (int k=0; k<opt_extrinsics.size(); k++ )
+  {
+    optimized_extrinsics=opt_extrinsics.at(k);
+    ROS_INFO_STREAM("Optimized Camera "<<k);
+    print_AAtoH(optimized_extrinsics[0], optimized_extrinsics[1], optimized_extrinsics[2],
+                optimized_extrinsics[3], optimized_extrinsics[4], optimized_extrinsics[5]);
+    pblockToPose(optimized_extrinsics);
+  }
+
+  industrial_extrinsic_cal::P_BLOCK optimized_target;
+  std::vector<geometry_msgs::Pose> target_pose_msgs;
+  for (int k=0; k<targets.size(); k++ )
+  {
+    optimized_target=targets.at(k);
+    ROS_INFO_STREAM("Optimized Target "<<k);
+    print_AAtoH(optimized_target[0], optimized_target[1], optimized_target[2],
+                optimized_target[3], optimized_target[4], optimized_target[5]);
+    pblockToPose(optimized_target);
+  }
+  generateMessages(pose_msgs);
+
+  ROS_INFO_STREAM("Camera pose(s) published");
+
 }
 
+void pblockToPose(industrial_extrinsic_cal::P_BLOCK optimized_input)
+{
+  double R[9];
+  double aa[3];
+  aa[0] = optimized_input[0];
+  aa[1] = optimized_input[1];
+  aa[2] = optimized_input[2];
+  ceres::AngleAxisToRotationMatrix(aa, R);
+  double rx = atan2(R[7], R[8]);
+  double ry = atan2(-R[6], sqrt(R[7] * R[7] + R[8] * R[8]));
+  double rz = atan2(R[3], R[0]);
+  //printf("rpy = %8.4f %8.4f %8.4f\n", rx, ry, rz);
+  Eigen::Matrix4f mod_matrix;
+
+  tf::Quaternion tf_quater;
+  tf::Matrix3x3 tf_mod_matrix;
+  tf_mod_matrix.setRPY(rx, ry, rz);
+  tf_mod_matrix.getRotation(tf_quater);
+  double roll, pitch, yaw;
+  tf_mod_matrix.getRPY(roll, pitch, yaw);
+  tf::Vector3 tf_transl;
+  tf_transl.setValue(optimized_input[3], optimized_input[4], optimized_input[5]);
+  ROS_INFO_STREAM("Origin: "<< tf_transl.x()<<", " <<tf_transl.y()<<", "<<tf_transl.z());
+  ROS_INFO_STREAM("Roll, pitch, yaw: "<< roll <<", " <<pitch<<", "<<yaw);
+  tf::Transform tf_model;
+  tf_model.setRotation(tf_quater);
+  tf_model.setOrigin(tf_transl);
+  //tf_models.push_back(tf_model);
+  geometry_msgs::Pose pose_msg;
+  tf::poseTFToMsg(tf_model, pose_msg);
+  pose_msgs.push_back(pose_msg);
+}
+
+void generateMessages(std::vector<geometry_msgs::Pose> poses)
+{
+
+  geometry_msgs::PoseStamped pose1_msg, pose2_msg, pose3_msg, pose4_msg;
+  pose1_msg.pose.orientation = poses[0].orientation;
+  pose1_msg.pose.position =poses[0].position;
+  pose1_msg.header.frame_id = "/ns1_kinect_link";
+  pose1_msg.header.stamp=ros::Time::now();
+
+  pose2_msg.pose.orientation = poses[1].orientation;
+  pose2_msg.pose.position = poses[1].position;
+  pose2_msg.header.frame_id = "/ns1_kinect_link";
+  pose2_msg.header.stamp=ros::Time::now();
+  transform_pub1.publish(pose1_msg);
+  transform_pub2.publish(pose2_msg);
+
+  pose3_msg.pose.orientation = poses[2].orientation;
+  pose3_msg.pose.position = poses[2].position;
+  pose3_msg.header.frame_id = "/ns1_kinect_link";
+  pose3_msg.header.stamp=ros::Time::now();
+
+  pose4_msg.pose.orientation =poses[3].orientation;
+  pose4_msg.pose.position = poses[3].position;
+  pose4_msg.header.frame_id = "/ns1_kinect_link";
+  pose4_msg.header.stamp=ros::Time::now();
+  transform_pub3.publish(pose3_msg);
+  transform_pub4.publish(pose4_msg);
+}
 // angle axis to homogeneous transform inverted
-void print_AAtoH(double x, double y, double z, double tx, double ty, double tz)
+void print_AAtoH(double &x, double &y, double &z, double &tx, double &ty, double &tz)
 {
   double R[9];
   double aa[3];
@@ -74,4 +168,3 @@ void print_AAtoH(double x, double y, double z, double tx, double ty, double tz)
   printf("%6.3lf %6.3lf %6.3lf %6.3lf\n", R[2], R[5], R[8], tz);
   printf("%6.3lf %6.3lf %6.3lf %6.3lf\n", 0.0, 0.0, 0.0, 1.0);
 }
-
