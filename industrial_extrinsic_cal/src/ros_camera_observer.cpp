@@ -25,6 +25,7 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
     sym_circle_(true), pattern_(pattern_options::Chessboard), pattern_rows_(0), pattern_cols_(0)
 {
   image_topic_ = camera_topic;
+  //ROS_DEBUG_STREAM("ROSCameraObserver created with image topic: "<<image_topic_);
   results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
 }
 
@@ -163,6 +164,7 @@ void ROSCameraObserver::triggerCamera()
 {
 
   sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
+  //ROS_INFO_STREAM("Waiting for image on topic: "<<image_topic_);
   try
   {
     input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
