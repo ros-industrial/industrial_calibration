@@ -114,6 +114,8 @@ target_link_libraries(cal_job industrial_extrinsic_cal industrial_extrinsic_cal_
 
 catkin_add_gtest(utest_inds_cal test/utest.cpp)
 target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal_ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+catkin_add_gtest(utest_inds_cal_ceres test/ceres_utest.cpp)
+target_link_libraries(utest_inds_cal_ceres ${PROJECT_NAME} industrial_extrinsic_cal_ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 #############
 ## Install ##
 #############
