@@ -35,6 +35,7 @@
 #include <ros/console.h>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
+#include <iostream>
 
 namespace industrial_extrinsic_cal
 {
@@ -212,6 +213,7 @@ private:
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
+  std::string reference_frame_; /*!< this the frame to which the camera is being calibrated (and to which the target is positioned) */
   int current_scene_; /*!< id of current scene under review or construction */
   std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */

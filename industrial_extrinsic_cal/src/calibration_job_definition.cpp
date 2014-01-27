@@ -278,7 +278,7 @@ bool CalibrationJob::loadCalJob()
   }
 
   std::string trigger_message="triggered";//TODO what's in the message?
-  std::string reference_frame;
+  std::string opt_params;
   int scene_id_num;
   int trig_type;
   Trigger cal_trig;
@@ -295,8 +295,8 @@ bool CalibrationJob::loadCalJob()
     YAML::Node caljob_doc;
     caljob_parser.GetNextDocument(caljob_doc);
 
-    caljob_doc["reference_frame"] >> reference_frame;
-    caljob_doc["optimization_parameters"] >> reference_frame;
+    caljob_doc["reference_frame"] >> reference_frame_;
+    caljob_doc["optimization_parameters"] >> opt_params;
     // read in all scenes
     if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
     {
@@ -422,8 +422,8 @@ bool CalibrationJob::runObservations()
         intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(camera_name);
         extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(camera_name);
         original_extrinsics_.push_back(extrinsics);
-        ROS_INFO_STREAM("each camera extrinsics: "<<extrinsics[3]<<" "
-                                         <<extrinsics[4]<<" "<<extrinsics[5]);
+        ROS_INFO_STREAM("each camera extrinsics: "<<extrinsics[0]<<" "<<extrinsics[1]<<" "<<extrinsics[2]<<" "
+                        <<extrinsics[3]<<" "<<extrinsics[4]<<" "<<extrinsics[5]);
       }
 
       // Get the observations
@@ -464,15 +464,15 @@ bool CalibrationJob::runObservations()
 bool CalibrationJob::runOptimization()
 {
   // take all the data collected and create a Ceres optimization problem and run it
-  ROS_DEBUG_STREAM("Optimizing "<<scene_list_.size()<<" scenes")
+  ROS_DEBUG_STREAM("Optimizing "<<scene_list_.size()<<" scenes");
       BOOST_FOREACH(ObservationScene current_scene, scene_list_)
       {
     int scene_id = current_scene.get_id();
 
     //ROS_DEBUG_STREAM("Optimizing # cameras: "<<current_scene.cameras_in_scene_);
 
-    //BOOST_FOREACH(shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
-    //{
+    BOOST_FOREACH(shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
+    {
 
     ROS_DEBUG_STREAM("Current observation data point list size: "<<observation_data_point_list_.at(scene_id).items.size());
     // take all the data collected and create a Ceres optimization problem and run it
@@ -524,8 +524,8 @@ bool CalibrationJob::runOptimization()
 
       // add it as a residual using parameter blocks
       problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
-      problem_.SetParameterBlockConstant(target_pose);
     }//for each observation
+      problem_.SetParameterBlockConstant(target_pose);
     // Make Ceres automatically detect the bundle structure. Note that the
     // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
     // for standard bundle adjustment problems.
@@ -540,25 +540,52 @@ bool CalibrationJob::runOptimization()
     target_pose_.push_back(target_pose);
 
     //return true;
-    //}//for each camera
+    }//for each camera
   }//for each scene
   return true;
 }//end runOptimization
 
 bool CalibrationJob::store()
 {
-  YAML::Emitter out;
-  out << YAML::Flow;
+  std::ofstream output_file("world_to_camera_transform_publisher.launch", std::ios::out);// | std::ios::app);
+  output_file << "<launch>";
+  for (int i=0; i<extrinsics_.size();i++)
+  {
+    output_file << "\n";
+    //get transform world to camera
+    double R[9];
+    double aa[3];
+    aa[0] = extrinsics_.at(i)[0];
+    aa[1] = extrinsics_.at(i)[1];
+    aa[2] = extrinsics_.at(i)[2];
+    double tx=extrinsics_.at(i)[3];
+    double ty=extrinsics_.at(i)[4];
+    double tz=extrinsics_.at(i)[5];
+    ceres::AngleAxisToRotationMatrix(aa, R);
+    double ix = -(tx * R[0] + ty * R[1] + tz * R[2]);
+    double iy = -(tx * R[3] + ty * R[4] + tz * R[5]);
+    double iz = -(tx * R[6] + ty * R[7] + tz * R[8]);
+    double rx = atan2(R[7], R[8]);
+    double ry = atan2(-R[6], sqrt(R[7] * R[7] + R[8] * R[8]));
+    double rz = atan2(R[3], R[0]);
 
-  out << YAML::Comment("should we change this method?");
-
-  out << YAML::BeginSeq << 2 << 3 << 5 << 7 << 11 << YAML::EndSeq;
-
-  YAML::Node config;// = YAML::LoadFile("config.yaml");
-
-
-  std::ofstream fout("extrinsics.yaml");
-  //fout << out.c_str;
+    if (output_file.is_open())
+    {
+      output_file<<" <node pkg=\"tf\" type=\"static_transform_publisher\" name=\"camera_tf_broadcaster"<<i<<"\" args=\"";
+      //tranform publisher launch files requires x y z yaw pitch roll
+      output_file<<ix<< ' '<<iy<< ' '<<iz<< ' '<<rz<< ' '<<ry<< ' '<<rx ;
+      output_file<<" "<<reference_frame_;
+      output_file<<" camera"<<i;
+      output_file<<" 100\" />";
+    }
+    else
+    {
+      ROS_ERROR_STREAM("Unable to open file");
+      return false;
+    }//end if writing to file
+  }//end for loop # extrinsics
+  output_file << "\n</launch> \n";
+  output_file.close();
   return true;
 }
 
