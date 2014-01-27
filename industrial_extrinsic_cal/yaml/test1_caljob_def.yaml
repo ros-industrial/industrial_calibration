@@ -1,5 +1,5 @@
 ---
-reference_frame: some_name
+reference_frame: world_frame
 scenes:
 -
      scene_id: 0
