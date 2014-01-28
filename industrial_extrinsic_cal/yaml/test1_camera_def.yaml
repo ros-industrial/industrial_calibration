@@ -1,0 +1,24 @@
+---
+
+static_cameras:
+ -
+    camera_name: Asus1
+    camera_optical_frame: /ns1_kinect_rgb_optical_frame
+    camera_intermediate_frame: /ns1_kinect_link
+    image_topic: /ns1_kinect/rgb/image_rect_color
+    angle_axis_ax: 1.0
+    angle_axis_ay: 1.1
+    angle_axis_az: 1.2
+    position_x: 1.3
+    position_y: 1.4
+    position_z: 1.5
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 320
+    center_y: 240
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01
+
