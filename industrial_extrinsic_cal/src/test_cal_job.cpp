@@ -17,11 +17,12 @@
  */
 
 #include <industrial_extrinsic_cal/calibration_job_definition.h>
+#include <industrial_extrinsic_cal/runtime_utils.h>
 #include <tf/transform_datatypes.h>
 #include <tf/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
 #include <tf/transform_broadcaster.h>
-
+#include <ros/ros.h>
 #include <Eigen/Geometry>
 #include <Eigen/Core>
 
@@ -38,72 +39,131 @@ std::vector<tf::Transform> transforms;
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "my_node_name");
+  ros::init(argc, argv, "calibration_node");
+
+  industrial_extrinsic_cal::ROSRuntimeUtils utils;
   ros::NodeHandle nh;
   transform_pub1= nh.advertise<geometry_msgs::PoseStamped>("camera1_pose", 1);
   transform_pub2= nh.advertise<geometry_msgs::PoseStamped>("camera2_pose", 1);
   transform_pub3= nh.advertise<geometry_msgs::PoseStamped>("target1_pose", 1);
   transform_pub4= nh.advertise<geometry_msgs::PoseStamped>("target2_pose", 1);
-  static tf::TransformBroadcaster br_camera1, br_camera2;
-  tf::Transform t_orig;
-  t_orig.setOrigin( tf::Vector3(0,0, 0.0) );
-  t_orig.setRotation( tf::Quaternion(0, 0, 0, 0) );
-  br_camera1.sendTransform(tf::StampedTransform(t_orig, ros::Time::now(), "/world_frame", "/ns1_kinect_rgb_optical_frame"));
-  br_camera2.sendTransform(tf::StampedTransform(t_orig, ros::Time::now(), "/world_frame", "/ns2_kinect_rgb_optical_frame"));
 
-
-  string camera_file_name(
-      "/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/test1_camera_def.yaml");
-  string target_file_name(
-      "/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/test1_target_def.yaml");
-  string caljob_file_name(
-      "/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/test1_caljob_def.yaml");
-  CalibrationJob Cal_job(camera_file_name, target_file_name, caljob_file_name);
+  utils.camera_file_="/home/cgomez/ros/hydro/catkin_ws/src/"
+      "industrial_calibration/industrial_extrinsic_cal/yaml/test2_camera_def.yaml";
+  utils.target_file_="/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration"
+      "/industrial_extrinsic_cal/yaml/test2_target_def.yaml";
+  utils.caljob_file_="/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration"
+      "/industrial_extrinsic_cal/yaml/test2_caljob_def.yaml";
+  industrial_extrinsic_cal::CalibrationJob Cal_job(utils.camera_file_, utils.target_file_, utils.caljob_file_);
   //ROS_INFO_STREAM("hello world ");
   if (Cal_job.load())
   {
     ROS_INFO_STREAM("Calibration job (cal_job, target and camera) yaml parameters loaded.");
   }
+
+  utils.world_frame_=Cal_job.getReferenceFrame();
+  utils.camera_optical_frame_=Cal_job.getCameraOpticalFrame();
+  utils.camera_intermediate_frame_=Cal_job.getCameraIntermediateFrame();
+  utils.initial_extrinsics_ = Cal_job.getOriginalExtrinsics();
+  utils.target_frame_=Cal_job.getTargetFrames();
+  industrial_extrinsic_cal::P_BLOCK orig_extrinsics;
+  tf::Transform tf_camera_orig;
+
+  for (int k=0; k<utils.initial_extrinsics_.size(); k++ )
+  {
+    //ROS_INFO_STREAM("each camera extrinsics: "<<utils.initial_extrinsics_[k][0]<<" "<<utils.initial_extrinsics_[k][1]<<" "
+      //            <<utils.initial_extrinsics_[k][2]<<" "<<utils.initial_extrinsics_[k][3]<<" "
+        //          <<utils.initial_extrinsics_[k][4]<<" "<<utils.initial_extrinsics_[k][5]);
+    orig_extrinsics=utils.initial_extrinsics_[k];
+    ROS_INFO_STREAM("Original Camera "<<k);
+    tf_camera_orig= utils.pblockToPose(orig_extrinsics);
+    utils.initial_transforms_.push_back(tf_camera_orig);
+  }
+  utils.broadcasters_.resize(utils.initial_extrinsics_.size());
+  ROS_INFO_STREAM("Size of broadcasters: "<<utils.broadcasters_.size());
+  ROS_INFO_STREAM("Size of initial_transforms: "<<utils.initial_transforms_.size());
+  ROS_INFO_STREAM("Size of cam_int_frame: "<<utils.camera_intermediate_frame_.size());
+  ROS_INFO_STREAM("Size of target_frame: "<<utils.target_frame_.size());
+  ROS_INFO_STREAM("Target frame: "<<utils.target_frame_[0]);
+  for (int k=0; k<utils.broadcasters_.size(); k++ )
+  {
+    utils.broadcasters_[k].sendTransform(tf::StampedTransform(utils.initial_transforms_[k], ros::Time::now(),
+                                                              utils.target_frame_[0], utils.camera_intermediate_frame_[k]));
+  }
+
   if (Cal_job.run())
   {
     ROS_INFO_STREAM("Calibration job observations and optimization complete");
   }
-  //industrial_extrinsic_cal::P_BLOCK original_extrinsics= c_blocks.getStaticCameraParameterBlockExtrinsics("Asus1");
-  std::vector<industrial_extrinsic_cal::P_BLOCK> opt_extrinsics = Cal_job.getExtrinsics();
-  std::vector<industrial_extrinsic_cal::P_BLOCK> targets = Cal_job.getTargetPose();
-  ROS_DEBUG_STREAM("Size of optimized_extrinsics_: "<<opt_extrinsics.size());
-  ROS_DEBUG_STREAM("Size of targets_: "<<targets.size());
 
-  industrial_extrinsic_cal::P_BLOCK optimized_extrinsics;
-  std::vector<geometry_msgs::Pose> camera_pose_msgs;
-  for (int k=0; k<opt_extrinsics.size(); k++ )
+  utils.calibrated_extrinsics_ = Cal_job.getExtrinsics();
+  utils.target_poses_ = Cal_job.getTargetPose();
+  ROS_DEBUG_STREAM("Size of optimized_extrinsics_: "<<utils.calibrated_extrinsics_.size());
+  ROS_DEBUG_STREAM("Size of targets_: "<<utils.target_poses_.size());
+
+  industrial_extrinsic_cal::P_BLOCK optimized_extrinsics, target;
+  tf::Transform tf_camera, tf_target;
+  for (int k=0; k<utils.calibrated_extrinsics_.size(); k++ )
   {
-    optimized_extrinsics=opt_extrinsics.at(k);
-    ROS_INFO_STREAM("Optimized Camera "<<k);
-    print_AAtoH(optimized_extrinsics[0], optimized_extrinsics[1], optimized_extrinsics[2],
+    optimized_extrinsics=utils.calibrated_extrinsics_[k];
+    /*print_AAtoH(optimized_extrinsics[0], optimized_extrinsics[1], optimized_extrinsics[2],
                 optimized_extrinsics[3], optimized_extrinsics[4], optimized_extrinsics[5]);
     print_AAToHI(optimized_extrinsics[0], optimized_extrinsics[1], optimized_extrinsics[2],
-                optimized_extrinsics[3], optimized_extrinsics[4], optimized_extrinsics[5]);
-    pblockToPose(optimized_extrinsics);
+                 optimized_extrinsics[3], optimized_extrinsics[4], optimized_extrinsics[5]);*/
+    ROS_INFO_STREAM("Optimized Camera "<<k);
+    tf_camera=utils.pblockToPose(optimized_extrinsics);
+    utils.calibrated_transforms_.push_back(tf_camera);
+    //pblockToPose(optimized_extrinsics);
   }
-
-  industrial_extrinsic_cal::P_BLOCK optimized_target;
-  std::vector<geometry_msgs::Pose> target_pose_msgs;
-  for (int k=0; k<targets.size(); k++ )
+  tf::Vector3 tf_cal=tf_camera.getOrigin();
+  ROS_INFO_STREAM("Cal transform origin: "<<tf_cal.x()<<" "<<tf_cal.y()<<" "<<tf_cal.z());
+  for (int k=0; k<utils.target_poses_.size(); k++ )
   {
-    optimized_target=targets.at(k);
+    target=utils.target_poses_[k];
     ROS_INFO_STREAM("Optimized Target "<<k);
-    print_AAtoH(optimized_target[0], optimized_target[1], optimized_target[2],
-                optimized_target[3], optimized_target[4], optimized_target[5]);
-    pblockToPose(optimized_target);
+    tf_target=utils.pblockToPose(target);
+    utils.target_transforms_.push_back(tf_target);
   }
-  generateMessages(pose_msgs);
-
-  //transforms.at(0).setRotation(tf::Quaternion(tf::Vector3(0,1,0), M_PI/2) );
-  //transforms.at(1).setRotation(tf::Quaternion(tf::Vector3(1,0,0), M_PI/2) );
-  br_camera1.sendTransform(tf::StampedTransform(transforms[0], ros::Time::now(), "/world_frame", "/ns1_kinect_rgb_optical_frame"));
-  br_camera2.sendTransform(tf::StampedTransform(transforms[1], ros::Time::now(), "/world_frame", "/ns2_kinect_rgb_optical_frame"));
-
+  //generateMessages(pose_msgs);
+  tf::StampedTransform temp_tf;
+  for (int i=0; i<utils.calibrated_extrinsics_.size(); i++ )
+  {
+    try
+    {
+      utils.listener_.lookupTransform( utils.camera_optical_frame_[i],utils.camera_intermediate_frame_[i],
+                                       ros::Time(0), temp_tf);
+      utils.camera_internal_transforms_.push_back(temp_tf);
+    }
+    catch (tf::TransformException ex)
+    {
+      ROS_ERROR("%s",ex.what());
+    }
+  }
+  ROS_INFO_STREAM("Size of internal_transforms: "<<utils.camera_internal_transforms_.size());
+  for (int k=0; k<utils.calibrated_transforms_.size(); k++ )
+  {
+    utils.calibrated_transforms_[k]=utils.calibrated_transforms_[k]*utils.camera_internal_transforms_[k];
+  }
+  ROS_INFO_STREAM("Target frame1: "<<utils.target_frame_[0]);
+  ROS_INFO_STREAM("World frame: "<<utils.world_frame_);
+  try
+  {
+    utils.listener_.lookupTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), temp_tf);
+    utils.points_to_world_transforms_.push_back(temp_tf);
+  }
+  catch (tf::TransformException ex)
+  {
+    ROS_ERROR("%s",ex.what());
+  }
+  for (int k=0; k<utils.calibrated_transforms_.size(); k++ )
+  {
+    utils.calibrated_transforms_[k]=utils.points_to_world_transforms_[0]*utils.calibrated_transforms_[k];
+  }
+  for (int k=0; k<utils.broadcasters_.size(); k++ )
+  {
+    utils.broadcasters_[k].sendTransform(tf::StampedTransform(utils.calibrated_transforms_[k], ros::Time::now(),
+                                                              utils.world_frame_, utils.camera_intermediate_frame_[k]));
+  }
   ROS_INFO_STREAM("Camera pose(s) published");
   if (Cal_job.store())
   {
@@ -181,7 +241,7 @@ void generateMessages(std::vector<geometry_msgs::Pose> poses)
   transform_pub3.publish(pose3_msg);
   transform_pub4.publish(pose4_msg);
 }
-// angle axis to homogeneous transform inverted
+// angle axis to homogeneous transform
 void print_AAtoH(double &x, double &y, double &z, double &tx, double &ty, double &tz)
 {
   double R[9];
@@ -195,7 +255,7 @@ void print_AAtoH(double &x, double &y, double &z, double &tx, double &ty, double
   printf("%6.3lf %6.3lf %6.3lf %6.3lf\n", R[2], R[5], R[8], tz);
   printf("%6.3lf %6.3lf %6.3lf %6.3lf\n", 0.0, 0.0, 0.0, 1.0);
 }
-// angle axis to homogeneous transform
+// angle axis to homogeneous transform inverted
 void print_AAToHI(double x, double y, double z, double tx, double ty, double tz)
 {
   double R[9];
