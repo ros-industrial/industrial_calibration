@@ -72,9 +72,9 @@ bool CalibrationJob::loadCamera()
       return (false);
     }
 
-  string temp_name;
-  string temp_topic;
+  string temp_name, temp_topic, camera_optical_frame, camera_intermediate_frame;
   CameraParameters temp_parameters;
+  P_BLOCK extrinsics;
   //shared_ptr<Camera> temp_camera = make_shared<Camera>();
 
   unsigned int scene_id;
@@ -92,6 +92,8 @@ bool CalibrationJob::loadCamera()
       {
         (*camera_parameters)[i]["camera_name"] >> temp_name;
         (*camera_parameters)[i]["image_topic"] >> temp_topic;
+        (*camera_parameters)[i]["camera_optical_frame"] >> camera_optical_frame;
+        (*camera_parameters)[i]["camera_intermediate_frame"] >> camera_intermediate_frame;
         (*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
         (*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
         (*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
@@ -111,6 +113,10 @@ bool CalibrationJob::loadCamera()
         shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
         temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
         ceres_blocks_.addStaticCamera(temp_camera);
+        camera_optical_frames_.push_back(camera_optical_frame);
+        camera_intermediate_frames_.push_back(camera_intermediate_frame);
+        extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
+        original_extrinsics_.push_back(extrinsics);
        }
     }
 
@@ -122,6 +128,8 @@ bool CalibrationJob::loadCamera()
       {
         (*camera_parameters)[i]["camera_name"] >> temp_name;
         (*camera_parameters)[i]["image_topic"] >> temp_topic;
+        (*camera_parameters)[i]["camera_optical_frame"] >> camera_optical_frame;
+        (*camera_parameters)[i]["camera_intermediate_frame"] >> camera_intermediate_frame;
         (*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
         (*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
         (*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
@@ -141,6 +149,10 @@ bool CalibrationJob::loadCamera()
         shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, true);
         temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
         ceres_blocks_.addMovingCamera(temp_camera, scene_id);
+        camera_optical_frames_.push_back(camera_optical_frame);
+        camera_intermediate_frames_.push_back(camera_intermediate_frame);
+        extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
+        original_extrinsics_.push_back(extrinsics);
       }
     }
   } // end try
@@ -182,6 +194,7 @@ bool CalibrationJob::loadTarget()
     return (false);
   }
   Target temp_target;
+  std::string temp_frame;
   try
   {
     YAML::Parser target_parser(target_input_file);
@@ -197,6 +210,7 @@ bool CalibrationJob::loadTarget()
       for (unsigned int i = 0; i < target_parameters->size(); i++)
       {
         (*target_parameters)[i]["target_name"] >> temp_target->target_name;
+        (*target_parameters)[i]["target_frame"] >> temp_frame;
         (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
         (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
         (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
@@ -219,6 +233,7 @@ bool CalibrationJob::loadTarget()
           temp_target->pts.push_back(temp_pnt3d);
         }
         ceres_blocks_.addStaticTarget(temp_target);
+        target_frames_.push_back(temp_frame);
       }
     }
 
@@ -232,6 +247,9 @@ bool CalibrationJob::loadTarget()
       for (unsigned int i = 0; i < target_parameters->size(); i++)
       {
         (*target_parameters)[i]["target_name"] >> temp_target->target_name;
+        (*target_parameters)[i]["target_frame"] >> temp_frame;
+        (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
+        (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
         (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
         (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ay;
         (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.az;
@@ -253,6 +271,7 @@ bool CalibrationJob::loadTarget()
           temp_target->pts.push_back(temp_pnt3d);
         }
         ceres_blocks_.addMovingTarget(temp_target, scene_id);
+        target_frames_.push_back(temp_frame);
       }
     }
   } // end try
@@ -413,7 +432,7 @@ bool CalibrationJob::runObservations()
         ceres_blocks_.addMovingCamera(camera, scene_id);
         intrinsics = ceres_blocks_.getMovingCameraParameterBlockIntrinsics(camera_name);
         extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(camera_name, scene_id);
-        original_extrinsics_.push_back(extrinsics);
+        //original_extrinsics_.push_back(extrinsics);
       }
       else
       {
@@ -421,9 +440,9 @@ bool CalibrationJob::runObservations()
         ceres_blocks_.addStaticCamera(camera);
         intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(camera_name);
         extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(camera_name);
-        original_extrinsics_.push_back(extrinsics);
-        ROS_INFO_STREAM("each camera extrinsics: "<<extrinsics[0]<<" "<<extrinsics[1]<<" "<<extrinsics[2]<<" "
-                        <<extrinsics[3]<<" "<<extrinsics[4]<<" "<<extrinsics[5]);
+        //original_extrinsics_.push_back(extrinsics);
+        //ROS_INFO_STREAM("each camera extrinsics: "<<extrinsics[0]<<" "<<extrinsics[1]<<" "<<extrinsics[2]<<" "
+          //              <<extrinsics[3]<<" "<<extrinsics[4]<<" "<<extrinsics[5]);
       }
 
       // Get the observations
@@ -575,7 +594,7 @@ bool CalibrationJob::store()
       //tranform publisher launch files requires x y z yaw pitch roll
       output_file<<ix<< ' '<<iy<< ' '<<iz<< ' '<<rz<< ' '<<ry<< ' '<<rx ;
       output_file<<" "<<reference_frame_;
-      output_file<<" camera"<<i;
+      output_file<<" "<<camera_optical_frames_[i];
       output_file<<" 100\" />";
     }
     else

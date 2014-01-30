@@ -88,33 +88,6 @@ public:
   bool clearObservationData();
 
   /**
-   * @brief get the private member ceres_blocks_
-   * @return the CeresBlocks class member of calibration_job
-   */
-  const CeresBlocks& getCeresBlocks() const
-  {
-    return ceres_blocks_;
-  }
-
-  /**
-   * @brief get the private member observation_data_point_list_
-   * @return a list of observation data points of calibration_job
-   */
-  const std::vector<ObservationDataPointList>& getObservationDataPointList() const
-  {
-    return observation_data_point_list_;
-  }
-
-/**
- * @brief get the private member scene_list_
- * @return a vector of observation scenes of calibration_job
- */
-  const std::vector<ObservationScene>& getSceneList() const
-  {
-    return scene_list_;
-  }
-
-  /**
    * @brief get the private member extrinsics_
    * @return a parameter block of the optimized extrinsics of calibration_job
    */
@@ -139,6 +112,26 @@ public:
   const std::vector<P_BLOCK> getTargetPose() const
   {
     return target_pose_;
+  }
+
+  const std::vector<std::string>& getCameraIntermediateFrame() const
+  {
+    return camera_intermediate_frames_;
+  }
+
+  const std::vector<std::string>& getCameraOpticalFrame() const
+  {
+    return camera_optical_frames_;
+  }
+
+  const std::string& getReferenceFrame() const
+  {
+    return reference_frame_;
+  }
+
+  const std::vector<std::string>& getTargetFrames() const
+  {
+    return target_frames_;
   }
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
@@ -214,6 +207,9 @@ private:
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
   std::string reference_frame_; /*!< this the frame to which the camera is being calibrated (and to which the target is positioned) */
+  std::vector<std::string> target_frames_; /*!< this the frame of the target points */
+  std::vector<std::string> camera_optical_frames_; /*!< this the frame in which observations were made */
+  std::vector<std::string> camera_intermediate_frames_; /*!< this the frame which links camera optical frame to reference frame */
   int current_scene_; /*!< id of current scene under review or construction */
   std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
