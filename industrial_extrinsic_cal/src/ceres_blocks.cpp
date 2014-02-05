@@ -212,7 +212,7 @@ const boost::shared_ptr<Camera> CeresBlocks::getCameraByName(const std::string &
     if (static_cameras_.at(i)->camera_name_==camera_name)
     {
       cam= static_cameras_.at(i);
-      ROS_INFO_STREAM("Found static camera with name: "<<static_cameras_.at(i)->camera_name_);
+      ROS_DEBUG_STREAM("Found static camera with name: "<<static_cameras_.at(i)->camera_name_);
     }
   }
   //ROS_INFO_STREAM("Found "<<moving_cameras_.size() <<" moving cameras");
@@ -221,7 +221,7 @@ const boost::shared_ptr<Camera> CeresBlocks::getCameraByName(const std::string &
     if (moving_cameras_.at(i)->cam->camera_name_==camera_name)
     {
       cam= moving_cameras_.at(i)->cam;
-      ROS_INFO_STREAM("Found moving camera with name: "<<camera_name);
+      ROS_DEBUG_STREAM("Found moving camera with name: "<<camera_name);
     }
   }
   if (!cam)
@@ -241,7 +241,7 @@ const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string &
     if (static_targets_.at(i)->target_name==target_name)
     {
       target=static_targets_.at(i);
-      ROS_INFO_STREAM("Found static target with name: "<<target_name);
+      ROS_DEBUG_STREAM("Found static target with name: "<<target_name);
     }
   }
   //ROS_INFO_STREAM("Found "<<moving_cameras_.size() <<" static cameras");
@@ -250,7 +250,7 @@ const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string &
     if (moving_targets_.at(i)->targ->target_name==target_name)
     {
       target=moving_targets_.at(i)->targ;
-      ROS_INFO_STREAM("Found moving target with name: "<<target_name);
+      ROS_DEBUG_STREAM("Found moving target with name: "<<target_name);
     }
   }
   if (!target)

@@ -308,7 +308,7 @@ bool CalibrationJob::runObservations()
         }
         ObservationDataPoint temp_ODP(camera_name, target_name, scene_id, intrinsics, extrinsics, pnt_id, target_pose,
                                       pnt_pos, observation_x, observation_y);
-        observation_data_point_list.addObservationPoint(temp_ODP);
+        observation_data_point_list_.addObservationPoint(temp_ODP);
       }
     }
   } // end for each scene
@@ -611,11 +611,11 @@ bool CalibrationJob::runOptimization()
 {
   // take all the data collected and create a Ceres optimization problem and run it
 
-  BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list.items)
+  BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.items)
   {
     // take all the data collected and create a Ceres optimization problem and run it
 
-    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list.items){
+    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.items){
       // create cost function
       // there are several options
       // 1. the complete reprojection error cost function "Create(obs_x,obs_y)"
@@ -630,11 +630,6 @@ bool CalibrationJob::runOptimization()
       // 4. the same as 3, point location fixed too "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z)"
       // 5. the same as 4, but with target in known location
       //    "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z,p_tx,p_ty,p_tz,p_ax,p_ay,p_az)"
-
-    // need a block of cameras 
-    // need a block of targets
-    // these two lists need to be able to search for an existing item by name
-    // and also an existing item by both name and scene id
 
       // pull out the constants from the observation point data
       double focal_length_x = ODP.camera_intrinsics_[0]; // TODO, make this not so ugly

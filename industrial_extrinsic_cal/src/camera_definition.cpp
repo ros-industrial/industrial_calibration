@@ -33,7 +33,7 @@ Camera::Camera()
 }
 
 Camera::Camera(string name, CameraParameters camera_parameters, bool is_moving) :
-    camera_name_(name), camera_parameters_(camera_parameters_), is_moving_(is_moving),
+    camera_name_(name), camera_parameters_(camera_parameters), is_moving_(is_moving),
     fixed_intrinsics_(true), fixed_extrinsics_(false)
 {
 }

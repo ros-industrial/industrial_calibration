@@ -425,7 +425,7 @@ public:
    */
   bool appendNewScene(Trigger trig);
 
-  ObservationDataPointList observation_data_point_list;
+  ObservationDataPointList observation_data_point_list_;
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 private:

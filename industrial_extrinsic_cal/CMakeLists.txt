@@ -4,7 +4,7 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf image_transport roslint)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint)
 
 
 # Ceres
@@ -91,7 +91,6 @@ add_library(industrial_extrinsic_cal
    src/observation_scene.cpp
    src/observation_data_point.cpp
    src/ceres_blocks.cpp
-#   src/calibration_job_class.cpp
 )
 
 ## Declare a cpp executable
@@ -107,9 +106,13 @@ add_executable(test_obs src/test_ros_cam_obs.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(industrial_extrinsic_cal_ceres yaml-cpp ${catkin_LIBRARIES})
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
-target_link_libraries(test_obs industrial_extrinsic_cal ${catkin_LIBRARIES})
+target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES})
 target_link_libraries(cal_job industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
 
+catkin_add_gtest(utest_inds_cal test/utest.cpp)
+target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal_ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+catkin_add_gtest(utest_inds_cal_ceres test/ceres_utest.cpp)
+target_link_libraries(utest_inds_cal_ceres ${PROJECT_NAME} industrial_extrinsic_cal_ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 #############
 ## Install ##
 #############
