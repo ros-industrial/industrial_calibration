@@ -43,17 +43,18 @@ int main(int argc, char **argv)
 
   industrial_extrinsic_cal::ROSRuntimeUtils utils;
   ros::NodeHandle nh;
+  ros::NodeHandle priv_nh_("~");
+
+  priv_nh_.getParam("camera_file", utils.camera_file_);
+  priv_nh_.getParam("target_file", utils.target_file_);
+  priv_nh_.getParam("cal_job_file", utils.caljob_file_);
+
   transform_pub1= nh.advertise<geometry_msgs::PoseStamped>("camera1_pose", 1);
   transform_pub2= nh.advertise<geometry_msgs::PoseStamped>("camera2_pose", 1);
   transform_pub3= nh.advertise<geometry_msgs::PoseStamped>("target1_pose", 1);
   transform_pub4= nh.advertise<geometry_msgs::PoseStamped>("target2_pose", 1);
 
-  utils.camera_file_="/home/cgomez/ros/hydro/catkin_ws/src/"
-      "industrial_calibration/industrial_extrinsic_cal/yaml/test2_camera_def.yaml";
-  utils.target_file_="/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration"
-      "/industrial_extrinsic_cal/yaml/test2_target_def.yaml";
-  utils.caljob_file_="/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration"
-      "/industrial_extrinsic_cal/yaml/test2_caljob_def.yaml";
+  ROS_INFO_STREAM("camera file: "<<utils.camera_file_);
   industrial_extrinsic_cal::CalibrationJob Cal_job(utils.camera_file_, utils.target_file_, utils.caljob_file_);
   //ROS_INFO_STREAM("hello world ");
   if (Cal_job.load())
@@ -125,14 +126,16 @@ int main(int argc, char **argv)
     utils.target_transforms_.push_back(tf_target);
   }
   //generateMessages(pose_msgs);
-  tf::StampedTransform temp_tf;
+  tf::StampedTransform temp_tf_cam, temp_tf_world;
   for (int i=0; i<utils.calibrated_extrinsics_.size(); i++ )
   {
     try
     {
+      utils.listener_.waitForTransform(utils.camera_optical_frame_[i],utils.camera_intermediate_frame_[i],
+                                              ros::Time(0), ros::Duration(3.0));
       utils.listener_.lookupTransform( utils.camera_optical_frame_[i],utils.camera_intermediate_frame_[i],
-                                       ros::Time(0), temp_tf);
-      utils.camera_internal_transforms_.push_back(temp_tf);
+                                       ros::Time(0), temp_tf_cam);
+      utils.camera_internal_transforms_.push_back(temp_tf_cam);
     }
     catch (tf::TransformException ex)
     {
@@ -148,8 +151,9 @@ int main(int argc, char **argv)
   ROS_INFO_STREAM("World frame: "<<utils.world_frame_);
   try
   {
-    utils.listener_.lookupTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), temp_tf);
-    utils.points_to_world_transforms_.push_back(temp_tf);
+    utils.listener_.waitForTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), ros::Duration(3.0));
+    utils.listener_.lookupTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), temp_tf_world);
+    utils.points_to_world_transforms_.push_back(temp_tf_world);
   }
   catch (tf::TransformException ex)
   {
@@ -159,6 +163,7 @@ int main(int argc, char **argv)
   {
     utils.calibrated_transforms_[k]=utils.points_to_world_transforms_[0]*utils.calibrated_transforms_[k];
   }
+  ROS_INFO_STREAM("Broadcasting transforms...");
   for (int k=0; k<utils.broadcasters_.size(); k++ )
   {
     utils.broadcasters_[k].sendTransform(tf::StampedTransform(utils.calibrated_transforms_[k], ros::Time::now(),
