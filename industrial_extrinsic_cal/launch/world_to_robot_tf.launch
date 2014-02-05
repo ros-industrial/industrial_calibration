@@ -1,0 +1,5 @@
+<?xml version="1.0" ?>
+<launch>
+<node pkg="tf" type="static_transform_publisher" name="world_frame" args="0 0 0 0 0 0 world_frame base_link 100" />
+<node pkg="tf" type="static_transform_publisher" name="target_frame" args="0.070 -0.105 0.021 3.14159 0 3.14159 tool0 target_frame 100" /> 
+</launch>
