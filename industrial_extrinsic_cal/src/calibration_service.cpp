@@ -22,7 +22,6 @@
 
 bool calibrated=false;
 bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-//industrial_extrinsic_cal::ROSRuntimeUtils utils;
 std::vector<tf::Transform> b_transforms;
 
 int main(int argc, char **argv)
@@ -32,13 +31,12 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   ros::ServiceServer service=nh.advertiseService("calibration_service", callback);
   industrial_extrinsic_cal::ROSRuntimeUtils utils;
+  ros::NodeHandle priv_nh_("~");
 
-  utils.camera_file_="/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration"
-      "/industrial_extrinsic_cal/yaml/test2_camera_def.yaml";
-  utils.target_file_="/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration"
-      "/industrial_extrinsic_cal/yaml/test2_target_def.yaml";
-  utils.caljob_file_="/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration"
-      "/industrial_extrinsic_cal/yaml/test2_caljob_def.yaml";
+  priv_nh_.getParam("camera_file", utils.camera_file_);
+  priv_nh_.getParam("target_file", utils.target_file_);
+  priv_nh_.getParam("cal_job_file", utils.caljob_file_);
+
   industrial_extrinsic_cal::CalibrationJob cal_job(utils.camera_file_, utils.target_file_, utils.caljob_file_);
 
   if (cal_job.load())
@@ -61,23 +59,25 @@ int main(int argc, char **argv)
     utils.initial_transforms_.push_back(tf_camera_orig);
   }
 
-/*  ROS_INFO_STREAM("Target frame1: "<<utils.target_frame_[0]);
+  ROS_INFO_STREAM("Target frame1: "<<utils.target_frame_[0]);
   ROS_INFO_STREAM("World frame: "<<utils.world_frame_);
   ROS_INFO_STREAM("Init tf size: "<<utils.initial_transforms_.size());
   tf::StampedTransform temp_tf;
   try
   {
+    utils.listener_.waitForTransform( utils.world_frame_,utils.target_frame_[0],
+                                      ros::Time(0), ros::Duration(3.0));
     utils.listener_.lookupTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), temp_tf);
     utils.points_to_world_transforms_.push_back(temp_tf);
   }
-  catch (tf::TransformException ex)
+  catch (tf::TransformException &ex)
   {
     ROS_ERROR("%s",ex.what());
   }
   for (int k=0; k<utils.initial_transforms_.size(); k++ )
   {
     utils.initial_transforms_[k]=utils.points_to_world_transforms_[0]*utils.initial_transforms_[k];
-  }*/
+  }
 
 
   utils.broadcasters_.resize(utils.initial_extrinsics_.size());
@@ -85,16 +85,23 @@ int main(int argc, char **argv)
   ros::Rate r(5); // 5 hz
   while (ros::ok())
   {
-    /*if(!calibrated)
+    if(!calibrated)
     {
       b_transforms=utils.initial_transforms_;
-    }*/
-    if(calibrated)
       for (int k=0; k<b_transforms.size(); k++ )
       {
         utils.broadcasters_[k].sendTransform(tf::StampedTransform(b_transforms[k], ros::Time::now(),
                                                                   utils.world_frame_, utils.camera_intermediate_frame_[k]));
       }
+    }
+    else if(calibrated)
+    {
+      for (int k=0; k<b_transforms.size(); k++ )
+      {
+        utils.broadcasters_[k].sendTransform(tf::StampedTransform(b_transforms[k], ros::Time::now(),
+                                                                  utils.world_frame_, utils.camera_intermediate_frame_[k]));
+      }
+    }
     ros::spinOnce();
     r.sleep();
   }
@@ -107,14 +114,13 @@ int main(int argc, char **argv)
 bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
   industrial_extrinsic_cal::ROSRuntimeUtils utils;
-  utils.camera_file_="/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration/"
-      "industrial_extrinsic_cal/yaml/test1_camera_def.yaml";
-  utils.target_file_="/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration"
-      "/industrial_extrinsic_cal/yaml/test1_target_def.yaml";
-  utils.caljob_file_="/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration"
-      "/industrial_extrinsic_cal/yaml/test1_caljob_def.yaml";
+  ros::NodeHandle priv_nh_("~");
+
+  priv_nh_.getParam("camera_file", utils.camera_file_);
+  priv_nh_.getParam("target_file", utils.target_file_);
+  priv_nh_.getParam("cal_job_file", utils.caljob_file_);
   industrial_extrinsic_cal::CalibrationJob cal_job(utils.camera_file_, utils.target_file_, utils.caljob_file_);
-  //ROS_INFO_STREAM("hello world ");
+
   cal_job.load();
   utils.world_frame_=cal_job.getReferenceFrame();
   utils.camera_optical_frame_=cal_job.getCameraOpticalFrame();
@@ -150,6 +156,8 @@ bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& resp
   {
     try
     {
+      utils.listener_.waitForTransform( utils.camera_optical_frame_[i],utils.camera_intermediate_frame_[i],
+                                        ros::Time(0), ros::Duration(3.0));
       utils.listener_.lookupTransform( utils.camera_optical_frame_[i],utils.camera_intermediate_frame_[i],
                                        ros::Time(0), temp_tf);
       utils.camera_internal_transforms_.push_back(temp_tf);
@@ -168,6 +176,7 @@ bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& resp
   ROS_INFO_STREAM("World frame: "<<utils.world_frame_);
   try
   {
+    utils.listener_.waitForTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), ros::Duration(3.0));
     utils.listener_.lookupTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), temp_tf);
     utils.points_to_world_transforms_.push_back(temp_tf);
   }
