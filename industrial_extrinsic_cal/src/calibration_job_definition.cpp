@@ -596,9 +596,9 @@ bool CalibrationJob::runOptimization()
 bool CalibrationJob::store()
 {
   std::string path = ros::package::getPath("industrial_extrinsic_cal");
-  std::string file_path = "launch/world_to_camera_transform_publisher.launch";
+  std::string file_path = "/launch/world_to_camera_transform_publisher.launch";
   std::string filepath = path+file_path;
-  ROS_INFO_STREAM("Storing results in as world_to_camera_transform_publisher.launch in directory: ");
+  ROS_INFO_STREAM("Storing results in as world_to_camera_transform_publisher.launch in directory: "<<path<<"/launch");
   std::ofstream output_file(filepath.c_str(), std::ios::out);// | std::ios::app);
   output_file << "<launch>";
   for (int i=0; i<extrinsics_.size();i++)
