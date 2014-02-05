@@ -99,7 +99,6 @@ add_library(industrial_extrinsic_cal
 add_executable(mono_ex_cal src/mono_ex_cal.cpp)
 add_executable(cal_job src/test_cal_job.cpp)
 add_executable(test_obs src/test_ros_cam_obs.cpp)
-add_executable(boeing_eval src/ba_ex_cal.cpp)
 add_executable(service_node src/calibration_service.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -109,7 +108,6 @@ add_executable(service_node src/calibration_service.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(industrial_extrinsic_cal_ceres yaml-cpp ${catkin_LIBRARIES})
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
-target_link_libraries(boeing_eval ${CERES_LIBRARIES}  ${catkin_LIBRARIES} yaml-cpp)
 target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES})
 target_link_libraries(cal_job industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
