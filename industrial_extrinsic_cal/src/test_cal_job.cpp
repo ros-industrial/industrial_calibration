@@ -23,6 +23,7 @@
 #include <tf_conversions/tf_eigen.h>
 #include <tf/transform_broadcaster.h>
 #include <ros/ros.h>
+#include <ros/package.h>
 #include <Eigen/Geometry>
 #include <Eigen/Core>
 
@@ -49,13 +50,15 @@ int main(int argc, char **argv)
   priv_nh_.getParam("target_file", utils.target_file_);
   priv_nh_.getParam("cal_job_file", utils.caljob_file_);
 
+  std::string path = ros::package::getPath("industrial_extrinsic_cal");
+  std::string file_path=path+"/yaml/";
   transform_pub1= nh.advertise<geometry_msgs::PoseStamped>("camera1_pose", 1);
   transform_pub2= nh.advertise<geometry_msgs::PoseStamped>("camera2_pose", 1);
   transform_pub3= nh.advertise<geometry_msgs::PoseStamped>("target1_pose", 1);
   transform_pub4= nh.advertise<geometry_msgs::PoseStamped>("target2_pose", 1);
 
-  ROS_INFO_STREAM("camera file: "<<utils.camera_file_);
-  industrial_extrinsic_cal::CalibrationJob Cal_job(utils.camera_file_, utils.target_file_, utils.caljob_file_);
+  ROS_INFO_STREAM("camera file: "<<file_path+utils.camera_file_);
+  industrial_extrinsic_cal::CalibrationJob Cal_job(file_path+utils.camera_file_, file_path+utils.target_file_, file_path+utils.caljob_file_);
   //ROS_INFO_STREAM("hello world ");
   if (Cal_job.load())
   {

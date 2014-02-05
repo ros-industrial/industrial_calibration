@@ -36,8 +36,9 @@ int main(int argc, char **argv)
   priv_nh_.getParam("camera_file", utils.camera_file_);
   priv_nh_.getParam("target_file", utils.target_file_);
   priv_nh_.getParam("cal_job_file", utils.caljob_file_);
-
-  industrial_extrinsic_cal::CalibrationJob cal_job(utils.camera_file_, utils.target_file_, utils.caljob_file_);
+  std::string path = ros::package::getPath("industrial_extrinsic_cal");
+  std::string file_path=path+"/yaml/";
+  industrial_extrinsic_cal::CalibrationJob cal_job(file_path+utils.camera_file_, file_path+utils.target_file_, file_path+utils.caljob_file_);
 
   if (cal_job.load())
   {

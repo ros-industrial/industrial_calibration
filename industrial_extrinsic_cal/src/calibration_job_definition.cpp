@@ -19,6 +19,7 @@
 #include <industrial_extrinsic_cal/calibration_job_definition.h>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
+#include <ros/package.h>
 
 using std::string;
 using boost::shared_ptr;
@@ -594,8 +595,11 @@ bool CalibrationJob::runOptimization()
 
 bool CalibrationJob::store()
 {
-  ROS_INFO_STREAM("Storing results in current directory as world_to_camera_transform_publisher.launch");
-  std::ofstream output_file("world_to_camera_transform_publisher.launch", std::ios::out);// | std::ios::app);
+  std::string path = ros::package::getPath("industrial_extrinsic_cal");
+  std::string file_path = "launch/world_to_camera_transform_publisher.launch";
+  std::string filepath = path+file_path;
+  ROS_INFO_STREAM("Storing results in as world_to_camera_transform_publisher.launch in directory: ");
+  std::ofstream output_file(filepath.c_str(), std::ios::out);// | std::ios::app);
   output_file << "<launch>";
   for (int i=0; i<extrinsics_.size();i++)
   {

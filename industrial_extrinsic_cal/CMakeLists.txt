@@ -4,7 +4,7 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib)
 
 
 # Ceres
@@ -64,7 +64,7 @@ ENDIF (EIGEN_FOUND)
 catkin_package(
    INCLUDE_DIRS include
 #  LIBRARIES industrial_extrinsic_cal
-   CATKIN_DEPENDS roscpp std_msgs rosconsole std_srvs
+   CATKIN_DEPENDS roscpp std_msgs rosconsole std_srvs roslib
 #  DEPENDS system_lib
 )
 
@@ -109,7 +109,7 @@ add_executable(service_node src/calibration_service.cpp)
 target_link_libraries(industrial_extrinsic_cal_ceres yaml-cpp ${catkin_LIBRARIES})
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
 target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES})
-target_link_libraries(cal_job industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
+target_link_libraries(cal_job industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES} ${catkin_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
 
 catkin_add_gtest(utest_inds_cal test/utest.cpp)
