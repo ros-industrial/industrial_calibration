@@ -200,7 +200,7 @@ bool CalibrationJob::loadTarget()
     YAML::Parser target_parser(target_input_file);
     YAML::Node target_doc;
     target_parser.GetNextDocument(target_doc);
-
+    ROS_INFO_STREAM("Parsing Target file...");
     // read in all static targets
     if (const YAML::Node *target_parameters = target_doc.FindValue("static_targets"))
     {
@@ -211,8 +211,21 @@ bool CalibrationJob::loadTarget()
       {
         (*target_parameters)[i]["target_name"] >> temp_target->target_name;
         (*target_parameters)[i]["target_frame"] >> temp_frame;
-        (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
-        (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
+        (*target_parameters)[i]["target_type"] >> temp_target->target_type;
+        //ROS_DEBUG_STREAM("TargetFrame: "<<temp_frame);
+        if (temp_target->target_type==0)
+        {
+          (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
+          (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
+          ROS_INFO_STREAM("TargetRows: "<<temp_target->checker_board_parameters.pattern_rows);
+          }
+        else if (temp_target->target_type==1)
+        {
+          (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters.pattern_rows;//checker_board_parameters.pattern_rows;
+          (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters.pattern_cols;//checker_board_parameters.pattern_cols;
+          temp_target->circle_grid_parameters.is_symmetric=true;
+        }
+        //ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters.pattern_rows);
         (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
         (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.ay;
         (*target_parameters)[i]["angle_axis_az"] >> temp_target->pose.az;
@@ -221,12 +234,14 @@ bool CalibrationJob::loadTarget()
         (*target_parameters)[i]["position_z"] >> temp_target->pose.z;
         (*target_parameters)[i]["num_points"] >> temp_target->num_points;
         const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
+        ROS_DEBUG_STREAM("FoundPoints: "<<points_node->size());
         for (int j = 0; j < points_node->size(); j++)
         {
           const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
           std::vector<float> temp_pnt;
           (*pnt_node) >> temp_pnt;
           Point3d temp_pnt3d;
+          //ROS_DEBUG_STREAM("pntx: "<<temp_pnt3d.x);
           temp_pnt3d.x = temp_pnt[0];
           temp_pnt3d.y = temp_pnt[1];
           temp_pnt3d.z = temp_pnt[2];
@@ -248,8 +263,20 @@ bool CalibrationJob::loadTarget()
       {
         (*target_parameters)[i]["target_name"] >> temp_target->target_name;
         (*target_parameters)[i]["target_frame"] >> temp_frame;
-        (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
-        (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
+        (*target_parameters)[i]["target_type"] >> temp_target->target_type;
+        //ROS_DEBUG_STREAM("TargetFrame: "<<temp_frame);
+        if (temp_target->target_type==0)
+        {
+          (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
+          (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
+          ROS_INFO_STREAM("TargetRows: "<<temp_target->checker_board_parameters.pattern_rows);
+        }
+        else if (temp_target->target_type==1)
+        {
+          (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters.pattern_rows;//checker_board_parameters.pattern_rows;
+          (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters.pattern_cols;//checker_board_parameters.pattern_cols;
+          temp_target->circle_grid_parameters.is_symmetric=true;
+        }
         (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
         (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ay;
         (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.az;
@@ -483,6 +510,7 @@ bool CalibrationJob::runObservations()
 bool CalibrationJob::runOptimization()
 {
   // take all the data collected and create a Ceres optimization problem and run it
+  ROS_INFO_STREAM("Running Optimization...");
   ROS_DEBUG_STREAM("Optimizing "<<scene_list_.size()<<" scenes");
       BOOST_FOREACH(ObservationScene current_scene, scene_list_)
       {
@@ -566,6 +594,7 @@ bool CalibrationJob::runOptimization()
 
 bool CalibrationJob::store()
 {
+  ROS_INFO_STREAM("Storing results in current directory as world_to_camera_transform_publisher.launch");
   std::ofstream output_file("world_to_camera_transform_publisher.launch", std::ios::out);// | std::ios::app);
   output_file << "<launch>";
   for (int i=0; i<extrinsics_.size();i++)
