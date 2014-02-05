@@ -3,7 +3,8 @@
 static_targets:
 -
     target_name: Checkerboard
-    target_frame: tool0
+    target_frame: target_frame
+    target_type: 0
     target_rows: 11
     target_cols: 11
     angle_axis_ax: 0.0
