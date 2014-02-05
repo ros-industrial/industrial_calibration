@@ -19,6 +19,7 @@
 #include <industrial_extrinsic_cal/runtime_utils.h>
 #include <std_srvs/Empty.h>
 #include <ros/ros.h>
+#include <ros/package.h>
 
 bool calibrated=false;
 bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
