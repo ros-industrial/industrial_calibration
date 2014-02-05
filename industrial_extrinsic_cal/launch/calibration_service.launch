@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<launch>
+<node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen" >
+    <rosparam>
+      camera_file: "/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/test1_camera_def.yaml"
+      target_file: "/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/test1a_target_def.yaml"
+      cal_job_file: "/home/cgomez/ros/hydro/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/test1_caljob_def.yaml"
+    </rosparam>
+    </node>
+</launch>
