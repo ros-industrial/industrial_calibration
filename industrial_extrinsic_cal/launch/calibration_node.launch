@@ -2,9 +2,9 @@
 <launch>
 <node pkg="industrial_extrinsic_cal" type="cal_job" name="calibration_node" output="screen" >
     <rosparam>
-      camera_file: "test1_camera_def.yaml"
-      target_file: "CircleGrid5x7_target_def.yaml"
-      cal_job_file: "test1_caljob_def.yaml"
+      camera_file: "test2_camera_def.yaml"
+      target_file: "test2_target_def.yaml"
+      cal_job_file: "test2_caljob_def.yaml"
     </rosparam>
     </node>
 </launch>
