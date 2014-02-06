@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
 	<!-- input arguments -->
-	<arg name="sensor_usb_manual_setup" default="true"/>
+	<arg name="sensor_usb_manual_setup" default="false"/>
 	<arg name="sensor_usb_bus1" default="001"/>
 	<arg name="sensor_usb_device1" default="000"/>
 
