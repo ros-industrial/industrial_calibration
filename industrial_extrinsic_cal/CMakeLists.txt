@@ -4,7 +4,7 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf std_srvs roslib)
 
 
 # Ceres
@@ -164,18 +164,4 @@ target_link_libraries(utest_inds_cal_ceres ${PROJECT_NAME} industrial_extrinsic_
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-## ROSlint checks
-## For more information see: http://wiki.ros.org/roslint
-##
-## CPPlint options justifications
-## - whitespace/* - errors are ignored, it is assumed that the follwing eclipse
-##   format file has been applied: 
-##   http://wiki.ros.org/IDEs?action=AttachFile&do=get&target=ROS_format.xml
-## - build/header_guard - #ifdef/#ifndef naming doesn't match ROS sytle
-## - readability/stream - does not apply to logging (the typical use in ROS)
-## - runtime/references - pass by reference is allowed for output parameters
-set(ROSLINT_CPP_OPTS 
-"--filter=-whitespace,-build/header_guard,-build/include_order,-readability/streams,-runtime/references")
-file(GLOB_RECURSE ${PROJECT_NAME}_LINT_SRCS 
-     RELATIVE ${PROJECT_SOURCE_DIR} src/*.cpp include/*.h)
-roslint_cpp(${${PROJECT_NAME}_LINT_SRCS})
+
