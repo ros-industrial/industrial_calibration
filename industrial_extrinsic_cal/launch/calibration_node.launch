@@ -1,10 +1,12 @@
 <?xml version="1.0" ?>
 <launch>
-<node pkg="industrial_extrinsic_cal" type="cal_job" name="calibration_node" output="screen" >
+  <node pkg="industrial_extrinsic_cal" type="cal_job" name="calibration_node" output="screen" >
     <rosparam>
       camera_file: "test2_camera_def.yaml"
       target_file: "test2_target_def.yaml"
       cal_job_file: "test2_caljob_def.yaml"
+      store_results_package_name: "industrial_extrinsic_cal"
+      store_results_file_name: "world_to_camera_tf_broadcaster.launch"
     </rosparam>
-    </node>
+  </node>
 </launch>

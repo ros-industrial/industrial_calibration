@@ -33,9 +33,6 @@ tf::Transform ROSRuntimeUtils::pblockToPose(industrial_extrinsic_cal::P_BLOCK &o
   double rx = atan2(R[7], R[8]);
   double ry = atan2(-R[6], sqrt(R[7] * R[7] + R[8] * R[8]));
   double rz = atan2(R[3], R[0]);
-  //double rx = atan2(R[5], R[8]);
-  //double ry = atan2(-R[2], sqrt(R[5] * R[5] + R[8] * R[8]));
-  //double rz = atan2(R[1], R[0]);
   Eigen::Matrix4f mod_matrix;
 
   double ix = -(optimized_input[3] * R[0] + optimized_input[4] * R[1] + optimized_input[5] * R[2]);
@@ -49,7 +46,6 @@ tf::Transform ROSRuntimeUtils::pblockToPose(industrial_extrinsic_cal::P_BLOCK &o
   double roll, pitch, yaw;
   tf_mod_matrix.getRPY(roll, pitch, yaw);
   tf::Vector3 tf_transl;
-  //tf_transl.setValue(optimized_input[3], optimized_input[4], optimized_input[5]);
   tf_transl.setValue(ix, iy, iz);
   ROS_INFO_STREAM("Origin: "<< tf_transl.x()<<", " <<tf_transl.y()<<", "<<tf_transl.z());
   ROS_INFO_STREAM("Roll, pitch, yaw: "<< roll <<", " <<pitch<<", "<<yaw);
@@ -57,5 +53,43 @@ tf::Transform ROSRuntimeUtils::pblockToPose(industrial_extrinsic_cal::P_BLOCK &o
   transform_output.setRotation(tf_quater);
   transform_output.setOrigin(tf_transl);
   return transform_output;
+}
+bool ROSRuntimeUtils::store_tf_broadcasters(std::string &package_path, std::string &file_name)
+{
+  std::string filepath = package_path+file_name;
+  std::ofstream output_file(filepath.c_str(), std::ios::out);// | std::ios::app);
+  if (output_file.is_open())
+  {
+    ROS_INFO_STREAM("Storing results in: "<<filepath);
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Unable to open file");
+    return false;
+  }
+  output_file << "<launch>";
+  //have calibrated transforms
+  double roll, pitch, yaw, x_position, y_position, z_position;
+  tf::Vector3 origin;
+  tf::Matrix3x3 orientation;
+  for (int i=0; i<calibrated_transforms_.size(); i++)
+  {
+    origin = calibrated_transforms_.at(i).getOrigin();
+    x_position=origin.getX();
+    y_position=origin.getY();
+    z_position=origin.getZ();
+    orientation = calibrated_transforms_.at(i).getBasis();
+    orientation.getEulerYPR(yaw, pitch, roll);
+    output_file<<"\n";
+    output_file<<" <node pkg=\"tf\" type=\"static_transform_publisher\" name=\"world_to_camera"<<i<<"\" args=\"";
+    //tranform publisher launch files requires x y z yaw pitch roll
+    output_file<<x_position<< ' '<<y_position<< ' '<<z_position<< ' '<<yaw<< ' '<<pitch<< ' '<<roll ;
+    output_file<<" "<<world_frame_;
+    output_file<<" "<<camera_intermediate_frame_[i];
+    output_file<<" 100\" />";
+  }
+  output_file<<"\n";
+  output_file << "</launch>";
+  return true;
 }
 } // end of namespace

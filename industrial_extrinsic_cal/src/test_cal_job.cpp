@@ -46,9 +46,13 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   ros::NodeHandle priv_nh_("~");
 
+  std::string ros_package_name;
+  std::string launch_file_name;
   priv_nh_.getParam("camera_file", utils.camera_file_);
   priv_nh_.getParam("target_file", utils.target_file_);
   priv_nh_.getParam("cal_job_file", utils.caljob_file_);
+  priv_nh_.getParam("store_results_package_name", ros_package_name);
+  priv_nh_.getParam("store_results_file_name", launch_file_name);
 
   std::string path = ros::package::getPath("industrial_extrinsic_cal");
   std::string file_path=path+"/yaml/";
@@ -140,7 +144,7 @@ int main(int argc, char **argv)
                                        ros::Time(0), temp_tf_cam);
       utils.camera_internal_transforms_.push_back(temp_tf_cam);
     }
-    catch (tf::TransformException ex)
+    catch (tf::TransformException &ex)
     {
       ROS_ERROR("%s",ex.what());
     }
@@ -158,7 +162,7 @@ int main(int argc, char **argv)
     utils.listener_.lookupTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), temp_tf_world);
     utils.points_to_world_transforms_.push_back(temp_tf_world);
   }
-  catch (tf::TransformException ex)
+  catch (tf::TransformException &ex)
   {
     ROS_ERROR("%s",ex.what());
   }
@@ -176,6 +180,13 @@ int main(int argc, char **argv)
   if (Cal_job.store())
   {
     ROS_INFO_STREAM("Calibration job optimization saved to file");
+  }
+
+  std::string save_package_path = ros::package::getPath(ros_package_name);
+  std::string save_file_path = "/launch/"+launch_file_name;
+  if (utils.store_tf_broadcasters(save_package_path, save_file_path))
+  {
+    ROS_INFO_STREAM("Calibration job optimization camera to world transforms saved");
   }
 
 }
