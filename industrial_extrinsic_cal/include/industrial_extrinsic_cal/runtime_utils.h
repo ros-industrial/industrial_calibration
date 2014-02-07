@@ -59,6 +59,12 @@ public:
    */
   tf::Transform pblockToPose(industrial_extrinsic_cal::P_BLOCK &optimized_input);
 
+  /**
+   * @brief saved final calibrated transforms as launch file
+   * @param package_name directory to package path
+   * @param file_name name to save under package path
+   * @return true if tf's successfully written to file
+   */
   bool store_tf_broadcasters(std::string &package_name, std::string &file_name);
   /**
    * @brief file containing camera definition parameters
