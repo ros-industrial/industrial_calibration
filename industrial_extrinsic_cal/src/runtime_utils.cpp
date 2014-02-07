@@ -33,9 +33,6 @@ tf::Transform ROSRuntimeUtils::pblockToPose(industrial_extrinsic_cal::P_BLOCK &o
   double rx = atan2(R[7], R[8]);
   double ry = atan2(-R[6], sqrt(R[7] * R[7] + R[8] * R[8]));
   double rz = atan2(R[3], R[0]);
-  //double rx = atan2(R[5], R[8]);
-  //double ry = atan2(-R[2], sqrt(R[5] * R[5] + R[8] * R[8]));
-  //double rz = atan2(R[1], R[0]);
   Eigen::Matrix4f mod_matrix;
 
   double ix = -(optimized_input[3] * R[0] + optimized_input[4] * R[1] + optimized_input[5] * R[2]);
@@ -49,7 +46,6 @@ tf::Transform ROSRuntimeUtils::pblockToPose(industrial_extrinsic_cal::P_BLOCK &o
   double roll, pitch, yaw;
   tf_mod_matrix.getRPY(roll, pitch, yaw);
   tf::Vector3 tf_transl;
-  //tf_transl.setValue(optimized_input[3], optimized_input[4], optimized_input[5]);
   tf_transl.setValue(ix, iy, iz);
   ROS_INFO_STREAM("Origin: "<< tf_transl.x()<<", " <<tf_transl.y()<<", "<<tf_transl.z());
   ROS_INFO_STREAM("Roll, pitch, yaw: "<< roll <<", " <<pitch<<", "<<yaw);
