@@ -58,6 +58,8 @@ public:
    * @return Tranform to be published/broadcasted
    */
   tf::Transform pblockToPose(industrial_extrinsic_cal::P_BLOCK &optimized_input);
+
+  bool store_tf_broadcasters(std::string &package_name, std::string &file_name);
   /**
    * @brief file containing camera definition parameters
    */

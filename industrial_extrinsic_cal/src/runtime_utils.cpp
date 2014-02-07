@@ -58,4 +58,42 @@ tf::Transform ROSRuntimeUtils::pblockToPose(industrial_extrinsic_cal::P_BLOCK &o
   transform_output.setOrigin(tf_transl);
   return transform_output;
 }
+bool ROSRuntimeUtils::store_tf_broadcasters(std::string &package_path, std::string &file_name)
+{
+  std::string filepath = package_path+file_name;
+  std::ofstream output_file(filepath.c_str(), std::ios::out);// | std::ios::app);
+  if (output_file.is_open())
+  {
+    ROS_INFO_STREAM("Storing results in: "<<filepath);
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Unable to open file");
+    return false;
+  }
+  output_file << "<launch>";
+  //have calibrated transforms
+  double roll, pitch, yaw, x_position, y_position, z_position;
+  tf::Vector3 origin;
+  tf::Matrix3x3 orientation;
+  for (int i=0; i<calibrated_transforms_.size(); i++)
+  {
+    origin = calibrated_transforms_.at(i).getOrigin();
+    x_position=origin.getX();
+    y_position=origin.getY();
+    z_position=origin.getZ();
+    orientation = calibrated_transforms_.at(i).getBasis();
+    orientation.getEulerYPR(yaw, pitch, roll);
+    output_file<<"\n";
+    output_file<<" <node pkg=\"tf\" type=\"static_transform_publisher\" name=\"world_to_camera"<<i<<"\" args=\"";
+    //tranform publisher launch files requires x y z yaw pitch roll
+    output_file<<x_position<< ' '<<y_position<< ' '<<z_position<< ' '<<yaw<< ' '<<pitch<< ' '<<roll ;
+    output_file<<" "<<world_frame_;
+    output_file<<" "<<camera_intermediate_frame_[i];
+    output_file<<" 100\" />";
+  }
+  output_file<<"\n";
+  output_file << "</launch>";
+  return true;
+}
 } // end of namespace
