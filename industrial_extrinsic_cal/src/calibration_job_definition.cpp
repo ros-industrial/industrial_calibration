@@ -19,6 +19,7 @@
 #include <industrial_extrinsic_cal/calibration_job_definition.h>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
+#include <ros/package.h>
 
 using std::string;
 using boost::shared_ptr;
@@ -72,10 +73,9 @@ bool CalibrationJob::loadCamera()
       return (false);
     }
 
-  string temp_name;
-  string temp_topic;
+  string temp_name, temp_topic, camera_optical_frame, camera_intermediate_frame;
   CameraParameters temp_parameters;
-  //shared_ptr<Camera> temp_camera = make_shared<Camera>();
+  P_BLOCK extrinsics;
 
   unsigned int scene_id;
   try
@@ -92,6 +92,8 @@ bool CalibrationJob::loadCamera()
       {
         (*camera_parameters)[i]["camera_name"] >> temp_name;
         (*camera_parameters)[i]["image_topic"] >> temp_topic;
+        (*camera_parameters)[i]["camera_optical_frame"] >> camera_optical_frame;
+        (*camera_parameters)[i]["camera_intermediate_frame"] >> camera_intermediate_frame;
         (*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
         (*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
         (*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
@@ -111,6 +113,10 @@ bool CalibrationJob::loadCamera()
         shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
         temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
         ceres_blocks_.addStaticCamera(temp_camera);
+        camera_optical_frames_.push_back(camera_optical_frame);
+        camera_intermediate_frames_.push_back(camera_intermediate_frame);
+        extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
+        original_extrinsics_.push_back(extrinsics);
        }
     }
 
@@ -122,6 +128,8 @@ bool CalibrationJob::loadCamera()
       {
         (*camera_parameters)[i]["camera_name"] >> temp_name;
         (*camera_parameters)[i]["image_topic"] >> temp_topic;
+        (*camera_parameters)[i]["camera_optical_frame"] >> camera_optical_frame;
+        (*camera_parameters)[i]["camera_intermediate_frame"] >> camera_intermediate_frame;
         (*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
         (*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
         (*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
@@ -141,6 +149,10 @@ bool CalibrationJob::loadCamera()
         shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, true);
         temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
         ceres_blocks_.addMovingCamera(temp_camera, scene_id);
+        camera_optical_frames_.push_back(camera_optical_frame);
+        camera_intermediate_frames_.push_back(camera_intermediate_frame);
+        extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
+        original_extrinsics_.push_back(extrinsics);
       }
     }
   } // end try
@@ -182,12 +194,13 @@ bool CalibrationJob::loadTarget()
     return (false);
   }
   Target temp_target;
+  std::string temp_frame;
   try
   {
     YAML::Parser target_parser(target_input_file);
     YAML::Node target_doc;
     target_parser.GetNextDocument(target_doc);
-
+    ROS_INFO_STREAM("Parsing Target file...");
     // read in all static targets
     if (const YAML::Node *target_parameters = target_doc.FindValue("static_targets"))
     {
@@ -197,8 +210,27 @@ bool CalibrationJob::loadTarget()
       for (unsigned int i = 0; i < target_parameters->size(); i++)
       {
         (*target_parameters)[i]["target_name"] >> temp_target->target_name;
-        (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
-        (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
+        (*target_parameters)[i]["target_frame"] >> temp_frame;
+        (*target_parameters)[i]["target_type"] >> temp_target->target_type;
+        //ROS_DEBUG_STREAM("TargetFrame: "<<temp_frame);
+        switch (temp_target->target_type)
+        {
+          case pattern_options::Chessboard:
+            (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
+            (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
+            ROS_DEBUG_STREAM("TargetRows: "<<temp_target->checker_board_parameters.pattern_rows);
+            break;
+          case pattern_options::CircleGrid:
+            (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters.pattern_rows;
+            (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters.pattern_cols;
+            temp_target->circle_grid_parameters.is_symmetric=true;
+            ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters.pattern_rows);
+            break;
+          default:
+            ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
+            return false;
+            break;
+        }
         (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
         (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.ay;
         (*target_parameters)[i]["angle_axis_az"] >> temp_target->pose.az;
@@ -207,18 +239,21 @@ bool CalibrationJob::loadTarget()
         (*target_parameters)[i]["position_z"] >> temp_target->pose.z;
         (*target_parameters)[i]["num_points"] >> temp_target->num_points;
         const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
+        ROS_DEBUG_STREAM("FoundPoints: "<<points_node->size());
         for (int j = 0; j < points_node->size(); j++)
         {
           const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
           std::vector<float> temp_pnt;
           (*pnt_node) >> temp_pnt;
           Point3d temp_pnt3d;
+          //ROS_DEBUG_STREAM("pntx: "<<temp_pnt3d.x);
           temp_pnt3d.x = temp_pnt[0];
           temp_pnt3d.y = temp_pnt[1];
           temp_pnt3d.z = temp_pnt[2];
           temp_target->pts.push_back(temp_pnt3d);
         }
         ceres_blocks_.addStaticTarget(temp_target);
+        target_frames_.push_back(temp_frame);
       }
     }
 
@@ -232,6 +267,26 @@ bool CalibrationJob::loadTarget()
       for (unsigned int i = 0; i < target_parameters->size(); i++)
       {
         (*target_parameters)[i]["target_name"] >> temp_target->target_name;
+        (*target_parameters)[i]["target_frame"] >> temp_frame;
+        (*target_parameters)[i]["target_type"] >> temp_target->target_type;
+        //ROS_DEBUG_STREAM("TargetFrame: "<<temp_frame);
+        switch (temp_target->target_type)
+        {
+          case pattern_options::Chessboard:
+            (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
+            (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
+            ROS_INFO_STREAM("TargetRows: "<<temp_target->checker_board_parameters.pattern_rows);
+            break;
+          case pattern_options::CircleGrid:
+            (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters.pattern_rows;
+            (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters.pattern_cols;
+            temp_target->circle_grid_parameters.is_symmetric=true;
+            break;
+          default:
+            ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
+            return false;
+            break;
+        }
         (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
         (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ay;
         (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.az;
@@ -253,6 +308,7 @@ bool CalibrationJob::loadTarget()
           temp_target->pts.push_back(temp_pnt3d);
         }
         ceres_blocks_.addMovingTarget(temp_target, scene_id);
+        target_frames_.push_back(temp_frame);
       }
     }
   } // end try
@@ -286,7 +342,6 @@ bool CalibrationJob::loadCalJob()
   std::string camera_name;
   shared_ptr<Camera> temp_cam = make_shared<Camera>();
   shared_ptr<Target> temp_targ = make_shared<Target>();
-  //Target temp_targ;
   Roi temp_roi;
 
   try
@@ -413,7 +468,6 @@ bool CalibrationJob::runObservations()
         ceres_blocks_.addMovingCamera(camera, scene_id);
         intrinsics = ceres_blocks_.getMovingCameraParameterBlockIntrinsics(camera_name);
         extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(camera_name, scene_id);
-        original_extrinsics_.push_back(extrinsics);
       }
       else
       {
@@ -421,9 +475,6 @@ bool CalibrationJob::runObservations()
         ceres_blocks_.addStaticCamera(camera);
         intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(camera_name);
         extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(camera_name);
-        original_extrinsics_.push_back(extrinsics);
-        ROS_INFO_STREAM("each camera extrinsics: "<<extrinsics[0]<<" "<<extrinsics[1]<<" "<<extrinsics[2]<<" "
-                        <<extrinsics[3]<<" "<<extrinsics[4]<<" "<<extrinsics[5]);
       }
 
       // Get the observations
@@ -464,6 +515,7 @@ bool CalibrationJob::runObservations()
 bool CalibrationJob::runOptimization()
 {
   // take all the data collected and create a Ceres optimization problem and run it
+  ROS_INFO_STREAM("Running Optimization...");
   ROS_DEBUG_STREAM("Optimizing "<<scene_list_.size()<<" scenes");
       BOOST_FOREACH(ObservationScene current_scene, scene_list_)
       {
@@ -547,7 +599,19 @@ bool CalibrationJob::runOptimization()
 
 bool CalibrationJob::store()
 {
-  std::ofstream output_file("world_to_camera_transform_publisher.launch", std::ios::out);// | std::ios::app);
+  std::string path = ros::package::getPath("industrial_extrinsic_cal");
+  std::string file_path = "/launch/target_to_camera_optical_transform_publisher.launch";
+  std::string filepath = path+file_path;
+  std::ofstream output_file(filepath.c_str(), std::ios::out);// | std::ios::app);
+  if (output_file.is_open())
+  {
+    ROS_INFO_STREAM("Storing results in: "<<filepath);
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Unable to open file");
+    return false;
+  }//end if writing to file
   output_file << "<launch>";
   for (int i=0; i<extrinsics_.size();i++)
   {
@@ -569,20 +633,12 @@ bool CalibrationJob::store()
     double ry = atan2(-R[6], sqrt(R[7] * R[7] + R[8] * R[8]));
     double rz = atan2(R[3], R[0]);
 
-    if (output_file.is_open())
-    {
-      output_file<<" <node pkg=\"tf\" type=\"static_transform_publisher\" name=\"camera_tf_broadcaster"<<i<<"\" args=\"";
-      //tranform publisher launch files requires x y z yaw pitch roll
-      output_file<<ix<< ' '<<iy<< ' '<<iz<< ' '<<rz<< ' '<<ry<< ' '<<rx ;
-      output_file<<" "<<reference_frame_;
-      output_file<<" camera"<<i;
-      output_file<<" 100\" />";
-    }
-    else
-    {
-      ROS_ERROR_STREAM("Unable to open file");
-      return false;
-    }//end if writing to file
+    output_file<<" <node pkg=\"tf\" type=\"static_transform_publisher\" name=\"camera_tf_broadcaster"<<i<<"\" args=\"";
+    //tranform publisher launch files requires x y z yaw pitch roll
+    output_file<<ix<< ' '<<iy<< ' '<<iz<< ' '<<rz<< ' '<<ry<< ' '<<rx ;
+    output_file<<" "<<target_frames_[i];
+    output_file<<" "<<camera_optical_frames_[i];
+    output_file<<" 100\" />";
   }//end for loop # extrinsics
   output_file << "\n</launch> \n";
   output_file.close();

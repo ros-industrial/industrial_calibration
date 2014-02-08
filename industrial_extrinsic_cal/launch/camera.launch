@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<launch>
+	<!-- input arguments -->
+	<arg name="sensor_usb_manual_setup" default="false"/>
+	<arg name="sensor_usb_bus1" default="001"/>
+	<arg name="sensor_usb_device1" default="000"/>
+
+	<!-- fixed parameters -->
+	<arg name="namespace1" value="ns1"/>
+	<arg name="sensor_name1" value="$(arg namespace1)_kinect"/>
+
+	<!-- camera sensor setup -->
+	<remap from="/$(arg sensor_name1)/depth/points"
+		to="/$(arg namespace1)/camera/depth_registered/points"/>
+	<include  file="$(find industrial_extrinsic_cal)/launch/single_sensor.launch">
+		<arg name="arm_prefix" value="$(arg namespace1)_"/>
+		<arg name="camera_name" value="$(arg sensor_name1)"/>
+		<arg name="publish_tf" value="true" />
+		<arg if="$(arg sensor_usb_manual_setup)" name="device_id" value="$(arg sensor_usb_bus1)@$(arg sensor_usb_device1)" />
+	</include> 
+
+
+</launch>

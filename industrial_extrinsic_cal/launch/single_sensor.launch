@@ -10,7 +10,7 @@
     <arg name="camera" default="$(arg camera_name)" />
     <!--arg name="launch_prefix" default="" /-->
     <arg name="rgb_frame_id" default="/$(arg arm_prefix)kinect_rgb_optical_frame"/>    
-    <arg name="depth_frame_id" default="/$(arg arm_prefix)kinect_ir_optical_frame"/>
+    <arg name="depth_frame_id" default="/$(arg arm_prefix)kinect_depth_optical_frame"/>
     <arg name="rgb_camera_info_url" default=""/>
     <arg name="depth_camera_info_url" default="" />
     <!-- device_id can have the following formats:
