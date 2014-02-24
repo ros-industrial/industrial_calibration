@@ -1,0 +1,3 @@
+<launch>
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find industrial_extrinsic_cal)/config/industrial_extrinsic_calibration.rviz" required="true" />
+</launch>
