@@ -19,7 +19,6 @@ IF (EIGEN_FOUND)
   MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
 ENDIF (EIGEN_FOUND)
 
-
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -75,7 +74,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(include
-  ${catkin_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
