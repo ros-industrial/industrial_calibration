@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (Apache License)
  *
- * Copyright (c) 2013, Southwest Research Institute
+ * Copyright (c) 2014, Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ public:
    * @brief constructor
    * @param image_topic name of published image topic
    */
-  ROSCameraObserver(std::string &image_topic);
+  ROSCameraObserver(const std::string &image_topic);
 
   /**
    * @brief Default destructor
@@ -99,10 +99,10 @@ public:
   int getObservations(CameraObservations &camera_observations);
 
   /** @brief tells observer to process next incomming image to find the targets in list */
-  void triggerCamera(){};
+  void triggerCamera();
 
   /** @brief tells when camera has completed its observations */
-  bool observationsDone(){};
+  bool observationsDone();
 
 private:
 
@@ -115,6 +115,10 @@ private:
    *  @brief cropped image based on original image and region of interest
    */
   cv::Mat image_roi_;
+  /*!
+   *  @brief cv rectangle region to crop image into
+   */
+  cv::Rect input_roi_;
   /**
    *  @brief target pattern grid number of rows
    */

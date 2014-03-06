@@ -3,6 +3,9 @@
 static_cameras:
  -
     camera_name: Basler-21135423
+    image_topic: /camera/image_color
+    camera_optical_frame: /camera_rgb_optical_frame
+    camera_intermediate_frame: /camera_link
     angle_axis_ax: 1.0
     angle_axis_ay: 1.1
     angle_axis_az: 1.2
@@ -20,6 +23,9 @@ static_cameras:
     distortion_p2: 0.01
  -
     camera_name: Basler-21135424
+    image_topic: /camera/image_color
+    camera_optical_frame: /camera_rgb_optical_frame
+    camera_intermediate_frame: /camera_link
     angle_axis_ax: 1.990
     angle_axis_ay: 1.001
     angle_axis_az: 1.992
@@ -39,6 +45,9 @@ static_cameras:
 moving_cameras:
  -
     camera_name: Basler-21135425
+    image_topic: /camera/image_color
+    camera_optical_frame: /camera_rgb_optical_frame
+    camera_intermediate_frame: /camera_link
     angle_axis_ax: 2.6660
     angle_axis_ay: 2.6662
     angle_axis_az: 2.6662

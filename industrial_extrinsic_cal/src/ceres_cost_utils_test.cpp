@@ -15,9 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace industrial_calibration
+
+#include <industrial_extrinsic_cal/basic_types.h>
+#include <industrial_extrinsic_cal/observation_scene.h>
+
+namespace industrial_extrinsic_cal
 {
-observation projectPoint(CameraParameters C, Point3d P)
+Observation projectPoint(CameraParameters C, Point3d P)
 {
   double p[3];
   double pt[3];
@@ -27,15 +31,20 @@ observation projectPoint(CameraParameters C, Point3d P)
 
   /* transform point into camera frame */
   /* note, camera transform takes points from camera frame into world frame */
-  ceres::AngleAxisRotatePoint(C.aa, pt, p);
+  double aa[3];
+  aa[0]=C.pb_extrinsics[0];
+  aa[0]=C.pb_extrinsics[1];
+  aa[0]=C.pb_extrinsics[2];
+  ceres::AngleAxisRotatePoint(aa, pt, p);
 
-  p[0] += C.pos[0];
-  p[1] += C.pos[1];
-  p[2] += C.pos[2];
+  p[0] +=C.pb_extrinsics[3];
+  p[1] +=C.pb_extrinsics[4];
+  p[2] +=C.pb_extrinsics[5];
 
   double xp = p[0] / p[2];
   double yp = p[1] / p[2];
 
+  // calculate terms for polynomial distortion
   double r2 = xp * xp + yp * yp;
   double r4 = r2 * r2;
   double r6 = r2 * r4;
@@ -44,20 +53,22 @@ observation projectPoint(CameraParameters C, Point3d P)
   double yp2 = yp * yp;
 
   /* apply the distortion coefficients to refine pixel location */
-  double xpp = xp + C.k1 * r2 * xp + C.k2 * r4 * xp + C.k3 * r6 * xp + C.p2 * (r2 + 2 * xp2) + 2 * C.p1 * xp * yp;
-  double ypp = yp + C.k1 * r2 * yp + C.k2 * r4 * yp + C.k3 * r6 * yp + C.p1 * (r2 + 2 * yp2) + 2 * C.p2 * xp * yp;
+  double xpp = xp + C.distortion_k1 * r2 * xp + C.distortion_k2 * r4 * xp +
+      C.distortion_k3 * r6 * xp + C.distortion_p2 * (r2 + 2 * xp2) + 2 * C.distortion_p1 * xp * yp;
+  double ypp = yp + C.distortion_k1 * r2 * yp + C.distortion_k2 * r4 * yp +
+      C.distortion_k3 * r6 * yp + C.distortion_p1 * (r2 + 2 * yp2) + 2 * C.distortion_p2 * xp * yp;
 
   /* perform projection using focal length and camera center into image plane */
-  observation O;
-  O.p_id = 0;
-  O.x = C.fx * xpp + C.cx;
-  O.y = C.fy * ypp + C.cy;
+  Observation O;
+  O.point_id = 0;
+  O.image_loc_x = C.focal_length_x * xpp + C.center_x;
+  O.image_loc_y = C.focal_length_y * ypp + C.center_y;
   return (O);
 }
 
-struct CameraReprjError
+struct CameraReprjErrorWithDistortion
 {
-  CameraReprjError(double ob_x, double ob_y) :
+  CameraReprjErrorWithDistortion(double ob_x, double ob_y) :
       ox_(ob_x), oy_(ob_y)
   {
   }
@@ -70,7 +81,7 @@ struct CameraReprjError
     {
       /** extract the variables from the camera parameters */
       int q = 0; /** extrinsic block of parameters */
-      const T& x = c_p1[q++]; /**  angle_axis x for rotation of camera		 */
+      const T& x = c_p1[q++]; /**  angle_axis x for rotation of camera           */
       const T& y = c_p1[q++]; /**  angle_axis y for rotation of camera */
       const T& z = c_p1[q++]; /**  angle_axis z for rotation of camera */
       const T& tx = c_p1[q++]; /**  translation of camera x */
@@ -126,7 +137,7 @@ struct CameraReprjError
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y)
   {
-    return (new ceres::AutoDiffCostFunction<CameraReprjError, 2, 6, 9, 3>(new CameraReprjError(o_x, o_y)));
+    return (new ceres::AutoDiffCostFunction<CameraReprjErrorWithDistortion, 2, 6, 9, 3>(new CameraReprjErrorWithDistortion(o_x, o_y)));
   }
   double ox_; /** observed x location of object in image */
   double oy_; /** observed y location of object in image */
@@ -188,7 +199,7 @@ struct CameraReprjErrorNoDistortion
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y)
   {
-    return (new ceres::AutoDiffCostFunction<CameraReprjErrorNoDistortion, 2, 6, 4, 3>(new CameraReprjError(o_x, o_y)));
+    return (new ceres::AutoDiffCostFunction<CameraReprjErrorNoDistortion, 2, 6, 4, 3>(new CameraReprjErrorNoDistortion(o_x, o_y)));
   }
   double ox_; /** observed x location of object in image */
   double oy_; /** observed y location of object in image */

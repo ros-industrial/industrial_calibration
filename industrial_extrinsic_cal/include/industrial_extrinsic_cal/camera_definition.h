@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (Apache License)
  *
- * Copyright (c) 2013, Southwest Research Institute
+ * Copyright (c) 2014, Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
-
 
 namespace industrial_extrinsic_cal
 {

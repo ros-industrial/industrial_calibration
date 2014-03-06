@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (Apache License)
  *
- * Copyright (c) 2013, Southwest Research Institute
+ * Copyright (c) 2014, Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,11 @@
 namespace industrial_extrinsic_cal
 {
 
-ROSCameraObserver::ROSCameraObserver(std::string &camera_topic) :
+ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
     sym_circle_(true), pattern_(pattern_options::Chessboard), pattern_rows_(0), pattern_cols_(0)
 {
   image_topic_ = camera_topic;
+  //ROS_DEBUG_STREAM("ROSCameraObserver created with image topic: "<<image_topic_);
   results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
 }
 
@@ -78,51 +79,44 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
       break;
   }
 
-  sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
-  try
-  {
-    input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
-    output_bridge_ = cv_bridge::toCvCopy(recent_image, "bgr8");
-    out_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
-    ROS_INFO_STREAM("cv image created based on ros image");
-  }
-  catch (cv_bridge::Exception& ex)
-  {
-    ROS_ERROR("Failed to convert image");
-    ROS_WARN_STREAM("cv_bridge exception: "<<ex.what());
-    return false;
-  }
+  input_roi_.x=roi.x_min;
+  input_roi_.y= roi.y_min;
+  input_roi_.width= roi.x_max - roi.x_min;
+  input_roi_.height= roi.y_max - roi.y_min;
+  ROS_INFO_STREAM("ROSCameraObserver added target and roi");
 
-  cv::Rect input_ROI(roi.x_min, roi.y_min, roi.x_max - roi.x_min, roi.y_max - roi.y_min); //Rect takes in x,y,width,height
-  //ROS_INFO_STREAM("image ROI region created");
-  if (input_bridge_->image.cols < input_ROI.width || input_bridge_->image.rows < input_ROI.height)
-  {
-    ROS_ERROR_STREAM("ROI too big for image size");
-    return false;
-  }
-
-  image_roi_ = input_bridge_->image(input_ROI);
-
-  output_bridge_->image = output_bridge_->image(input_ROI);
-  out_bridge_->image = image_roi_;
-  ROS_INFO_STREAM("output image size: " <<output_bridge_->image.rows<<" x "<<output_bridge_->image.cols);
-  results_pub_.publish(out_bridge_->toImageMsg());
   return true;
 }
 
 void ROSCameraObserver::clearTargets()
 {
   instance_target_.reset();
+  //ROS_INFO_STREAM("Targets cleared from observer");
 }
 
 void ROSCameraObserver::clearObservations()
 {
   camera_obs_.observations.clear();
+  //ROS_INFO_STREAM("Observations cleared from observer");
 }
 
 int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 {
   bool successful_find = false;
+
+  ROS_INFO_STREAM("image ROI region created: "<<input_roi_.x<<" "<<input_roi_.y<<" "<<input_roi_.width<<" "<<input_roi_.height);
+  if (input_bridge_->image.cols < input_roi_.width || input_bridge_->image.rows < input_roi_.height)
+  {
+    ROS_ERROR_STREAM("ROI too big for image size");
+    return 0;
+  }
+
+  image_roi_ = input_bridge_->image(input_roi_);
+
+  output_bridge_->image = output_bridge_->image(input_roi_);
+  out_bridge_->image = image_roi_;
+  ROS_INFO_STREAM("output image size: " <<output_bridge_->image.rows<<" x "<<output_bridge_->image.cols);
+  results_pub_.publish(out_bridge_->toImageMsg());
 
   switch (pattern_)
   {
@@ -149,6 +143,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   if (!successful_find)
   {
     ROS_WARN_STREAM("Pattern not found for pattern: "<<pattern_ <<" with symmetry: "<< sym_circle_);
+    return 0;
   }
 
   ROS_INFO_STREAM("Number of points found on board: "<<observation_pts_.size());
@@ -162,12 +157,38 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   }
 
   cam_obs = camera_obs_;
-  if (successful_find && camera_obs_.observations.size() != 0)
-  {
-    return 1;
-  }
-  else
-    return 0;
+  return 1;
 }
 
+void ROSCameraObserver::triggerCamera()
+{
+
+  sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
+  //ROS_INFO_STREAM("Waiting for image on topic: "<<image_topic_);
+  try
+  {
+    input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
+    output_bridge_ = cv_bridge::toCvCopy(recent_image, "bgr8");
+    out_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
+    ROS_INFO_STREAM("cv image created based on ros image");
+  }
+  catch (cv_bridge::Exception& ex)
+  {
+    ROS_ERROR("Failed to convert image");
+    ROS_WARN_STREAM("cv_bridge exception: "<<ex.what());
+    //return false;
+    return;
+  }
+
+}
+
+bool ROSCameraObserver::observationsDone()
+{
+  //if (camera_obs_.observations.size() != 0)
+  if(!input_bridge_)
+  {
+    return false;
+  }
+  return true;
+}
 } //industrial_extrinsic_cal

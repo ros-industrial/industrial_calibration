@@ -308,7 +308,7 @@ bool CalibrationJob::runObservations()
         }
         ObservationDataPoint temp_ODP(camera_name, target_name, scene_id, intrinsics, extrinsics, pnt_id, target_pose,
                                       pnt_pos, observation_x, observation_y);
-        observation_data_point_list.addObservationPoint(temp_ODP);
+        observation_data_point_list_.addObservationPoint(temp_ODP);
       }
     }
   } // end for each scene
@@ -611,11 +611,11 @@ bool CalibrationJob::runOptimization()
 {
   // take all the data collected and create a Ceres optimization problem and run it
 
-  BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list.items)
+  BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.items)
   {
     // take all the data collected and create a Ceres optimization problem and run it
 
-    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list.items){
+    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.items){
       // create cost function
       // there are several options
       // 1. the complete reprojection error cost function "Create(obs_x,obs_y)"
