@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include <industrial_extrinsic_cal/calibration_job_definition.h>
+#include <industrial_extrinsic_cal/calibration_job_definition2.h>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <ros/package.h>
@@ -223,6 +223,7 @@ bool CalibrationJob::loadTarget()
           case pattern_options::CircleGrid:
             (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters.pattern_rows;
             (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters.pattern_cols;
+	    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters.circle_diameter;
             temp_target->circle_grid_parameters.is_symmetric=true;
             ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters.pattern_rows);
             break;
@@ -280,6 +281,7 @@ bool CalibrationJob::loadTarget()
           case pattern_options::CircleGrid:
             (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters.pattern_rows;
             (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters.pattern_cols;
+	    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters.circle_diameter;
             temp_target->circle_grid_parameters.is_symmetric=true;
             break;
           default:
@@ -490,6 +492,10 @@ bool CalibrationJob::runObservations()
       {
         target_name = observation.target->target_name;
         target_type = observation.target->target_type;
+	double circle_dia=0.0;
+	if(target_type == pattern_options::CircleGrid){
+	  circle_dia = observation.target->circle_grid_parameters.circle_diameter;
+	}
         int pnt_id = observation.point_id;
         double observation_x = observation.image_loc_x;
         double observation_y = observation.image_loc_y;
@@ -507,7 +513,7 @@ bool CalibrationJob::runObservations()
         }
         ObservationDataPoint temp_ODP(camera_name, target_name, target_type,
 				      scene_id, intrinsics, extrinsics, pnt_id, target_pose,
-                                      pnt_pos, observation_x, observation_y);
+                                      pnt_pos, observation_x, observation_y, circle_dia);
         listpercamera.addObservationPoint(temp_ODP);
       }//end for each observed point
     }//end for each camera
@@ -563,23 +569,39 @@ bool CalibrationJob::runOptimization()
       double point_x        = ODP.point_position_[0];// location of point within target frame
       double point_y        = ODP.point_position_[1];
       double point_z        = ODP.point_position_[2];
-
-      // create the cost function
-      CostFunction* cost_function = TargetCameraReprjErrorNoDistortion::Create(image_x, image_y,
-                                                                               focal_length_x,
-                                                                               focal_length_y,
-                                                                               center_pnt_x,
-                                                                               center_pnt_y,
-                                                                               point_x,
-                                                                               point_y,
-                                                                               point_z);
-
+      unsigned int target_type    = ODP.target_type_;
+      
       // pull out pointers to the parameter blocks in the observation point data
       extrinsics    = ODP.camera_extrinsics_;
       target_pose   = ODP.target_pose_;
 
-      // add it as a residual using parameter blocks
-      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+      // create the cost function
+      if(target_type == pattern_options::CircleGrid){
+	double circle_dia = ODP.circle_dia_;
+	CostFunction* cost_function = CircleTargetCameraReprjErrorNoDFixedPoint::Create(image_x, image_y,
+											circle_dia,
+											focal_length_x,
+											focal_length_y,
+											center_pnt_x,
+											center_pnt_y,
+											point_x,
+											point_y,
+											point_z);
+	// add it as a residual using parameter blocks
+	problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+      }
+      else{
+	CostFunction* cost_function = TargetCameraReprjErrorNoDistortion::Create(image_x, image_y,
+										 focal_length_x,
+										 focal_length_y,
+										 center_pnt_x,
+										 center_pnt_y,
+										 point_x,
+										 point_y,
+										 point_z);
+	// add it as a residual using parameter blocks
+	problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+      }
     }//for each observation
       problem_.SetParameterBlockConstant(target_pose);
     // Make Ceres automatically detect the bundle structure. Note that the
@@ -623,23 +645,22 @@ bool CalibrationJob::store()
     //get transform world to camera
     double R[9];
     double aa[3];
-    aa[0] = extrinsics_.at(i)[0];
-    aa[1] = extrinsics_.at(i)[1];
-    aa[2] = extrinsics_.at(i)[2];
-    double tx=extrinsics_.at(i)[3];
-    double ty=extrinsics_.at(i)[4];
-    double tz=extrinsics_.at(i)[5];
-    ceres::AngleAxisToRotationMatrix(aa, R);
-    double ix = -(tx * R[0] + ty * R[1] + tz * R[2]);
-    double iy = -(tx * R[3] + ty * R[4] + tz * R[5]);
-    double iz = -(tx * R[6] + ty * R[7] + tz * R[8]);
-    double rx = atan2(R[7], R[8]);
-    double ry = atan2(-R[6], sqrt(R[7] * R[7] + R[8] * R[8]));
-    double rz = atan2(R[3], R[0]);
+    double camera_to_world[3];
+    double world_to_camera[3];
+    double quat[4];
+    aa[0] = -extrinsics_.at(i)[0]; // 
+    aa[1] = -extrinsics_.at(i)[1];
+    aa[2] = -extrinsics_.at(i)[2];
+    camera_to_world[0] = -extrinsics_.at(i)[3];
+    camera_to_world[1] = -extrinsics_.at(i)[4];
+    camera_to_world[2] = -extrinsics_.at(i)[5];
+    ceres::AngleAxisToQuaternion(aa, quat);
+    ceres::AngleAxisRotatePoint(aa,camera_to_world,world_to_camera);
 
     output_file<<" <node pkg=\"tf\" type=\"static_transform_publisher\" name=\"camera_tf_broadcaster"<<i<<"\" args=\"";
     //tranform publisher launch files requires x y z yaw pitch roll
-    output_file<<ix<< ' '<<iy<< ' '<<iz<< ' '<<rz<< ' '<<ry<< ' '<<rx ;
+    output_file<<world_to_camera[0]<< ' '<<world_to_camera[1]<< ' '<<world_to_camera[2]<< ' ';
+    output_file<<quat[1]<< ' '<<quat[2]<< ' '<<quat[3] << ' ' << quat[0] ;
     output_file<<" "<<target_frames_[i];
     output_file<<" "<<camera_optical_frames_[i];
     output_file<<" 100\" />";

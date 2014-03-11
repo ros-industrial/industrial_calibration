@@ -21,7 +21,7 @@
 
 #include <vector>
 #include <boost/shared_ptr.hpp>
-#include <industrial_extrinsic_cal/basic_types.h>
+//#include <industrial_extrinsic_cal/basic_types.h>
 
 namespace industrial_extrinsic_cal
 {
@@ -90,9 +90,10 @@ typedef struct
 /** @brief Parameters defining circle grid target  */
 typedef struct
 {
-  int pattern_rows;
-  int pattern_cols;
-  bool is_symmetric;
+  int pattern_rows;		// number of rows
+  int pattern_cols;		// number of colulmns
+  bool is_symmetric;		// not sure
+  double circle_diameter;	// size of each circle
 } CircleGridParameters;
 /** @brief Parameters defining AR target */
 typedef struct
@@ -105,7 +106,8 @@ typedef struct
 typedef struct
 {
   std::string target_name;
-  int target_type;
+  unsigned int target_type;
+
   union
   {
     CheckerBoardParameters checker_board_parameters;

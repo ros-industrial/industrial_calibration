@@ -64,7 +64,7 @@ ENDIF (EIGEN_FOUND)
 catkin_package(
    INCLUDE_DIRS include
 #  LIBRARIES industrial_extrinsic_cal
-   CATKIN_DEPENDS roscpp std_msgs rosconsole std_srvs roslib
+   CATKIN_DEPENDS roscpp std_msgs rosconsole std_srvs roslib 
 #  DEPENDS system_lib
 )
 
@@ -83,7 +83,7 @@ include_directories(include
 #   src/${PROJECT_NAME}/industrial_extrinsic_cal.cpp
 # )
 add_library(industrial_extrinsic_cal_ceres
-   src/calibration_job_definition.cpp
+   src/calibration_job_definition2.cpp
 )
 add_library(industrial_extrinsic_cal
    src/ros_camera_observer.cpp
@@ -110,6 +110,7 @@ target_link_libraries(industrial_extrinsic_cal_ceres yaml-cpp ${catkin_LIBRARIES
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
 target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES})
 target_link_libraries(cal_job industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES} ${catkin_LIBRARIES})
+#target_link_libraries(cal_job2 industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES} ${catkin_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
 
 catkin_add_gtest(utest_inds_cal test/utest.cpp)

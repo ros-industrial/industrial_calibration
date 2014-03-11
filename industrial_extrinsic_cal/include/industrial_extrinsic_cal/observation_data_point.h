@@ -41,11 +41,13 @@ public:
    * @param image_x       image location x
    * @param image_y       image location y
    */
-  ObservationDataPoint(std::string c_name, std::string t_name, int s_id, P_BLOCK c_intrinsics, P_BLOCK c_extrinsics,
-                       int point_id, P_BLOCK t_pose, P_BLOCK p_position, double image_x, double image_y)
+  ObservationDataPoint(std::string c_name, std::string t_name, int t_type,
+		       int s_id, P_BLOCK c_intrinsics, P_BLOCK c_extrinsics,
+                       int point_id, P_BLOCK t_pose, P_BLOCK p_position, double image_x, double image_y, double circle_dia=0.0)
   {
     camera_name_ = c_name;
     target_name_ = t_name;
+    target_type_ = t_type;
     scene_id_ = s_id;
     camera_intrinsics_ = c_intrinsics;
     camera_extrinsics_ = c_extrinsics;
@@ -54,6 +56,7 @@ public:
     point_position_ = p_position;
     image_x_ = image_x;
     image_y_ = image_y;
+    circle_dia_ = circle_dia;
   }
   ;
 
@@ -64,6 +67,7 @@ public:
 
   std::string camera_name_;
   std::string target_name_;
+  unsigned int target_type_;
   int scene_id_;
   int point_id_;
   P_BLOCK camera_extrinsics_;
@@ -72,6 +76,7 @@ public:
   P_BLOCK point_position_;
   double image_x_;
   double image_y_;
+  double circle_dia_;
 };
 // end of class ObservationDataPoint
 

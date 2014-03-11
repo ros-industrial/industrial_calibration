@@ -20,7 +20,7 @@
 #define RUNTIME_UTILS_H_
 
 #include <industrial_extrinsic_cal/basic_types.h>
-#include <industrial_extrinsic_cal/calibration_job_definition.h>
+#include <industrial_extrinsic_cal/calibration_job_definition2.h>
 
 //#include <ros/ros.h>
 #include <tf/transform_datatypes.h>
@@ -58,7 +58,7 @@ public:
    * @return Tranform to be published/broadcasted
    */
   tf::Transform pblockToPose(industrial_extrinsic_cal::P_BLOCK &optimized_input);
-
+  tf::Transform pblockToPose2(industrial_extrinsic_cal::P_BLOCK &optimized_input);
   /**
    * @brief saved final calibrated transforms as launch file
    * @param package_name directory to package path

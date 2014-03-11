@@ -22,6 +22,40 @@
 namespace industrial_extrinsic_cal
 {
 
+  // note that this version does not need to explicitly compute roll pitch and yaw
+tf::Transform ROSRuntimeUtils::pblockToPose2(industrial_extrinsic_cal::P_BLOCK &optimized_input)
+{
+    double aa[3];
+    double quaternion[4];
+    // the negative of the angle axis is the inverse rotation
+    aa[0] = -optimized_input[0];
+    aa[1] = -optimized_input[1];
+    aa[2] = -optimized_input[2];
+    ceres::AngleAxisToQuaternion(aa,quaternion);
+    // note w term is now first
+    tf::Quaternion desired_q(quaternion[3],quaternion[0],quaternion[1],quaternion[2]); 
+
+    double point[3],ipoint[3];
+    point[0] = -optimized_input[3];
+    point[1] = -optimized_input[4];
+    point[2] = -optimized_input[5];
+    ceres::AngleAxisRotatePoint(aa,point,ipoint);
+    tf::Vector3 desired_t(ipoint[0],ipoint[1],ipoint[2]);
+
+    // show some results on screen, NOTE, this code is not necessary 
+    ROS_INFO_STREAM("Origin: "<< desired_t.x()<<", " <<desired_t.y()<<", "<<desired_t.z());
+    tf::Matrix3x3 tf_matrix(desired_q);
+    double roll, pitch, yaw;
+    tf_matrix.getRPY(roll, pitch, yaw);
+    ROS_INFO_STREAM("Roll, pitch, yaw: "<< roll <<", " <<pitch<<", "<<yaw);
+
+    // construct the result
+    tf::Transform transform_output;
+    transform_output.setRotation(desired_q);
+    transform_output.setOrigin(desired_t);
+    return transform_output;
+}
+
 tf::Transform ROSRuntimeUtils::pblockToPose(industrial_extrinsic_cal::P_BLOCK &optimized_input)
 {
   double R[9];
