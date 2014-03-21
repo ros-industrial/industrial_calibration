@@ -60,10 +60,6 @@ int main(int argc, char **argv)
     tf_camera_orig= utils.pblockToPose(orig_extrinsics);
     utils.initial_transforms_.push_back(tf_camera_orig);
   }
-
-  ROS_INFO_STREAM("Target frame1: "<<utils.target_frame_[0]);
-  ROS_INFO_STREAM("World frame: "<<utils.world_frame_);
-  ROS_INFO_STREAM("Init tf size: "<<utils.initial_transforms_.size());
   tf::StampedTransform temp_tf;
   try
   {
@@ -120,13 +116,22 @@ bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& resp
 
   std::string ros_package_name;
   std::string launch_file_name;
+
   priv_nh_.getParam("camera_file", utils.camera_file_);
   priv_nh_.getParam("target_file", utils.target_file_);
   priv_nh_.getParam("cal_job_file", utils.caljob_file_);
   priv_nh_.getParam("store_results_package_name", ros_package_name);
   priv_nh_.getParam("store_results_file_name", launch_file_name);
+
   std::string path = ros::package::getPath("industrial_extrinsic_cal");
   std::string file_path=path+"/yaml/";
+  ROS_INFO("path: %s",file_path.c_str());
+  ROS_INFO("camera_file: %s",utils.camera_file_.c_str());
+  ROS_INFO("target_file: %s",utils.target_file_.c_str());
+  ROS_INFO("cal_job_file: %s",utils.caljob_file_.c_str());
+  ROS_INFO("store results: %s",ros_package_name.c_str());
+  ROS_INFO("launch_file_name: %s",launch_file_name.c_str());
+
   industrial_extrinsic_cal::CalibrationJob cal_job(file_path+utils.camera_file_, file_path+utils.target_file_, file_path+utils.caljob_file_);
 
   cal_job.load();
@@ -134,85 +139,39 @@ bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& resp
   utils.camera_optical_frame_=cal_job.getCameraOpticalFrame();
   utils.camera_intermediate_frame_=cal_job.getCameraIntermediateFrame();
   utils.target_frame_=cal_job.getTargetFrames();
+
+  ROS_INFO("world_fame: %s",utils.world_frame_.c_str());
+  for(int i=0;i<(int)utils.camera_optical_frame_.size();i++){
+    ROS_INFO("optical_fame %d: %s",i,utils.camera_optical_frame_[i].c_str());
+  }
+  for(int i=0;i<(int)utils.camera_intermediate_frame_.size();i++){
+    ROS_INFO("intermediate_fame %d: %s",i,utils.camera_intermediate_frame_[i].c_str());
+  }
+  for(int i=0;i<(int)utils.target_frame_.size();i++){
+    ROS_INFO("target_fame %d: %s",i,utils.target_frame_[i].c_str());
+  }
+
+  ROS_INFO("State prior to optimization");
+  cal_job.show();
+
+  ROS_INFO("RUNNING");
   if (cal_job.run())
   {
     ROS_INFO_STREAM("Calibration job observations and optimization complete");
+    calibrated=true;
   }
-  utils.calibrated_extrinsics_ = cal_job.getExtrinsics();
-  utils.target_poses_ = cal_job.getTargetPose();
-  ROS_DEBUG_STREAM("Size of optimized_extrinsics_: "<<utils.calibrated_extrinsics_.size());
-  ROS_DEBUG_STREAM("Size of targets_: "<<utils.target_poses_.size());
-
-  industrial_extrinsic_cal::P_BLOCK optimized_extrinsics, target;
-  tf::Transform tf_camera, tf_target;
-  for (int k=0; k<utils.calibrated_extrinsics_.size(); k++ )
-  {
-    optimized_extrinsics=utils.calibrated_extrinsics_[k];
-    ROS_INFO_STREAM("Optimized Camera "<<k);
-     tf_camera= utils.pblockToPose(optimized_extrinsics);
-    utils.calibrated_transforms_.push_back(tf_camera);
-  }
-  for (int k=0; k<utils.target_poses_.size(); k++ )
-  {
-    target=utils.target_poses_[k];
-    ROS_INFO_STREAM("Optimized Target "<<k);
-    tf_target = utils.pblockToPose(target);
-    utils.target_transforms_.push_back(tf_target);
-  }
-  tf::StampedTransform temp_tf;
-  for (int i=0; i<utils.calibrated_extrinsics_.size(); i++ )
-  {
-    try
+  else
     {
-      utils.listener_.waitForTransform( utils.camera_optical_frame_[i],utils.camera_intermediate_frame_[i],
-                                        ros::Time(0), ros::Duration(3.0));
-      utils.listener_.lookupTransform( utils.camera_optical_frame_[i],utils.camera_intermediate_frame_[i],
-                                       ros::Time(0), temp_tf);
-      utils.camera_internal_transforms_.push_back(temp_tf);
+      ROS_INFO_STREAM("Calibration job failed");
+      return(false);
     }
-    catch (tf::TransformException &ex)
-    {
-      ROS_ERROR("%s",ex.what());
-    }
-  }
-  ROS_INFO_STREAM("Size of internal_transforms: "<<utils.camera_internal_transforms_.size());
-  for (int k=0; k<utils.calibrated_transforms_.size(); k++ )
+  
+  // PRINT RESULTS TO THE SCREEN
+  
+  if (!cal_job.store())
   {
-    utils.calibrated_transforms_[k]=utils.calibrated_transforms_[k]*utils.camera_internal_transforms_[k];
+    ROS_INFO_STREAM(" Trouble storing calibration job optimization results ");
   }
-  ROS_INFO_STREAM("Target frame1: "<<utils.target_frame_[0]);
-  ROS_INFO_STREAM("World frame: "<<utils.world_frame_);
-  try
-  {
-    utils.listener_.waitForTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), ros::Duration(3.0));
-    utils.listener_.lookupTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), temp_tf);
-    utils.points_to_world_transforms_.push_back(temp_tf);
-  }
-  catch (tf::TransformException &ex)
-  {
-    ROS_ERROR("%s",ex.what());
-  }
-  for (int k=0; k<utils.calibrated_transforms_.size(); k++ )
-  {
-    utils.calibrated_transforms_[k]=utils.points_to_world_transforms_[0]*utils.calibrated_transforms_[k];
-  }
-
-  b_transforms=utils.calibrated_transforms_;
-  calibrated=true;
-
-  if (cal_job.store())
-  {
-    ROS_INFO_STREAM("Calibration job optimization camera results saved");
-  }
-
-  std::string save_package_path = ros::package::getPath(ros_package_name);
-  std::string save_file_path = "/launch/"+launch_file_name;
-  if (utils.store_tf_broadcasters(save_package_path, save_file_path))
-  {
-    ROS_INFO_STREAM("Calibration job optimization camera to world transforms saved");
-  }
-
-  ROS_INFO_STREAM("Camera pose(s) published");
-
+  cal_job.show();
   return true;
 }

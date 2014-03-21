@@ -68,6 +68,11 @@ public:
    */
   bool store();
 
+  /** @brief shows the current poses of all cameras and targets
+   * @return true if successful
+   */
+ void show();
+
   /** @brief runs both data collection and optimization
    * @return true if successful
    */
@@ -89,30 +94,12 @@ public:
   bool clearObservationData();
 
   /**
-   * @brief get the private member extrinsics_
-   * @return a parameter block of the optimized extrinsics of calibration_job
-   */
-  const std::vector<P_BLOCK> getExtrinsics() const
-  {
-    return extrinsics_;
-  }
-
-  /**
    * @brief get the private member original_extrinsics_
    * @return a parameter block of the original extrinsics of calibration_job
    */
   const std::vector<P_BLOCK> getOriginalExtrinsics() const
   {
     return original_extrinsics_;
-  }
-
-  /**
-   * @brief get the private member target_pose_
-   * @return a parameter block of the optimized target_pose of calibration_job
-   */
-  const std::vector<P_BLOCK> getTargetPose() const
-  {
-    return target_pose_;
   }
 
   const std::vector<std::string>& getCameraIntermediateFrame() const
@@ -127,7 +114,7 @@ public:
 
   const std::string& getReferenceFrame() const
   {
-    return reference_frame_;
+    return ceres_blocks_.reference_frame_;
   }
 
   const std::vector<std::string>& getTargetFrames() const
@@ -207,7 +194,6 @@ private:
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
-  std::string reference_frame_; /*!< this the frame to which the camera is being calibrated (and to which the target is positioned) */
   std::vector<std::string> target_frames_; /*!< this the frame of the target points */
   std::vector<std::string> camera_optical_frames_; /*!< this the frame in which observations were made */
   std::vector<std::string> camera_intermediate_frames_; /*!< this the frame which links camera optical frame to reference frame */
@@ -216,9 +202,7 @@ private:
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
   CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
   ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
-  std::vector<P_BLOCK> extrinsics_; /*!< This is the parameter block which holds the optimized camera extrinsics solution */
   std::vector<P_BLOCK> original_extrinsics_; /*!< This is the parameter block which holds the original camera extrinsics */
-  std::vector<P_BLOCK> target_pose_; /*!< This is the parameter block which holds the optimized target pose solution */
 
 };//end class
 

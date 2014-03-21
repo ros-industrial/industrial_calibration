@@ -166,9 +166,12 @@ bool CeresBlocks::addStaticTarget(shared_ptr<Target> target_to_add)
   BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
   {
     if (targ->target_name == target_to_add->target_name)
-      return (false); // target already exists
+      {
+	return (false); // target already exists
+      }
   }
   static_targets_.push_back(target_to_add);
+
   return (true);
 }
 bool CeresBlocks::addMovingCamera(shared_ptr<Camera> camera_to_add, int scene_id)
@@ -235,25 +238,28 @@ const boost::shared_ptr<Camera> CeresBlocks::getCameraByName(const std::string &
 const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string &target_name)
 {
   boost::shared_ptr<Target> target = boost::make_shared<Target>();
+  bool found=false;
   //ROS_INFO_STREAM("Found "<<static_cameras_.size() <<" static cameras");
-  for (int i=0; i< static_targets_.size() ; i++ )
+  BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
   {
-    if (static_targets_.at(i)->target_name==target_name)
+    if (targ->target_name==target_name)
     {
-      target=static_targets_.at(i);
+      target=targ;
+      found = true;
       ROS_DEBUG_STREAM("Found static target with name: "<<target_name);
     }
   }
   //ROS_INFO_STREAM("Found "<<moving_cameras_.size() <<" static cameras");
-  for (int i=0; i< moving_targets_.size() ; i++ )
+  BOOST_FOREACH(shared_ptr<MovingTarget> mtarg, moving_targets_)
   {
-    if (moving_targets_.at(i)->targ->target_name==target_name)
+    if (mtarg->targ->target_name==target_name)
     {
-      target=moving_targets_.at(i)->targ;
+      found = true;
+      target=mtarg->targ;
       ROS_DEBUG_STREAM("Found moving target with name: "<<target_name);
     }
   }
-  if (!target)
+  if (!found)
   {
     ROS_ERROR_STREAM("Fail");
   }
@@ -261,6 +267,210 @@ const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string &
 }
 
 
-}// end namespace industrial_extrinsic_cal
+ void CeresBlocks::display_static_cameras()
+{
+  double R[9];
+  double aa[3];
+  double camera_to_world[3];
+  double world_to_camera[3];
+  double quat[4];
 
+  if(static_cameras_.size() !=0)   ROS_INFO("Static Cameras");
+  BOOST_FOREACH(shared_ptr<Camera> cam, static_cameras_)
+    {
+      aa[0] = -cam->camera_parameters_.angle_axis[0];
+      aa[1] = -cam->camera_parameters_.angle_axis[1];
+      aa[2] = -cam->camera_parameters_.angle_axis[2];
+      camera_to_world[0] = -cam->camera_parameters_.position[0];
+      camera_to_world[1] = -cam->camera_parameters_.position[1];
+      camera_to_world[2] = -cam->camera_parameters_.position[2];
+      ceres::AngleAxisToQuaternion(aa, quat);
+      ceres::AngleAxisRotatePoint(aa,camera_to_world,world_to_camera);
+      ceres::AngleAxisToRotationMatrix(aa,R);
+      ROS_INFO("%s \nPose:\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf \n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf\n",
+	       cam->camera_name_.c_str(),
+	       R[0],R[1],R[2],world_to_camera[0],
+	       R[3],R[4],R[5],world_to_camera[1],
+	       R[6],R[7],R[8],world_to_camera[2],
+	       0.0,0.0,0.0,1.0);
+      ROS_INFO("Intrinsics:\n fx = %lf fy = %lf\n cx = %lf cy = %lf\n D=[ %7.4lf %7.4lf %7.4lf %7.4lf %7.4lf]",
+	       cam->camera_parameters_.focal_length_x,
+	       cam->camera_parameters_.focal_length_y,
+	       cam->camera_parameters_.center_x,
+	       cam->camera_parameters_.center_y,
+	       cam->camera_parameters_.distortion_k1,
+	       cam->camera_parameters_.distortion_k2,
+	       cam->camera_parameters_.distortion_k3,
+	       cam->camera_parameters_.distortion_p1,
+	       cam->camera_parameters_.distortion_p2);
+    }
+}
+void CeresBlocks::display_moving_cameras()
+{
+  double R[9];
+  double aa[3];
+  double camera_to_world[3];
+  double world_to_camera[3];
+  double quat[4];
+
+  if(moving_cameras_.size() !=0) ROS_INFO("Moving Cameras");
+  BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
+    {
+      aa[0] = -mcam->cam->camera_parameters_.angle_axis[0];
+      aa[1] = -mcam->cam->camera_parameters_.angle_axis[1];
+      aa[2] = -mcam->cam->camera_parameters_.angle_axis[2];
+      camera_to_world[0] = -mcam->cam->camera_parameters_.position[0];
+      camera_to_world[1] = -mcam->cam->camera_parameters_.position[1];
+      camera_to_world[2] = -mcam->cam->camera_parameters_.position[2];
+      ceres::AngleAxisToQuaternion(aa, quat);
+      ceres::AngleAxisRotatePoint(aa,camera_to_world,world_to_camera);
+      ceres::AngleAxisToRotationMatrix(aa,R);
+      ROS_INFO("%s \nPose:\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf \n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf",
+	       mcam->cam->camera_name_.c_str(),
+	       R[0],R[1],R[2],world_to_camera[0],
+	       R[3],R[4],R[5],world_to_camera[1],
+	       R[6],R[7],R[8],world_to_camera[2],
+	       0.0,0.0,0.0,1.0);
+      ROS_INFO("Intrinsics:\n fx = %lf fy = %lf\n cx = %lf cy = %lf\n D=[ %7.4lf %7.4lf %7.4lf %7.4lf %7.4lf]",
+	       mcam->cam->camera_parameters_.focal_length_x,
+	       mcam->cam->camera_parameters_.focal_length_y,
+	       mcam->cam->camera_parameters_.center_x,
+	       mcam->cam->camera_parameters_.center_y,
+	       mcam->cam->camera_parameters_.distortion_k1,
+	       mcam->cam->camera_parameters_.distortion_k2,
+	       mcam->cam->camera_parameters_.distortion_k3,
+	       mcam->cam->camera_parameters_.distortion_p1,
+	       mcam->cam->camera_parameters_.distortion_p2);
+    }
+}
+void CeresBlocks::display_static_targets()
+{
+  double R[9];
+
+  if(static_targets_.size() !=0)   ROS_INFO("Static Targets:");
+  BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
+    {
+      ceres::AngleAxisToRotationMatrix(targ->pose.pb_aa,R);
+      ROS_INFO("%s \nPose:\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf \n %d points",
+	       targ->target_name.c_str(),
+	       R[0],R[3],R[6],targ->pose.x,
+	       R[1],R[4],R[7],targ->pose.y,
+	       R[2],R[5],R[8],targ->pose.z,
+	       0.0,0.0,0.0,1.0,
+	       targ->num_points);
+    }
+}
+void CeresBlocks::display_moving_targets()
+{
+  double R[9];
+
+  if(moving_targets_.size() !=0)   ROS_INFO("Moving Targets:");
+  BOOST_FOREACH(shared_ptr<MovingTarget> mtarg, moving_targets_)
+    {
+      ceres::AngleAxisToRotationMatrix(mtarg->targ->pose.pb_aa,R);
+      ROS_INFO("%s Pose:\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf \n%6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf\n%d points",
+	       mtarg->targ->target_name.c_str(),
+	       R[0],R[3],R[6],mtarg->targ->pose.x,
+	       R[1],R[4],R[7],mtarg->targ->pose.y,
+	       R[2],R[5],R[8],mtarg->targ->pose.z,
+	       0.0,0.0,0.0,1.0,
+	       mtarg->targ->num_points);
+    }
+}
+using std::string;
+using std::ofstream;
+using std::endl;
+
+bool CeresBlocks::write_static_tf_publisher(string filePath,string name,double *position, double *quat, string refFrame) 
+{
+  std::ofstream outputFile(filePath.c_str(), std::ios::app);// appending
+  if (!outputFile.is_open())
+  {
+    ROS_ERROR_STREAM("Unable to open file:" <<filePath);
+    return false;
+  }//end if writing to file
+
+  outputFile<<"<node pkg=\"tf\" type=\"static_transform_publisher\" name=\"";
+  outputFile<<name<<"_tf_broadcaster"<<"\" args=\"";
+  outputFile<<position[0]<< ' '<<position[1]<< ' '<<position[2]<< ' ';
+  outputFile<<quat[1]<< ' '<<quat[2]<< ' '<<quat[3] << ' ' << quat[0] ;
+  outputFile<<" "<<refFrame;
+  outputFile<<" "<<name;
+  outputFile<<" 100\" />"<<endl;
+  outputFile.close();
+}
+bool CeresBlocks::write_all_static_transforms(string filePath)
+{
+  std::ofstream outputFile(filePath.c_str(), std::ios::out);// | std::ios::app);
+  if (outputFile.is_open())
+  {
+    ROS_INFO_STREAM("Storing results in: "<<filePath);
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Unable to open file:" <<filePath);
+    return false;
+  }//end if writing to file
+  outputFile << "<launch>\n";
+  outputFile.close();
+
+  bool rtn = true;
+  double quat[4];
+  double c2w[3];
+  double w2c[3];
+  double aa[3];
+  
+  BOOST_FOREACH(shared_ptr<Camera> cam, static_cameras_)
+    {
+      aa[0] = -cam->camera_parameters_.angle_axis[0];
+      aa[1] = -cam->camera_parameters_.angle_axis[1];
+      aa[2] = -cam->camera_parameters_.angle_axis[2];
+      c2w[0] = -cam->camera_parameters_.position[0];
+      c2w[1] = -cam->camera_parameters_.position[1];
+      c2w[2] = -cam->camera_parameters_.position[2];
+      ceres::AngleAxisToQuaternion(aa,quat);
+      ceres::AngleAxisRotatePoint(aa,c2w,w2c);
+      rtn &= write_static_tf_publisher(filePath,cam->camera_name_,w2c, quat, reference_frame_) ;
+    }
+  BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
+    {
+      aa[0] = -mcam->cam->camera_parameters_.angle_axis[0];
+      aa[1] = -mcam->cam->camera_parameters_.angle_axis[1];
+      aa[2] = -mcam->cam->camera_parameters_.angle_axis[2];
+      c2w[0] = -mcam->cam->camera_parameters_.position[0];
+      c2w[1] = -mcam->cam->camera_parameters_.position[1];
+      c2w[2] = -mcam->cam->camera_parameters_.position[2];
+      ceres::AngleAxisToQuaternion(aa,quat);
+      ceres::AngleAxisRotatePoint(aa,c2w,w2c);
+      rtn &= write_static_tf_publisher(filePath,mcam->cam->camera_name_,w2c, quat, reference_frame_) ;
+    }
+  BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
+    {
+      ceres::AngleAxisToQuaternion(targ->pose.pb_aa,quat);
+      rtn &= write_static_tf_publisher(filePath,targ->target_name,targ->pose.pb_loc, quat, reference_frame_) ;
+    }
+  BOOST_FOREACH(shared_ptr<MovingTarget> mtarg, moving_targets_)
+    {
+      ceres::AngleAxisToQuaternion(mtarg->targ->pose.pb_aa,quat);
+      rtn &= write_static_tf_publisher(filePath,mtarg->targ->target_name, mtarg->targ->pose.pb_loc, quat, reference_frame_) ;
+    }
+
+  if(!rtn){
+    ROS_ERROR("Couldn't write the static tranform publishers");
+  }
+  std::ofstream outputFileagain(filePath.c_str(), std::ios::app);
+  if (!outputFileagain.is_open())
+  {
+    ROS_ERROR_STREAM("Unable to re-open file:" <<filePath);
+    return false;
+  }//end if writing to file
+  else{
+    outputFileagain << "\n</launch> \n";
+    outputFileagain.close();
+  }
+  return(rtn);
+}
+
+
+}// end namespace industrial_extrinsic_cal
 

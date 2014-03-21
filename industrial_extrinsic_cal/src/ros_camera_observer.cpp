@@ -17,7 +17,6 @@
  */
 
 #include <industrial_extrinsic_cal/ros_camera_observer.h>
-
 namespace industrial_extrinsic_cal
 {
 
@@ -113,11 +112,8 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 
   image_roi_ = input_bridge_->image(input_roi_);
 
-  output_bridge_->image = output_bridge_->image(input_roi_);
-  out_bridge_->image = image_roi_;
-  ROS_INFO_STREAM("output image size: " <<output_bridge_->image.rows<<" x "<<output_bridge_->image.cols);
-  results_pub_.publish(out_bridge_->toImageMsg());
-
+  std::vector<cv::KeyPoint> key_points;
+  ROS_INFO("Pattern type %d, rows %d, cols %d",pattern_,pattern_rows_,pattern_cols_);
   switch (pattern_)
   {
     case pattern_options::Chessboard:
@@ -131,6 +127,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
         ROS_INFO_STREAM("Finding Circles in grid, symmetric...");
         successful_find = cv::findCirclesGrid(image_roi_, cv::Size(pattern_rows_, pattern_cols_), observation_pts_,
                                               cv::CALIB_CB_SYMMETRIC_GRID);
+        if(successful_find) ROS_INFO_STREAM("FOUND");
       }
       else
       {
@@ -139,7 +136,26 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
                                               cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING);
       }
       break;
+
   }
+  // next block of code for publishing the roi as an image, when target is found, circles are placed on image, with a line between pt1 and pt2
+  for(int i=0;i<(int)observation_pts_.size();i++){
+    cv::Point p;
+    p.x = observation_pts_[i].x;
+    p.y = observation_pts_[i].y;
+    circle(image_roi_,p,10.0,255,5);
+  }
+  if(observation_pts_.size()>1){
+    cv::Point p1,p2;
+    p1.x = observation_pts_[0].x; 
+    p1.y = observation_pts_[0].y; 
+    p2.x = observation_pts_[1].x; 
+    p2.y = observation_pts_[1].y; 
+    line(image_roi_,p1,p2,255,3);
+  }
+  out_bridge_->image = image_roi_;
+  results_pub_.publish(out_bridge_->toImageMsg());
+
   if (!successful_find)
   {
     ROS_WARN_STREAM("Pattern not found for pattern: "<<pattern_ <<" with symmetry: "<< sym_circle_);
@@ -163,8 +179,10 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 void ROSCameraObserver::triggerCamera()
 {
 
+  ROS_INFO("in rosCameraObserver, waiting for image from topic %s",image_topic_.c_str());
   sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
   //ROS_INFO_STREAM("Waiting for image on topic: "<<image_topic_);
+  ROS_INFO("GOT IT");
   try
   {
     input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");

@@ -115,6 +115,7 @@ private:
    *  @brief cropped image based on original image and region of interest
    */
   cv::Mat image_roi_;
+
   /*!
    *  @brief cv rectangle region to crop image into
    */

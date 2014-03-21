@@ -200,7 +200,6 @@ bool CalibrationJob::loadTarget()
     YAML::Parser target_parser(target_input_file);
     YAML::Node target_doc;
     target_parser.GetNextDocument(target_doc);
-    ROS_INFO_STREAM("Parsing Target file...");
     // read in all static targets
     if (const YAML::Node *target_parameters = target_doc.FindValue("static_targets"))
     {
@@ -209,6 +208,7 @@ bool CalibrationJob::loadTarget()
       temp_target->is_moving = false;
       for (unsigned int i = 0; i < target_parameters->size(); i++)
       {
+	shared_ptr<Target> temp_target = make_shared<Target>();
         (*target_parameters)[i]["target_name"] >> temp_target->target_name;
         (*target_parameters)[i]["target_frame"] >> temp_frame;
         (*target_parameters)[i]["target_type"] >> temp_target->target_type;
@@ -342,6 +342,7 @@ bool CalibrationJob::loadCalJob()
   Trigger cal_trig;
   cal_trig.trigger_popup_msg=trigger_message;
   std::string camera_name;
+  std::string target_name;
   shared_ptr<Camera> temp_cam = make_shared<Camera>();
   shared_ptr<Target> temp_targ = make_shared<Target>();
   Roi temp_roi;
@@ -352,7 +353,7 @@ bool CalibrationJob::loadCalJob()
     YAML::Node caljob_doc;
     caljob_parser.GetNextDocument(caljob_doc);
 
-    caljob_doc["reference_frame"] >> reference_frame_;
+    caljob_doc["reference_frame"] >> ceres_blocks_.reference_frame_;
     caljob_doc["optimization_parameters"] >> opt_params;
     // read in all scenes
     if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
@@ -374,17 +375,16 @@ bool CalibrationJob::loadCalJob()
         {
           //ROS_INFO_STREAM("For obs "<<j);
           (*obs_node)[j]["camera"] >> camera_name;
-          temp_cam = ceres_blocks_.getCameraByName(camera_name);
-
-          scene_list_.at(i).addCameraToScene(temp_cam);
-
           (*obs_node)[j]["roi_x_min"] >> temp_roi.x_min;
           (*obs_node)[j]["roi_x_max"] >> temp_roi.x_max;
           (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
           (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
-          (*obs_node)[j]["target"] >> temp_targ->target_name;
-          temp_targ = ceres_blocks_.getTargetByName(temp_targ->target_name);
+          (*obs_node)[j]["target"] >> target_name;
 
+	  // TODO CHECK FOR valid return
+          temp_cam = ceres_blocks_.getCameraByName(camera_name);
+          temp_targ = ceres_blocks_.getTargetByName(target_name);
+          scene_list_.at(i).addCameraToScene(temp_cam);
           scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi);
         }
       }
@@ -401,9 +401,10 @@ bool CalibrationJob::loadCalJob()
 
 bool CalibrationJob::run()
 {
+  ROS_INFO("RUNNING_OBSERVATION");
   runObservations();
-  runOptimization();
-  return true;
+  ROS_INFO("RUNNING_OPTIMIZATIONS");
+  return runOptimization();
 }
 
 bool CalibrationJob::runObservations()
@@ -411,12 +412,15 @@ bool CalibrationJob::runObservations()
   ROS_DEBUG_STREAM("Running observations...");
   this->ceres_blocks_.clearCamerasTargets();
   // For each scene
+  int q=0;
+
   BOOST_FOREACH(ObservationScene current_scene, scene_list_)
   {
     int scene_id = current_scene.get_id();
 
     // clear all observations from every camera
-    ROS_DEBUG_STREAM("Processing Scene " << scene_id<<" of "<< scene_list_.size());
+    ROS_DEBUG_STREAM("Processing Scene " << scene_id+1<<" of "<< scene_list_.size());
+    ROS_INFO("Processing Scene  %d of %d",scene_id,scene_list_.size());
 
     // add observations to every camera
     //ROS_INFO_STREAM("Processing " << current_scene.cameras_in_scene_.size() <<" Cameras ");
@@ -430,8 +434,14 @@ bool CalibrationJob::runObservations()
     // add each target to each cameras observations
     ROS_DEBUG_STREAM("Processing " << current_scene.observation_command_list_.size()
                      <<" Observation Commands");
+    ROS_INFO("scene has %d commands",current_scene.observation_command_list_.size());
     BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
     {
+      ROS_INFO("current command has camera: %s with target %s of type %d",
+	       o_command.camera->camera_name_.c_str(),
+	       o_command.target->target_name.c_str(),
+	       o_command.target->target_type);
+
       // configure to find target in roi
       o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi);
       //ROS_INFO_STREAM("Current Camera name: "<<o_command.camera->camera_name_);
@@ -462,8 +472,7 @@ bool CalibrationJob::runObservations()
     {
 
       // wait until observation is done
-      while (!camera->camera_observer_->observationsDone())
-        ;
+      while (!camera->camera_observer_->observationsDone()) ;
 
       camera_name = camera->camera_name_;
       if (camera->isMoving())
@@ -486,8 +495,8 @@ bool CalibrationJob::runObservations()
       int number_returned;
       number_returned = camera->camera_observer_->getObservations(camera_observations);
 
-      ROS_DEBUG_STREAM("Processing " << camera_observations.observations.size()
-                           <<" Observations");
+      ROS_DEBUG_STREAM("Processing " << camera_observations.observations.size() << " Observations");
+      ROS_INFO("Processing %d Observations ",camera_observations.observations.size());
       BOOST_FOREACH(Observation observation, camera_observations.observations)
       {
         target_name = observation.target->target_name;
@@ -524,102 +533,106 @@ bool CalibrationJob::runObservations()
 
 bool CalibrationJob::runOptimization()
 {
+  int total_observations =0;
+  for(int i=0;i<observation_data_point_list_.size();i++){
+    total_observations += observation_data_point_list_[i].items.size();
+  }
+  if(total_observations == 0){ // TODO really need more than number of parameters being computed
+    ROS_ERROR("TOO FEW OBSERVATIONS: %d",total_observations);
+    return(false);
+  }
+
   // take all the data collected and create a Ceres optimization problem and run it
-  ROS_INFO_STREAM("Running Optimization...");
+  ROS_INFO("Running Optimization with %d scenes",(int)scene_list_.size());
   ROS_DEBUG_STREAM("Optimizing "<<scene_list_.size()<<" scenes");
-      BOOST_FOREACH(ObservationScene current_scene, scene_list_)
-      {
-    int scene_id = current_scene.get_id();
-
-    //ROS_DEBUG_STREAM("Optimizing # cameras: "<<current_scene.cameras_in_scene_);
-
-    BOOST_FOREACH(shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
+  BOOST_FOREACH(ObservationScene current_scene, scene_list_)
     {
 
-    ROS_DEBUG_STREAM("Current observation data point list size: "<<observation_data_point_list_.at(scene_id).items.size());
-    // take all the data collected and create a Ceres optimization problem and run it
-    P_BLOCK extrinsics;
-    P_BLOCK target_pose;
-    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items)
-    {
-      // create cost function
-      // there are several options
-      // 1. the complete reprojection error cost function "Create(obs_x,obs_y)"
-      //    this cost function has the following parameters:
-      //      a. camera intrinsics
-      //      b. camera extrinsics
-      //      c. target pose
-      //      d. point location in target frame
-      // 2. the same as 1, but without d  "Create(obs_x,obs_y,t_pnt_x, t_pnt_y, t_pnt_z)
-      // 3. the same as 1, but without a  "Create(obs_x,obs_y,fx,fy,cx,cy,cz)"
-      //    Note that this one assumes we are using rectified images to compute the observations
-      // 4. the same as 3, point location fixed too "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z)"
-      //        implemented in TargetCameraReprjErrorNoDistortion
-      // 5. the same as 4, but with target in known location
-      //    "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z,p_tx,p_ty,p_tz,p_ax,p_ay,p_az)"
+      int scene_id = current_scene.get_id();
+      BOOST_FOREACH(shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
+	{
+	  ROS_DEBUG_STREAM("Current observation data point list size: "<<observation_data_point_list_.at(scene_id).items.size());
+	  // take all the data collected and create a Ceres optimization problem and run it
+	  P_BLOCK extrinsics;
+	  P_BLOCK target_pose;
+	  BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items)
+	    {
+	      // create cost function
+	      // there are several options
+	      // 1. the complete reprojection error cost function "Create(obs_x,obs_y)"
+	      //    this cost function has the following parameters:
+	      //      a. camera intrinsics
+	      //      b. camera extrinsics
+	      //      c. target pose
+	      //      d. point location in target frame
+	      // 2. the same as 1, but without d  "Create(obs_x,obs_y,t_pnt_x, t_pnt_y, t_pnt_z)
+	      // 3. the same as 1, but without a  "Create(obs_x,obs_y,fx,fy,cx,cy,cz)"
+	      //    Note that this one assumes we are using rectified images to compute the observations
+	      // 4. the same as 3, point location fixed too "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z)"
+	      //        implemented in TargetCameraReprjErrorNoDistortion
+	      // 5. the same as 4, but with target in known location
+	      //    "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z,p_tx,p_ty,p_tz,p_ax,p_ay,p_az)"
+	      // pull out the constants from the observation point data
 
+	      double focal_length_x = ODP.camera_intrinsics_[0]; // TODO, make this not so ugly
+	      double focal_length_y = ODP.camera_intrinsics_[1];
+	      double center_pnt_x   = ODP.camera_intrinsics_[2];
+	      double center_pnt_y   = ODP.camera_intrinsics_[3];
+	      double image_x        = ODP.image_x_;
+	      double image_y        = ODP.image_y_;
+	      double point_x        = ODP.point_position_[0];// location of point within target frame
+	      double point_y        = ODP.point_position_[1];
+	      double point_z        = ODP.point_position_[2];
+	      unsigned int target_type    = ODP.target_type_;
+	      
+	      // pull out pointers to the parameter blocks in the observation point data
+	      extrinsics    = ODP.camera_extrinsics_;
+	      target_pose   = ODP.target_pose_;
+	      
+	      // create the cost function
+	      if(target_type == pattern_options::CircleGrid){
+		double circle_dia = ODP.circle_dia_;
+		CostFunction* cost_function = CircleTargetCameraReprjErrorNoDFixedPoint::Create(image_x, image_y,
+												circle_dia,
+												focal_length_x,
+												focal_length_y,
+												center_pnt_x,
+												center_pnt_y,
+												point_x,
+												point_y,
+												point_z);
+		// add it as a residual using parameter blocks
+		problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+	      }
+	      else{
+		CostFunction* cost_function = TargetCameraReprjErrorNoDistortion::Create(image_x, image_y,
+											 focal_length_x,
+											 focal_length_y,
+											 center_pnt_x,
+											 center_pnt_y,
+											 point_x,
+											 point_y,
+											 point_z);
+		// add it as a residual using parameter blocks
+		problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+	      }
+	    }//for each observation
+	  problem_.SetParameterBlockConstant(target_pose);
+	  
+	}//for each camera
+    }//for each scene
+  ROS_INFO("total observations: %d ",total_observations);
 
-      // pull out the constants from the observation point data
-      double focal_length_x = ODP.camera_intrinsics_[0]; // TODO, make this not so ugly
-      double focal_length_y = ODP.camera_intrinsics_[1];
-      double center_pnt_x   = ODP.camera_intrinsics_[2];
-      double center_pnt_y   = ODP.camera_intrinsics_[3];
-      double image_x        = ODP.image_x_;
-      double image_y        = ODP.image_y_;
-      double point_x        = ODP.point_position_[0];// location of point within target frame
-      double point_y        = ODP.point_position_[1];
-      double point_z        = ODP.point_position_[2];
-      unsigned int target_type    = ODP.target_type_;
-      
-      // pull out pointers to the parameter blocks in the observation point data
-      extrinsics    = ODP.camera_extrinsics_;
-      target_pose   = ODP.target_pose_;
+  // Make Ceres automatically detect the bundle structure. Note that the
+  // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
+  // for standard bundle adjustment problems.
+  ceres::Solver::Options options;
+  ceres::Solver::Summary summary;
+  options.linear_solver_type = ceres::DENSE_SCHUR;
+  options.minimizer_progress_to_stdout = true;
+  options.max_num_iterations = 1000;
+  ceres::Solve(options, &problem_, &summary);
 
-      // create the cost function
-      if(target_type == pattern_options::CircleGrid){
-	double circle_dia = ODP.circle_dia_;
-	CostFunction* cost_function = CircleTargetCameraReprjErrorNoDFixedPoint::Create(image_x, image_y,
-											circle_dia,
-											focal_length_x,
-											focal_length_y,
-											center_pnt_x,
-											center_pnt_y,
-											point_x,
-											point_y,
-											point_z);
-	// add it as a residual using parameter blocks
-	problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
-      }
-      else{
-	CostFunction* cost_function = TargetCameraReprjErrorNoDistortion::Create(image_x, image_y,
-										 focal_length_x,
-										 focal_length_y,
-										 center_pnt_x,
-										 center_pnt_y,
-										 point_x,
-										 point_y,
-										 point_z);
-	// add it as a residual using parameter blocks
-	problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
-      }
-    }//for each observation
-      problem_.SetParameterBlockConstant(target_pose);
-    // Make Ceres automatically detect the bundle structure. Note that the
-    // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
-    // for standard bundle adjustment problems.
-    ceres::Solver::Options options;
-    options.linear_solver_type = ceres::DENSE_SCHUR;
-    options.minimizer_progress_to_stdout = false;
-    options.max_num_iterations = 1000;
-
-    ceres::Solver::Summary summary;
-    ceres::Solve(options, &problem_, &summary);
-    extrinsics_.push_back(extrinsics);
-    target_pose_.push_back(target_pose);
-
-    //return true;
-    }//for each camera
-  }//for each scene
   return true;
 }//end runOptimization
 
@@ -628,46 +641,12 @@ bool CalibrationJob::store()
   std::string path = ros::package::getPath("industrial_extrinsic_cal");
   std::string file_path = "/launch/target_to_camera_optical_transform_publisher.launch";
   std::string filepath = path+file_path;
-  std::ofstream output_file(filepath.c_str(), std::ios::out);// | std::ios::app);
-  if (output_file.is_open())
-  {
-    ROS_INFO_STREAM("Storing results in: "<<filepath);
-  }
-  else
-  {
-    ROS_ERROR_STREAM("Unable to open file");
-    return false;
-  }//end if writing to file
-  output_file << "<launch>";
-  for (int i=0; i<extrinsics_.size();i++)
-  {
-    output_file << "\n";
-    //get transform world to camera
-    double R[9];
-    double aa[3];
-    double camera_to_world[3];
-    double world_to_camera[3];
-    double quat[4];
-    aa[0] = -extrinsics_.at(i)[0]; // 
-    aa[1] = -extrinsics_.at(i)[1];
-    aa[2] = -extrinsics_.at(i)[2];
-    camera_to_world[0] = -extrinsics_.at(i)[3];
-    camera_to_world[1] = -extrinsics_.at(i)[4];
-    camera_to_world[2] = -extrinsics_.at(i)[5];
-    ceres::AngleAxisToQuaternion(aa, quat);
-    ceres::AngleAxisRotatePoint(aa,camera_to_world,world_to_camera);
+  return ceres_blocks_.write_all_static_transforms(filepath);
+}
 
-    output_file<<" <node pkg=\"tf\" type=\"static_transform_publisher\" name=\"camera_tf_broadcaster"<<i<<"\" args=\"";
-    //tranform publisher launch files requires x y z yaw pitch roll
-    output_file<<world_to_camera[0]<< ' '<<world_to_camera[1]<< ' '<<world_to_camera[2]<< ' ';
-    output_file<<quat[1]<< ' '<<quat[2]<< ' '<<quat[3] << ' ' << quat[0] ;
-    output_file<<" "<<target_frames_[i];
-    output_file<<" "<<camera_optical_frames_[i];
-    output_file<<" 100\" />";
-  }//end for loop # extrinsics
-  output_file << "\n</launch> \n";
-  output_file.close();
-  return true;
+void CalibrationJob::show()
+{
+  ceres_blocks_.display_all_cameras_and_targets();
 }
 
 }//end namespace industrial_extrinsic_cal

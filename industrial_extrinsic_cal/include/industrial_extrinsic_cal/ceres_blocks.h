@@ -23,6 +23,10 @@
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/camera_definition.h>
 #include "boost/make_shared.hpp"
+#include "ceres/ceres.h"
+#include "ceres/rotation.h"
+#include <iostream>
+#include <fstream>
 
 namespace industrial_extrinsic_cal
 {
@@ -148,11 +152,26 @@ public:
    */
   P_BLOCK getMovingTargetPointParameterBlock(std::string target_name, int pnt_id);
 
+  bool write_static_tf_publisher(std::string filepath,std::string name,double *position, double *quat, std::string refFrame) ;
+  bool write_all_static_transforms(std::string filepath);
+  void display_static_cameras();
+  void display_moving_cameras();
+  void display_static_targets();
+  void display_moving_targets();
+  void display_all_cameras_and_targets()
+  {
+    display_static_cameras();
+    display_moving_cameras();
+    display_static_targets();
+    display_moving_targets();
+  };
+  std::string reference_frame_; /*! name of reference frame, typically a ROS tf frame */
   //private:
   std::vector<boost::shared_ptr<Camera> > static_cameras_; /*!< all non-moving cameras in job */
   std::vector<boost::shared_ptr<MovingCamera> > moving_cameras_; /*! only one camera of a given name per scene */
   std::vector<boost::shared_ptr<Target> > static_targets_; /*!< all non-moving targets in job */
   std::vector<boost::shared_ptr<MovingTarget> > moving_targets_; /*! only one target of a given name per scene */
+
 };//end class
 
 }// end namespace industrial_extrinsic_cal
