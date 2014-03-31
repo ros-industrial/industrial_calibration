@@ -178,10 +178,9 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 
 void ROSCameraObserver::triggerCamera()
 {
-
-  ROS_INFO("in rosCameraObserver, waiting for image from topic %s",image_topic_.c_str());
+  ROS_INFO("rosCameraObserver, waiting for image from topic %s",image_topic_.c_str());
   sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
-  //ROS_INFO_STREAM("Waiting for image on topic: "<<image_topic_);
+
   ROS_INFO("GOT IT");
   try
   {
@@ -194,7 +193,6 @@ void ROSCameraObserver::triggerCamera()
   {
     ROS_ERROR("Failed to convert image");
     ROS_WARN_STREAM("cv_bridge exception: "<<ex.what());
-    //return false;
     return;
   }
 

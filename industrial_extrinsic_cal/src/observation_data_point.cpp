@@ -29,6 +29,7 @@ ObservationDataPointList::ObservationDataPointList()
 
 ObservationDataPointList::~ObservationDataPointList()
 {
+      items.clear();
 }
 ;
 

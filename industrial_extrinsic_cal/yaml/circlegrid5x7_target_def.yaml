@@ -2,7 +2,7 @@
 
 static_targets:
 -
-    target_name: CircleGrid
+    target_name: CircleGrid5x7
     target_type: 1
     target_frame: target_frame
     target_rows: 5

@@ -6,7 +6,7 @@ static_cameras:
     camera_optical_frame: /optical_frame
     camera_intermediate_frame: /camera_frame
     image_topic: /image_color
-    angle_axis_ax: -1.0
+    angle_axis_ax: 1.5
     angle_axis_ay: 2.35
     angle_axis_az: 3.0
     position_x: -0.2

@@ -170,11 +170,34 @@ typedef struct
 } CameraParameters;
 
 /*! @brief what kind of trigger initiates the collection of data for this scene */
-typedef struct
+class Trigger
 { /** Trigger */
-  int trigger_type;
-  std::string trigger_popup_msg;
-} Trigger;
+ public:
+  enum TRIGGER_TYPE{
+    GRAB_NEXT_IMAGE,
+    WAIT_FOR_ROS_BOOL,
+    WAIT_FOR_POPUP_OK
+  };
+  Trigger()
+    {
+      type_ = Trigger::GRAB_NEXT_IMAGE;
+      popup_msg_ = "GRABBING NEXT IMAGE";
+    }
+  Trigger(Trigger::TRIGGER_TYPE tt,
+	  std::string msg="HIT RETURN TO ACCEPT IMAGE")
+    {
+      type_ = tt;
+      popup_msg_ = msg;
+    };
+  ~Trigger(){};
+  void setTriggerType( Trigger::TRIGGER_TYPE tt) { type_ = tt; };
+  Trigger::TRIGGER_TYPE  getTriggerType( ) { return (Trigger::TRIGGER_TYPE)type_; };
+  void setPopupMessage( std::string msg) { popup_msg_ = msg; };
+  std::string  getPopupMessage( ) { return popup_msg_; };
+ private:
+  int type_;
+  std::string popup_msg_;
+} ;
 
 /*! \brief moving  need a new pose with each scene in which they are used */
 typedef struct MovingTarget
