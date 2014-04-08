@@ -1,0 +1,519 @@
+{
+  "keys": {}, 
+  "groups": {
+    "pluginmanager": {
+      "keys": {
+        "running-plugins": {
+          "type": "repr", 
+          "repr": "{u'deere_calibration/CalibrationControl': [1], u'rqt_rviz/RViz': [1], u'rqt_image_view/ImageView': [1, 2], u'rqt_console/Console': [1]}"
+        }
+      }, 
+      "groups": {
+        "plugin____DockWidgetContainer__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "u'false'"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "u'2'"
+                }
+              }, 
+              "groups": {
+                "mainwindow": {
+                  "keys": {
+                    "geometry": {
+                      "type": "repr(QByteArray.hex)", 
+                      "repr(QByteArray.hex)": "QtCore.QByteArray('01d9d0cb000100000000000400000019000004f9000001af0000000000000000ffffffffffffffff000000000000')", 
+                      "pretty-print": "                       "
+                    }, 
+                    "state": {
+                      "type": "repr(QByteArray.hex)", 
+                      "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff00000000fd0000000300000000000004f600000197fc0200000001fb00000030005f005f0044006f0063006b0057006900640067006500740043006f006e007400610069006e00650072005f005f0033030000000f00000207000004f60000019f00000002000004f600000197fc0100000002fb0000004c007200710074005f0063006f006e0073006f006c0065005f005f0043006f006e0073006f006c0065005f005f0031005f005f0043006f006e0073006f006c0065005700690064006700650074030000001700000069000003fb000003b9fc00000000000004f60000000000fffffffa000000000200000001fb0000008000640065006500720065005f00630061006c006900620072006100740069006f006e005f005f00430061006c006900620072006100740069006f006e0043006f006e00740072006f006c005f005f0031005f005f00630061006c006900620072006100740069006f006e005f0063006f006e00740072006f006c005f00550069030000003a000000e700000500000000f300000003000002ba00000386fc0100000002fc00000000000002ba0000000000fffffffc0200000002fb0000006e006d00740063006f006e006e006500630074005f006500780061006d0070006c0065005f006700750069005f005f0053004d0049006e0074006500720066006100630065004700550049005f005f0031005f005f0053004d0049006e0074006500720066006100630065005500690100000000000003860000000000000000fb000000400072006f0073006700750069005f0070006100720061006d0065006400690074005f005f0050006100720061006d0045006400690074005f005f0031005f005f01000000cb000002d90000000000000000fb00000026007200710074005f007200760069007a005f005f005200560069007a005f005f0031005f005f03000000000000014500000500000002bb000000000000000000000004000000040000000800000008fc00000000')", 
+                      "pretty-print": "                 0__DockWidgetContainer__3                   Lrqt_console__Console__1__ConsoleWidget                                                                                          :                            nmtconnect_example_gui__SMInterfaceGUI__1__SMInterfaceUi          @rosgui_paramedit__ParamEdit__1__          &rqt_rviz__RViz__1__                       "
+                    }
+                  }, 
+                  "groups": {}
+                }
+              }
+            }
+          }
+        }, 
+        "plugin__rqt_rviz__RViz__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "True"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin____DockWidgetContainer__3": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {
+                "mainwindow": {
+                  "keys": {
+                    "geometry": {
+                      "type": "repr(QByteArray.hex)", 
+                      "repr(QByteArray.hex)": "QtCore.QByteArray('01d9d0cb000100000000000400000019000004fb000002a20000000000000000ffffffffffffffff000000000000')", 
+                      "pretty-print": "                       "
+                    }, 
+                    "state": {
+                      "type": "repr(QByteArray.hex)", 
+                      "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff00000000fd000000020000000200000500000001c4fc0100000001fb0000008000640065006500720065005f00630061006c006900620072006100740069006f006e005f005f00430061006c006900620072006100740069006f006e0043006f006e00740072006f006c005f005f0031005f005f00630061006c006900620072006100740069006f006e005f0063006f006e00740072006f006c005f0055006903000000000000024400000500000000d3000000030000000000000000fc0100000001fb0000004c007200710074005f0063006f006e0073006f006c0065005f005f0043006f006e0073006f006c0065005f005f0031005f005f0043006f006e0073006f006c0065005700690064006700650074030000000000000054000002890000018a000000000000000000000004000000040000000800000008fc00000000')", 
+                      "pretty-print": "                  deere_calibration__CalibrationControl__1__calibration_control_Ui                   Lrqt_console__Console__1__ConsoleWidget                       "
+                    }
+                  }, 
+                  "groups": {}
+                }
+              }
+            }
+          }
+        }, 
+        "plugin____DockWidgetContainer__2": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {
+                "mainwindow": {
+                  "keys": {
+                    "geometry": {
+                      "type": "repr(QByteArray.hex)", 
+                      "repr(QByteArray.hex)": "QtCore.QByteArray('01d9d0cb0001000000000000000000150000055e0000039a0000000000000000ffffffffffffffff000000000000')", 
+                      "pretty-print": "         ^             "
+                    }, 
+                    "state": {
+                      "type": "repr(QByteArray.hex)", 
+                      "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff00000000fd0000000100000003000003d3000003a4fc0100000001fc00000000000003d30000000000fffffffc0200000002fb00000026007200710074005f007200760069007a005f005f005200560069007a005f005f0031005f005f01000000000000020f0000000000000000fb0000004c007200710074005f0063006f006e0073006f006c0065005f005f0043006f006e0073006f006c0065005f005f0031005f005f0043006f006e0073006f006c006500570069006400670065007401000002150000018f0000000000000000000000000000000000000004000000040000000800000008fc00000000')", 
+                      "pretty-print": "                                                                                                                        "
+                    }
+                  }, 
+                  "groups": {}
+                }
+              }
+            }
+          }
+        }, 
+        "plugin__rqt_image_view__ImageView__2": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__ImageViewWidget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "True"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {}
+            }, 
+            "plugin": {
+              "keys": {
+                "dynamic_range": {
+                  "type": "repr", 
+                  "repr": "False"
+                }, 
+                "max_range": {
+                  "type": "repr", 
+                  "repr": "10.0"
+                }, 
+                "topic": {
+                  "type": "repr", 
+                  "repr": "u'/observer_results_image'"
+                }, 
+                "zoom1": {
+                  "type": "repr", 
+                  "repr": "False"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rqt_image_view__ImageView__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__ImageViewWidget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "True"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {}
+            }, 
+            "plugin": {
+              "keys": {
+                "dynamic_range": {
+                  "type": "repr", 
+                  "repr": "False"
+                }, 
+                "max_range": {
+                  "type": "repr", 
+                  "repr": "10.0"
+                }, 
+                "topic": {
+                  "type": "repr", 
+                  "repr": "u'/ns1_kinect/rgb/image_color'"
+                }, 
+                "zoom1": {
+                  "type": "repr", 
+                  "repr": "False"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__mtconnect_example_gui__SMInterfaceGUI__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__SMInterfaceUi": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "u'1'"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rqt_param__Param__1": {
+          "keys": {}, 
+          "groups": {
+            "plugin": {
+              "keys": {
+                "splitter": {
+                  "type": "repr(QByteArray.hex)", 
+                  "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff0000000000000002000001180000006401000000060100000001')", 
+                  "pretty-print": "         d     "
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__deere_calibration__CalibrationControl__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__calibration_control_Ui": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "True"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rqt_robot_steering__RobotSteering__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__RobotSteeringUi": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {}
+            }, 
+            "plugin": {
+              "keys": {
+                "topic": {
+                  "type": "repr", 
+                  "repr": "u'/cmd_vel'"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rqt_robot_monitor__RobotMonitor__1": {
+          "keys": {}, 
+          "groups": {
+            "plugin": {
+              "keys": {
+                "splitter": {
+                  "type": "repr(QByteArray.hex)", 
+                  "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff00000000000000030000006400000064000000c801000000090100000002')", 
+                  "pretty-print": "       d d       "
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rqt_dep__RosPackGraph__1": {
+          "keys": {}, 
+          "groups": {
+            "plugin": {
+              "keys": {
+                "filter_line_edit_text": {
+                  "type": "repr", 
+                  "repr": "u''"
+                }, 
+                "highlight_connections_check_box_state": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "with_stacks_state": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "depth_combo_box_index": {
+                  "type": "repr", 
+                  "repr": "u'0'"
+                }, 
+                "hide_transitives_state": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "directions_combo_box_index": {
+                  "type": "repr", 
+                  "repr": "u'0'"
+                }, 
+                "colorize_state": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "mark_state": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "auto_fit_graph_check_box_state": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rosgui_paramedit__ParamEdit__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "u'false'"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "u'1'"
+                }
+              }, 
+              "groups": {}
+            }, 
+            "plugin": {
+              "keys": {
+                "param_root": {
+                  "type": "repr", 
+                  "repr": "u'/mtconnect_state_machine'"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rqt_service_caller__ServiceCaller__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__ServiceCallerWidget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {}
+            }, 
+            "plugin": {
+              "keys": {
+                "splitter_orientation": {
+                  "type": "repr", 
+                  "repr": "u'2'"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rqt_console__Console__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__ConsoleWidget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "True"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {}
+            }, 
+            "plugin": {
+              "keys": {
+                "show_highlighted_only": {
+                  "type": "repr", 
+                  "repr": "False"
+                }, 
+                "exclude_filters": {
+                  "type": "repr", 
+                  "repr": "u'severity'"
+                }, 
+                "table_splitter": {
+                  "type": "repr(QByteArray.hex)", 
+                  "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff00000000000000020000036a0000000001000000090100000002')", 
+                  "pretty-print": "       j       "
+                }, 
+                "highlight_filters": {
+                  "type": "repr", 
+                  "repr": "u'message'"
+                }, 
+                "paused": {
+                  "type": "repr", 
+                  "repr": "False"
+                }, 
+                "settings_exist": {
+                  "type": "repr", 
+                  "repr": "True"
+                }, 
+                "filter_splitter": {
+                  "type": "repr(QByteArray.hex)", 
+                  "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff0000000000000002000000e4000000e401000000090100000002')", 
+                  "pretty-print": "               "
+                }
+              }, 
+              "groups": {
+                "exclude_filter_0": {
+                  "keys": {
+                    "enabled": {
+                      "type": "repr", 
+                      "repr": "True"
+                    }, 
+                    "displist": {
+                      "type": "repr", 
+                      "repr": "[u'Debug', u'Info', u'Warn', u'Fatal', u'Error']"
+                    }, 
+                    "itemlist": {
+                      "type": "repr", 
+                      "repr": "u'Debug'"
+                    }
+                  }, 
+                  "groups": {}
+                }, 
+                "highlight_filter_0": {
+                  "keys": {
+                    "regex": {
+                      "type": "repr", 
+                      "repr": "False"
+                    }, 
+                    "text": {
+                      "type": "repr", 
+                      "repr": "u''"
+                    }, 
+                    "enabled": {
+                      "type": "repr", 
+                      "repr": "True"
+                    }
+                  }, 
+                  "groups": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    }, 
+    "mainwindow": {
+      "keys": {
+        "geometry": {
+          "type": "repr(QByteArray.hex)", 
+          "repr(QByteArray.hex)": "QtCore.QByteArray('01d9d0cb000100000000000100000035000005000000041c0000000100000035000005000000041c000000010000')", 
+          "pretty-print": "       5       5       "
+        }, 
+        "state": {
+          "type": "repr(QByteArray.hex)", 
+          "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff00000000fd0000000300000001000004fe0000039bfc0200000002fc00000019000001ac0000000000fffffffa000000000100000001fb00000030005f005f0044006f0063006b0057006900640067006500740043006f006e007400610069006e00650072005f005f003103000002c8000000c8000000c0000001b4fb00000030005f005f0044006f0063006b0057006900640067006500740043006f006e007400610069006e00650072005f005f003201000000190000039b00000000000000000000000200000500000003b9fc0100000002fc00000000000005000000037a00fffffffc0200000002fc0000001900000231000000db00fffffffc0100000002fb00000026007200710074005f007200760069007a005f005f005200560069007a005f005f0031005f005f01000000000000032b000000a700fffffffc00000331000001cf0000014700fffffffc0200000002fb0000005a007200710074005f0069006d006100670065005f0076006900650077005f005f0049006d0061006700650056006900650077005f005f0031005f005f0049006d00610067006500560069006500770057006900640067006500740100000019000001120000005100fffffffb0000005a007200710074005f0069006d006100670065005f0076006900650077005f005f0049006d0061006700650056006900650077005f005f0032005f005f0049006d00610067006500560069006500770057006900640067006500740100000131000001190000008400fffffffc00000250000001820000018200000182fc0100000002fb0000004c007200710074005f0063006f006e0073006f006c0065005f005f0043006f006e0073006f006c0065005f005f0031005f005f0043006f006e0073006f006c00650057006900640067006500740100000000000003f20000028100fffffffb0000008000640065006500720065005f00630061006c006900620072006100740069006f006e005f005f00430061006c006900620072006100740069006f006e0043006f006e00740072006f006c005f005f0031005f005f00630061006c006900620072006100740069006f006e005f0063006f006e00740072006f006c005f0055006901000003f800000108000000f300fffffffc00000000000005000000000000fffffffa000000000200000001fb00000066007200710074005f006c006f0067006700650072005f006c006500760065006c005f005f004c006f0067006700650072004c006500760065006c005f005f0031005f005f004c006f0067006700650072004c006500760065006c0057006900640067006500740300000007000002fd00000500000000ea000000030000050000000084fc010000000cfb00000050007200710074005f006400650070005f005f0052006f0073005000610063006b00470072006100700068005f005f0031005f005f0052006f0073005000610063006b00470072006100700068005500690100000000000003740000000000000000fb00000062007200710074005f0072006f0062006f0074005f006d006f006e00690074006f0072005f005f0052006f0062006f0074004d006f006e00690074006f0072005f005f0031005f005f0052006f0062006f00740020004d006f006e00690074006f007201000002ac000000c80000000000000000fc000000000000055e0000000000fffffffc0200000001fb00000072007200710074005f0073006500720076006900630065005f00630061006c006c00650072005f005f005300650072007600690063006500430061006c006c00650072005f005f0031005f005f005300650072007600690063006500430061006c006c0065007200570069006400670065007401000002b1000001210000000000000000fb0000006a007200710074005f0072006f0062006f0074005f007300740065006500720069006e0067005f005f0052006f0062006f0074005300740065006500720069006e0067005f005f0031005f005f0052006f0062006f0074005300740065006500720069006e0067005500690100000206000000d80000000000000000fb00000034007200710074005f0070006100720061006d005f005f0050006100720061006d005f005f0031005f005f0050006100720061006d01000002c5000001900000000000000000fb000000400072006f0073006700750069005f0070006100720061006d0065006400690074005f005f0050006100720061006d0045006400690074005f005f0031005f005f03000003160000005c00000138000003a4fb0000006e006d00740063006f006e006e006500630074005f006500780061006d0070006c0065005f006700750069005f005f0053004d0049006e0074006500720066006100630065004700550049005f005f0031005f005f0053004d0049006e00740065007200660061006300650055006903000004400000005c000000b6000003a4fb00000044007200710074005f00670072006100700068005f005f0052006f007300470072006100700068005f005f0031005f005f0052006f0073004700720061007000680055006901000000000000039c0000000000000000fb00000040007200710074005f007300720076005f005f00530065007200760069006300650073005f005f0031005f005f004d0065007300730061006700650073005500690100000304000002570000000000000000fb00000042007200710074005f007300720076005f005f00530065007200760069006300650073005f005f0031005f005f006d0065007300730061006700650073002e0075006901000003a2000002570000000000000000fb0000008000640065006500720065005f00630061006c006900620072006100740069006f006e005f005f00430061006c006900620072006100740069006f006e0043006f006e00740072006f006c005f005f0032005f005f00630061006c006900620072006100740069006f006e005f0063006f006e00740072006f006c005f0055006901000002d1000001150000000000000000fb00000030005f005f0044006f0063006b0057006900640067006500740043006f006e007400610069006e00650072005f005f003303000003d4000000520000012c00000150000005000000000000000004000000040000000800000008fc00000001000000030000000100000036004d0069006e0069006d0069007a006500640044006f0063006b00570069006400670065007400730054006f006f006c0062006100720000000000ffffffff0000000000000000')", 
+          "pretty-print": "                                                                                                                           1                                +                 Zrqt_image_view__ImageView__1__ImageViewWidget          Zrqt_image_view__ImageView__2__ImageViewWidget          P                                                                                                                                                    frqt_logger_level__LoggerLevel__1__LoggerLevelWidget                   Prqt_dep__RosPackGraph__1__RosPackGraphUi          brqt_robot_monitor__RobotMonitor__1__Robot Monitor            ^                                                                      !                                                                                                                                               \\ 8                                                             @ \\                                                                                       W                                           W                                                                                                             R , P                                                        "
+        }
+      }, 
+      "groups": {
+        "toolbar_areas": {
+          "keys": {
+            "MinimizedDockWidgetsToolbar": {
+              "type": "repr", 
+              "repr": "8"
+            }
+          }, 
+          "groups": {}
+        }
+      }
+    }
+  }
+}

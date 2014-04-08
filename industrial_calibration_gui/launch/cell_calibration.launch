@@ -1,0 +1,109 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <!-- true = fanuc robot, false = motoman-->
+  <arg name="fanuc_robot" default="false" />
+  
+  <!-- Set true for real fanuc robot-->
+  <arg name="use_bswap" default="false" />
+	
+	<!--true = gui, false = no gui-->
+	<arg name="display" default="true" />
+	
+	<!--true = locked gui, false = unlocked gui-->
+	<arg name="display_lock" default="false" />
+
+
+
+
+  <!-- Kinect Camera Launch -->
+	<arg name="namespace1" value="ns1"/>
+	<arg name="sensor_name1" value="$(arg namespace1)_kinect"/>
+
+	<remap from="/$(arg sensor_name1)/depth/points"
+		to="/$(arg namespace1)/camera/depth_registered/points"/>
+	<include  file="$(find industrial_extrinsic_cal)/launch/single_sensor.launch">
+		<arg name="arm_prefix" value="$(arg namespace1)_"/>
+		<arg name="camera_name" value="$(arg sensor_name1)"/>
+		<arg name="publish_tf" value="true" />
+	</include> 
+	
+	
+	<!-- Motoman - Robot State Launch -->
+	<group unless="$(arg fanuc_robot)">
+    <arg name="controller" value = "fs100" />
+    <arg name="robot_ip" default = "192.168.32.6"/>
+	  
+	  <!-- Static TF publishers -->
+    <node pkg="tf" type="static_transform_publisher" name="world_frame" args="0 0 0 0 0 0 world_frame base_link 100" />
+        <node pkg="tf" type="static_transform_publisher" name="target_tf" args="0.0 0.0 0.0 1.05 3.14159 3.14159 tool0 target_tf 100" /> 	
+    
+    <node pkg="tf" type="static_transform_publisher" name="target_frame" args="-0.070 -0.330 0.0 0.0 0.0 0.0 target_tf target_frame 100" /> 	
+    
+	  <rosparam command="load" file="$(find motoman_sia20d_support)/config/joint_names_sia20d.yaml" />
+
+	  <include file="$(find motoman_driver)/launch/robot_state_$(arg controller).launch">
+		  <arg name="robot_ip"   value="$(arg robot_ip)" />
+	  </include>
+
+	  <node name="robot_state_publisher" pkg="robot_state_publisher" 
+		  type="robot_state_publisher" />
+
+	  <include file="$(find motoman_sia20d_support)/launch/load_sia20d.launch" />
+	  
+	  <!--include file="$(find motoman_sia20d_support)/launch/robot_state_visualize_sia20d.launch" >
+	    <arg name="robot_ip" default = "192.168.32.6"/>
+      <arg name="controller" value = "fs100" />
+      </include>-->
+
+	</group>
+	
+	<!-- Fanuc - Robot State Launch -->
+	<group if="$(arg fanuc_robot)">
+    <arg name="J23_factor" default="1" />
+    <arg name="robot_ip" default = "172.16.0.135"/>    
+  
+	  <!-- Static TF publishers -->
+    <node pkg="tf" type="static_transform_publisher" name="world_frame" args="0 0 0 0 0 0 world_frame base_link 100" />
+    <!-- Values that will make sense, 0.070, 0.120, 0.330-->
+    <node pkg="tf" type="static_transform_publisher" name="target_frame" args="0.0 0.070 -0.105 1.57 3.14 4.712 tool0 target_frame 100" /> 	
+
+    <rosparam command="load" file="$(find fanuc_m16ib_support)/config/joint_names_m16ib20.yaml" />
+
+    <include file="$(find fanuc_driver)/launch/robot_state.launch">
+      <arg name="robot_ip" value="$(arg robot_ip)" />
+      <arg name="J23_factor" value="$(arg J23_factor)" />
+      <arg name="use_bswap" value="$(arg use_bswap)" />
+    </include>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher"
+    type="robot_state_publisher" />
+
+    <include file="$(find fanuc_m16ib_support)/launch/load_m16ib20.launch" />
+
+    
+	</group>
+	
+	
+	<!-- Calibration Node -->
+	<node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen">
+    <rosparam>
+      camera_file: "test1_camera_def.yaml"
+      target_file: "circlegrid5x7_target_def.yaml"
+      cal_job_file: "test1_caljob_def.yaml"
+      store_results_package_name: "industrial_extrinsic_cal"
+      store_results_file_name: "world_to_camera_tf_broadcaster.launch"
+    </rosparam>
+  </node>
+	
+	
+	<!-- Visualization -->
+	<group if="$(arg display)">
+    <node name="rqt" pkg="rqt_gui" type="rqt_gui" args="-f -l" required="true" if="$(arg display_lock)" />
+    <node name="rqt" pkg="rqt_gui" type="rqt_gui" required="true" unless="$(arg display_lock)" />
+  </group>
+
+
+
+
+</launch>
