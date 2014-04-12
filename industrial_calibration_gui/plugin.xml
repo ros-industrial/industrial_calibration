@@ -1,0 +1,20 @@
+<library path="src">
+  <class name="CalibrationControl" type="industrial_calibration_gui.calibration_control.CalibrationControl" base_class_type="rqt_gui_py::Plugin">
+    <description>
+      A control widget for calibration
+    </description>
+    <qtgui>
+      <!-- optional grouping...
+      <group>
+        <label>Group</label>
+      </group>
+      <group>
+        <label>Subgroup</label>
+      </group>
+      -->
+      <label>Calibration Control</label>
+      <icon type="theme">system-help</icon>
+      <statustip>Industrial calibration control.</statustip>
+    </qtgui>
+  </class>
+</library>
