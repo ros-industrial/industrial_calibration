@@ -5,6 +5,7 @@ static_cameras:
     camera_name: BaslerAce
     camera_optical_frame: /optical_frame
     camera_intermediate_frame: /camera_frame
+    transform_observer: ros_camera_housing_transform_observer
     image_topic: /image_color
     angle_axis_ax: 1.5
     angle_axis_ay: 2.35

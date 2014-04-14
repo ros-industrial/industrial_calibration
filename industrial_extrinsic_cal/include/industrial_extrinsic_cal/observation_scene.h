@@ -21,6 +21,7 @@
 
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/camera_definition.h>
+#include <industrial_extrinsic_cal/scene_trigger.h>
 #include <ros/console.h>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
@@ -35,9 +36,10 @@ public:
   /*! \brief Constructor,
    *   \param Trigger Trig the type of trigger to initiate this observation
    */
-  ObservationScene(Trigger trig, int scene_id) :
-      trig_(trig), scene_id_(scene_id)
+  ObservationScene(SceneTrigger * trig, int scene_id) :
+      scene_id_(scene_id)
   {
+    trig_ = trig;
   }
   ;
 
@@ -79,7 +81,7 @@ public:
   ;
 
   /*! \brief gets the trigger of this scene */
-  Trigger get_trigger()
+  SceneTrigger * get_trigger()
   {
     return (trig_);
   }
@@ -96,7 +98,7 @@ public:
    * \brief set the trigger for this scene
    * @param trig
    */
-  void setTrig(const Trigger& trig)
+  void setTrig(SceneTrigger * trig)
   {
     trig_ = trig;
   };
@@ -105,7 +107,7 @@ public:
   std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scene */
 
 private:
-  Trigger trig_; /*!< event to trigger the observations in this command */
+  SceneTrigger * trig_; /*!< event to trigger the observations in this command */
   int scene_id_; /*!< unique identifier of this scene */
 };
 // end of class ObservationScene

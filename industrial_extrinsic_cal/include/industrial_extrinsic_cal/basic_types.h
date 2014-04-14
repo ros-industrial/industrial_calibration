@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <tf/LinearMath/Matrix3x3.h>
 //#include <industrial_extrinsic_cal/basic_types.h>
 
 namespace industrial_extrinsic_cal
@@ -56,8 +57,22 @@ typedef struct
  *   x,y,z have their natrual meanging
  *   ax,ay,az define the rotation part of the pose using angle axis notation
  */
-typedef struct
+class Pose6d
 {
+ public:
+  Pose6d(double tx, double ty, double tz, double aax, double aay, double aaz);
+  Pose6d();
+  void set_basis( tf::Matrix3x3 m);
+  void set_origin(tf::Vector3 v);
+  void set_origin(double tx, double ty, double tz);
+  void set_eulerZYX(double ez, double ey, double ex);
+  void set_quaternion(double qx, double qy, double qz, double qw);
+  void set_angle_axis(double aax, double aay, double aaz);
+  tf::Matrix3x3 get_basis();
+  tf::Vector3 get_origin();
+  //TODO  void get_eulerZYX(double &ez, double &ey, double &ex);
+  void get_quaternion(double &qx,  double &qy, double &qz, double &qw);
+
   union
   {
     struct
@@ -79,7 +94,7 @@ typedef struct
       double pb_pose[6]; /**< a third option with a single block for 6dof pose */
     };
   };
-}Pose6d;
+};
   
 /** @brief Parameters defining checker board target   */
 typedef struct
@@ -175,28 +190,38 @@ class Trigger
  public:
   enum TRIGGER_TYPE{
     GRAB_NEXT_IMAGE,
-    WAIT_FOR_ROS_BOOL,
-    WAIT_FOR_POPUP_OK
+    ROS_BOOL_PARAM,
+    ACTION_TRIGGER
   };
   Trigger()
     {
       type_ = Trigger::GRAB_NEXT_IMAGE;
-      popup_msg_ = "GRABBING NEXT IMAGE";
+      ros_bool_param_ = "start_scene_capture";
+      action_msg_ = "Set up next static scene ";
+      action_srv_  = "scene_trigger_action_server";
     }
   Trigger(Trigger::TRIGGER_TYPE tt,
 	  std::string msg="HIT RETURN TO ACCEPT IMAGE")
     {
       type_ = tt;
-      popup_msg_ = msg;
+      action_msg_ = msg;
+      ros_bool_param_ = "start_scene_capture";
+      action_srv_  = "scene_trigger_action_server";
     };
   ~Trigger(){};
   void setTriggerType( Trigger::TRIGGER_TYPE tt) { type_ = tt; };
+  void setRosBoolParam( std::string msg) { ros_bool_param_ = msg; };
+  void setActionMessage( std::string msg) { action_msg_ = msg; };
+  void setActionServer( std::string msg) { action_msg_ = msg; };
   Trigger::TRIGGER_TYPE  getTriggerType( ) { return (Trigger::TRIGGER_TYPE)type_; };
-  void setPopupMessage( std::string msg) { popup_msg_ = msg; };
-  std::string  getPopupMessage( ) { return popup_msg_; };
+  std::string  getRosBoolParam( ) { return ros_bool_param_; };
+  std::string  getActionMessage( ) { return action_msg_; };
+  std::string  getActionServer( ) { return action_srv_; };
  private:
   int type_;
-  std::string popup_msg_;
+  std::string ros_bool_param_;
+  std::string action_msg_;
+  std::string action_srv_;
 } ;
 
 /*! \brief moving  need a new pose with each scene in which they are used */

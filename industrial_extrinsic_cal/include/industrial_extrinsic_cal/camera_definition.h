@@ -19,10 +19,11 @@
 #ifndef CAMERA_CLASS_H_
 #define CAMERA_CLASS_H_
 
-#include <industrial_extrinsic_cal/basic_types.h>
+
 #include <ros/console.h>
 #include <industrial_extrinsic_cal/camera_observer.hpp>
-#include <industrial_extrinsic_cal/ros_camera_observer.h>
+#include <industrial_extrinsic_cal/basic_types.h>
+#include <industrial_extrinsic_cal/transform_interface.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
@@ -52,7 +53,7 @@ public:
    static cameras get but one set of pose parameters
    */
   bool isMoving();
-  boost::shared_ptr<ROSCameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
+  boost::shared_ptr<CameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
   CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
   //    ::std::ostream& operator<<(::std::ostream& os, const Camera& C){ return os<< "TODO";};
 
@@ -60,9 +61,9 @@ public:
 
   bool fixed_intrinsics_; /** are the extrinsics known? */
   bool fixed_extrinsics_; /** are the extrinsics known? */
-
 private:
   bool is_moving_; /*!< bool is_moving_  false for static cameras */
+  TransformInterface * transform_interface_ptr_;
 };
 // end of class Camera
 

@@ -20,6 +20,9 @@
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <ros/package.h>
+#include <actionlib/client/simple_action_client.h>
+#include <industrial_extrinsic_cal/manual_triggerAction.h>
+#include <industrial_extrinsic_cal/ros_scene_triggers.h>
 
 using std::string;
 using boost::shared_ptr;
@@ -335,12 +338,10 @@ namespace industrial_extrinsic_cal
 	return (false);
       }
 
-    std::string trigger_message="triggered";//TODO what's in the message?
     std::string opt_params;
     int scene_id_num;
     int trig_type;
-    Trigger cal_trig;
-    cal_trig.setPopupMessage(trigger_message);
+    SceneTrigger *scene_trig;
     std::string camera_name;
     std::string target_name;
     shared_ptr<Camera> temp_cam = make_shared<Camera>();
@@ -364,8 +365,28 @@ namespace industrial_extrinsic_cal
 	      {
 		(*caljob_scenes)[i]["scene_id"] >> scene_id_num;
 		(*caljob_scenes)[i]["trigger_type"] >> trig_type;
-		cal_trig.setTriggerType((Trigger::TRIGGER_TYPE)trig_type);
-		scene_list_.at(i).setTrig(cal_trig);
+		string ros_bool_param;
+		string message;
+		string server_name;
+		switch(trig_type)
+		  {
+		  case 1: // GRAB next image, no message, don't wait, just do it
+		    scene_trig = new ImmediateSceneTrigger();
+		    break;
+		  case 2: // 
+		    (*caljob_scenes)[i]["ros_bool_param"] >> ros_bool_param;
+		    scene_trig = new ROSParamSceneTrigger(ros_bool_param);
+		    break;
+		  case 3: // send a message to an action server and wait till finished
+		    (*caljob_scenes)[i]["action_message"] >> message;
+		    (*caljob_scenes)[i]["action_server"]    >> server_name;
+		    scene_trig = new ROSActionServerSceneTrigger(server_name,message);
+		    break;
+		  default:
+		    ROS_ERROR("TRIGGER TYPE NOT IMPLEMENTED");
+		    break;
+		  }
+		scene_list_.at(i).setTrig(scene_trig);
 		scene_list_.at(i).setSceneId(scene_id_num);
 		const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
 		ROS_DEBUG_STREAM("Found "<<obs_node->size() <<" observations within scene "<<i);
@@ -434,6 +455,8 @@ namespace industrial_extrinsic_cal
 	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi);
 	  }
 	
+	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
+
 	BOOST_FOREACH( shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {// trigger the cameras
 	    current_camera->camera_observer_->triggerCamera();
@@ -536,6 +559,7 @@ namespace industrial_extrinsic_cal
 	    // take all the data collected and create a Ceres optimization problem and run it
 	    P_BLOCK extrinsics;
 	    P_BLOCK target_pose;
+	    P_BLOCK point_position;
 	    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items)
 	      {
 		// create cost function
@@ -567,12 +591,14 @@ namespace industrial_extrinsic_cal
 		unsigned int target_type    = ODP.target_type_;
 	      
 		// pull out pointers to the parameter blocks in the observation point data
-		extrinsics    = ODP.camera_extrinsics_;
-		target_pose   = ODP.target_pose_;
+		extrinsics        = ODP.camera_extrinsics_;
+		target_pose     = ODP.target_pose_;
+		point_position = ODP.point_position_;
 	      
 		// create the cost function
 		if(target_type == pattern_options::CircleGrid){
 		  double circle_dia = ODP.circle_dia_;
+
 		  CostFunction* cost_function = CircleTargetCameraReprjErrorNoDFixedPoint::Create(image_x, image_y,
 												  circle_dia,
 												  focal_length_x,

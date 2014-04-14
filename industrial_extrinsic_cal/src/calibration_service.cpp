@@ -16,162 +16,104 @@
  * limitations under the License.
  */
 
-#include <industrial_extrinsic_cal/runtime_utils.h>
+
 #include <std_srvs/Empty.h>
 #include <ros/ros.h>
 #include <ros/package.h>
-
-bool calibrated=false;
-bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-std::vector<tf::Transform> b_transforms;
-
-int main(int argc, char **argv)
+#include <industrial_extrinsic_cal/calibration_job_definition2.h>
+class CalibrationServiceNode
 {
-  ros::init(argc, argv, "calibration_service_node");
-
-  ros::NodeHandle nh;
-  ros::ServiceServer service=nh.advertiseService("calibration_service", callback);
-  industrial_extrinsic_cal::ROSRuntimeUtils utils;
-  ros::NodeHandle priv_nh_("~");
-
-  priv_nh_.getParam("camera_file", utils.camera_file_);
-  priv_nh_.getParam("target_file", utils.target_file_);
-  priv_nh_.getParam("cal_job_file", utils.caljob_file_);
-  std::string path = ros::package::getPath("industrial_extrinsic_cal");
-  std::string file_path=path+"/yaml/";
-  industrial_extrinsic_cal::CalibrationJob cal_job(file_path+utils.camera_file_, file_path+utils.target_file_, file_path+utils.caljob_file_);
-
-  if (cal_job.load())
+public:
+  explicit CalibrationServiceNode(const ros::NodeHandle& nh):
+    nh_(nh)
   {
-    ROS_INFO_STREAM("Calibration job (cal_job, target and camera) yaml parameters loaded.");
-  }
-
-  utils.world_frame_=cal_job.getReferenceFrame();
-  utils.camera_optical_frame_=cal_job.getCameraOpticalFrame();
-  utils.camera_intermediate_frame_=cal_job.getCameraIntermediateFrame();
-  utils.initial_extrinsics_ = cal_job.getOriginalExtrinsics();
-  utils.target_frame_=cal_job.getTargetFrames();
-  industrial_extrinsic_cal::P_BLOCK orig_extrinsics;
-  tf::Transform tf_camera_orig;
-  for (int k=0; k<utils.initial_extrinsics_.size(); k++ )
-  {
-    orig_extrinsics=utils.initial_extrinsics_[k];
-    ROS_INFO_STREAM("Original Camera "<<k);
-    tf_camera_orig= utils.pblockToPose(orig_extrinsics);
-    utils.initial_transforms_.push_back(tf_camera_orig);
-  }
-  tf::StampedTransform temp_tf;
-  try
-  {
-    utils.listener_.waitForTransform( utils.world_frame_,utils.target_frame_[0],
-                                      ros::Time(0), ros::Duration(3.0));
-    utils.listener_.lookupTransform(utils.world_frame_,utils.target_frame_[0], ros::Time(0), temp_tf);
-    utils.points_to_world_transforms_.push_back(temp_tf);
-  }
-  catch (tf::TransformException &ex)
-  {
-    ROS_ERROR("%s",ex.what());
-  }
-  for (int k=0; k<utils.initial_transforms_.size(); k++ )
-  {
-    utils.initial_transforms_[k]=utils.points_to_world_transforms_[0]*utils.initial_transforms_[k];
-  }
-
-
-  utils.broadcasters_.resize(utils.initial_extrinsics_.size());
-
-  ros::Rate r(5); // 5 hz
-  while (ros::ok())
-  {
-    if(!calibrated)
-    {
-      b_transforms=utils.initial_transforms_;
-      for (int k=0; k<b_transforms.size(); k++ )
+    calibrated_ = false;
+    std::string nn = ros::this_node::getName();
+    ros::NodeHandle priv_nh("~");
+    std::string camera_file;
+    std::string target_file;
+    std::string caljob_file;
+    std::string ros_package_name;
+    std::string launch_file_name;
+    priv_nh.getParam("camera_file", camera_file);
+    priv_nh.getParam("target_file", target_file);
+    priv_nh.getParam("cal_job_file", caljob_file);
+    priv_nh.getParam("store_results_package_name", ros_package_name);
+    priv_nh.getParam("store_results_file_name", launch_file_name);
+    
+    std::string path = ros::package::getPath("industrial_extrinsic_cal");
+    std::string file_path=path+"/yaml/";
+    ROS_INFO("path: %s",file_path.c_str());
+    ROS_INFO("camera_file: %s",camera_file.c_str());
+    ROS_INFO("target_file: %s",target_file.c_str());
+    ROS_INFO("cal_job_file: %s",caljob_file.c_str());
+    ROS_INFO("store results: %s",ros_package_name.c_str());
+    ROS_INFO("launch_file_name: %s",launch_file_name.c_str());
+    
+    cal_job_ = new industrial_extrinsic_cal::CalibrationJob(file_path+camera_file, file_path+target_file, file_path+caljob_file);
+  
+    if (cal_job_->load())
       {
-        utils.broadcasters_[k].sendTransform(tf::StampedTransform(b_transforms[k], ros::Time::now(),
-                                                                  utils.world_frame_, utils.camera_intermediate_frame_[k]));
+	ROS_INFO_STREAM("Calibration job (cal_job, target and camera) yaml parameters loaded.");
       }
-    }
-    else if(calibrated)
-    {
-      for (int k=0; k<b_transforms.size(); k++ )
-      {
-        utils.broadcasters_[k].sendTransform(tf::StampedTransform(b_transforms[k], ros::Time::now(),
-                                                                  utils.world_frame_, utils.camera_intermediate_frame_[k]));
-      }
-    }
-    ros::spinOnce();
-    r.sleep();
+  };
+
+  ~CalibrationServiceNode()
+  {
+    delete( cal_job_);
   }
+  bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  bool is_calibrated(){return(calibrated_);};
+private:
+  ros::NodeHandle nh_;
+  bool calibrated_;
+  industrial_extrinsic_cal::CalibrationJob * cal_job_;
+};
 
-
-  ros::spin();
-  return 0;
-}
-
-bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+bool CalibrationServiceNode::callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
-  industrial_extrinsic_cal::ROSRuntimeUtils utils;
-  ros::NodeHandle priv_nh_("~");
-
-  std::string ros_package_name;
-  std::string launch_file_name;
-
-  priv_nh_.getParam("camera_file", utils.camera_file_);
-  priv_nh_.getParam("target_file", utils.target_file_);
-  priv_nh_.getParam("cal_job_file", utils.caljob_file_);
-  priv_nh_.getParam("store_results_package_name", ros_package_name);
-  priv_nh_.getParam("store_results_file_name", launch_file_name);
-
-  std::string path = ros::package::getPath("industrial_extrinsic_cal");
-  std::string file_path=path+"/yaml/";
-  ROS_INFO("path: %s",file_path.c_str());
-  ROS_INFO("camera_file: %s",utils.camera_file_.c_str());
-  ROS_INFO("target_file: %s",utils.target_file_.c_str());
-  ROS_INFO("cal_job_file: %s",utils.caljob_file_.c_str());
-  ROS_INFO("store results: %s",ros_package_name.c_str());
-  ROS_INFO("launch_file_name: %s",launch_file_name.c_str());
-
-  industrial_extrinsic_cal::CalibrationJob cal_job(file_path+utils.camera_file_, file_path+utils.target_file_, file_path+utils.caljob_file_);
-
-  cal_job.load();
-  utils.world_frame_=cal_job.getReferenceFrame();
-  utils.camera_optical_frame_=cal_job.getCameraOpticalFrame();
-  utils.camera_intermediate_frame_=cal_job.getCameraIntermediateFrame();
-  utils.target_frame_=cal_job.getTargetFrames();
-
-  ROS_INFO("world_fame: %s",utils.world_frame_.c_str());
-  for(int i=0;i<(int)utils.camera_optical_frame_.size();i++){
-    ROS_INFO("optical_fame %d: %s",i,utils.camera_optical_frame_[i].c_str());
-  }
-  for(int i=0;i<(int)utils.camera_intermediate_frame_.size();i++){
-    ROS_INFO("intermediate_fame %d: %s",i,utils.camera_intermediate_frame_[i].c_str());
-  }
-  for(int i=0;i<(int)utils.target_frame_.size();i++){
-    ROS_INFO("target_fame %d: %s",i,utils.target_frame_[i].c_str());
-  }
-
+  
+// Display initial state
   ROS_INFO("State prior to optimization");
-  cal_job.show();
-
+  cal_job_->show();
+  
+  // Run observations and subsequent optimization
   ROS_INFO("RUNNING");
-  if (cal_job.run())
-  {
-    ROS_INFO_STREAM("Calibration job observations and optimization complete");
-    calibrated=true;
-  }
+  if (cal_job_->run())
+    {
+      ROS_INFO_STREAM("Calibration job observations and optimization complete");
+      calibrated_=true;
+    }
   else
     {
       ROS_INFO_STREAM("Calibration job failed");
       return(false);
     }
   
-  // PRINT RESULTS TO THE SCREEN
+  // Show Results
+  cal_job_->show();
   
-  if (!cal_job.store())
-  {
-    ROS_INFO_STREAM(" Trouble storing calibration job optimization results ");
-  }
-  cal_job.show();
+  // Store Results
+  if (!cal_job_->store())
+    {
+      ROS_INFO_STREAM(" Trouble storing calibration job optimization results ");
+    }
+  
   return true;
 }
+
+int main(int argc, char **argv)
+{
+  ros::init(argc, argv, "calibration_service_node");
+  ros::NodeHandle nh;
+  CalibrationServiceNode cal_service_node(nh);
+
+  ros::Rate r(5); // 5 hz
+  while (ros::ok()){
+    ros::spinOnce();
+    r.sleep();
+  }
+    
+}
+
+
