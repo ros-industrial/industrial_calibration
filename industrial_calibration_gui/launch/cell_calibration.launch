@@ -11,7 +11,7 @@
 	<arg name="display" default="true" />
 	
 	<!--true = locked gui, false = unlocked gui-->
-	<arg name="display_lock" default="false" />
+	<arg name="display_lock" default="true" />
 
 
 
@@ -99,11 +99,8 @@
 	
 	<!-- Visualization -->
 	<group if="$(arg display)">
-    <node name="rqt" pkg="rqt_gui" type="rqt_gui" args="-f -l" required="true" if="$(arg display_lock)" />
+    <node name="rqt" pkg="rqt_gui" type="rqt_gui" args="-f -l -p $(find industrial_calibration_gui)/config/calibration.perspective" required="true" if="$(arg display_lock)" />
     <node name="rqt" pkg="rqt_gui" type="rqt_gui" required="true" unless="$(arg display_lock)" />
   </group>
-
-
-
 
 </launch>
