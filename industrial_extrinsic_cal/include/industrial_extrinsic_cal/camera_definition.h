@@ -23,6 +23,7 @@
 #include <ros/console.h>
 #include <industrial_extrinsic_cal/camera_observer.hpp>
 #include <industrial_extrinsic_cal/basic_types.h>
+#include <industrial_extrinsic_cal/trigger.h>
 #include <industrial_extrinsic_cal/transform_interface.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
@@ -54,13 +55,16 @@ public:
    */
   bool isMoving();
   boost::shared_ptr<CameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
+  boost::shared_ptr<Trigger>  trigger_; /*!< pointer to the trigger mechanism for this camera*/
   CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
+
   //    ::std::ostream& operator<<(::std::ostream& os, const Camera& C){ return os<< "TODO";};
 
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
 
   bool fixed_intrinsics_; /** are the extrinsics known? */
   bool fixed_extrinsics_; /** are the extrinsics known? */
+
 private:
   bool is_moving_; /*!< bool is_moving_  false for static cameras */
   TransformInterface * transform_interface_ptr_;

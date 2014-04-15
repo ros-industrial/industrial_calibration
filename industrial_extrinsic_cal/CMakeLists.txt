@@ -4,8 +4,13 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib genmsg actionlib_msgs actionlib )
 
+# Opencv
+FIND_PACKAGE(OpenCV REQUIRED)
+IF (OPENCV_FOUND)
+  MESSAGE("-- Found OpenCV version ${OPENCV_VERSION}: ${OPENCV_INCLUDE_DIRS}")
+ENDIF (OPENCV_FOUND)
 
 # Ceres
 FIND_PACKAGE(Ceres REQUIRED)
@@ -19,10 +24,8 @@ IF (EIGEN_FOUND)
   MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
 ENDIF (EIGEN_FOUND)
 
-
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -47,11 +50,15 @@ ENDIF (EIGEN_FOUND)
 #   Service2.srv
 # )
 
+add_action_files(DIRECTORY action FILES manual_trigger.action)
+
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
 #   std_msgs  # Or other packages containing msgs
 # )
+
+generate_messages(DEPENDENCIES actionlib_msgs)
 
 ###################################
 ## catkin specific configuration ##
@@ -75,14 +82,21 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(include
-  ${catkin_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
 # add_library(industrial_extrinsic_cal
 #   src/${PROJECT_NAME}/industrial_extrinsic_cal.cpp
 # )
-add_library(industrial_extrinsic_cal_ceres
+add_library(industrial_extrinsic_cal2
+   src/ros_camera_observer.cpp
+   src/camera_definition.cpp
+   src/observation_scene.cpp
+   src/observation_data_point.cpp
+   src/ceres_blocks.cpp
+   src/basic_types.cpp
+   src/ros_transform_interface.cpp
    src/calibration_job_definition2.cpp
 )
 add_library(industrial_extrinsic_cal
@@ -92,6 +106,9 @@ add_library(industrial_extrinsic_cal
    src/observation_data_point.cpp
    src/ceres_blocks.cpp
    src/runtime_utils.cpp
+   src/basic_types.cpp
+   src/ros_transform_interface.cpp
+   src/calibration_job_definition.cpp
 )
 
 ## Declare a cpp executable
@@ -100,23 +117,25 @@ add_executable(mono_ex_cal src/mono_ex_cal.cpp)
 add_executable(cal_job src/test_cal_job.cpp)
 add_executable(test_obs src/test_ros_cam_obs.cpp)
 add_executable(service_node src/calibration_service.cpp)
+add_executable(trigger_service src/ros_scene_trigger_server.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(industrial_extrinsic_cal_node industrial_extrinsic_cal_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(industrial_extrinsic_cal_ceres yaml-cpp ${catkin_LIBRARIES})
+target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(industrial_extrinsic_cal2 yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
 target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES})
-target_link_libraries(cal_job industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES} ${catkin_LIBRARIES})
-#target_link_libraries(cal_job2 industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES} ${catkin_LIBRARIES})
-target_link_libraries(service_node industrial_extrinsic_cal industrial_extrinsic_cal_ceres ${CERES_LIBRARIES})
+target_link_libraries(cal_job industrial_extrinsic_cal  ${CERES_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(service_node industrial_extrinsic_cal2 ${CERES_LIBRARIES})
+target_link_libraries(trigger_service ${catkin_LIBRARIES} )
 
 catkin_add_gtest(utest_inds_cal test/utest.cpp)
-target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal_ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal2 ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 catkin_add_gtest(utest_inds_cal_ceres test/ceres_utest.cpp)
-target_link_libraries(utest_inds_cal_ceres ${PROJECT_NAME} industrial_extrinsic_cal_ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(utest_inds_cal_ceres ${PROJECT_NAME} industrial_extrinsic_cal2 ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 #############
 ## Install ##
 #############

@@ -22,7 +22,6 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include <tf/LinearMath/Matrix3x3.h>
-//#include <industrial_extrinsic_cal/basic_types.h>
 
 namespace industrial_extrinsic_cal
 {
@@ -184,45 +183,6 @@ typedef struct
   };
 } CameraParameters;
 
-/*! @brief what kind of trigger initiates the collection of data for this scene */
-class Trigger
-{ /** Trigger */
- public:
-  enum TRIGGER_TYPE{
-    GRAB_NEXT_IMAGE,
-    ROS_BOOL_PARAM,
-    ACTION_TRIGGER
-  };
-  Trigger()
-    {
-      type_ = Trigger::GRAB_NEXT_IMAGE;
-      ros_bool_param_ = "start_scene_capture";
-      action_msg_ = "Set up next static scene ";
-      action_srv_  = "scene_trigger_action_server";
-    }
-  Trigger(Trigger::TRIGGER_TYPE tt,
-	  std::string msg="HIT RETURN TO ACCEPT IMAGE")
-    {
-      type_ = tt;
-      action_msg_ = msg;
-      ros_bool_param_ = "start_scene_capture";
-      action_srv_  = "scene_trigger_action_server";
-    };
-  ~Trigger(){};
-  void setTriggerType( Trigger::TRIGGER_TYPE tt) { type_ = tt; };
-  void setRosBoolParam( std::string msg) { ros_bool_param_ = msg; };
-  void setActionMessage( std::string msg) { action_msg_ = msg; };
-  void setActionServer( std::string msg) { action_msg_ = msg; };
-  Trigger::TRIGGER_TYPE  getTriggerType( ) { return (Trigger::TRIGGER_TYPE)type_; };
-  std::string  getRosBoolParam( ) { return ros_bool_param_; };
-  std::string  getActionMessage( ) { return action_msg_; };
-  std::string  getActionServer( ) { return action_srv_; };
- private:
-  int type_;
-  std::string ros_bool_param_;
-  std::string action_msg_;
-  std::string action_srv_;
-} ;
 
 /*! \brief moving  need a new pose with each scene in which they are used */
 typedef struct MovingTarget

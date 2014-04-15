@@ -333,12 +333,10 @@ bool CalibrationJob::loadCalJob()
     return (false);
   }
 
-  std::string trigger_message="triggered";//TODO what's in the message?
   std::string opt_params;
   int scene_id_num;
-  int trig_type;
-  Trigger cal_trig;
-  cal_trig.trigger_popup_msg=trigger_message;
+  std::string trigger_name;
+  boost::shared_ptr<NoWaitTrigger> trigger = boost::make_shared<NoWaitTrigger>();
   std::string camera_name;
   shared_ptr<Camera> temp_cam = make_shared<Camera>();
   shared_ptr<Target> temp_targ = make_shared<Target>();
@@ -361,10 +359,8 @@ bool CalibrationJob::loadCalJob()
       {
         (*caljob_scenes)[i]["scene_id"] >> scene_id_num;
         //ROS_INFO_STREAM("scene "<<scene_id_num);
-        (*caljob_scenes)[i]["trigger_type"] >> trig_type;
-        //ROS_INFO_STREAM("trig type "<<trig_type);
-        cal_trig.trigger_type=trig_type;
-        scene_list_.at(i).setTrig(cal_trig);
+        (*caljob_scenes)[i]["trigger"] >> trigger_name; // currently ignored
+        scene_list_.at(i).setTrig(trigger);
         scene_list_.at(i).setSceneId(scene_id_num);
         const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
         ROS_DEBUG_STREAM("Found "<<obs_node->size() <<" observations within scene "<<i);

@@ -186,7 +186,7 @@ protected:
    *  @param trig the trigger type to use for this scene
    *  @return true if successful
    */
-  bool appendNewScene(Trigger trig);
+  bool appendNewScene(boost::shared_ptr<Trigger> trig);
 
 private:
   std::vector<ObservationDataPointList> observation_data_point_list_;

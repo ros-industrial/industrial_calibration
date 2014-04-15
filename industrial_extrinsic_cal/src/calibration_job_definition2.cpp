@@ -22,7 +22,8 @@
 #include <ros/package.h>
 #include <actionlib/client/simple_action_client.h>
 #include <industrial_extrinsic_cal/manual_triggerAction.h>
-#include <industrial_extrinsic_cal/ros_scene_triggers.h>
+#include <industrial_extrinsic_cal/trigger.h>
+#include <industrial_extrinsic_cal/ros_triggers.h>
 
 using std::string;
 using boost::shared_ptr;
@@ -81,6 +82,10 @@ namespace industrial_extrinsic_cal
     P_BLOCK extrinsics;
 
     unsigned int scene_id;
+    std::string trigger_name;
+    std::string trig_param;
+    std::string trig_action_server;
+    std::string trig_action_msg;
     try
       {
 	YAML::Parser camera_parser(camera_input_file);
@@ -94,6 +99,7 @@ namespace industrial_extrinsic_cal
 	    for (unsigned int i = 0; i < camera_parameters->size(); i++)
 	      {
 		(*camera_parameters)[i]["camera_name"] >> temp_name;
+		(*camera_parameters)[i]["trigger"] >> trigger_name;
 		(*camera_parameters)[i]["image_topic"] >> temp_topic;
 		(*camera_parameters)[i]["camera_optical_frame"] >> camera_optical_frame;
 		(*camera_parameters)[i]["camera_intermediate_frame"] >> camera_intermediate_frame;
@@ -114,6 +120,19 @@ namespace industrial_extrinsic_cal
 		(*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
 		// create a static camera
 		shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
+		// handle all the different trigger cases
+		if(trigger_name == std::string("NO_WAIT_TRIGGER")){
+		  temp_camera->trigger_ = make_shared<NoWaitTrigger>();
+		}
+		else if(trigger_name == std::string("ROS_PARAM_TRIGGER")){
+		  (*camera_parameters)[i]["trig_param"] >> trig_param;
+		  temp_camera->trigger_ = make_shared<ROSParamTrigger>(trig_param);
+		}
+		else if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
+		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
+		  (*camera_parameters)[i]["trig_action_msg"] >> trig_action_msg;
+		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
+		}
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
 		ceres_blocks_.addStaticCamera(temp_camera);
 		camera_optical_frames_.push_back(camera_optical_frame);
@@ -130,6 +149,7 @@ namespace industrial_extrinsic_cal
 	    for (unsigned int i = 0; i < camera_parameters->size(); i++)
 	      {
 		(*camera_parameters)[i]["camera_name"] >> temp_name;
+		(*camera_parameters)[i]["trigger"] >> trigger_name;
 		(*camera_parameters)[i]["image_topic"] >> temp_topic;
 		(*camera_parameters)[i]["camera_optical_frame"] >> camera_optical_frame;
 		(*camera_parameters)[i]["camera_intermediate_frame"] >> camera_intermediate_frame;
@@ -150,13 +170,26 @@ namespace industrial_extrinsic_cal
 		(*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
 		(*camera_parameters)[i]["scene_id"] >> scene_id;
 		shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, true);
-		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
-		ceres_blocks_.addMovingCamera(temp_camera, scene_id);
-		camera_optical_frames_.push_back(camera_optical_frame);
-		camera_intermediate_frames_.push_back(camera_intermediate_frame);
-		extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
-		original_extrinsics_.push_back(extrinsics);
-	      }
+		// handle all the different trigger cases
+		if(trigger_name == std::string("NO_WAIT_TRIGGER")){
+		  temp_camera->trigger_ = make_shared<NoWaitTrigger>();
+		}
+		else if(trigger_name == std::string("ROS_PARAM_TRIGGER")){
+		  (*camera_parameters)[i]["trig_param"] >> trig_param;
+		  temp_camera->trigger_ = make_shared<ROSParamTrigger>(trig_param);
+		}
+		else  if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
+			(*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
+			(*camera_parameters)[i]["trig_action_message"] >> trig_action_msg;
+			temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
+		      }
+		      temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
+		      ceres_blocks_.addMovingCamera(temp_camera, scene_id);
+		      camera_optical_frames_.push_back(camera_optical_frame);
+		      camera_intermediate_frames_.push_back(camera_intermediate_frame);
+		      extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
+		      original_extrinsics_.push_back(extrinsics);
+		      }
 	  }
       } // end try
     catch (YAML::ParserException& e)
@@ -340,8 +373,10 @@ namespace industrial_extrinsic_cal
 
     std::string opt_params;
     int scene_id_num;
-    int trig_type;
-    SceneTrigger *scene_trig;
+    std::string trigger_name;
+    std::string trig_param;
+    std::string trig_action_server;
+    std::string trig_action_msg;
     std::string camera_name;
     std::string target_name;
     shared_ptr<Camera> temp_cam = make_shared<Camera>();
@@ -364,29 +399,27 @@ namespace industrial_extrinsic_cal
 	    for (unsigned int i = 0; i < caljob_scenes->size(); i++)
 	      {
 		(*caljob_scenes)[i]["scene_id"] >> scene_id_num;
-		(*caljob_scenes)[i]["trigger_type"] >> trig_type;
+		(*caljob_scenes)[i]["trigger"] >> trigger_name;
 		string ros_bool_param;
 		string message;
 		string server_name;
-		switch(trig_type)
-		  {
-		  case 1: // GRAB next image, no message, don't wait, just do it
-		    scene_trig = new ImmediateSceneTrigger();
-		    break;
-		  case 2: // 
-		    (*caljob_scenes)[i]["ros_bool_param"] >> ros_bool_param;
-		    scene_trig = new ROSParamSceneTrigger(ros_bool_param);
-		    break;
-		  case 3: // send a message to an action server and wait till finished
-		    (*caljob_scenes)[i]["action_message"] >> message;
-		    (*caljob_scenes)[i]["action_server"]    >> server_name;
-		    scene_trig = new ROSActionServerSceneTrigger(server_name,message);
-		    break;
-		  default:
-		    ROS_ERROR("TRIGGER TYPE NOT IMPLEMENTED");
-		    break;
-		  }
-		scene_list_.at(i).setTrig(scene_trig);
+		boost::shared_ptr<Trigger> temp_trigger;
+
+		// handle all the different trigger cases
+		if(trigger_name == std::string("NO_WAIT_TRIGGER")){
+		  temp_trigger = make_shared<NoWaitTrigger>();
+		}
+		else if(trigger_name == std::string("ROS_PARAM_TRIGGER")){
+		  (*caljob_scenes)[i]["trig_param"] >> trig_param;
+		  temp_trigger = make_shared<ROSParamTrigger>(trig_param);
+		}
+		else if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
+		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
+		  (*caljob_scenes)[i]["trig_action_msg"] >> trig_action_msg;
+		  temp_trigger = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
+		}
+		scene_list_.at(i).setTrig(temp_trigger);
+
 		scene_list_.at(i).setSceneId(scene_id_num);
 		const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
 		ROS_DEBUG_STREAM("Found "<<obs_node->size() <<" observations within scene "<<i);

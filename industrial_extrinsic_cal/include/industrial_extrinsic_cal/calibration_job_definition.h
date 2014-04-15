@@ -198,7 +198,7 @@ protected:
    *  @param trig the trigger type to use for this scene
    *  @return true if successful
    */
-  bool appendNewScene(Trigger trig);
+  bool appendNewScene(boost::shared_ptr<Trigger>  trig);
 
 private:
   std::vector<ObservationDataPointList> observation_data_point_list_;
@@ -218,7 +218,7 @@ private:
   std::vector<P_BLOCK> extrinsics_; /*!< This is the parameter block which holds the optimized camera extrinsics solution */
   std::vector<P_BLOCK> original_extrinsics_; /*!< This is the parameter block which holds the original camera extrinsics */
   std::vector<P_BLOCK> target_pose_; /*!< This is the parameter block which holds the optimized target pose solution */
-
+  boost::shared_ptr<Trigger> scene_trigger_;
 };//end class
 
 }//end namespace industrial_extrinsic_cal
