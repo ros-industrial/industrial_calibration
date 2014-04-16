@@ -21,8 +21,10 @@
 
 #include <industrial_extrinsic_cal/basic_types.h>
 
+
 namespace industrial_extrinsic_cal
 {
+
 
 class ObservationDataPoint
 {

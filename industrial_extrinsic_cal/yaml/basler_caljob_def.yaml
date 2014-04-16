@@ -3,7 +3,7 @@ reference_frame: world_frame
 scenes: 
 -
      scene_id: 0
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -14,8 +14,8 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 1
-     trigger_type: 2
-     ros_bool_param: scene_trigger_ready
+     trigger: ROS_PARAM_TRIGGER
+     trig_param: scene_trigger_ready
      observations: 
      -
           camera: BaslerAce
@@ -26,9 +26,9 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 2
-     trigger_type: 3
-     action_server: rosSceneTrigger
-     action_message: "Prepare Next Scene"
+     trigger: ROS_ACTION_TRIGGER
+     trig_action_server: rosSceneTrigger
+     trig_action_msg: "Prepare Next Scene"
      observations: 
      -
           camera: BaslerAce
@@ -39,7 +39,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 3
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -50,7 +50,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 4
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -61,7 +61,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 5
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -72,7 +72,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 6
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -83,7 +83,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 7
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -94,7 +94,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 8
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -105,7 +105,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 9
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -116,7 +116,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 10
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -127,7 +127,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 11
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -138,7 +138,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 12
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -149,7 +149,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 13
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -160,7 +160,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 14
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -171,7 +171,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 15
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -182,7 +182,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 16
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -193,7 +193,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 17
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -204,7 +204,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 18
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -215,7 +215,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 19
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce
@@ -226,7 +226,7 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 20
-     trigger_type: 1
+     trigger: NO_WAIT_TRIGGER
      observations: 
      -
           camera: BaslerAce

@@ -92,6 +92,7 @@ include_directories(include
 add_library(industrial_extrinsic_cal2
    src/ros_camera_observer.cpp
    src/camera_definition.cpp
+   src/target.cpp
    src/observation_scene.cpp
    src/observation_data_point.cpp
    src/ceres_blocks.cpp
@@ -101,6 +102,7 @@ add_library(industrial_extrinsic_cal2
 )
 add_library(industrial_extrinsic_cal
    src/ros_camera_observer.cpp
+   src/target.cpp
    src/camera_definition.cpp
    src/observation_scene.cpp
    src/observation_data_point.cpp

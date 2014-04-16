@@ -131,4 +131,6 @@ namespace industrial_extrinsic_cal
     qy = temp*qy;
     qz = temp*qz;
   }
-}
+
+
+}// end of namespace

@@ -27,14 +27,14 @@ typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::manual_triggerAc
 void execute(const industrial_extrinsic_cal::manual_triggerGoalConstPtr& goal, Server* as)
 {
   // Do lots of awesome groundbreaking robot stuff here
-  ROS_ERROR("CALLING EXECUTE");
+  ROS_ERROR("Scene Action Trigger is waiting for you to type: rosparam set test_scene_trigger true");
   bool test_scene_trigger_bool=false;
   ros::NodeHandle nh;
   nh.setParam("test_scene_trigger",false);
   while(test_scene_trigger_bool == false){
     nh.getParam("test_scene_trigger",test_scene_trigger_bool);
-    ROS_INFO("Scene Trigger is waiting for you to type: rosparam set test_scene_trigger true");
   }
+  ROS_ERROR("Scene Action Trigger has executed successfully");
   as->setSucceeded();
 }
 

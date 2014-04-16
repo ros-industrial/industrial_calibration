@@ -6,6 +6,7 @@ static_cameras:
     camera_optical_frame: /optical_frame
     camera_intermediate_frame: /camera_frame
     transform_observer: ros_camera_housing_transform_observer
+    trigger: NO_WAIT_TRIGGER
     image_topic: /image_color
     angle_axis_ax: 1.5
     angle_axis_ay: 2.35

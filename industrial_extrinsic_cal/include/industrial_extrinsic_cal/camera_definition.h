@@ -54,20 +54,22 @@ public:
    static cameras get but one set of pose parameters
    */
   bool isMoving();
+  void push_transform();
+  void pull_transform();
+  void set_transform_interface(boost::shared_ptr<TransformInterface> tranform_interface);
+  boost::shared_ptr<TransformInterface> get_transform_interface();
+
   boost::shared_ptr<CameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
   boost::shared_ptr<Trigger>  trigger_; /*!< pointer to the trigger mechanism for this camera*/
   CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
 
-  //    ::std::ostream& operator<<(::std::ostream& os, const Camera& C){ return os<< "TODO";};
-
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
-
   bool fixed_intrinsics_; /** are the extrinsics known? */
   bool fixed_extrinsics_; /** are the extrinsics known? */
 
 private:
   bool is_moving_; /*!< bool is_moving_  false for static cameras */
-  TransformInterface * transform_interface_ptr_;
+  boost::shared_ptr<TransformInterface>  transform_interface_;
 };
 // end of class Camera
 

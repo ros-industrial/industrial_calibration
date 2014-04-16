@@ -24,7 +24,6 @@ namespace industrial_extrinsic_cal
 
 using std::string;
 using boost::shared_ptr;
-//using boost::make_shared;
 using ceres::CostFunction;
 Camera::Camera()
 {
@@ -46,7 +45,31 @@ bool Camera::isMoving()
 {
   return (is_moving_);
 }
-
+void Camera::push_transform()
+{
+  Pose6d pose;
+  pose.set_angle_axis(camera_parameters_.angle_axis[0], camera_parameters_.angle_axis[1], camera_parameters_.angle_axis[2]);
+  pose.set_origin(camera_parameters_.position[0], camera_parameters_.position[1], camera_parameters_.position[2]);
+  transform_interface_->push_transform(pose);
+}
+void Camera::pull_transform()
+{
+  Pose6d pose = transform_interface_->pull_transform();
+  camera_parameters_.angle_axis[0] = pose.ax;
+  camera_parameters_.angle_axis[1] = pose.ay;
+  camera_parameters_.angle_axis[2] = pose.az;
+  camera_parameters_.position[0]    = pose.x;
+  camera_parameters_.position[1]    = pose.y;
+  camera_parameters_.position[2]    = pose.z;
+}
+void Camera::set_transform_interface(boost::shared_ptr<TransformInterface> transform_interface)
+{
+  transform_interface_ = transform_interface;
+}
+boost::shared_ptr<TransformInterface> Camera::get_transform_interface()
+{
+  return(transform_interface_);
+}
 }//end namespace industrial_extrinsic_cal
 
 

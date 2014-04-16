@@ -19,7 +19,7 @@
 #ifndef TRANSFORM_INTERFACE_HPP_
 #define TRANSFORM_INTERFACE_HPP_
 
-#include <industrial_extrinsic_cal/basic_types.h> /* Target,Roi,Observation,CameraObservations */
+#include <industrial_extrinsic_cal/basic_types.h> /* Pose6d,Roi,Observation,CameraObservations */
 
 namespace industrial_extrinsic_cal
 {
@@ -31,7 +31,7 @@ namespace industrial_extrinsic_cal
     virtual ~TransformInterface(){ }  ;
 
     /** @brief push the transform to the hardware or display */
-    virtual bool push_transform(Pose6d Pose)=0;
+    virtual bool push_transform(Pose6d & pose)=0;
 
     /** @brief get the transform from the hardware or display */
     virtual Pose6d pull_transform()=0;

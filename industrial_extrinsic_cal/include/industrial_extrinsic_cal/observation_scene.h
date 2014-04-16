@@ -21,12 +21,14 @@
 
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/camera_definition.h>
+#include <industrial_extrinsic_cal/target.h>
 #include <ros/console.h>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace industrial_extrinsic_cal
 {
+
 
 /*! \brief a command to take a set of observations from a group of cameras upon a trigger event */
 class ObservationScene

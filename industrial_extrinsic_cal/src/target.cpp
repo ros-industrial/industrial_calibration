@@ -1,0 +1,39 @@
+/*
+ * Software License Agreement (Apache License)
+ *
+ * Copyright (c) 2014, Southwest Research Institute
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <industrial_extrinsic_cal/target.h>
+
+namespace industrial_extrinsic_cal
+{
+
+  void Target::push_transform()
+  {
+    transform_interface_->push_transform(pose);
+  }
+  void Target::pull_transform()
+  {
+    pose = transform_interface_->pull_transform();
+  }
+  void Target::set_transform_interface(boost::shared_ptr<TransformInterface> transform_interface)
+  {
+    transform_interface_ = transform_interface;
+  }
+  boost::shared_ptr<TransformInterface> Target::get_transform_interface()
+  {
+    return(transform_interface_);
+  }
+}// end of namespace

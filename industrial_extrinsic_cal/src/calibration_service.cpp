@@ -56,6 +56,7 @@ public:
       {
 	ROS_INFO_STREAM("Calibration job (cal_job, target and camera) yaml parameters loaded.");
       }
+    
   };
 
   ~CalibrationServiceNode()
@@ -107,6 +108,8 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "calibration_service_node");
   ros::NodeHandle nh;
   CalibrationServiceNode cal_service_node(nh);
+
+  ros::ServiceServer service=nh.advertiseService("calibration_service", &CalibrationServiceNode::callback, &cal_service_node);
 
   ros::Rate r(5); // 5 hz
   while (ros::ok()){

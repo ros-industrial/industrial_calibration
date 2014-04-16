@@ -32,7 +32,7 @@
     <remap from="image_raw" to="image"/>
   </node>
 
-  <node pkg="industrial_extrinsic_cal" type="trigger_service" name="ros_trigger_service" output="screen" />
+  <node pkg="industrial_extrinsic_cal" type="trigger_service" name="scene_trigger_service" output="screen" />
   
   <node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen" >
     <rosparam>
