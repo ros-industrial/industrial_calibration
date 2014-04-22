@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "scene trigger server");
   ros::NodeHandle n;
-  Server server(n, "rosSceneTrigger", boost::bind(&execute, _1, &server), false);
+  Server server(n, "ros_scene_trigger", boost::bind(&execute, _1, &server), false);
   server.start();
   ros::spin();
   return 0;

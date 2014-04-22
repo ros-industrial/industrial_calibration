@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <stdio.h>
 #include <industrial_extrinsic_cal/basic_types.h>
 namespace industrial_extrinsic_cal
 {
@@ -92,10 +93,16 @@ namespace industrial_extrinsic_cal
     az = aaz;
   }
 
-  tf::Matrix3x3 Pose6d::get_basis()
+  tf::Matrix3x3 Pose6d::get_basis() const
   {
     tf::Matrix3x3 R;
     double angle = sqrt(ax*ax + ay*ay + az*az);
+    if(angle < .0001){
+      R[0][0] = 1.0;  R[0][1] = 0.0;  R[0][2] = 0.0;
+      R[1][0] = 0.0;  R[1][1] = 1.0;  R[1][2] = 0.0;
+      R[2][0] = 0.0;  R[2][1] = 0.0;  R[2][2] = 1.0;
+      return(R);
+    }
     double ct = cos(angle);
     double st = sin(angle);
     double ux = ax/angle;
@@ -108,7 +115,7 @@ namespace industrial_extrinsic_cal
     return(R);
   }
 
-  tf::Vector3 Pose6d::get_origin()
+  tf::Vector3 Pose6d::get_origin() const
   {
     tf::Vector3 V;
     V[0] = x;
@@ -132,5 +139,47 @@ namespace industrial_extrinsic_cal
     qz = temp*qz;
   }
 
+  Pose6d Pose6d::get_inverse()
+  {
+    double newx,newy,newz;
+    tf::Matrix3x3 R = get_basis();
+    newx =-( R[0][0] * x + R[1][0] * y + R[2][0] * z);
+    newy = -(R[0][1] * x + R[1][1] * y + R[2][1] * z);
+    newz = -(R[0][2] * x + R[1][2] * y + R[2][2] * z);
+    Pose6d new_pose(newx, newy, newz, -ax,- ay, -az);
+    return(new_pose);
+  }
+
+  Pose6d Pose6d::operator * ( Pose6d pose2) const
+  {
+    tf::Matrix3x3  R1   = get_basis();
+    tf::Matrix3x3 R2 = pose2.get_basis();
+    tf::Vector3 T1     = get_origin();
+    tf::Vector3 T2     = pose2.get_origin();
+    
+    tf::Matrix3x3 R3;
+    R3[0][0] = R1[0][0] * R2[0][0] + R1[0][1]*R2[1][0] + R1[0][2]*R2[2][0]; 
+    R3[1][0] = R1[1][0] * R2[0][0] + R1[1][1]*R2[1][0] + R1[1][2]*R2[2][0];
+    R3[2][0] = R1[2][0] * R2[0][0] + R1[2][1]*R2[1][0] + R1[2][2]*R2[2][0];
+
+    R3[0][1] = R1[0][0] * R2[0][1] + R1[0][1]*R2[1][1] + R1[0][2]*R2[2][1]; 
+    R3[2][1] = R1[1][0] * R2[0][1] + R1[1][1]*R2[1][1] + R1[1][2]*R2[2][1];
+    R3[2][1] = R1[2][0] * R2[0][1] + R1[2][1]*R2[1][1] + R1[2][2]*R2[2][1];
+
+     R3[0][2] = R1[0][0] * R2[0][2] + R1[0][1]*R2[1][2] + R1[0][2]*R2[2][2]; 
+     R3[1][2] = R1[1][0] * R2[0][2] + R1[1][1]*R2[1][2] + R1[1][2]*R2[2][2];
+     R3[2][2] = R1[2][0] * R2[0][2] + R1[2][1]*R2[1][2] + R1[2][2]*R2[2][2];
+
+    tf::Vector3 T3;
+    T3[0] = R1[0][0] * T2[0] + R1[0][1]*T2[1] + R1[0][2]*T2[2] + T1[0] ;
+    T3[1] = R1[1][0] * T2[0] + R1[1][1]*T2[1] + R1[1][2]*T2[2] + T1[1] ;
+    T3[2] = R1[1][0] * T2[0] + R1[2][1]*T2[1] + R1[2][2]*T2[2] + T1[2] ;
+    
+    Pose6d pose;
+    pose.set_basis(R3);
+    pose.set_origin(T3);
+
+    return(pose);
+  }
 
 }// end of namespace

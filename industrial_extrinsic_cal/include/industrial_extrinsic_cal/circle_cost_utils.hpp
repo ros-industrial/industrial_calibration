@@ -15,10 +15,10 @@ namespace industrial_extrinsic_cal
       : ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia){};
 
     template<typename T>
-    bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
-		    const T* const c_p2, /** 6Dof transform of target into world frame [6]*/
-		    const T* const c_p3, /** intrinsic parameters fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
-		    const T* const point, /** point described in target frame that is being seen [3]*/
+    bool operator()(const T* const c_p1, /**< extrinsic parameters [6]*/
+		    const T* const c_p2, /**< 6Dof transform of target into world frame [6]*/
+		    const T* const c_p3, /**< intrinsic parameters fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
+		    const T* const point, /**< point described in target frame that is being seen [3]*/
 		    T* resid) const;
 
     /** Factory to hide the construction of the CostFunction object from the client code*/
@@ -31,51 +31,53 @@ namespace industrial_extrinsic_cal
     }
 
   private:
-    double ox_; /** observed x location of object in image */
-    double oy_; /** observed y location of object in image */
-    double circle_diameter_; //** diameter of circle being observed */
+    double ox_; /**< observed x location of object in image */
+    double oy_; /**< observed y location of object in image */
+    double circle_diameter_; //**< diameter of circle being observed */
   };
 
   // member function definitions
   template<typename T>
-  bool industrial_extrinsic_cal::CircleTargetCameraReprjError::operator()(const T* const c_p1, /** extrinsic parameters [6]*/
-							const T* const c_p2, /** 6Dof transform of target into world frame [6]*/
-							const T* const c_p3, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
-							const T* const point, /** point described in target frame that is being seen [3]*/
+  bool industrial_extrinsic_cal::CircleTargetCameraReprjError::operator()(const T* const c_p1, /**< extrinsic parameters [6]*/
+							const T* const c_p2, /**< 6Dof transform of target into world frame [6]*/
+							const T* const c_p3, /**< intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
+							const T* const point, /**< point described in target frame that is being seen [3]*/
 							T* resid) const
   {
-    T camera_aa[3];		/** angle axis  */
-    T camera_loc[3];	/** point rotated */
-    T target_aa[3];		/** angle axis for target */
-    T target_loc[3];		/** location of target */
+    T camera_aa[3];		/**< angle axis  */
+    T camera_loc[3];	/**< point rotated */
+    T target_aa[3];		/**< angle axis for target */
+    T target_loc[3];		/**< location of target */
 
     /** extract the variables from parameter blocks  */
-    int q = 0; /** extract extrinsic block of parameters */
-    camera_aa[0]  = c_p1[q++]; /**  angle_axis x for rotation of camera		 */
-    camera_aa[1]  = c_p1[q++]; /**  angle_axis y for rotation of camera */
-    camera_aa[2]  = c_p1[q++]; /**  angle_axis z for rotation of camera */
-    camera_loc[0] = c_p1[q++]; /**  translation of camera x (actualy of world in camera frame)*/
-    camera_loc[1] = c_p1[q++]; /**  translation of camera y (actualy of world in camera frame)*/
-    camera_loc[2] = c_p1[q++]; /**  translation of camera z (actualy of world in camera frame)*/
+    int q = 0; /**< a temporary variable */
+    camera_aa[0]  = c_p1[q++]; /**<  angle_axis x for rotation of camera		 */
+    camera_aa[1]  = c_p1[q++]; /**<  angle_axis y for rotation of camera */
+    camera_aa[2]  = c_p1[q++]; /**<  angle_axis z for rotation of camera */
+    camera_loc[0] = c_p1[q++]; /**<  translation of camera x (actualy of world in camera frame)*/
+    camera_loc[1] = c_p1[q++]; /**<  translation of camera y (actualy of world in camera frame)*/
+    camera_loc[2] = c_p1[q++]; /**<  translation of camera z (actualy of world in camera frame)*/
 
-    q = 0; /** extract target pose block of parameters */
-    target_aa[0]  = c_p2[q++]; /**  target's ax angle axis value */
-    target_aa[1]  = c_p2[q++]; /**  target's ay angle axis value */
-    target_aa[2]  = c_p2[q++]; /**  target's az angle axis value */
-    target_loc[0] = c_p2[q++]; /**  target's x location */
-    target_loc[1] = c_p2[q++]; /**  target's y location */
-    target_loc[2] = c_p2[q++]; /**  target's z location */
+    /** extract target pose block of parameters */
+    q = 0;
+    target_aa[0]  = c_p2[q++]; /**<  target's ax angle axis value */
+    target_aa[1]  = c_p2[q++]; /**<  target's ay angle axis value */
+    target_aa[2]  = c_p2[q++]; /**<  target's az angle axis value */
+    target_loc[0] = c_p2[q++]; /**<  target's x location */
+    target_loc[1] = c_p2[q++]; /**<  target's y location */
+    target_loc[2] = c_p2[q++]; /**<  target's z location */
 
-    q = 0; /** extract intrinsic block of parameters */
-    const T& fx  = c_p3[q++]; /** focal length x */
-    const T& fy  = c_p3[q++]; /** focal length y */
-    const T& cx  = c_p3[q++]; /** central point x */
-    const T& cy  = c_p3[q++]; /** central point y */
-    const T& k1  = c_p3[q++]; /** distortion k1  */
-    const T& k2  = c_p3[q++]; /** distortion k2  */
-    const T& k3  = c_p3[q++]; /** distortion k3  */
-    const T& p1  = c_p3[q++]; /** distortion p1  */
-    const T& p2  = c_p3[q++]; /** distortion p2  */
+    /** extract intrinsic block of parameters */
+    q = 0;
+    const T& fx  = c_p3[q++]; /**< focal length x */
+    const T& fy  = c_p3[q++]; /**< focal length y */
+    const T& cx  = c_p3[q++]; /**< central point x */
+    const T& cy  = c_p3[q++]; /**< central point y */
+    const T& k1  = c_p3[q++]; /**< distortion k1  */
+    const T& k2  = c_p3[q++]; /**< distortion k2  */
+    const T& k3  = c_p3[q++]; /**< distortion k3  */
+    const T& p1  = c_p3[q++]; /**< distortion p1  */
+    const T& p2  = c_p3[q++]; /**< distortion p2  */
 
     /** rotate and translate point into world frame */
     T world_point_loc[3];
@@ -92,7 +94,7 @@ namespace industrial_extrinsic_cal
     ceres::AngleAxisRotatePoint(camera_aa, world_point_loc, camera_point_loc);
 
     /** apply camera translation */
-    camera_point_loc[0] = camera_point_loc[0] + camera_loc[0]; /** point rotated and translated */
+    camera_point_loc[0] = camera_point_loc[0] + camera_loc[0]; /**< point rotated and translated */
     camera_point_loc[1] = camera_point_loc[1] + camera_loc[1];
     camera_point_loc[2] = camera_point_loc[2] + camera_loc[2];
 
@@ -193,9 +195,9 @@ namespace industrial_extrinsic_cal
       : ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), fx_(fx), fy_(fy), cx_(cx), cy_(cy){};
 
     template<typename T>
-    bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
-		    const T* const c_p2, /** 6Dof transform of target into world frame [6]*/
-		    const T* const point, /** point described in target frame that is being seen [3]*/
+    bool operator()(const T* const c_p1, /**< extrinsic parameters [6]*/
+		    const T* const c_p2, /**< 6Dof transform of target into world frame [6]*/
+		    const T* const point, /**< point described in target frame that is being seen [3]*/
 		    T* resid) const;
     
     /** Factory to hide the construction of the CostFunction object from the client code*/
@@ -210,9 +212,9 @@ namespace industrial_extrinsic_cal
     }
     
   private:
-    double ox_; /** observed x location of object in image */
-    double oy_; /** observed y location of object in image */
-    double circle_diameter_; //** diameter of circle being observed */
+    double ox_; /**< observed x location of object in image */
+    double oy_; /**< observed y location of object in image */
+    double circle_diameter_; //**< diameter of circle being observed */
     double fx_;			// focal length x
     double fy_;			// focal length y
     double cx_;			// optical center pixel x
@@ -223,33 +225,34 @@ namespace industrial_extrinsic_cal
   template<typename T>
   bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDistortion::operator()
     (
-     const T* const c_p1,	/** extrinsic parameters [6]*/
-     const T* const c_p2,	/** 6Dof transform of target into world frame [6]*/
-     const T* const point,	/** point described in target frame that is being seen [3]*/
+     const T* const c_p1,	/**< extrinsic parameters [6]*/
+     const T* const c_p2,	/**< 6Dof transform of target into world frame [6]*/
+     const T* const point,	/**< point described in target frame that is being seen [3]*/
      T* resid
      ) const
   {
-    T camera_aa[3];		/** angle axis  */
-    T camera_loc[3];		/** point rotated */
-    T target_aa[3];		/** angle axis for target */
-    T target_loc[3];		/** location of target */
+    T camera_aa[3];		/**< angle axis  */
+    T camera_loc[3];		/**< point rotated */
+    T target_aa[3];		/**< angle axis for target */
+    T target_loc[3];		/**< location of target */
     
     /** extract the variables from parameter blocks  */
-    int q = 0; /** extract extrinsic block of parameters */
-    camera_aa[0]  = c_p1[q++]; /**  angle_axis x for rotation of camera		 */
-    camera_aa[1]  = c_p1[q++]; /**  angle_axis y for rotation of camera */
-    camera_aa[2]  = c_p1[q++]; /**  angle_axis z for rotation of camera */
-    camera_loc[0] = c_p1[q++]; /**  translation of camera x (actualy of world in camera frame)*/
-    camera_loc[1] = c_p1[q++]; /**  translation of camera y (actualy of world in camera frame)*/
-    camera_loc[2] = c_p1[q++]; /**  translation of camera z (actualy of world in camera frame)*/
+    int q = 0; /**< a temporary variable */
+    camera_aa[0]  = c_p1[q++]; /**<  angle_axis x for rotation of camera		 */
+    camera_aa[1]  = c_p1[q++]; /**<  angle_axis y for rotation of camera */
+    camera_aa[2]  = c_p1[q++]; /**<  angle_axis z for rotation of camera */
+    camera_loc[0] = c_p1[q++]; /**<  translation of camera x (actualy of world in camera frame)*/
+    camera_loc[1] = c_p1[q++]; /**<  translation of camera y (actualy of world in camera frame)*/
+    camera_loc[2] = c_p1[q++]; /**<  translation of camera z (actualy of world in camera frame)*/
 
-    q = 0; /** extract target pose block of parameters */
-    target_aa[0]  = c_p2[q++]; /**  target's ax angle axis value */
-    target_aa[1]  = c_p2[q++]; /**  target's ay angle axis value */
-    target_aa[2]  = c_p2[q++]; /**  target's az angle axis value */
-    target_loc[0] = c_p2[q++]; /**  target's x location */
-    target_loc[1] = c_p2[q++]; /**  target's y location */
-    target_loc[2] = c_p2[q++]; /**  target's z location */
+    /** extract target pose block of parameters */
+    q = 0;
+    target_aa[0]  = c_p2[q++]; /**<  target's ax angle axis value */
+    target_aa[1]  = c_p2[q++]; /**<  target's ay angle axis value */
+    target_aa[2]  = c_p2[q++]; /**<  target's az angle axis value */
+    target_loc[0] = c_p2[q++]; /**<  target's x location */
+    target_loc[1] = c_p2[q++]; /**<  target's y location */
+    target_loc[2] = c_p2[q++]; /**<  target's z location */
 
     /** rotate and translate point into world frame */
     T world_point_loc[3];
@@ -266,7 +269,7 @@ namespace industrial_extrinsic_cal
     ceres::AngleAxisRotatePoint(camera_aa, world_point_loc, camera_point_loc);
 
     /** apply camera translation */
-    camera_point_loc[0] = camera_point_loc[0] + camera_loc[0]; /** point rotated and translated */
+    camera_point_loc[0] = camera_point_loc[0] + camera_loc[0]; /**< point rotated and translated */
     camera_point_loc[1] = camera_point_loc[1] + camera_loc[1];
     camera_point_loc[2] = camera_point_loc[2] + camera_loc[2];
 
@@ -359,8 +362,8 @@ namespace industrial_extrinsic_cal
     };
 
     template<typename T>
-    bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
-		    const T* const c_p2, /** 6Dof transform of target into world frame [6]*/
+    bool operator()(const T* const c_p1, /**< extrinsic parameters [6]*/
+		    const T* const c_p2, /**< 6Dof transform of target into world frame [6]*/
 		    T* resid) const;
     
     /** Factory to hide the construction of the CostFunction object from the client code*/
@@ -380,9 +383,9 @@ namespace industrial_extrinsic_cal
     }
     
   private:
-    double ox_; /** observed x location of object in image */
-    double oy_; /** observed y location of object in image */
-    double circle_diameter_; //** diameter of circle being observed */
+    double ox_; /**< observed x location of object in image */
+    double oy_; /**< observed y location of object in image */
+    double circle_diameter_; //**< diameter of circle being observed */
     double fx_;			// focal length x
     double fy_;			// focal length y
     double cx_;			// optical center pixel x
@@ -395,32 +398,33 @@ namespace industrial_extrinsic_cal
   template<typename T>
   bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDFixedPoint::operator()
     (
-     const T* const c_p1,	/** extrinsic parameters [6]*/
-     const T* const c_p2,	/** 6Dof transform of target into world frame [6]*/
+     const T* const c_p1,	/**< extrinsic parameters [6]*/
+     const T* const c_p2,	/**< 6Dof transform of target into world frame [6]*/
      T* resid
      ) const
   {
-    T camera_aa[3];		/** angle axis  */
-    T camera_loc[3];		/** point rotated */
-    T target_aa[3];		/** angle axis for target */
-    T target_loc[3];		/** location of target */
+    T camera_aa[3];		/**< angle axis  */
+    T camera_loc[3];		/**< point rotated */
+    T target_aa[3];		/**< angle axis for target */
+    T target_loc[3];		/**< location of target */
     
     /** extract the variables from parameter blocks  */
-    int q = 0; /** extract extrinsic block of parameters */
-    camera_aa[0]  = c_p1[q++]; /**  angle_axis x for rotation of camera		 */
-    camera_aa[1]  = c_p1[q++]; /**  angle_axis y for rotation of camera */
-    camera_aa[2]  = c_p1[q++]; /**  angle_axis z for rotation of camera */
-    camera_loc[0] = c_p1[q++]; /**  translation of camera x (actualy of world in camera frame)*/
-    camera_loc[1] = c_p1[q++]; /**  translation of camera y (actualy of world in camera frame)*/
-    camera_loc[2] = c_p1[q++]; /**  translation of camera z (actualy of world in camera frame)*/
+    int q = 0; /**< a temporary variable */
+    camera_aa[0]  = c_p1[q++]; /**<  angle_axis x for rotation of camera		 */
+    camera_aa[1]  = c_p1[q++]; /**<  angle_axis y for rotation of camera */
+    camera_aa[2]  = c_p1[q++]; /**<  angle_axis z for rotation of camera */
+    camera_loc[0] = c_p1[q++]; /**<  translation of camera x (actualy of world in camera frame)*/
+    camera_loc[1] = c_p1[q++]; /**<  translation of camera y (actualy of world in camera frame)*/
+    camera_loc[2] = c_p1[q++]; /**<  translation of camera z (actualy of world in camera frame)*/
 
-    q = 0; /** extract target pose block of parameters */
-    target_aa[0]  = c_p2[q++]; /**  target's ax angle axis value */
-    target_aa[1]  = c_p2[q++]; /**  target's ay angle axis value */
-    target_aa[2]  = c_p2[q++]; /**  target's az angle axis value */
-    target_loc[0] = c_p2[q++]; /**  target's x location */
-    target_loc[1] = c_p2[q++]; /**  target's y location */
-    target_loc[2] = c_p2[q++]; /**  target's z location */
+    /** extract target pose block of parameters */
+    q = 0;
+    target_aa[0]  = c_p2[q++]; /**<  target's ax angle axis value */
+    target_aa[1]  = c_p2[q++]; /**<  target's ay angle axis value */
+    target_aa[2]  = c_p2[q++]; /**<  target's az angle axis value */
+    target_loc[0] = c_p2[q++]; /**<  target's x location */
+    target_loc[1] = c_p2[q++]; /**<  target's y location */
+    target_loc[2] = c_p2[q++]; /**<  target's z location */
 
     /** rotate and translate point into world frame */
     T world_point_loc[3];
@@ -441,7 +445,7 @@ namespace industrial_extrinsic_cal
     ceres::AngleAxisRotatePoint(camera_aa, world_point_loc, camera_point_loc);
 
     /** apply camera translation */
-    camera_point_loc[0] = camera_point_loc[0] + camera_loc[0]; /** point rotated and translated */
+    camera_point_loc[0] = camera_point_loc[0] + camera_loc[0]; /**< point rotated and translated */
     camera_point_loc[1] = camera_point_loc[1] + camera_loc[1];
     camera_point_loc[2] = camera_point_loc[2] + camera_loc[2];
 

@@ -206,38 +206,38 @@ bool CalibrationJob::loadTarget()
     {
       ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<" targets ");
       shared_ptr<Target> temp_target = make_shared<Target>();
-      temp_target->is_moving = false;
+      temp_target->is_moving_ = false;
       for (unsigned int i = 0; i < target_parameters->size(); i++)
       {
-        (*target_parameters)[i]["target_name"] >> temp_target->target_name;
+        (*target_parameters)[i]["target_name"] >> temp_target->target_name_;
         (*target_parameters)[i]["target_frame"] >> temp_frame;
-        (*target_parameters)[i]["target_type"] >> temp_target->target_type;
+        (*target_parameters)[i]["target_type"] >> temp_target->target_type_;
         //ROS_DEBUG_STREAM("TargetFrame: "<<temp_frame);
-        switch (temp_target->target_type)
+        switch (temp_target->target_type_)
         {
           case pattern_options::Chessboard:
-            (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
-            (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
-            ROS_DEBUG_STREAM("TargetRows: "<<temp_target->checker_board_parameters.pattern_rows);
+            (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters_.pattern_rows;
+            (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters_.pattern_cols;
+            ROS_DEBUG_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
             break;
           case pattern_options::CircleGrid:
-            (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters.pattern_rows;
-            (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters.pattern_cols;
-            temp_target->circle_grid_parameters.is_symmetric=true;
-            ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters.pattern_rows);
+            (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
+            (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
+            temp_target->circle_grid_parameters_.is_symmetric=true;
+            ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
             break;
           default:
             ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
             return false;
             break;
         }
-        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
-        (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.ay;
-        (*target_parameters)[i]["angle_axis_az"] >> temp_target->pose.az;
-        (*target_parameters)[i]["position_x"] >> temp_target->pose.x;
-        (*target_parameters)[i]["position_y"] >> temp_target->pose.y;
-        (*target_parameters)[i]["position_z"] >> temp_target->pose.z;
-        (*target_parameters)[i]["num_points"] >> temp_target->num_points;
+        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose_.ax;
+        (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose_.ay;
+        (*target_parameters)[i]["angle_axis_az"] >> temp_target->pose_.az;
+        (*target_parameters)[i]["position_x"] >> temp_target->pose_.x;
+        (*target_parameters)[i]["position_y"] >> temp_target->pose_.y;
+        (*target_parameters)[i]["position_z"] >> temp_target->pose_.z;
+        (*target_parameters)[i]["num_points"] >> temp_target->num_points_;
         const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
         ROS_DEBUG_STREAM("FoundPoints: "<<points_node->size());
         for (int j = 0; j < points_node->size(); j++)
@@ -250,7 +250,7 @@ bool CalibrationJob::loadTarget()
           temp_pnt3d.x = temp_pnt[0];
           temp_pnt3d.y = temp_pnt[1];
           temp_pnt3d.z = temp_pnt[2];
-          temp_target->pts.push_back(temp_pnt3d);
+          temp_target->pts_.push_back(temp_pnt3d);
         }
         ceres_blocks_.addStaticTarget(temp_target);
         target_frames_.push_back(temp_frame);
@@ -263,38 +263,38 @@ bool CalibrationJob::loadTarget()
       ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<"  moving targets ");
       shared_ptr<Target> temp_target = make_shared<Target>();
       unsigned int scene_id;
-      temp_target->is_moving = true;
+      temp_target->is_moving_ = true;
       for (unsigned int i = 0; i < target_parameters->size(); i++)
       {
-        (*target_parameters)[i]["target_name"] >> temp_target->target_name;
+        (*target_parameters)[i]["target_name"] >> temp_target->target_name_;
         (*target_parameters)[i]["target_frame"] >> temp_frame;
-        (*target_parameters)[i]["target_type"] >> temp_target->target_type;
+        (*target_parameters)[i]["target_type"] >> temp_target->target_type_;
         //ROS_DEBUG_STREAM("TargetFrame: "<<temp_frame);
-        switch (temp_target->target_type)
+        switch (temp_target->target_type_)
         {
           case pattern_options::Chessboard:
-            (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
-            (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
-            ROS_INFO_STREAM("TargetRows: "<<temp_target->checker_board_parameters.pattern_rows);
+            (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters_.pattern_rows;
+            (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters_.pattern_cols;
+            ROS_INFO_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
             break;
           case pattern_options::CircleGrid:
-            (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters.pattern_rows;
-            (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters.pattern_cols;
-            temp_target->circle_grid_parameters.is_symmetric=true;
+            (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
+            (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
+            temp_target->circle_grid_parameters_.is_symmetric=true;
             break;
           default:
             ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
             return false;
             break;
         }
-        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
-        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ay;
-        (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.az;
-        (*target_parameters)[i]["position_x"] >> temp_target->pose.x;
-        (*target_parameters)[i]["position_y"] >> temp_target->pose.y;
-        (*target_parameters)[i]["position_z"] >> temp_target->pose.z;
+        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose_.ax;
+        (*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose_.ay;
+        (*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose_.az;
+        (*target_parameters)[i]["position_x"] >> temp_target->pose_.x;
+        (*target_parameters)[i]["position_y"] >> temp_target->pose_.y;
+        (*target_parameters)[i]["position_z"] >> temp_target->pose_.z;
         (*target_parameters)[i]["scene_id"] >> scene_id;
-        (*target_parameters)[i]["num_points"] >> temp_target->num_points;
+        (*target_parameters)[i]["num_points"] >> temp_target->num_points_;
         const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
         for (int j = 0; j < points_node->size(); j++)
         {
@@ -305,7 +305,7 @@ bool CalibrationJob::loadTarget()
           temp_pnt3d.x = temp_pnt[0];
           temp_pnt3d.y = temp_pnt[1];
           temp_pnt3d.z = temp_pnt[2];
-          temp_target->pts.push_back(temp_pnt3d);
+          temp_target->pts_.push_back(temp_pnt3d);
         }
         ceres_blocks_.addMovingTarget(temp_target, scene_id);
         target_frames_.push_back(temp_frame);
@@ -376,8 +376,8 @@ bool CalibrationJob::loadCalJob()
           (*obs_node)[j]["roi_x_max"] >> temp_roi.x_max;
           (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
           (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
-          (*obs_node)[j]["target"] >> temp_targ->target_name;
-          temp_targ = ceres_blocks_.getTargetByName(temp_targ->target_name);
+          (*obs_node)[j]["target"] >> temp_targ->target_name_;
+          temp_targ = ceres_blocks_.getTargetByName(temp_targ->target_name_);
 
           scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi);
         }
@@ -484,12 +484,12 @@ bool CalibrationJob::runObservations()
                            <<" Observations");
       BOOST_FOREACH(Observation observation, camera_observations.observations)
       {
-        target_name = observation.target->target_name;
-        target_type = observation.target->target_type;
+        target_name = observation.target->target_name_;
+        target_type = observation.target->target_type_;
         int pnt_id = observation.point_id;
         double observation_x = observation.image_loc_x;
         double observation_y = observation.image_loc_y;
-        if (observation.target->is_moving)
+        if (observation.target->is_moving_)
         {
           ceres_blocks_.addMovingTarget(observation.target, scene_id);
           target_pose = ceres_blocks_.getMovingTargetPoseParameterBlock(target_name, scene_id);
@@ -526,11 +526,11 @@ bool CalibrationJob::runOptimization()
     BOOST_FOREACH(shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
     {
 
-    ROS_DEBUG_STREAM("Current observation data point list size: "<<observation_data_point_list_.at(scene_id).items.size());
+    ROS_DEBUG_STREAM("Current observation data point list size: "<<observation_data_point_list_.at(scene_id).items_.size());
     // take all the data collected and create a Ceres optimization problem and run it
     P_BLOCK extrinsics;
     P_BLOCK target_pose;
-    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items)
+    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items_)
     {
       // create cost function
       // there are several options

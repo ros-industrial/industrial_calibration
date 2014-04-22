@@ -31,9 +31,9 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
 bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
 {
   //set pattern based on target
-  ROS_INFO_STREAM("Target type: "<<targ->target_type);
+  ROS_INFO_STREAM("Target type: "<<targ->target_type_);
   instance_target_ = targ;
-  switch (targ->target_type)
+  switch (targ->target_type_)
   {
     case pattern_options::Chessboard:
       pattern_ = pattern_options::Chessboard;
@@ -60,13 +60,13 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
   switch (pattern_)
   {
     case pattern_options::Chessboard:
-      pattern_rows_ = targ->checker_board_parameters.pattern_rows;
-      pattern_cols_ = targ->checker_board_parameters.pattern_cols;
+      pattern_rows_ = targ->checker_board_parameters_.pattern_rows;
+      pattern_cols_ = targ->checker_board_parameters_.pattern_cols;
       break;
     case pattern_options::CircleGrid:
-      pattern_rows_ = targ->circle_grid_parameters.pattern_rows;
-      pattern_cols_ = targ->circle_grid_parameters.pattern_cols;
-      sym_circle_ = targ->circle_grid_parameters.is_symmetric;
+      pattern_rows_ = targ->circle_grid_parameters_.pattern_rows;
+      pattern_cols_ = targ->circle_grid_parameters_.pattern_cols;
+      sym_circle_ = targ->circle_grid_parameters_.is_symmetric;
       break;
     case pattern_options::ARtag:
       ROS_ERROR_STREAM("AR Tag recognized but pattern not supported yet");

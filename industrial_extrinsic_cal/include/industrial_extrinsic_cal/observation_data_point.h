@@ -59,26 +59,23 @@ public:
     image_x_ = image_x;
     image_y_ = image_y;
     circle_dia_ = circle_dia;
-  }
-  ;
+  };
 
-  ~ObservationDataPoint()
-  {
-  }
-  ;
+  /** @brief Destructor */
+  ~ObservationDataPoint(){};
 
-  std::string camera_name_;
-  std::string target_name_;
-  unsigned int target_type_;
-  int scene_id_;
-  int point_id_;
-  P_BLOCK camera_extrinsics_;
-  P_BLOCK camera_intrinsics_;
-  P_BLOCK target_pose_;
-  P_BLOCK point_position_;
-  double image_x_;
-  double image_y_;
-  double circle_dia_;
+  std::string camera_name_;	/**< name of camera */
+  std::string target_name_;	/**< name of target */
+  unsigned int target_type_;	/**<type of target */
+  int scene_id_;		/**< scene's identifier */
+  int point_id_;		/**< idetifier of point  */
+  P_BLOCK camera_extrinsics_;	/**< pointer to block of camera's extrinsic parameters */
+  P_BLOCK camera_intrinsics_;	/**< pointer to block of camera's interinsic parameters */
+  P_BLOCK target_pose_;		/**< pointer to block of target's pose parameters */
+  P_BLOCK point_position_;	/**< pointer to block of point's position parameters */
+  double image_x_;		/**< location of point in image (observation) */
+  double image_y_;		/**< location of point in image (observation) */
+  double circle_dia_;		/**< diameter of circle being observed (only appies to circular fiducials) */
 };
 // end of class ObservationDataPoint
 
@@ -89,13 +86,23 @@ public:
 class ObservationDataPointList
 {
 public:
+
+/**
+ * @brief constructor
+ */
   ObservationDataPointList();
 
+/**
+ * @brief destructor
+ */
   ~ObservationDataPointList();
 
+
+  /** @brief add an observation point to the list */
   void addObservationPoint(ObservationDataPoint new_data_point);
 
-  std::vector<ObservationDataPoint> items;
+  /** @brief vector of observations */
+  std::vector<ObservationDataPoint> items_;
 };
 
 

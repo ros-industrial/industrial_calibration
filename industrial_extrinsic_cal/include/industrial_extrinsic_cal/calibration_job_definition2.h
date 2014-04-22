@@ -48,15 +48,10 @@ public:
   /** @brief constructor */
   CalibrationJob(std::string camera_fn, std::string target_fn, std::string caljob_fn) :
       camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn)
-  {
-  }
-  ;
+  {  } ;
 
   /** @brief default destructor */
-  ~CalibrationJob()
-  {
-  }
-  ;
+  ~CalibrationJob() {  } ;
 
   /** @brief reads input files to create a calibration job
    * @return true if successful
@@ -102,9 +97,9 @@ public:
     return original_extrinsics_;
   }
 
-  const std::vector<std::string>& getCameraIntermediateFrame() const
+  const std::vector<std::string>& getCameraHousingFrame() const
   {
-    return camera_intermediate_frames_;
+    return camera_housing_frames_;
   }
 
   const std::vector<std::string>& getCameraOpticalFrame() const
@@ -188,15 +183,21 @@ protected:
    */
   bool appendNewScene(boost::shared_ptr<Trigger> trig);
 
+  /** @brief each camera and each target have a transform interface, push the current values to the interface */
+  void pushTransforms();
+
+  /** @brief each camera and each target have a transform interface, pull the current values from the interface */
+  void pullTransforms();
+
 private:
-  std::vector<ObservationDataPointList> observation_data_point_list_;
+  std::vector<ObservationDataPointList> observation_data_point_list_; /*!< a list of observation data points */
   std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
   std::vector<std::string> target_frames_; /*!< this the frame of the target points */
   std::vector<std::string> camera_optical_frames_; /*!< this the frame in which observations were made */
-  std::vector<std::string> camera_intermediate_frames_; /*!< this the frame which links camera optical frame to reference frame */
+  std::vector<std::string> camera_housing_frames_; /*!< this the frame which links camera optical frame to reference frame */
   int current_scene_; /*!< id of current scene under review or construction */
   std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */

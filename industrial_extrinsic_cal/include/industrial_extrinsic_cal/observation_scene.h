@@ -41,16 +41,15 @@ public:
       scene_id_(scene_id)
   {
     trig_ = trig;
-  }
-  ;
+  };
 
   /*! \brief destructor, clears observation command list*/
   ObservationScene()
   {
     observation_command_list_.clear();
     cameras_in_scene_.clear();
-  }
-  ;
+  };
+
 
   /*! \brief  Clears all observations from the command */
   void clear();
@@ -61,6 +60,7 @@ public:
    *  \param roi:    the region of interest in the camera's field of view to look for target
    */
   void addObservationToScene(ObservationCmd observation_command);
+
   /*!
    * \brief Adds a camera to the scene
    * @param cameras_in_scene
@@ -74,19 +74,20 @@ public:
    * @param roi the region of interest for this observation command
    */
   void populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi);
+
   /*! \brief gets the id of this scene */
   int get_id()
   {
     return (scene_id_);
-  }
-  ;
+  };
+
 
   /*! \brief gets the trigger of this scene */
   boost::shared_ptr<Trigger> get_trigger()
   {
     return (trig_);
-  }
-  ;
+  };
+
   /*!
    * \brief set scene_id for this scene
    * @param sceneId
@@ -95,6 +96,7 @@ public:
   {
     scene_id_ = sceneId;
   };
+
   /*!
    * \brief set the trigger for this scene
    * @param trig

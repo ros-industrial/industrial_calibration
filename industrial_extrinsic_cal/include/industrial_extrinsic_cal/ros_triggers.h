@@ -69,9 +69,11 @@ namespace industrial_extrinsic_cal
 	server_name_ = server_name;  
 	action_message_ = action_message;  
       };
+
     /*! \brief Destructor
      */
     ~ROSActionServerTrigger(){};
+
     /*! \brief Initiates and waits for trigger to finish
      */
     bool waitForTrigger()
@@ -90,9 +92,9 @@ namespace industrial_extrinsic_cal
       return(true);
     };
   private: 
-    ros::NodeHandle nh_;
-    std::string server_name_;
-    std::string action_message_;
+    ros::NodeHandle nh_;	/**< node handle */
+    std::string server_name_;	/**< name of server */
+    std::string action_message_; /**< message sent to action server, often displayed by that server */
   };
 }// end of namespace
 

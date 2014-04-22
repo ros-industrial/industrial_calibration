@@ -27,38 +27,54 @@ namespace industrial_extrinsic_cal
   class Target
   {
   public:
+  /*! \brief constructor*/
     Target(){};
-    ~Target(){};
-    void push_transform();
-    void pull_transform();
-    void set_transform_interface(boost::shared_ptr<TransformInterface> tranform_interface);
-    boost::shared_ptr<TransformInterface> get_transform_interface();
 
-    std::string target_name;
-    unsigned int target_type;
+  /*! \brief destructor*/
+    ~Target(){};
+
+    /*! \brief sends pose_ to the transform interface*/
+    void pushTransform();
+
+    /*! \brief gets pose_ from the transform interface*/
+    void pullTransform();
+
+    /*! \brief sets the transform interface */
+    void setTransformInterface(boost::shared_ptr<TransformInterface> tranform_interface);
+
+    /*! \brief gets the transform interface, why we have this for a public member, I don't know*/
+    boost::shared_ptr<TransformInterface> getTransformInterface();
+
+    /*! \brief sets the transform interface, reference frame*/
+    void setTIReferenceFrame(std::string ref_frame);
   
-    // TODO make these each a derived class of a basic target
+    // TODO make these each a derived class of a base target class
     union
     {
-      CheckerBoardParameters checker_board_parameters;
-      CircleGridParameters circle_grid_parameters;
-      ARTargetParameters ar_target_parameters;
+      CheckerBoardParameters checker_board_parameters_;
+      CircleGridParameters circle_grid_parameters_;
+      ARTargetParameters ar_target_parameters_;
     };
-    bool is_moving; /**< observed in multiple locations or it fixed to ref frame */
-    Pose6d pose;
-    unsigned int num_points; /**< number of points in the point array */
-    std::vector<Point3d> pts; /**< an array of points expressed relative to Pose p. */
-    bool fixed_pose; /**< is the location of the target known? **/
-    bool fixed_points; /**< are the locations of the points within the target known */
+
+    // TODO make many of these private with interfaces
+    Pose6d pose_;		/**< pose of target */
+    unsigned int num_points_;	/**< number of points in the point array */
+    std::vector<Point3d> pts_;	/**< an array of points expressed relative to Pose p. */
+    bool fixed_pose_;		/**< is the location of the target known? **/
+    bool fixed_points_;		/**< are the locations of the points within the target known */
+    bool is_moving_;		/**< observed in multiple locations or it fixed to ref frame */
+    std::string target_name_;	/**< Name of target */
+    std::string target_frame_;	/**< name of target's coordinate frame */
+    unsigned int target_type_;	/**< Type of target */
+    boost::shared_ptr<TransformInterface>  transform_interface_; /**< interface to transform */
 
   private:
-    boost::shared_ptr<TransformInterface>  transform_interface_;
   } ;
   /*! \brief moving  need a new pose with each scene in which they are used */
   typedef struct MovingTarget
   {
-    boost::shared_ptr<Target> targ; // must hold a copy of the target pose parameters,
-    int scene_id; // but point parameters may be unused duplicates
+    boost::shared_ptr<Target> targ_; // must hold a copy of the target pose parameters,
+    int scene_id_; // but point parameters may be unused duplicates
   } MovingTarget;
 
 }// end of namespace

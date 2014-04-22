@@ -29,13 +29,13 @@ ObservationDataPointList::ObservationDataPointList()
 
 ObservationDataPointList::~ObservationDataPointList()
 {
-      items.clear();
+      items_.clear();
 }
 ;
 
 void ObservationDataPointList::addObservationPoint(ObservationDataPoint new_data_point)
 {
-  items.push_back(new_data_point);
+  items_.push_back(new_data_point);
 }
 
 }//end namespace industrial_extrinsic_cal

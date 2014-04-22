@@ -17,6 +17,7 @@
  */
 
 #include <industrial_extrinsic_cal/calibration_job_definition2.h>
+#include <industrial_extrinsic_cal/ros_transform_interface.h>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <ros/package.h>
@@ -77,7 +78,7 @@ namespace industrial_extrinsic_cal
 	return (false);
       }
 
-    string temp_name, temp_topic, camera_optical_frame, camera_intermediate_frame;
+    string temp_name, temp_topic, camera_optical_frame, camera_housing_frame;
     CameraParameters temp_parameters;
     P_BLOCK extrinsics;
 
@@ -86,6 +87,8 @@ namespace industrial_extrinsic_cal
     std::string trig_param;
     std::string trig_action_server;
     std::string trig_action_msg;
+    std::string transform_interface;
+    shared_ptr<TransformInterface> temp_ti;
     try
       {
 	YAML::Parser camera_parser(camera_input_file);
@@ -102,7 +105,7 @@ namespace industrial_extrinsic_cal
 		(*camera_parameters)[i]["trigger"] >> trigger_name;
 		(*camera_parameters)[i]["image_topic"] >> temp_topic;
 		(*camera_parameters)[i]["camera_optical_frame"] >> camera_optical_frame;
-		(*camera_parameters)[i]["camera_intermediate_frame"] >> camera_intermediate_frame;
+		(*camera_parameters)[i]["transform_interface"] >> transform_interface;
 		(*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
 		(*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
 		(*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
@@ -118,6 +121,8 @@ namespace industrial_extrinsic_cal
 		(*camera_parameters)[i]["distortion_k3"] >> temp_parameters.distortion_k3;
 		(*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
 		(*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
+		Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
+			    temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
 		// create a static camera
 		shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
 		// handle all the different trigger cases
@@ -133,10 +138,38 @@ namespace industrial_extrinsic_cal
 		  (*camera_parameters)[i]["trig_action_msg"] >> trig_action_msg;
 		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
+		if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
+		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
+		}
+		else if(transform_interface == std::string("ros_bti")){ // this option makes no sense for a camera
+		  temp_ti = make_shared<ROSBroadcastTransInterface>(camera_optical_frame, pose);
+		}
+		else if(transform_interface == std::string("ros_camera_lti")){ 
+		  temp_ti = make_shared<ROSCameraListenerTransInterface>(camera_optical_frame);
+		}
+		else if(transform_interface == std::string("ros_camera_bti")){ 
+		  temp_ti = make_shared<ROSCameraBroadcastTransInterface>(camera_optical_frame, pose);
+		}
+		else if(transform_interface == std::string("ros_camera_housing_lti")){ 
+		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame;
+		  temp_ti = make_shared<ROSCameraHousingListenerTInterface>(camera_optical_frame,camera_housing_frame);
+		}
+		else if(transform_interface == std::string("ros_camera_housing_bti")){ 
+		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; // note, this is unused
+		  temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame,  pose);
+		}
+		else if(transform_interface == std::string("default_ti")){
+		  temp_ti = make_shared<DefaultTransformInterface>(pose);
+		}
+		else{
+		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
+		  temp_ti = make_shared<DefaultTransformInterface>(pose);
+		}
+		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
 		ceres_blocks_.addStaticCamera(temp_camera);
 		camera_optical_frames_.push_back(camera_optical_frame);
-		camera_intermediate_frames_.push_back(camera_intermediate_frame);
+		camera_housing_frames_.push_back(camera_housing_frame);
 		extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
 		original_extrinsics_.push_back(extrinsics);
 	      }
@@ -152,7 +185,7 @@ namespace industrial_extrinsic_cal
 		(*camera_parameters)[i]["trigger"] >> trigger_name;
 		(*camera_parameters)[i]["image_topic"] >> temp_topic;
 		(*camera_parameters)[i]["camera_optical_frame"] >> camera_optical_frame;
-		(*camera_parameters)[i]["camera_intermediate_frame"] >> camera_intermediate_frame;
+		(*camera_parameters)[i]["transform_interface"] >> transform_interface;
 		(*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
 		(*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
 		(*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
@@ -169,6 +202,8 @@ namespace industrial_extrinsic_cal
 		(*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
 		(*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
 		(*camera_parameters)[i]["scene_id"] >> scene_id;
+		Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
+			    temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
 		shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, true);
 		// handle all the different trigger cases
 		if(trigger_name == std::string("NO_WAIT_TRIGGER")){
@@ -179,17 +214,47 @@ namespace industrial_extrinsic_cal
 		  temp_camera->trigger_ = make_shared<ROSParamTrigger>(trig_param);
 		}
 		else  if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
-			(*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
-			(*camera_parameters)[i]["trig_action_message"] >> trig_action_msg;
-			temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
-		      }
-		      temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
-		      ceres_blocks_.addMovingCamera(temp_camera, scene_id);
-		      camera_optical_frames_.push_back(camera_optical_frame);
-		      camera_intermediate_frames_.push_back(camera_intermediate_frame);
-		      extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
-		      original_extrinsics_.push_back(extrinsics);
-		      }
+		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
+		  (*camera_parameters)[i]["trig_action_message"] >> trig_action_msg;
+		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
+		}
+
+		// install camera's transform interface
+		if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
+		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
+		}
+		else if(transform_interface == std::string("ros_bti")){ // this option makes no sense for a camera
+		  temp_ti = make_shared<ROSBroadcastTransInterface>(camera_optical_frame, pose);
+		}
+		else if(transform_interface == std::string("ros_camera_lti")){ 
+		  temp_ti = make_shared<ROSCameraListenerTransInterface>(camera_optical_frame);
+		}
+		else if(transform_interface == std::string("ros_camera_bti")){ 
+		  temp_ti = make_shared<ROSCameraBroadcastTransInterface>(camera_optical_frame, pose);
+		}
+		else if(transform_interface == std::string("ros_camera_housing_lti")){ 
+		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; 
+		  temp_ti = make_shared<ROSCameraHousingListenerTInterface>(camera_optical_frame, camera_housing_frame);
+		}
+		else if(transform_interface == std::string("ros_camera_housing_bti")){ 
+		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; // note, this is unused
+		  temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, pose);
+		}
+		else if(transform_interface == std::string("default_ti")){
+		  temp_ti = make_shared<DefaultTransformInterface>(pose);
+		}
+		else{
+		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
+		  temp_ti = make_shared<DefaultTransformInterface>(pose);
+		}
+		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
+		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
+		ceres_blocks_.addMovingCamera(temp_camera, scene_id);
+		camera_optical_frames_.push_back(camera_optical_frame);
+		camera_housing_frames_.push_back(camera_housing_frame);
+		extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
+		original_extrinsics_.push_back(extrinsics);
+	      }
 	  }
       } // end try
     catch (YAML::ParserException& e)
@@ -231,6 +296,8 @@ namespace industrial_extrinsic_cal
       }
     Target temp_target;
     std::string temp_frame;
+    std::string transform_interface;
+    shared_ptr<TransformInterface> temp_ti;
     try
       {
 	YAML::Parser target_parser(target_input_file);
@@ -241,40 +308,56 @@ namespace industrial_extrinsic_cal
 	  {
 	    ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<" targets ");
 	    shared_ptr<Target> temp_target = make_shared<Target>();
-	    temp_target->is_moving = false;
+	    temp_target->is_moving_ = false;
 	    for (unsigned int i = 0; i < target_parameters->size(); i++)
 	      {
 		shared_ptr<Target> temp_target = make_shared<Target>();
-		(*target_parameters)[i]["target_name"] >> temp_target->target_name;
-		(*target_parameters)[i]["target_frame"] >> temp_frame;
-		(*target_parameters)[i]["target_type"] >> temp_target->target_type;
-		//ROS_DEBUG_STREAM("TargetFrame: "<<temp_frame);
-		switch (temp_target->target_type)
+		(*target_parameters)[i]["target_name"] >> temp_target->target_name_;
+		(*target_parameters)[i]["target_frame"] >> temp_target->target_frame_;
+		(*target_parameters)[i]["target_type"] >> temp_target->target_type_;
+		switch (temp_target->target_type_)
 		  {
 		  case pattern_options::Chessboard:
-		    (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
-		    (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
-		    ROS_DEBUG_STREAM("TargetRows: "<<temp_target->checker_board_parameters.pattern_rows);
+		    (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters_.pattern_rows;
+		    (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters_.pattern_cols;
+		    ROS_DEBUG_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
 		    break;
 		  case pattern_options::CircleGrid:
-		    (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters.pattern_rows;
-		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters.pattern_cols;
-		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters.circle_diameter;
-		    temp_target->circle_grid_parameters.is_symmetric=true;
-		    ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters.pattern_rows);
+		    (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
+		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
+		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
+		    temp_target->circle_grid_parameters_.is_symmetric=true;
+		    ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
 		    break;
 		  default:
 		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
 		    return false;
 		    break;
-		  }
-		(*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
-		(*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.ay;
-		(*target_parameters)[i]["angle_axis_az"] >> temp_target->pose.az;
-		(*target_parameters)[i]["position_x"] >> temp_target->pose.x;
-		(*target_parameters)[i]["position_y"] >> temp_target->pose.y;
-		(*target_parameters)[i]["position_z"] >> temp_target->pose.z;
-		(*target_parameters)[i]["num_points"] >> temp_target->num_points;
+		  } // end of target type
+		(*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose_.ax;
+		(*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose_.ay;
+		(*target_parameters)[i]["angle_axis_az"] >> temp_target->pose_.az;
+		(*target_parameters)[i]["position_x"] >> temp_target->pose_.x;
+		(*target_parameters)[i]["position_y"] >> temp_target->pose_.y;
+		(*target_parameters)[i]["position_z"] >> temp_target->pose_.z;
+		(*target_parameters)[i]["transform_interface"] >> transform_interface;
+
+		// install target's transform interface
+		if(transform_interface == std::string("ros_lti")){ 
+		  temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
+		}
+		else if(transform_interface == std::string("ros_bti")){ 
+		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_, temp_target->pose_);
+		}
+		else if(transform_interface == std::string("default_ti")){
+		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+		}
+		else{
+		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
+		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+		}
+		temp_target->setTransformInterface(temp_ti);// install the transform interface 
+		(*target_parameters)[i]["num_points"] >> temp_target->num_points_;
 		const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
 		ROS_DEBUG_STREAM("FoundPoints: "<<points_node->size());
 		for (int j = 0; j < points_node->size(); j++)
@@ -287,7 +370,7 @@ namespace industrial_extrinsic_cal
 		    temp_pnt3d.x = temp_pnt[0];
 		    temp_pnt3d.y = temp_pnt[1];
 		    temp_pnt3d.z = temp_pnt[2];
-		    temp_target->pts.push_back(temp_pnt3d);
+		    temp_target->pts_.push_back(temp_pnt3d);
 		  }
 		ceres_blocks_.addStaticTarget(temp_target);
 		target_frames_.push_back(temp_frame);
@@ -300,39 +383,72 @@ namespace industrial_extrinsic_cal
 	    ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<"  moving targets ");
 	    shared_ptr<Target> temp_target = make_shared<Target>();
 	    unsigned int scene_id;
-	    temp_target->is_moving = true;
+	    temp_target->is_moving_ = true;
 	    for (unsigned int i = 0; i < target_parameters->size(); i++)
 	      {
-		(*target_parameters)[i]["target_name"] >> temp_target->target_name;
+		(*target_parameters)[i]["target_name"] >> temp_target->target_name_;
 		(*target_parameters)[i]["target_frame"] >> temp_frame;
-		(*target_parameters)[i]["target_type"] >> temp_target->target_type;
+		(*target_parameters)[i]["transform_interface"] >> transform_interface;
+		// install target's transform interface
+		if(transform_interface == std::string("ros_lti")){ 
+		  temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
+		}
+		else if(transform_interface == std::string("ros_bti")){ 
+		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_, temp_target->pose_);
+		}
+		else if(transform_interface == std::string("default_ti")){
+		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+		}
+		else{
+		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
+		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+		}
+		temp_target->setTransformInterface(temp_ti);// install the transform interface 
+
+		// set parameters by the target's type
+		(*target_parameters)[i]["target_type"] >> temp_target->target_type_;
 		//ROS_DEBUG_STREAM("TargetFrame: "<<temp_frame);
-		switch (temp_target->target_type)
+		switch (temp_target->target_type_)
 		  {
 		  case pattern_options::Chessboard:
-		    (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters.pattern_rows;
-		    (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters.pattern_cols;
-		    ROS_INFO_STREAM("TargetRows: "<<temp_target->checker_board_parameters.pattern_rows);
+		    (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters_.pattern_rows;
+		    (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters_.pattern_cols;
+		    ROS_INFO_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
 		    break;
 		  case pattern_options::CircleGrid:
-		    (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters.pattern_rows;
-		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters.pattern_cols;
-		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters.circle_diameter;
-		    temp_target->circle_grid_parameters.is_symmetric=true;
+		    (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
+		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
+		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
+		    temp_target->circle_grid_parameters_.is_symmetric=true;
 		    break;
 		  default:
 		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
 		    return false;
 		    break;
 		  }
-		(*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ax;
-		(*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose.ay;
-		(*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose.az;
-		(*target_parameters)[i]["position_x"] >> temp_target->pose.x;
-		(*target_parameters)[i]["position_y"] >> temp_target->pose.y;
-		(*target_parameters)[i]["position_z"] >> temp_target->pose.z;
+		(*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose_.ax;
+		(*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose_.ay;
+		(*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose_.az;
+		(*target_parameters)[i]["position_x"] >> temp_target->pose_.x;
+		(*target_parameters)[i]["position_y"] >> temp_target->pose_.y;
+		(*target_parameters)[i]["position_z"] >> temp_target->pose_.z;
+		(*target_parameters)[i]["transform_interface"] >> transform_interface;
+		if(transform_interface == std::string("ros_lti")){
+		  temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
+		}
+		if(transform_interface == std::string("ros_bti")){
+		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_,temp_target->pose_);
+		}
+		else if(transform_interface == std::string("default_ti")){
+		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+		}
+		else{
+		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
+		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+		}
+		temp_target->setTransformInterface(temp_ti);// install the transform interface 
 		(*target_parameters)[i]["scene_id"] >> scene_id;
-		(*target_parameters)[i]["num_points"] >> temp_target->num_points;
+		(*target_parameters)[i]["num_points"] >> temp_target->num_points_;
 		const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
 		for (int j = 0; j < points_node->size(); j++)
 		  {
@@ -343,7 +459,7 @@ namespace industrial_extrinsic_cal
 		    temp_pnt3d.x = temp_pnt[0];
 		    temp_pnt3d.y = temp_pnt[1];
 		    temp_pnt3d.z = temp_pnt[2];
-		    temp_target->pts.push_back(temp_pnt3d);
+		    temp_target->pts_.push_back(temp_pnt3d);
 		  }
 		ceres_blocks_.addMovingTarget(temp_target, scene_id);
 		target_frames_.push_back(temp_frame);
@@ -379,6 +495,7 @@ namespace industrial_extrinsic_cal
     std::string trig_action_msg;
     std::string camera_name;
     std::string target_name;
+    std::string reference_frame;
     shared_ptr<Camera> temp_cam = make_shared<Camera>();
     shared_ptr<Target> temp_targ = make_shared<Target>();
     Roi temp_roi;
@@ -389,7 +506,8 @@ namespace industrial_extrinsic_cal
 	YAML::Node caljob_doc;
 	caljob_parser.GetNextDocument(caljob_doc);
 
-	caljob_doc["reference_frame"] >> ceres_blocks_.reference_frame_;
+	caljob_doc["reference_frame"] >> reference_frame;
+	ceres_blocks_.setReferenceFrame(reference_frame);
 	caljob_doc["optimization_parameters"] >> opt_params;
 	// read in all scenes
 	if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
@@ -455,7 +573,9 @@ namespace industrial_extrinsic_cal
     ROS_INFO("RUNNING_OBSERVATION");
     runObservations();
     ROS_INFO("RUNNING_OPTIMIZATIONS");
-    return runOptimization();
+    bool did_optimization_run_ok = runOptimization();
+    pushTransforms(); // sends updated transforms to their intefaces
+    return(did_optimization_run_ok);
   }
 
   bool CalibrationJob::runObservations()
@@ -489,6 +609,8 @@ namespace industrial_extrinsic_cal
 	  }
 	
 	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
+
+	pullTransforms(); // gets transforms of targets and cameras from their interfaces
 
 	BOOST_FOREACH( shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {// trigger the cameras
@@ -536,16 +658,16 @@ namespace industrial_extrinsic_cal
 	    ROS_INFO("Processing %d Observations ",camera_observations.observations.size());
 	    BOOST_FOREACH(Observation observation, camera_observations.observations)
 	      {
-		target_name = observation.target->target_name;
-		target_type = observation.target->target_type;
+		target_name = observation.target->target_name_;
+		target_type = observation.target->target_type_;
 		double circle_dia=0.0;
 		if(target_type == pattern_options::CircleGrid){
-		  circle_dia = observation.target->circle_grid_parameters.circle_diameter;
+		  circle_dia = observation.target->circle_grid_parameters_.circle_diameter;
 		}
 		int pnt_id = observation.point_id;
 		double observation_x = observation.image_loc_x;
 		double observation_y = observation.image_loc_y;
-		if (observation.target->is_moving)
+		if (observation.target->is_moving_)
 		  {
 		    ceres_blocks_.addMovingTarget(observation.target, scene_id);
 		    target_pose = ceres_blocks_.getMovingTargetPoseParameterBlock(target_name, scene_id);
@@ -572,7 +694,7 @@ namespace industrial_extrinsic_cal
   {
     int total_observations =0;
     for(int i=0;i<observation_data_point_list_.size();i++){
-      total_observations += observation_data_point_list_[i].items.size();
+      total_observations += observation_data_point_list_[i].items_.size();
     }
     if(total_observations == 0){ // TODO really need more than number of parameters being computed
       ROS_ERROR("TOO FEW OBSERVATIONS: %d",total_observations);
@@ -588,12 +710,12 @@ namespace industrial_extrinsic_cal
 	int scene_id = current_scene.get_id();
 	BOOST_FOREACH(shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
 	  {
-	    ROS_DEBUG_STREAM("Current observation data point list size: "<<observation_data_point_list_.at(scene_id).items.size());
+	    ROS_DEBUG_STREAM("Current observation data point list size: "<<observation_data_point_list_.at(scene_id).items_.size());
 	    // take all the data collected and create a Ceres optimization problem and run it
 	    P_BLOCK extrinsics;
 	    P_BLOCK target_pose;
 	    P_BLOCK point_position;
-	    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items)
+	    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items_)
 	      {
 		// create cost function
 		// there are several options
@@ -681,12 +803,19 @@ namespace industrial_extrinsic_cal
     std::string path = ros::package::getPath("industrial_extrinsic_cal");
     std::string file_path = "/launch/target_to_camera_optical_transform_publisher.launch";
     std::string filepath = path+file_path;
-    return ceres_blocks_.write_all_static_transforms(filepath);
+    return ceres_blocks_.writeAllStaticTransforms(filepath);
   }
 
   void CalibrationJob::show()
   {
-    ceres_blocks_.display_all_cameras_and_targets();
+    ceres_blocks_.displayAllCamerasAndTargets();
   }
-
+  void CalibrationJob::pullTransforms()
+  {
+    ceres_blocks_.pushTransforms();
+  }
+  void CalibrationJob::pushTransforms()
+  {
+    ceres_blocks_.pushTransforms();
+  }
 }//end namespace industrial_extrinsic_cal
