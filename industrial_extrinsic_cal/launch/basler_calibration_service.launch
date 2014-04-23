@@ -7,4 +7,40 @@
 <node pkg="tf" type="static_transform_publisher" name="optical_frame" args="0 0 0 0 0 0 camera_frame optical_frame 100" />
 <node pkg="tf" type="static_transform_publisher" name="source_frame" args="0 0 0 0 0 0 camera_frame source_frame 100" />
 
+<!-- exposure time: in micro seconds -->
+  <node pkg="aravis_camera_driver" type="aravis_camera_node" name="aravis_camera_node">
+    <param name="camera_id" value="Basler-21135423"/>
+    <param name="pixel_format" value="bayer_bggr8"/>
+    <param name="exposure_mode" value="auto_once"/>
+    <param name="exposure_time" value="1000"/>
+    <param name="auto_white_balance_once" value="true"/>
+    <param name="gain_mode" value="auto_once"/>
+    <param name="gain" value="0"/>
+    <param name="digital_shift" value="0"/>
+    <param name="mtu" value="1500"/>
+    <param name="bin_x" value="1"/>
+    <param name="bin_y" value="1"/>
+    <param name="roi_x" value="0"/>
+    <param name="roi_y" value="0"/>
+    <param name="roi_width" value="1624"/>
+    <param name="roi_height" value="1234"/>
+    <param name="frame_rate" value="30"/>
+  </node>
+  
+  <node pkg="nodelet" type="nodelet" name="image_proc_nodelet"  args="manager"/>
+  <node pkg="nodelet" type="nodelet" name="debayer" args="load image_proc/debayer image_proc_nodelet">
+    <remap from="image_raw" to="image"/>
+  </node>
+
+  <node pkg="industrial_extrinsic_cal" type="trigger_service" name="ros_trigger_service" output="screen" />
+  
+  <node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen" >
+    <rosparam>
+      camera_file: "basler_camera_def.yaml"
+      target_file: "circlegrid5x7n7x5.yaml"
+      cal_job_file: "basler_caljob_def.yaml"
+      store_results_package_name: "industrial_extrinsic_cal"
+      store_results_file_name: "world_to_basler_tf_broadcaster.launch"
+    </rosparam>
+  </node>
 </launch>
