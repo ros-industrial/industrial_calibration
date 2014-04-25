@@ -43,7 +43,7 @@ namespace industrial_extrinsic_cal
      */
     bool waitForTrigger()
     {
-      ROS_ERROR("waiting for %s to be true",parameter_name_.c_str());
+      ROS_ERROR("ROSParamSceneTrigger: waiting for %s to be true",parameter_name_.c_str());
       bool pval = false;
       while(!pval){
 	nh_.getParam(parameter_name_.c_str(),pval);
@@ -75,7 +75,7 @@ namespace industrial_extrinsic_cal
      */
     bool waitForTrigger()
     {
-      ROS_ERROR("waiting for trigger server %s to complete ",server_name_.c_str());
+      ROS_ERROR("ROSActionServerSceneTrigger: waiting for trigger server %s to complete ",server_name_.c_str());
       Client client(server_name_.c_str(),true);
       client.waitForServer();
       industrial_extrinsic_cal::manual_triggerGoal goal;

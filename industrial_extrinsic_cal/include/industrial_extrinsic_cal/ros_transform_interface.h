@@ -216,7 +216,7 @@ namespace industrial_extrinsic_cal
     bool store(std::string filePath);
 
     /** @brief a sets ref_frame_, but also starts the timer for broadcasting the transform */
-    void set_reference_frame(std::string ref_frame);
+    void setReferenceFrame(std::string ref_frame);
 
     /** @brief a timer callback that continuously broadcast the current pose as a tf */
     void timerCallback(const ros::TimerEvent & timer_event);
@@ -263,7 +263,7 @@ namespace industrial_extrinsic_cal
     void timerCallback(const ros::TimerEvent & timer_event);
    
     /** @brief initialized the reference frame, and starts broadcasting with current value of pose_ */
-    void  set_reference_frame(std::string ref_frame);
+    void  setReferenceFrame(std::string ref_frame);
   private:
     Pose6d pose_; /**< pose associated with the transform */
     ros::Timer timer_; /**< need a timer to initiate broadcast of transform */

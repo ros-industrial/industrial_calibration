@@ -143,6 +143,7 @@ namespace industrial_extrinsic_cal
       qz = az*k;
     }
     else{ // can't do division by zeor
+      double k = 0.5;
       qw = 1.0;
       qx = ax*k;
       qy = ay*k;
