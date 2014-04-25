@@ -34,7 +34,7 @@ namespace industrial_extrinsic_cal
     x=y=z=ax=ay=az=0.0;
   }
   void Pose6d::set_basis( tf::Matrix3x3 m)
-  {
+  { // TODO this may have issues see rotation.h from ceres to fix
     double trace_R = m[0][0]+m[1][1]+m[2][2];
     double angle = acos((trace_R - 1.0)/2.0);
     double st = sin(angle);
@@ -131,12 +131,23 @@ namespace industrial_extrinsic_cal
   //  }
   void Pose6d::get_quaternion(double &qx,  double &qy, double &qz, double &qw)
   {
-    double angle = sqrt(ax*ax+ay*ay+az*az);
-    qw = cos(angle/2.0);
-    double temp = sqrt(1-qw*qw)*angle;
-    qx = temp*ax;
-    qy = temp*qy;
-    qz = temp*qz;
+    // the following was taken from ceres equivalent function
+    double theta_squared = ax*ax + ay*ay + az*az;
+    if(theta_squared>0.0){
+      double theta = sqrt(theta_squared);
+      double half_theta = theta*0.5;
+      double k = sin(half_theta)/theta;
+      qw = cos(half_theta);
+      qx = ax*k;
+      qy = ay*k;
+      qz = az*k;
+    }
+    else{ // can't do division by zeor
+      qw = 1.0;
+      qx = ax*k;
+      qy = ay*k;
+      qz = az*k;
+    }
   }
 
   Pose6d Pose6d::get_inverse()
