@@ -211,7 +211,7 @@ namespace industrial_extrinsic_cal
       }//end if writing to file
   }
 
-  void  ROSCameraBroadcastTransInterface::set_reference_frame(string ref_frame)
+  void  ROSCameraBroadcastTransInterface::setReferenceFrame(string ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
@@ -285,7 +285,7 @@ namespace industrial_extrinsic_cal
     }//end if writing to file
   }
 
-  void  ROSCameraHousingBroadcastTInterface::set_reference_frame(string ref_frame)
+  void  ROSCameraHousingBroadcastTInterface::setReferenceFrame(string ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;

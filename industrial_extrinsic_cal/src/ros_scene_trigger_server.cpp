@@ -32,6 +32,7 @@ void execute(const industrial_extrinsic_cal::manual_triggerGoalConstPtr& goal, S
   ros::NodeHandle nh;
   nh.setParam("test_scene_trigger",false);
   while(test_scene_trigger_bool == false){
+    ROS_INFO("still waiting");
     nh.getParam("test_scene_trigger",test_scene_trigger_bool);
   }
   ROS_ERROR("Scene Action Trigger has executed successfully");
@@ -42,7 +43,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "scene trigger server");
   ros::NodeHandle n;
-  Server server(n, "ros_scene_trigger", boost::bind(&execute, _1, &server), false);
+  Server server(n, "rosSceneTrigger", boost::bind(&execute, _1, &server), false);
   server.start();
   ros::spin();
   return 0;

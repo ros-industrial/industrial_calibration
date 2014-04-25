@@ -595,7 +595,7 @@ namespace industrial_extrinsic_cal
       {
 	int scene_id = current_scene.get_id();
 	ROS_DEBUG_STREAM("Processing Scene " << scene_id+1<<" of "<< scene_list_.size());
-	ROS_INFO("Processing Scene  %d of %d",scene_id,scene_list_.size());
+	ROS_INFO("Processing Scene  %d of %d",scene_id, (int) scene_list_.size());
 
 	BOOST_FOREACH(shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {			// clear camera of existing observations
@@ -655,7 +655,7 @@ namespace industrial_extrinsic_cal
 	    number_returned = camera->camera_observer_->getObservations(camera_observations);
 
 	    ROS_DEBUG_STREAM("Processing " << camera_observations.observations.size() << " Observations");
-	    ROS_INFO("Processing %d Observations ",camera_observations.observations.size());
+	    ROS_INFO("Processing %d Observations ", (int) camera_observations.observations.size());
 	    BOOST_FOREACH(Observation observation, camera_observations.observations)
 	      {
 		target_name = observation.target->target_name_;

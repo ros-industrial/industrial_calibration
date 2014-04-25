@@ -126,10 +126,10 @@ add_executable(trigger_service src/ros_scene_trigger_server.cpp)
 # add_dependencies(industrial_extrinsic_cal_node industrial_extrinsic_cal_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
-target_link_libraries(industrial_extrinsic_cal2 yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(industrial_extrinsic_cal2 yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
-target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES})
+target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(cal_job industrial_extrinsic_cal  ${CERES_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal2 ${CERES_LIBRARIES})
 target_link_libraries(trigger_service ${catkin_LIBRARIES} )

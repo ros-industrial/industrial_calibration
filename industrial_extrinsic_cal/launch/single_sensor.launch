@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="arm_prefix" default=""/>
-  <arg name="camera_name" default="camera"/>    
+  <arg name="camera_name" default="Asus"/>    
   <arg name="device_id" default="#1" />
   <arg name="publish_tf" default="true" />
 

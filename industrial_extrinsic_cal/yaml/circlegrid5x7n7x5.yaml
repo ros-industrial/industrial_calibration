@@ -14,6 +14,7 @@ static_targets:
     position_x: 0.0
     position_y: 0.0
     position_z: 0.0
+    transform_interface: ros_lti
     num_points: 35
     points:
     - pnt: [0.000,0.210,0.000]
@@ -64,6 +65,7 @@ static_targets:
     position_x: 0.0
     position_y: 0.0
     position_z: 0.0
+    transform_interface: ros_lti
     num_points: 35
     points:
     - pnt: [0.000,0.140,0.000]
