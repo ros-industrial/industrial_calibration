@@ -48,8 +48,8 @@ bool Camera::isMoving()
 void Camera::pushTransform()
 {
   Pose6d pose;
-  pose.set_angle_axis(camera_parameters_.angle_axis[0], camera_parameters_.angle_axis[1], camera_parameters_.angle_axis[2]);
-  pose.set_origin(camera_parameters_.position[0], camera_parameters_.position[1], camera_parameters_.position[2]);
+  pose.setAngleAxis(camera_parameters_.angle_axis[0], camera_parameters_.angle_axis[1], camera_parameters_.angle_axis[2]);
+  pose.setOrigin(camera_parameters_.position[0], camera_parameters_.position[1], camera_parameters_.position[2]);
   transform_interface_->pushTransform(pose);
 }
 void Camera::pullTransform()

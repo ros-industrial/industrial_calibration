@@ -33,7 +33,7 @@ namespace industrial_extrinsic_cal
   {
     x=y=z=ax=ay=az=0.0;
   }
-  void Pose6d::set_basis( tf::Matrix3x3 m)
+  void Pose6d::setBasis( tf::Matrix3x3 m)
   { // TODO this may have issues see rotation.h from ceres to fix
     double trace_R = m[0][0]+m[1][1]+m[2][2];
     double angle = acos((trace_R - 1.0)/2.0);
@@ -43,21 +43,21 @@ namespace industrial_extrinsic_cal
     az = (m[1][0]-m[0][1])/(2.0*st)*angle;
   }
 
-  void Pose6d::set_origin(tf::Vector3 v)
+  void Pose6d::setOrigin(tf::Vector3 v)
   {
     x = v[0];
     y = v[1];
     z = v[2];
   }
 
-  void Pose6d::set_origin(double tx, double ty, double tz)
+  void Pose6d::setOrigin(double tx, double ty, double tz)
   {
     x = tx;
     y = ty;
     z = tz;
   }
 
-  void Pose6d::set_eulerZYX(double ez, double ey, double ex)
+  void Pose6d::setEulerZYX(double ez, double ey, double ex)
   {
     double ci = cos(ex);
     double cj = cos(ey);
@@ -75,10 +75,10 @@ namespace industrial_extrinsic_cal
     m[1][0] = cj*sh;  m[1][1] = sj*ss + cc;   m[1][2] = sj*cs - sc;
     m[2][0] = -sj;      m[2][1] = cj*si;           m[2][2] =cj*ci ;
 
-    set_basis(m);
+    setBasis(m);
   }
 
-  void Pose6d::set_quaternion(double qx, double qy, double qz, double qw)
+  void Pose6d::setQuaternion(double qx, double qy, double qz, double qw)
   {
     double angle = 2.0 * acos(qw);
     ax = qx / sqrt(1-qw*qw)*angle;
@@ -86,14 +86,14 @@ namespace industrial_extrinsic_cal
     az = qz / sqrt(1-qw*qw)*angle;
   }
 
-  void Pose6d::set_angle_axis(double aax, double aay, double aaz)
+  void Pose6d::setAngleAxis(double aax, double aay, double aaz)
   {
     ax = aax;
     ay = aay;
     az = aaz;
   }
 
-  tf::Matrix3x3 Pose6d::get_basis() const
+  tf::Matrix3x3 Pose6d::getBasis() const
   {
     tf::Matrix3x3 R;
     double angle = sqrt(ax*ax + ay*ay + az*az);
@@ -115,7 +115,7 @@ namespace industrial_extrinsic_cal
     return(R);
   }
 
-  tf::Vector3 Pose6d::get_origin() const
+  tf::Vector3 Pose6d::getOrigin() const
   {
     tf::Vector3 V;
     V[0] = x;
@@ -129,7 +129,7 @@ namespace industrial_extrinsic_cal
   //  {
   //    
   //  }
-  void Pose6d::get_quaternion(double &qx,  double &qy, double &qz, double &qw)
+  void Pose6d::getQuaternion(double &qx,  double &qy, double &qz, double &qw)
   {
     // the following was taken from ceres equivalent function
     double theta_squared = ax*ax + ay*ay + az*az;
@@ -151,10 +151,10 @@ namespace industrial_extrinsic_cal
     }
   }
 
-  Pose6d Pose6d::get_inverse()
+  Pose6d Pose6d::getInverse()
   {
     double newx,newy,newz;
-    tf::Matrix3x3 R = get_basis();
+    tf::Matrix3x3 R = getBasis();
     newx =-( R[0][0] * x + R[1][0] * y + R[2][0] * z);
     newy = -(R[0][1] * x + R[1][1] * y + R[2][1] * z);
     newz = -(R[0][2] * x + R[1][2] * y + R[2][2] * z);
@@ -164,10 +164,10 @@ namespace industrial_extrinsic_cal
 
   Pose6d Pose6d::operator * ( Pose6d pose2) const
   {
-    tf::Matrix3x3  R1   = get_basis();
-    tf::Matrix3x3 R2 = pose2.get_basis();
-    tf::Vector3 T1     = get_origin();
-    tf::Vector3 T2     = pose2.get_origin();
+    tf::Matrix3x3  R1   = getBasis();
+    tf::Matrix3x3 R2 = pose2.getBasis();
+    tf::Vector3 T1     = getOrigin();
+    tf::Vector3 T2     = pose2.getOrigin();
     
     tf::Matrix3x3 R3;
     R3[0][0] = R1[0][0] * R2[0][0] + R1[0][1]*R2[1][0] + R1[0][2]*R2[2][0]; 
@@ -188,8 +188,8 @@ namespace industrial_extrinsic_cal
     T3[2] = R1[1][0] * T2[0] + R1[2][1]*T2[1] + R1[2][2]*T2[2] + T1[2] ;
     
     Pose6d pose;
-    pose.set_basis(R3);
-    pose.set_origin(T3);
+    pose.setBasis(R3);
+    pose.setOrigin(T3);
 
     return(pose);
   }

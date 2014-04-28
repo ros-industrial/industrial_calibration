@@ -44,8 +44,8 @@ namespace industrial_extrinsic_cal
 	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
       }
       tf_listener_.lookupTransform(transform_frame_,ref_frame_, now, transform);
-      pose_.set_basis(transform.getBasis());
-      pose_.set_origin(transform.getOrigin());
+      pose_.setBasis(transform.getBasis());
+      pose_.setOrigin(transform.getOrigin());
       return(pose_);
     }
   }
@@ -71,8 +71,8 @@ namespace industrial_extrinsic_cal
 	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
       }
       tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, transform);
-      pose_.set_basis(transform.getBasis());
-      pose_.set_origin(transform.getOrigin());
+      pose_.setBasis(transform.getBasis());
+      pose_.setOrigin(transform.getOrigin());
       return(pose_);
     }
   }
@@ -105,8 +105,8 @@ namespace industrial_extrinsic_cal
 	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
       }
       tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, transform);
-      pose_.set_basis(transform.getBasis());
-      pose_.set_origin(transform.getOrigin());
+      pose_.setBasis(transform.getBasis());
+      pose_.setOrigin(transform.getOrigin());
       return(pose_);
     }
   }
@@ -134,7 +134,7 @@ namespace industrial_extrinsic_cal
     if (outputFile.is_open())
       {
 	double qx,qy,qz,qw;
-	pose_.get_quaternion(qx, qy, qz, qw);
+	pose_.getQuaternion(qx, qy, qz, qw);
 	outputFile<<"<node pkg=\"tf\" type=\"static_transform_publisher\" name=\"";
 	outputFile<< transform_frame_ <<"_tf_broadcaster"<<"\" args=\"";
 	outputFile<< pose_.x << ' '<< pose_.y << ' '<< pose_.z << ' ';
@@ -162,8 +162,8 @@ namespace industrial_extrinsic_cal
 
   void  ROSBroadcastTransInterface::timerCallback(const ros::TimerEvent & timer_event)
   { // broadcast current value of pose as a transform each time called
-    transform_.setBasis(pose_.get_basis());
-    transform_.setOrigin(pose_.get_origin());
+    transform_.setBasis(pose_.getBasis());
+    transform_.setOrigin(pose_.getOrigin());
     transform_.child_frame_id_ = transform_frame_;
     transform_.frame_id_ = ref_frame_;
     //    ROS_INFO("broadcasting %s in %s",transform_frame_.c_str(),ref_frame_.c_str());
@@ -193,10 +193,10 @@ namespace industrial_extrinsic_cal
     if (outputFile.is_open())
       {
 	double qx,qy,qz,qw;
-	pose_.get_inverse().get_quaternion(qx, qy, qz, qw);
+	pose_.getInverse().getQuaternion(qx, qy, qz, qw);
 	outputFile<<"<node pkg=\"tf\" type=\"static_transform_publisher\" name=\"";
 	outputFile<<transform_frame_<<"_tf_broadcaster"<<"\" args=\"";
-	outputFile<< pose_.get_inverse().x << ' '<< pose_.get_inverse().y << ' '<< pose_.get_inverse().z << ' ';
+	outputFile<< pose_.getInverse().x << ' '<< pose_.getInverse().y << ' '<< pose_.getInverse().z << ' ';
 	outputFile<< qx << ' '<< qy << ' '<<qz << ' ' << qw ;
 	outputFile<<" "<<ref_frame_;
 	outputFile<<" "<<transform_frame_;
@@ -221,8 +221,8 @@ namespace industrial_extrinsic_cal
 
   void  ROSCameraBroadcastTransInterface::timerCallback(const ros::TimerEvent & timer_event)
   { // broadcast current value of pose.inverse() as a transform each time called
-    transform_.setBasis(pose_.get_inverse().get_basis());
-    transform_.setOrigin(pose_.get_inverse().get_origin());
+    transform_.setBasis(pose_.getInverse().getBasis());
+    transform_.setOrigin(pose_.getInverse().getOrigin());
     transform_.child_frame_id_ = transform_frame_;
     transform_.frame_id_ = ref_frame_;
     //    ROS_INFO("broadcasting %s in %s",transform_frame_.c_str(),ref_frame_.c_str());
@@ -262,13 +262,13 @@ namespace industrial_extrinsic_cal
 	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
       }
       tf_listener_.lookupTransform(transform_frame_, housing_frame_, now, transform);
-      T_co2ch.set_basis(transform.getBasis());
-      T_co2ch.set_origin(transform.getOrigin());
-      Pose6d T_ref2ch = pose_.get_inverse() * T_co2ch;
+      T_co2ch.setBasis(transform.getBasis());
+      T_co2ch.setOrigin(transform.getOrigin());
+      Pose6d T_ref2ch = pose_.getInverse() * T_co2ch;
       
       // append the transform to a launch file
       double qx,qy,qz,qw;
-      T_ref2ch.get_quaternion(qx, qy, qz, qw);
+      T_ref2ch.getQuaternion(qx, qy, qz, qw);
       outputFile<<"<node pkg=\"tf\" type=\"static_transform_publisher\" name=\"";
       outputFile<<transform_frame_<<"_tf_broadcaster"<<"\" args=\"";
       outputFile<< T_ref2ch.x << ' '<< T_ref2ch.y << ' '<< T_ref2ch.z << ' ';
@@ -308,13 +308,13 @@ namespace industrial_extrinsic_cal
       ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
     }
     tf_listener_.lookupTransform(transform_frame_, housing_frame_, now, transform);
-    T_co2ch.set_basis(transform.getBasis());
-    T_co2ch.set_origin(transform.getOrigin());
-    Pose6d T_ref2ch = pose_.get_inverse() * T_co2ch;
+    T_co2ch.setBasis(transform.getBasis());
+    T_co2ch.setOrigin(transform.getOrigin());
+    Pose6d T_ref2ch = pose_.getInverse() * T_co2ch;
     
     // copy into the stamped transform
-    transform_.setBasis(T_ref2ch.get_basis());
-    transform_.setOrigin(T_ref2ch.get_origin());
+    transform_.setBasis(T_ref2ch.getBasis());
+    transform_.setOrigin(T_ref2ch.getOrigin());
     transform_.child_frame_id_ = housing_frame_;
     transform_.frame_id_ = ref_frame_;
     //    ROS_INFO("broadcasting %s in %s",housing_frame_.c_str(),ref_frame_.c_str());

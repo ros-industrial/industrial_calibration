@@ -66,36 +66,36 @@ namespace industrial_extrinsic_cal
     Pose6d();
 
     /** @brief set the rotational part of pose using a tf::Matrix3x3 */
-    void set_basis( tf::Matrix3x3 m);
+    void setBasis( tf::Matrix3x3 m);
 
     /** @brief set the translational part of pose using a tf::Vector3 */
-    void set_origin(tf::Vector3 v);
+    void setOrigin(tf::Vector3 v);
 
     /** @brief set the translational part of pose */
-    void set_origin(double tx, double ty, double tz);
+    void setOrigin(double tx, double ty, double tz);
 
     /** @brief set the rotational part of pose using Euler Z-Y-Z rotations*/
-    void set_eulerZYX(double ez, double ey, double ex);
+    void setEulerZYX(double ez, double ey, double ex);
 
     /** @brief set the rotational part of pose using a quaternion*/
-    void set_quaternion(double qx, double qy, double qz, double qw);
+    void setQuaternion(double qx, double qy, double qz, double qw);
 
     /** @brief set the rotational part of pose using the angle axis notation*/
-    void set_angle_axis(double aax, double aay, double aaz);
+    void setAngleAxis(double aax, double aay, double aaz);
 
     /** @brief get the rotational part of pose as a tf::Matrix3x3 */
-    tf::Matrix3x3 get_basis() const;
+    tf::Matrix3x3 getBasis() const;
 
     /** @brief get the translationalpart of pose as a tf::Vector3*/
-    tf::Vector3 get_origin() const;
+    tf::Vector3 getOrigin() const;
 
     //TODO  void get_eulerZYX(double &ez, double &ey, double &ex);
 
     /** @brief get the translationalpart of pose as a quaternion*/
-    void get_quaternion(double &qx,  double &qy, double &qz, double &qw);
+    void getQuaternion(double &qx,  double &qy, double &qz, double &qw);
 
     /** @brief get the inverse of the pose_*/
-    Pose6d get_inverse();
+    Pose6d getInverse();
 
     /** @brief multiplication operator*/
     Pose6d operator * ( Pose6d pose2) const;
