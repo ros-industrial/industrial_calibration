@@ -20,7 +20,7 @@
 #include <std_srvs/Empty.h>
 #include <ros/ros.h>
 #include <ros/package.h>
-#include <industrial_extrinsic_cal/calibration_job_definition2.h>
+#include <industrial_extrinsic_cal/calibration_job_definition.h>
 class CalibrationServiceNode
 {
 public:

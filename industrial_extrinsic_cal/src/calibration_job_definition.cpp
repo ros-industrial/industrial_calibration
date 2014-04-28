@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include <industrial_extrinsic_cal/calibration_job_definition2.h>
+#include <industrial_extrinsic_cal/calibration_job_definition.h>
 #include <industrial_extrinsic_cal/ros_transform_interface.h>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>

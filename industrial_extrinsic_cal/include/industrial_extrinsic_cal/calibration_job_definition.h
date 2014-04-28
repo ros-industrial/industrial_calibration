@@ -28,6 +28,7 @@
 #include <industrial_extrinsic_cal/ceres_blocks.h>
 #include <industrial_extrinsic_cal/ros_camera_observer.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
+#include <industrial_extrinsic_cal/circle_cost_utils.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
@@ -47,15 +48,10 @@ public:
   /** @brief constructor */
   CalibrationJob(std::string camera_fn, std::string target_fn, std::string caljob_fn) :
       camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn)
-  {
-  }
-  ;
+  {  } ;
 
   /** @brief default destructor */
-  ~CalibrationJob()
-  {
-  }
-  ;
+  ~CalibrationJob() {  } ;
 
   /** @brief reads input files to create a calibration job
    * @return true if successful
@@ -66,6 +62,11 @@ public:
    * @return true if successful
    */
   bool store();
+
+  /** @brief shows the current poses of all cameras and targets
+   * @return true if successful
+   */
+ void show();
 
   /** @brief runs both data collection and optimization
    * @return true if successful
@@ -88,15 +89,6 @@ public:
   bool clearObservationData();
 
   /**
-   * @brief get the private member extrinsics_
-   * @return a parameter block of the optimized extrinsics of calibration_job
-   */
-  const std::vector<P_BLOCK> getExtrinsics() const
-  {
-    return extrinsics_;
-  }
-
-  /**
    * @brief get the private member original_extrinsics_
    * @return a parameter block of the original extrinsics of calibration_job
    */
@@ -105,18 +97,9 @@ public:
     return original_extrinsics_;
   }
 
-  /**
-   * @brief get the private member target_pose_
-   * @return a parameter block of the optimized target_pose of calibration_job
-   */
-  const std::vector<P_BLOCK> getTargetPose() const
+  const std::vector<std::string>& getCameraHousingFrame() const
   {
-    return target_pose_;
-  }
-
-  const std::vector<std::string>& getCameraIntermediateFrame() const
-  {
-    return camera_intermediate_frames_;
+    return camera_housing_frames_;
   }
 
   const std::vector<std::string>& getCameraOpticalFrame() const
@@ -126,7 +109,7 @@ public:
 
   const std::string& getReferenceFrame() const
   {
-    return reference_frame_;
+    return ceres_blocks_.reference_frame_;
   }
 
   const std::vector<std::string>& getTargetFrames() const
@@ -198,27 +181,30 @@ protected:
    *  @param trig the trigger type to use for this scene
    *  @return true if successful
    */
-  bool appendNewScene(boost::shared_ptr<Trigger>  trig);
+  bool appendNewScene(boost::shared_ptr<Trigger> trig);
+
+  /** @brief each camera and each target have a transform interface, push the current values to the interface */
+  void pushTransforms();
+
+  /** @brief each camera and each target have a transform interface, pull the current values from the interface */
+  void pullTransforms();
 
 private:
-  std::vector<ObservationDataPointList> observation_data_point_list_;
+  std::vector<ObservationDataPointList> observation_data_point_list_; /*!< a list of observation data points */
   std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
-  std::string reference_frame_; /*!< this the frame to which the camera is being calibrated (and to which the target is positioned) */
   std::vector<std::string> target_frames_; /*!< this the frame of the target points */
   std::vector<std::string> camera_optical_frames_; /*!< this the frame in which observations were made */
-  std::vector<std::string> camera_intermediate_frames_; /*!< this the frame which links camera optical frame to reference frame */
+  std::vector<std::string> camera_housing_frames_; /*!< this the frame which links camera optical frame to reference frame */
   int current_scene_; /*!< id of current scene under review or construction */
   std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
   CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
   ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
-  std::vector<P_BLOCK> extrinsics_; /*!< This is the parameter block which holds the optimized camera extrinsics solution */
   std::vector<P_BLOCK> original_extrinsics_; /*!< This is the parameter block which holds the original camera extrinsics */
-  std::vector<P_BLOCK> target_pose_; /*!< This is the parameter block which holds the optimized target pose solution */
-  boost::shared_ptr<Trigger> scene_trigger_;
+
 };//end class
 
 }//end namespace industrial_extrinsic_cal

@@ -20,7 +20,7 @@
 #define RUNTIME_UTILS_H_
 
 #include <industrial_extrinsic_cal/basic_types.h>
-#include <industrial_extrinsic_cal/calibration_job_definition2.h>
+#include <industrial_extrinsic_cal/calibration_job_definition.h>
 
 //#include <ros/ros.h>
 #include <tf/transform_datatypes.h>
