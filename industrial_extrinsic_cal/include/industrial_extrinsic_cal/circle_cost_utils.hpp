@@ -6,22 +6,43 @@
 
 namespace industrial_extrinsic_cal
 {
-
+  /** @brief A ceres reprojection error class which returns the reprojection error for a point in a target who's world
+                   location is parameterized by 6Dof, and the point itself has 3Dof defining its location in the target frame
+	    The circle's center is the feature, but when viewed obliquely it appears as an ellipse. The center of the 
+	    ellipse is not the projected center of the circle. This error model accounts for this shift.
+	    This complete version includes lens distortion
+  */
   class  CircleTargetCameraReprjError
   {
   public:
 
+    /** @brief Constructor
+     *    @param ob_x observation -x value in image coordinates
+     *    @param ob_y observation -y value in image coordinates
+     *    @param c_dia diameter of circle being viewed
+     */
     CircleTargetCameraReprjError(double ob_x, double ob_y, double c_dia)
       : ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia){};
 
+    /** @brief operator ()
+     *    @param c_p1 extrinsic parameters [6] 
+     *    @param c_p2  6Dof transform of target into world frame [6]
+     *    @param c_p3 intrinsic parameters fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]
+     *    @param point  point being viewd described in target frame that is being seen [3]
+     *    @output resid the error between the observation and the reprojected values given the parameters
+     */
     template<typename T>
-    bool operator()(const T* const c_p1, /**< extrinsic parameters [6]*/
-		    const T* const c_p2, /**< 6Dof transform of target into world frame [6]*/
-		    const T* const c_p3, /**< intrinsic parameters fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
-		    const T* const point, /**< point described in target frame that is being seen [3]*/
+    bool operator()(const T* const c_p1, 
+		    const T* const c_p2, 
+		    const T* const c_p3, 
+		    const T* const point,
 		    T* resid) const;
 
-    /** Factory to hide the construction of the CostFunction object from the client code*/
+    /**  @brief Factory to hide the construction of the CostFunction object from the client code
+     *    @param ob_x observation -x value in image coordinates
+     *    @param ob_y observation -y value in image coordinates
+     *    @param c_dia diameter of circle being viewed
+     */
     static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia)
     {
       return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjError, 2, 6, 6, 9, 3>
@@ -38,10 +59,10 @@ namespace industrial_extrinsic_cal
 
   // member function definitions
   template<typename T>
-  bool industrial_extrinsic_cal::CircleTargetCameraReprjError::operator()(const T* const c_p1, /**< extrinsic parameters [6]*/
-							const T* const c_p2, /**< 6Dof transform of target into world frame [6]*/
-							const T* const c_p3, /**< intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
-							const T* const point, /**< point described in target frame that is being seen [3]*/
+  bool industrial_extrinsic_cal::CircleTargetCameraReprjError::operator()(const T* const c_p1,
+							const T* const c_p2, 
+							const T* const c_p3, 
+							const T* const point,
 							T* resid) const
   {
     T camera_aa[3];		/**< angle axis  */
@@ -186,21 +207,49 @@ namespace industrial_extrinsic_cal
     return true;
   } // end of operator() 
 
+  /** @brief A ceres reprojection error class which returns the reprojection error for a point in a target who's world
+                   location is parameterized by 6Dof, and the point itself has 3Dof defining its location in the target frame
+	    The circle's center is the feature, but when viewed obliquely it appears as an ellipse. The center of the 
+	    ellipse is not the projected center of the circle. This error model accounts for this shift.
+	    This version has no lens distortion, and should be used when objects are located in rectified images
+  */
   class  CircleTargetCameraReprjErrorNoDistortion
   {
   public:
-    
+    /** @brief Constructor
+     *    @param ob_x observation -x value in image coordinates
+     *    @param ob_y observation -y value in image coordinates
+     *    @param c_dia diameter of circle being viewed
+     *    @param fx  focal length in x units are pixels
+     *    @param fy  focal length in y units are pixels
+     *    @param cx optical center in x units are pixels
+     *    @param cy optical center in y units are pixels
+     */
     CircleTargetCameraReprjErrorNoDistortion(double ob_x, double ob_y, double c_dia,
 					     double fx, double fy, double cx, double cy)
       : ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), fx_(fx), fy_(fy), cx_(cx), cy_(cy){};
 
+    /** @brief operator ()
+     *    @param c_p1 extrinsic parameters [6] 
+     *    @param c_p2  6Dof transform of target into world frame [6]
+     *    @param point  point being viewd described in target frame that is being seen [3]
+     *    @output resid the error between the observation and the reprojected values given the parameters
+     */
     template<typename T>
     bool operator()(const T* const c_p1, /**< extrinsic parameters [6]*/
 		    const T* const c_p2, /**< 6Dof transform of target into world frame [6]*/
 		    const T* const point, /**< point described in target frame that is being seen [3]*/
 		    T* resid) const;
     
-    /** Factory to hide the construction of the CostFunction object from the client code*/
+    /**  @brief Factory to hide the construction of the CostFunction object from the client code
+     *    @param ob_x observation -x value in image coordinates
+     *    @param ob_y observation -y value in image coordinates
+     *    @param c_dia diameter of circle being viewed
+     *    @param fx  focal length in x units are pixels
+     *    @param fy  focal length in y units are pixels
+     *    @param cx optical center in x units are pixels
+     *    @param cy optical center in y units are pixels
+     */
     static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia,
 				       const double fx, const double fy,
 				       const double cx, const double cy)
@@ -212,22 +261,22 @@ namespace industrial_extrinsic_cal
     }
     
   private:
-    double ox_; /**< observed x location of object in image */
-    double oy_; /**< observed y location of object in image */
-    double circle_diameter_; //**< diameter of circle being observed */
-    double fx_;			// focal length x
-    double fy_;			// focal length y
-    double cx_;			// optical center pixel x
-    double cy_;			// optical center pixel y
+    double ox_;			/**< observed x location of object in image */
+    double oy_;			/**< observed y location of object in image */
+    double circle_diameter_;	/**< diameter of circle being observed */
+    double fx_;			/**< focal length x */
+    double fy_;			/**< focal length y */
+    double cx_;			/**< optical center pixel x */
+    double cy_;			/**< optical center pixel y */
   };
   
   // member function definitions
   template<typename T>
   bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDistortion::operator()
     (
-     const T* const c_p1,	/**< extrinsic parameters [6]*/
-     const T* const c_p2,	/**< 6Dof transform of target into world frame [6]*/
-     const T* const point,	/**< point described in target frame that is being seen [3]*/
+     const T* const c_p1,	
+     const T* const c_p2,	
+     const T* const point,	
      T* resid
      ) const
   {
@@ -340,10 +389,28 @@ namespace industrial_extrinsic_cal
     return true;
   } // end of operator() 
 
+  /** @brief A ceres reprojection error class which returns the reprojection error for a point in a target who's world
+                   location is parameterized by 6Dof, and the point itself has 3Dof defining its location in the target frame
+	    The circle's center is the feature, but when viewed obliquely it appears as an ellipse. The center of the 
+	    ellipse is not the projected center of the circle. This error model accounts for this shift.
+	    This version has no lens distortion, and the point's location within the target is fixed.
+                   It should be used when objects are located in rectified images
+  */
   class  CircleTargetCameraReprjErrorNoDFixedPoint
   {
   public:
-    
+        /** @brief Constructor
+     *    @param ob_x observation -x value in image coordinates
+     *    @param ob_y observation -y value in image coordinates
+     *    @param c_dia diameter of circle being viewed
+     *    @param fx  focal length in x units are pixels
+     *    @param fy  focal length in y units are pixels
+     *    @param cx optical center in x units are pixels
+     *    @param cy optical center in y units are pixels
+     *    @param point_x location of point in target frame x value
+     *    @param point_y location of point in target frame y value
+     *    @param point_z location of point in target frame z value
+     */
     CircleTargetCameraReprjErrorNoDFixedPoint(double ob_x, double ob_y,
 					      double c_dia,
 					      double fx, 
@@ -361,12 +428,28 @@ namespace industrial_extrinsic_cal
       point_[2] = point_z;
     };
 
+    /** @brief operator ()
+     *    @param c_p1 extrinsic parameters [6] 
+     *    @param c_p2  6Dof transform of target into world frame [6]
+     *    @output resid the error between the observation and the reprojected values given the parameters
+     */
     template<typename T>
     bool operator()(const T* const c_p1, /**< extrinsic parameters [6]*/
 		    const T* const c_p2, /**< 6Dof transform of target into world frame [6]*/
 		    T* resid) const;
     
-    /** Factory to hide the construction of the CostFunction object from the client code*/
+    /**  @brief Factory to hide the construction of the CostFunction object from the client code
+     *    @param ob_x observation -x value in image coordinates
+     *    @param ob_y observation -y value in image coordinates
+     *    @param c_dia diameter of circle being viewed
+     *    @param fx  focal length in x units are pixels
+     *    @param fy  focal length in y units are pixels
+     *    @param cx optical center in x units are pixels
+     *    @param cy optical center in y units are pixels
+     *    @param point_x location of point in target frame x value
+     *    @param point_y location of point in target frame y value
+     *    @param point_z location of point in target frame z value
+     */
     static ceres::CostFunction* Create(const double o_x, const double o_y, 
 				       const double c_dia,
 				       const double fx, const double fy,
@@ -398,8 +481,8 @@ namespace industrial_extrinsic_cal
   template<typename T>
   bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDFixedPoint::operator()
     (
-     const T* const c_p1,	/**< extrinsic parameters [6]*/
-     const T* const c_p2,	/**< 6Dof transform of target into world frame [6]*/
+     const T* const c_p1,	
+     const T* const c_p2,	
      T* resid
      ) const
   {

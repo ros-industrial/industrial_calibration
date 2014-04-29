@@ -59,28 +59,56 @@ namespace industrial_extrinsic_cal
   class Pose6d
   {
   public:
-    /** @brief constructor with complete information */
+    /** @brief constructor with complete information 
+     *    @param tx translation in x
+     *    @param ty translation in y
+     *    @param tz translation in z
+     *    @param aax x component of angle axis vector
+     *    @param aay y component of angle axis vector
+     *    @param aaz z component of angle axis vector
+    */
     Pose6d(double tx, double ty, double tz, double aax, double aay, double aaz);
 
     /** @brief default constructor*/
     Pose6d();
 
-    /** @brief set the rotational part of pose using a tf::Matrix3x3 */
+    /** @brief set the rotational part of pose using a tf::Matrix3x3 
+     *    @param m a 3x3 matrix representing the rotation
+     */
     void setBasis( tf::Matrix3x3 m);
 
-    /** @brief set the translational part of pose using a tf::Vector3 */
+    /** @brief set the translational part of pose using a tf::Vector3 
+     *    @param v the translation components as a 3 vector
+    */
     void setOrigin(tf::Vector3 v);
 
-    /** @brief set the translational part of pose */
+    /** @brief set the translational part of pose 
+     *    @param tx  the x value of the translation vector
+     *    @param ty  the y value of the translation vector
+     *    @param tz  the z value of the translation vector
+    */
     void setOrigin(double tx, double ty, double tz);
 
-    /** @brief set the rotational part of pose using Euler Z-Y-Z rotations*/
+    /** @brief set the rotational part of pose using Euler Z-Y-Z rotations
+     *   @param  ez Rotation angle around Z axis
+     *   @param  ey Rotation angle around y axis
+     *   @param  ex Rotation angle around x axis
+     */
     void setEulerZYX(double ez, double ey, double ex);
 
-    /** @brief set the rotational part of pose using a quaternion*/
+    /** @brief set the rotational part of pose using a quaternion
+     *   @param qx quaternion x value
+     *   @param qy quaternion y value
+     *   @param qz quaternion z value
+     *   @param qw quaternion w value
+     */
     void setQuaternion(double qx, double qy, double qz, double qw);
 
-    /** @brief set the rotational part of pose using the angle axis notation*/
+    /** @brief set the rotational part of pose using the angle axis notation
+     *    @param aax x component of angle axis vector
+     *    @param aay y component of angle axis vector
+     *    @param aaz z component of angle axis vector
+    */
     void setAngleAxis(double aax, double aay, double aaz);
 
     /** @brief get the rotational part of pose as a tf::Matrix3x3 */
@@ -91,7 +119,12 @@ namespace industrial_extrinsic_cal
 
     //TODO  void get_eulerZYX(double &ez, double &ey, double &ex);
 
-    /** @brief get the translationalpart of pose as a quaternion*/
+    /** @brief get the translationalpart of pose as a quaternion
+     *   @param qx quaternion x value
+     *   @param qy quaternion y value
+     *   @param qz quaternion z value
+     *   @param qw quaternion w value
+    */
     void getQuaternion(double &qx,  double &qy, double &qz, double &qw);
 
     /** @brief get the inverse of the pose_*/

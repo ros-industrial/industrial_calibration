@@ -70,9 +70,9 @@ generate_messages(DEPENDENCIES actionlib_msgs)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES industrial_extrinsic_cal
+#  LIBRARIES 
    CATKIN_DEPENDS roscpp std_msgs rosconsole std_srvs roslib 
-#  DEPENDS system_lib
+#  DEPENDS 
 )
 
 ###########
@@ -86,9 +86,9 @@ include_directories(include
 )
 
 ## Declare a cpp library
-# add_library(industrial_extrinsic_cal
-#   src/${PROJECT_NAME}/industrial_extrinsic_cal.cpp
-# )
+# For Example:
+# add_library(industrial_extrinsic_cal  src/${PROJECT_NAME}/industrial_extrinsic_cal.cpp)
+#
 add_library(industrial_extrinsic_cal
    src/ros_camera_observer.cpp
    src/camera_definition.cpp
@@ -103,9 +103,7 @@ add_library(industrial_extrinsic_cal
 )
 
 ## Declare a cpp executable
-# add_executable(industrial_extrinsic_cal_node src/industrial_extrinsic_cal_node.cpp)
 add_executable(mono_ex_cal src/mono_ex_cal.cpp)
-#add_executable(cal_job src/test_cal_job.cpp)
 add_executable(test_obs src/test_ros_cam_obs.cpp)
 add_executable(service_node src/calibration_service.cpp)
 add_executable(trigger_service src/ros_scene_trigger_server.cpp)
@@ -118,7 +116,6 @@ add_executable(trigger_service src/ros_scene_trigger_server.cpp)
 target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} )
 target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES})
-#target_link_libraries(cal_job industrial_extrinsic_cal  ${CERES_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(trigger_service ${catkin_LIBRARIES} )
 

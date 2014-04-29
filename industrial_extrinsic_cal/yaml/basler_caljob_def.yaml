@@ -27,7 +27,7 @@ scenes:
 -
      scene_id: 2
      trigger: ROS_ACTION_TRIGGER
-     trig_action_server: rosSceneTrigger
+     trig_action_server: ros_scene_trigger
      trig_action_msg: "Prepare Next Scene"
      observations: 
      -

@@ -25,13 +25,14 @@
 namespace industrial_extrinsic_cal
 {
 
-
+  /** @brief An observation data point contains all the information necessary to construct the cost function to be added to the 
+   *              bundle adjustment problem to be solved by ceres. When a camera makes an observation, it fills out this object
+   **/
 class ObservationDataPoint
 {
 public:
 
-  /**
-   *
+  /** @brief constructor
    * @param c_name camera name
    * @param t_name target name
    * @param s_id   scene id
@@ -98,7 +99,9 @@ public:
   ~ObservationDataPointList();
 
 
-  /** @brief add an observation point to the list */
+  /** @brief add an observation point to the list 
+   *   @param new_data_point the observation to add to the list
+*/
   void addObservationPoint(ObservationDataPoint new_data_point);
 
   /** @brief vector of observations */
