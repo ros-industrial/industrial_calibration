@@ -32,7 +32,7 @@ namespace industrial_extrinsic_cal
   public:
     /*! \brief Constructor,
      */
-    ROSParamTrigger(std::string parameter_name) 
+    ROSParamTrigger(const std::string & parameter_name) 
       {
 	parameter_name_ = parameter_name;  
 	nh_.setParam(parameter_name_.c_str(),false);
@@ -64,10 +64,11 @@ namespace industrial_extrinsic_cal
   public:
     /*! \brief Constructor,
      */
-    ROSActionServerTrigger(std::string server_name, std::string action_message) 
+    ROSActionServerTrigger(const std::string & server_name, const  std::string  & action_message) 
       {
 	server_name_ = server_name;  
 	action_message_ = action_message;  
+	client_ = new Client(server_name_.c_str(),true);
       };
 
     /*! \brief Destructor
@@ -78,20 +79,19 @@ namespace industrial_extrinsic_cal
      */
     bool waitForTrigger()
     {
-      ROS_ERROR("ROSActionServerTrigger: waiting for trigger server %s to complete ",server_name_.c_str());
-      Client client(server_name_.c_str(),true);
-      client.waitForServer();
+      ROS_INFO("ROSActionServerTrigger: waiting for trigger server %s to complete ",server_name_.c_str());
+      client_->waitForServer();
       industrial_extrinsic_cal::manual_triggerGoal goal;
       goal.display_message = action_message_;
-      client.sendGoal(goal);
-      client.waitForResult(ros::Duration(5.0));
-      while(client.getState() != actionlib::SimpleClientGoalState::SUCCEEDED){
-	ROS_INFO("Current State: %s", client.getState().toString().c_str());
-	client.waitForResult(ros::Duration(5.0));
-      }
-      return(true);
+      client_->sendGoal(goal);
+      do{
+	client_->waitForResult(ros::Duration(5.0));
+	ROS_INFO("Current State: %s", client_->getState().toString().c_str());
+      } while(client_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED);
+      return(true);  /**< TODO implement a timeout, cancels action and with returns false*/
     };
   private: 
+    Client *client_;
     ros::NodeHandle nh_;	/**< node handle */
     std::string server_name_;	/**< name of server */
     std::string action_message_; /**< message sent to action server, often displayed by that server */

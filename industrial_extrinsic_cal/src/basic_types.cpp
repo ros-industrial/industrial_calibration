@@ -33,8 +33,8 @@ namespace industrial_extrinsic_cal
   {
     x=y=z=ax=ay=az=0.0;
   }
-  void Pose6d::setBasis( tf::Matrix3x3 m)
-  { // TODO this may have issues see rotation.h from ceres to fix
+  void Pose6d::setBasis( tf::Matrix3x3 & m)
+  { // TODO this may have issues see rotation.h from ceres to fix STILL A TODO, st =0 will cause divide by zero
     double trace_R = m[0][0]+m[1][1]+m[2][2];
     double angle = acos((trace_R - 1.0)/2.0);
     double st = sin(angle);
@@ -43,7 +43,7 @@ namespace industrial_extrinsic_cal
     az = (m[1][0]-m[0][1])/(2.0*st)*angle;
   }
 
-  void Pose6d::setOrigin(tf::Vector3 v)
+  void Pose6d::setOrigin(tf::Vector3 & v)
   {
     x = v[0];
     y = v[1];

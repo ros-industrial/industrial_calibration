@@ -95,7 +95,7 @@ void ROSCameraObserver::clearTargets()
 
 void ROSCameraObserver::clearObservations()
 {
-  camera_obs_.observations.clear();
+  camera_obs_.clear();
   //ROS_INFO_STREAM("Observations cleared from observer");
 }
 
@@ -163,13 +163,13 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   }
 
   ROS_INFO_STREAM("Number of points found on board: "<<observation_pts_.size());
-  camera_obs_.observations.resize(observation_pts_.size());
+  camera_obs_.resize(observation_pts_.size());
   for (int i = 0; i < observation_pts_.size(); i++)
   {
-    camera_obs_.observations.at(i).target = instance_target_;
-    camera_obs_.observations.at(i).point_id = i;
-    camera_obs_.observations.at(i).image_loc_x = observation_pts_.at(i).x;
-    camera_obs_.observations.at(i).image_loc_y = observation_pts_.at(i).y;
+    camera_obs_.at(i).target = instance_target_;
+    camera_obs_.at(i).point_id = i;
+    camera_obs_.at(i).image_loc_x = observation_pts_.at(i).x;
+    camera_obs_.at(i).image_loc_y = observation_pts_.at(i).y;
   }
 
   cam_obs = camera_obs_;

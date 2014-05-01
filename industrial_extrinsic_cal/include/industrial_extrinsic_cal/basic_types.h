@@ -75,12 +75,12 @@ namespace industrial_extrinsic_cal
     /** @brief set the rotational part of pose using a tf::Matrix3x3 
      *    @param m a 3x3 matrix representing the rotation
      */
-    void setBasis( tf::Matrix3x3 m);
+    void setBasis( tf::Matrix3x3 & m);
 
     /** @brief set the translational part of pose using a tf::Vector3 
      *    @param v the translation components as a 3 vector
     */
-    void setOrigin(tf::Vector3 v);
+    void setOrigin(tf::Vector3 & v);
 
     /** @brief set the translational part of pose 
      *    @param tx  the x value of the translation vector

@@ -75,7 +75,7 @@ public:
    *  Because transform interfaces need to get created when the camera or target is created, we often don't know
    *  what the reference frame is for the interface until later, so we need to set it
    */
-  void setTIReferenceFrame(std::string ref_frame);
+  void setTIReferenceFrame(std::string & ref_frame);
 
   /*! \brief get the transform interface, 
    *  Because transform interfaces need to get created when the camera or target is created, we often don't know

@@ -28,28 +28,38 @@ namespace industrial_extrinsic_cal
   {
   public:
     /** @brief Default destructor */
-    ~TransformInterface(){} ;
+    virtual ~TransformInterface(){} ;
 
-    /** @brief push the transform to the hardware or display */
+    /** @brief push the transform to the hardware or display 
+     *   @return true if successful, false if not
+     */
     virtual bool pushTransform(Pose6d & pose)=0;
 
     /** @brief get the transform from the hardware or display */
     virtual Pose6d pullTransform()=0;
 
-    /** @brief output the results to a file */
-    virtual bool store(std::string filePath)=0;
+    /** @brief output the results to a file 
+     *   @param filePath full pathname of file to store resutlts in
+     */
+    virtual bool store(std::string & filePath)=0;
 
-    /** @brief get the transform reference frame of transform  */
-    virtual void setReferenceFrame(std::string ref_frame) { ref_frame_ = ref_frame;};
-
-    /** @brief set the transform reference frame of transform */
-    std::string getReferenceFrame(std::string ref_frame) { return(ref_frame_);};
-
-    /** @brief set the transform reference frame of transform */
-    void setTransformFrame(std::string ref_frame) { transform_frame_ = ref_frame;};
+    /** @brief get the transform reference frame of transform  
+     *   @param ref_frame the reference frame name
+    */
+    virtual void setReferenceFrame(std::string & ref_frame) { ref_frame_ = ref_frame;};
 
     /** @brief set the transform reference frame of transform */
-    std::string getTransformFrame(std::string ref_frame) { return(transform_frame_);};
+    std::string getReferenceFrame() { return(ref_frame_);};
+
+    /** @brief set the transform reference frame of transform 
+     *   @param transform_frame the transform frame name
+     */
+    void setTransformFrame(std::string & transform_frame) { transform_frame_ = transform_frame;};
+
+    /** @brief set the transform reference frame of transform 
+     *    @return the transform frame name
+     */
+    std::string getTransformFrame() { return(transform_frame_);};
 
   protected:
     std::string ref_frame_; /*!< name of reference frame for transform (parent frame_id in  Rviz) */
@@ -62,20 +72,29 @@ namespace industrial_extrinsic_cal
   {
   public:
 
-    /** @brief  constructor */
+    /** @brief  constructor 
+     *   @param pose the pose associated with the transform interface
+     */
     DefaultTransformInterface(const Pose6d &pose){ pose_ = pose;};
 
     /** @brief  destructor */
     ~DefaultTransformInterface(){} ;
 
-    /** @brief push the transform to the hardware or display */
+    /** @brief push the transform to the hardware or display 
+     *   @param pose the pose associated with the transform interface
+     */
     bool pushTransform(Pose6d & pose){ pose_ = pose;};
 
-    /** @brief get the transform from the hardware or display */
+    /** @brief get the transform from the hardware or display 
+     *    @return the pose
+     */
     Pose6d pullTransform(){ return(pose_);};
 
-    /** @brief typically outputs the results to a file, but here does nothing */
-    bool store(std::string filePath){ return(true);}; 
+    /** @brief typically outputs the results to a file, but here does nothing 
+     *    @param the file path name, a dummy argument in this case
+     *    @return   always true
+     */
+    bool store(std::string & filePath){ return(true);}; 
 
   protected:
     Pose6d pose_; /*!< 6dof pose  */

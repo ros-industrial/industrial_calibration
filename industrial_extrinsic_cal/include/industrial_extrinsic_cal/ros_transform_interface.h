@@ -44,7 +44,7 @@ namespace industrial_extrinsic_cal
      * @brief constructor
      * @param image_topic name of published image topic
      */
-    ROSListenerTransInterface(const std::string transform_frame);
+    ROSListenerTransInterface(const std::string & transform_frame);
 
     /**
      * @brief Default destructor
@@ -58,7 +58,7 @@ namespace industrial_extrinsic_cal
     Pose6d pullTransform();
 
     /** @brief this is a listener interface, does nothing */
-    bool store(std::string filePath) { return(true);};
+    bool store(std::string & filePath) { return(true);};
 
   private:
     Pose6d pose_;
@@ -81,7 +81,7 @@ namespace industrial_extrinsic_cal
      * @brief constructor
      * @param image_topic name of published image topic
      */
-    ROSCameraListenerTransInterface(const std::string transform_frame);
+    ROSCameraListenerTransInterface(const std::string & transform_frame);
 
     /**
      * @brief Default destructor
@@ -95,7 +95,7 @@ namespace industrial_extrinsic_cal
     Pose6d pullTransform();
 
     /** @brief as a listener interface, this does nothing because transform defined by urdf*/
-    bool store(std::string filePath) {return(true);};
+    bool store(std::string & filePath) {return(true);};
 
   private:
     Pose6d pose_;
@@ -119,7 +119,7 @@ namespace industrial_extrinsic_cal
      * @param optical_frame The name of the optical frame defined in the urdf
      * @param optical_frame The name of camera housing frame defined in the urdf
      */
-    ROSCameraHousingListenerTInterface(const std::string optical_frame,const std::string housing_frame);
+    ROSCameraHousingListenerTInterface(const std::string & optical_frame, const std::string & housing_frame);
 
     /**
      * @brief Default destructor
@@ -133,13 +133,12 @@ namespace industrial_extrinsic_cal
     Pose6d pullTransform();
 
     /** @brief as a listener interface, this does nothing. Transform is defined by urdf */
-    bool store(std::string filePath){ return(true);};
+    bool store(std::string & filePath){ return(true);};
 
   private:
     std::string housing_frame_; /**< housing frame name note, this is not used, but kept be symetry with broadcaster param list */
     Pose6d pose_; /**< pose associated with the transform from reference frame to housing frame */
     tf::TransformListener tf_listener_; /**< listener used to get the transform/pose_ from tf */
-    tf::StampedTransform transform_;/**< listener returns this which we convert to pose_ */
   };
 
   /** @brief This transform interface is used when the pose determined through calibration
@@ -155,7 +154,7 @@ namespace industrial_extrinsic_cal
      * @brief constructor
      * @param image_topic name of published image topic
      */
-    ROSBroadcastTransInterface(const std::string transform_frame, Pose6d pose);
+    ROSBroadcastTransInterface(const std::string & transform_frame, const Pose6d & pose);
 
     /**
      * @brief Default destructor
@@ -169,10 +168,10 @@ namespace industrial_extrinsic_cal
     Pose6d pullTransform() {return(pose_);};
 
     /** @brief appends data as a static transform publisher to the file */
-    bool store(std::string filePath);
+    bool store(std::string & filePath);
 
     /** @brief a sets ref_frame_, but also starts the timer for broadcasting the transform */
-    void setReferenceFrame(std::string ref_frame);
+    void setReferenceFrame(std::string & ref_frame);
 
     /** @brief a timer callback that continuously broadcast the current pose as a tf */
     void timerCallback(const ros::TimerEvent & timer_event);
@@ -199,7 +198,7 @@ namespace industrial_extrinsic_cal
      * @brief constructor
      * @param image_topic name of published image topic
      */
-    ROSCameraBroadcastTransInterface(const std::string transform_frame, Pose6d pose);
+    ROSCameraBroadcastTransInterface(const std::string & transform_frame, const Pose6d & pose);
 
     /**
      * @brief Default destructor
@@ -213,10 +212,10 @@ namespace industrial_extrinsic_cal
     Pose6d pullTransform() {return(pose_);};
 
     /** @brief appends data as a static transform publisher to the file */
-    bool store(std::string filePath);
+    bool store(std::string & filePath);
 
     /** @brief a sets ref_frame_, but also starts the timer for broadcasting the transform */
-    void setReferenceFrame(std::string ref_frame);
+    void setReferenceFrame(std::string & ref_frame);
 
     /** @brief a timer callback that continuously broadcast the current pose as a tf */
     void timerCallback(const ros::TimerEvent & timer_event);
@@ -243,7 +242,7 @@ namespace industrial_extrinsic_cal
      * @brief constructor
      * @param image_topic name of published image topic
      */
-    ROSCameraHousingBroadcastTInterface(const std::string transform_frame, Pose6d pose);
+    ROSCameraHousingBroadcastTInterface(const std::string & transform_frame, const Pose6d & pose);
 
     /**
      * @brief Default destructor
@@ -257,13 +256,13 @@ namespace industrial_extrinsic_cal
     Pose6d pullTransform(){ return(pose_);};
 
     /** @brief appends pose as a static transform publisher to the file */
-    bool store(std::string filePath);
+    bool store(std::string & filePath);
 
     /** @brief a timer callback that continuously broadcast the current pose as a tf */
     void timerCallback(const ros::TimerEvent & timer_event);
    
     /** @brief initialized the reference frame, and starts broadcasting with current value of pose_ */
-    void  setReferenceFrame(std::string ref_frame);
+    void  setReferenceFrame(std::string & ref_frame);
   private:
     Pose6d pose_; /**< pose associated with the transform */
     ros::Timer timer_; /**< need a timer to initiate broadcast of transform */

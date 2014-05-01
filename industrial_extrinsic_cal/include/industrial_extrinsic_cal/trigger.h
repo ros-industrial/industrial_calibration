@@ -32,7 +32,7 @@ class Trigger
 
     /*! \brief Destructor
      */
-  ~Trigger(){};
+  virtual ~Trigger(){};
 
     /*! \brief Initiates and waits for trigger to finish
      */

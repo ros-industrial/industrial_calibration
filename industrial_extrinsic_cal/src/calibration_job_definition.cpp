@@ -259,24 +259,6 @@ namespace industrial_extrinsic_cal
       } // end try
     catch (YAML::ParserException& e)
       {
-	ROS_INFO_STREAM("load() Failed to read in moving cameras from  yaml file ");
-	/*ROS_INFO_STREAM("camera name =     "<<temp_name.c_str());
-	  ROS_INFO_STREAM("angle_axis_ax =  "<<temp_parameters.angle_axis[0]);
-	  ROS_INFO_STREAM("angle_axis_ay = "<<temp_parameters.angle_axis[1]);
-	  ROS_INFO_STREAM("angle_axis_az =  "<<temp_parameters.angle_axis[2]);
-	  ROS_INFO_STREAM("position_x =  "<<temp_parameters.position[0]);
-	  ROS_INFO_STREAM("position_y =  "<<temp_parameters.position[1]);
-	  ROS_INFO_STREAM("position_z =  "<<temp_parameters.position[2]);
-	  ROS_INFO_STREAM("focal_length_x =  "<<temp_parameters.focal_length_x);
-	  ROS_INFO_STREAM("focal_length_y =  "<<temp_parameters.focal_length_y);
-	  ROS_INFO_STREAM("center_x = "<<temp_parameters.center_x);
-	  ROS_INFO_STREAM("center_y =  "<<temp_parameters.center_y);
-	  ROS_INFO_STREAM("distortion_k1 =  "<<temp_parameters.distortion_k1);
-	  ROS_INFO_STREAM("distortion_k2 =  "<<temp_parameters.distortion_k2);
-	  ROS_INFO_STREAM("distortion_k3 =  "<<temp_parameters.distortion_k3);
-	  ROS_INFO_STREAM("distortion_p1 =  "<<temp_parameters.distortion_p1);
-	  ROS_INFO_STREAM("distortion_p2 =  "<<temp_parameters.distortion_p2);
-	  ROS_INFO_STREAM("scene_id = "<<scene_id);*/
 	ROS_ERROR("load() Failed to read in cameras yaml file");
 	ROS_ERROR_STREAM("Failed with exception "<< e.what());
 	return (false);
@@ -654,9 +636,9 @@ namespace industrial_extrinsic_cal
 	    int number_returned;
 	    number_returned = camera->camera_observer_->getObservations(camera_observations);
 
-	    ROS_DEBUG_STREAM("Processing " << camera_observations.observations.size() << " Observations");
-	    ROS_INFO("Processing %d Observations ", (int) camera_observations.observations.size());
-	    BOOST_FOREACH(Observation observation, camera_observations.observations)
+	    ROS_DEBUG_STREAM("Processing " << camera_observations.size() << " Observations");
+	    ROS_INFO("Processing %d Observations ", (int) camera_observations.size());
+	    BOOST_FOREACH(Observation observation, camera_observations)
 	      {
 		target_name = observation.target->target_name_;
 		target_type = observation.target->target_type_;

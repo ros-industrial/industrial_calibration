@@ -34,11 +34,12 @@ namespace industrial_extrinsic_cal
   } Observation;
 
   /*! \brief A vector of observations made by a single camera of posibly multiple targets */
-  typedef struct
-  {
-    std::vector<Observation> observations;
-  } CameraObservations;
+  typedef     std::vector<Observation> CameraObservations;
 
+  /** @brief A camera observer is an object which given a set of targets and regions of interest, it provides observations 
+   *              of those targets. A camera obsever is configured with targets, then triggered, once observations are done, they
+   *              may be collected with the getter function.
+   */
 class CameraObserver
 {
 public:

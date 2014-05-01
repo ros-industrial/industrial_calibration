@@ -23,7 +23,7 @@ namespace industrial_extrinsic_cal
 {
   using std::string;
 
-  ROSListenerTransInterface::ROSListenerTransInterface(const string transform_frame) 
+  ROSListenerTransInterface::ROSListenerTransInterface(const string & transform_frame) 
   {
     transform_frame_ = transform_frame;
     transform_.child_frame_id_ = transform_frame_;
@@ -50,7 +50,7 @@ namespace industrial_extrinsic_cal
     }
   }
 
-  ROSCameraListenerTransInterface::ROSCameraListenerTransInterface(const string transform_frame) 
+  ROSCameraListenerTransInterface::ROSCameraListenerTransInterface(const string & transform_frame) 
   {
     transform_frame_ = transform_frame;
     transform_.child_frame_id_ = transform_frame_;
@@ -83,11 +83,10 @@ namespace industrial_extrinsic_cal
    *            push does nothing
    *            store does nothing
    */
-  ROSCameraHousingListenerTInterface::ROSCameraHousingListenerTInterface(const string transform_frame, const string housing_frame) 
+  ROSCameraHousingListenerTInterface::ROSCameraHousingListenerTInterface(const string & transform_frame, const string & housing_frame) 
   {
     transform_frame_               = transform_frame;
     housing_frame_                  = housing_frame; // note, this is not used, but maintained to be symetric with Broadcaster parameter list
-    transform_.child_frame_id_ = transform_frame_;
     ref_frame_initialized_         = false;    // still need to initialize ref_frame_
   }				
 
@@ -111,7 +110,7 @@ namespace industrial_extrinsic_cal
     }
   }
 
-  ROSBroadcastTransInterface::ROSBroadcastTransInterface(const string transform_frame, Pose6d pose)
+  ROSBroadcastTransInterface::ROSBroadcastTransInterface(const string & transform_frame, const Pose6d & pose)
   {
     transform_frame_                = transform_frame;
     transform_.child_frame_id_ = transform_frame_;
@@ -128,7 +127,7 @@ namespace industrial_extrinsic_cal
     return(true);
   }
 
-  bool  ROSBroadcastTransInterface::store(std::string filePath)
+  bool  ROSBroadcastTransInterface::store(std::string & filePath)
   {
     std::ofstream outputFile(filePath.c_str(), std::ios::app); // open for appending
     if (outputFile.is_open())
@@ -152,7 +151,7 @@ namespace industrial_extrinsic_cal
       }//end if writing to file
   }
 
-  void  ROSBroadcastTransInterface::setReferenceFrame(string ref_frame)
+  void  ROSBroadcastTransInterface::setReferenceFrame(string & ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
@@ -170,7 +169,7 @@ namespace industrial_extrinsic_cal
     tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), transform_frame_, ref_frame_));
   }
 
-  ROSCameraBroadcastTransInterface::ROSCameraBroadcastTransInterface(const string transform_frame, Pose6d pose)
+  ROSCameraBroadcastTransInterface::ROSCameraBroadcastTransInterface(const string & transform_frame, const Pose6d & pose)
   {
     transform_frame_                = transform_frame;
     transform_.child_frame_id_ = transform_frame_;
@@ -187,7 +186,7 @@ namespace industrial_extrinsic_cal
     return(true);
   }
 
-  bool  ROSCameraBroadcastTransInterface::store(std::string filePath)
+  bool  ROSCameraBroadcastTransInterface::store(std::string & filePath)
   {
     std::ofstream outputFile(filePath.c_str(), std::ios::app); // open for appending
     if (outputFile.is_open())
@@ -211,7 +210,7 @@ namespace industrial_extrinsic_cal
       }//end if writing to file
   }
 
-  void  ROSCameraBroadcastTransInterface::setReferenceFrame(string ref_frame)
+  void  ROSCameraBroadcastTransInterface::setReferenceFrame(string & ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
@@ -229,7 +228,7 @@ namespace industrial_extrinsic_cal
     tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), transform_frame_, ref_frame_));
   }
 
-  ROSCameraHousingBroadcastTInterface::ROSCameraHousingBroadcastTInterface(const string transform_frame, Pose6d pose)
+  ROSCameraHousingBroadcastTInterface::ROSCameraHousingBroadcastTInterface(const string & transform_frame, const Pose6d & pose)
   {
     transform_frame_                = transform_frame;
     transform_.child_frame_id_ = transform_frame_;
@@ -246,7 +245,7 @@ namespace industrial_extrinsic_cal
     return(true);
   }
 
-  bool  ROSCameraHousingBroadcastTInterface::store(std::string filePath)
+  bool  ROSCameraHousingBroadcastTInterface::store(std::string & filePath)
   {
     std::ofstream outputFile(filePath.c_str(), std::ios::app); // open for appending
     if (outputFile.is_open()){
@@ -285,7 +284,7 @@ namespace industrial_extrinsic_cal
     }//end if writing to file
   }
 
-  void  ROSCameraHousingBroadcastTInterface::setReferenceFrame(string ref_frame)
+  void  ROSCameraHousingBroadcastTInterface::setReferenceFrame(string & ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;

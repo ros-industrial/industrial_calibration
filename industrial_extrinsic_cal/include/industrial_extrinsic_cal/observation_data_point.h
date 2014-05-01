@@ -101,7 +101,7 @@ public:
 
   /** @brief add an observation point to the list 
    *   @param new_data_point the observation to add to the list
-*/
+   */
   void addObservationPoint(ObservationDataPoint new_data_point);
 
   /** @brief vector of observations */

@@ -70,7 +70,7 @@ boost::shared_ptr<TransformInterface> Camera::getTransformInterface()
 {
   return(transform_interface_);
 }
-void Camera::setTIReferenceFrame(std::string ref_frame)
+void Camera::setTIReferenceFrame(std::string & ref_frame)
 {
   transform_interface_->setReferenceFrame(ref_frame);
 }

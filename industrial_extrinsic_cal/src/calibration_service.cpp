@@ -111,11 +111,7 @@ int main(int argc, char **argv)
 
   ros::ServiceServer service=nh.advertiseService("calibration_service", &CalibrationServiceNode::callback, &cal_service_node);
 
-  ros::Rate r(5); // 5 hz
-  while (ros::ok()){
-    ros::spinOnce();
-    r.sleep();
-  }
+  ros::spin();
     
 }
 
