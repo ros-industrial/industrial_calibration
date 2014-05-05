@@ -20,10 +20,26 @@
 #define CAMERA_OBSERVER_HPP_
 
 #include <industrial_extrinsic_cal/basic_types.h> /* Target,Roi,Observation,CameraObservations */
+#include <industrial_extrinsic_cal/target.h> /* Roi,Observation,CameraObservations */
 
 namespace industrial_extrinsic_cal
 {
+  /*! \brief An observation is the x,y image location of a target's point in an image*/
+  typedef struct
+  {
+    boost::shared_ptr<Target> target; /**< pointer to target who's point is observed */
+    int point_id; /**< point's id in target's point array */
+    double image_loc_x; /**< target point was found at image location x */
+    double image_loc_y; /**< target point image location y */
+  } Observation;
 
+  /*! \brief A vector of observations made by a single camera of posibly multiple targets */
+  typedef     std::vector<Observation> CameraObservations;
+
+  /** @brief A camera observer is an object which given a set of targets and regions of interest, it provides observations 
+   *              of those targets. A camera obsever is configured with targets, then triggered, once observations are done, they
+   *              may be collected with the getter function.
+   */
 class CameraObserver
 {
 public:

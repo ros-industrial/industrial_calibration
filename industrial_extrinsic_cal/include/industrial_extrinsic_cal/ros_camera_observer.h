@@ -45,134 +45,147 @@
  */
 namespace pattern_options
 {
-enum pattern_options_
-{
-  Chessboard = 0, CircleGrid = 1, ARtag = 2
-};
+  enum pattern_options_
+    {
+      Chessboard = 0, CircleGrid = 1, ARtag = 2
+    };
 }
 typedef pattern_options::pattern_options_ PatternOption;
 
 namespace industrial_extrinsic_cal
 {
 
-class ROSCameraObserver : public CameraObserver
-{
-public:
-
-  /**
-   * @brief constructor
-   * @param image_topic name of published image topic
-   */
-  ROSCameraObserver(const std::string &image_topic);
-
-  /**
-   * @brief Default destructor
-   */
-  ~ROSCameraObserver()
+  class ROSCameraObserver : public CameraObserver
   {
-  }
-  ;
+  public:
+    
+    /**
+     * @brief constructor
+     * @param image_topic name of published image topic
+     */
+    ROSCameraObserver(const std::string &image_topic);
+    
+    /**
+     * @brief Default destructor
+     */
+    ~ROSCameraObserver()  { }  ;
+    
+    /**
+     * @brief add a target to look for and region to look in
+     * @param targ a target to look for
+     * @param roi Region of interest for target
+     * @return true if successful, false if error in setting target or roi
+     */
+    bool addTarget(boost::shared_ptr<Target> targ, Roi &roi);
 
-  /**
-   * @brief add a target to look for and region to look in
-   * @param targ a target to look for
-   * @param roi Region of interest for target
-   * @return true if successful, false if error in setting target or roi
-   */
-  bool addTarget(boost::shared_ptr<Target> targ, Roi &roi);
+    /**
+     * @brief remove all targets
+     */
+    void clearTargets();
 
-  /**
-   * @brief remove all targets
-   */
-  void clearTargets();
+    /**
+     * @brief clear all previous observations
+     */
+    void clearObservations();
 
-  /**
-   * @brief clear all previous observations
-   */
-  void clearObservations();
+    /**
+     * @brief return observations
+     * @param camera_observations output observations of targets defined
+     * @return 0 if failed to get observations, 1 if successful
+     */
+    int getObservations(CameraObservations &camera_observations);
 
-  /**
-   * @brief return observations
-   * @param camera_observations output observations of targets defined
-   * @return 0 if failed to get observations, 1 if successful
-   */
-  int getObservations(CameraObservations &camera_observations);
+    /** @brief tells observer to process next incomming image to find the targets in list */
+    void triggerCamera();
 
-  /** @brief tells observer to process next incomming image to find the targets in list */
-  void triggerCamera();
+    /** @brief tells when camera has completed its observations */
+    bool observationsDone();
 
-  /** @brief tells when camera has completed its observations */
-  bool observationsDone();
+  private:
 
-private:
+    /**
+     * @brief name of pattern being looked for
+     */
+    PatternOption pattern_;
 
-  PatternOption pattern_;
-  /**
-   * @brief topic name for image which is input at constructor
-   */
-  std::string image_topic_;
-  /**
-   *  @brief cropped image based on original image and region of interest
-   */
-  cv::Mat image_roi_;
-  /*!
-   *  @brief cv rectangle region to crop image into
-   */
-  cv::Rect input_roi_;
-  /**
-   *  @brief target pattern grid number of rows
-   */
-  int pattern_rows_;
-  /**
-   *  @brief target pattern grid number of columns
-   */
-  int pattern_cols_;
-  /**
-   *  @brief circle grid target pattern true=symmetric
-   */
-  bool sym_circle_;
-  /**
-   *  @brief 2D values of corner/circle locations returned from cv methods
-   */
-  std::vector<cv::Point2f> observation_pts_;
-  /**
-   *  @brief private target which is initialized to input target
-   */
-  boost::shared_ptr<Target> instance_target_;
-  /**
-   *  @brief private CameraObservations which are set at the end of getObservations and cleared
-   */
-  CameraObservations camera_obs_;
+    /**
+     * @brief topic name for image which is input at constructor
+     */
+    std::string image_topic_;
 
-  //ROS specific params
-  /**
-   *  @brief ROS node handle for initializing point cloud publisher
-   */
-  ros::NodeHandle nh_;
-  /**
-   *  @brief ROS subscriber to image_topic_
-   */
-  ros::Subscriber image_sub_;
-  /**
-   *  @brief ROS publisher of out_bridge_ or output_bridge_
-   */
-  ros::Publisher results_pub_;
+    /**
+     *  @brief cropped image based on original image and region of interest
+     */
+    cv::Mat image_roi_;
 
-  // Structures for interacting with ROS/CV messages
-  /**
-   *  @brief cv_bridge image for input image from ROS topic image_topic_
-   */
-  cv_bridge::CvImagePtr input_bridge_;
-  /**
-   *  @brief cv_bridge image for cropped color output image
-   */
-  cv_bridge::CvImagePtr output_bridge_;
-  /**
-   *  @brief cv_bridge image for cropped mono output image
-   */
-  cv_bridge::CvImagePtr out_bridge_;
+    /*!
+     *  @brief cv rectangle region to crop image into
+     */
+    cv::Rect input_roi_;
 
-};
+    /**
+     *  @brief target pattern grid number of rows
+     */
+    int pattern_rows_;
+
+    /**
+     *  @brief target pattern grid number of columns
+     */
+    int pattern_cols_;
+
+    /**
+     *  @brief circle grid target pattern true=symmetric
+     */
+    bool sym_circle_;
+
+    /**
+     *  @brief 2D values of corner/circle locations returned from cv methods
+     */
+    std::vector<cv::Point2f> observation_pts_;
+
+    /**
+     *  @brief private target which is initialized to input target
+     */
+    boost::shared_ptr<Target> instance_target_;
+
+    /**
+     *  @brief private CameraObservations which are set at the end of getObservations and cleared
+     */
+    CameraObservations camera_obs_;
+
+    //ROS specific params
+    /**
+     *  @brief ROS node handle for initializing point cloud publisher
+     */
+    ros::NodeHandle nh_;
+
+    /**
+     *  @brief ROS subscriber to image_topic_
+     */
+    ros::Subscriber image_sub_;
+
+    /**
+     *  @brief ROS publisher of out_bridge_ or output_bridge_
+     */
+    ros::Publisher results_pub_;
+
+    // Structures for interacting with ROS/CV messages
+    /**
+     *  @brief cv_bridge image for input image from ROS topic image_topic_
+     */
+    cv_bridge::CvImagePtr input_bridge_;
+
+    /**
+     *  @brief cv_bridge image for cropped color output image
+     */
+    cv_bridge::CvImagePtr output_bridge_;
+
+    /**
+     *  @brief cv_bridge image for cropped mono output image
+     */
+    cv_bridge::CvImagePtr out_bridge_;
+
+  };
 
 } //end industrial_extrinsic_cal namespace
 

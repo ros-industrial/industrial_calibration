@@ -17,7 +17,6 @@
  */
 
 #include <industrial_extrinsic_cal/ros_camera_observer.h>
-
 namespace industrial_extrinsic_cal
 {
 
@@ -32,9 +31,9 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
 bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
 {
   //set pattern based on target
-  ROS_INFO_STREAM("Target type: "<<targ->target_type);
+  ROS_INFO_STREAM("Target type: "<<targ->target_type_);
   instance_target_ = targ;
-  switch (targ->target_type)
+  switch (targ->target_type_)
   {
     case pattern_options::Chessboard:
       pattern_ = pattern_options::Chessboard;
@@ -61,13 +60,13 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
   switch (pattern_)
   {
     case pattern_options::Chessboard:
-      pattern_rows_ = targ->checker_board_parameters.pattern_rows;
-      pattern_cols_ = targ->checker_board_parameters.pattern_cols;
+      pattern_rows_ = targ->checker_board_parameters_.pattern_rows;
+      pattern_cols_ = targ->checker_board_parameters_.pattern_cols;
       break;
     case pattern_options::CircleGrid:
-      pattern_rows_ = targ->circle_grid_parameters.pattern_rows;
-      pattern_cols_ = targ->circle_grid_parameters.pattern_cols;
-      sym_circle_ = targ->circle_grid_parameters.is_symmetric;
+      pattern_rows_ = targ->circle_grid_parameters_.pattern_rows;
+      pattern_cols_ = targ->circle_grid_parameters_.pattern_cols;
+      sym_circle_ = targ->circle_grid_parameters_.is_symmetric;
       break;
     case pattern_options::ARtag:
       ROS_ERROR_STREAM("AR Tag recognized but pattern not supported yet");
@@ -96,7 +95,7 @@ void ROSCameraObserver::clearTargets()
 
 void ROSCameraObserver::clearObservations()
 {
-  camera_obs_.observations.clear();
+  camera_obs_.clear();
   //ROS_INFO_STREAM("Observations cleared from observer");
 }
 
@@ -113,11 +112,8 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 
   image_roi_ = input_bridge_->image(input_roi_);
 
-  output_bridge_->image = output_bridge_->image(input_roi_);
-  out_bridge_->image = image_roi_;
-  ROS_INFO_STREAM("output image size: " <<output_bridge_->image.rows<<" x "<<output_bridge_->image.cols);
-  results_pub_.publish(out_bridge_->toImageMsg());
-
+  std::vector<cv::KeyPoint> key_points;
+  ROS_INFO("Pattern type %d, rows %d, cols %d",pattern_,pattern_rows_,pattern_cols_);
   switch (pattern_)
   {
     case pattern_options::Chessboard:
@@ -131,6 +127,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
         ROS_INFO_STREAM("Finding Circles in grid, symmetric...");
         successful_find = cv::findCirclesGrid(image_roi_, cv::Size(pattern_rows_, pattern_cols_), observation_pts_,
                                               cv::CALIB_CB_SYMMETRIC_GRID);
+        if(successful_find) ROS_INFO_STREAM("FOUND");
       }
       else
       {
@@ -139,7 +136,26 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
                                               cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING);
       }
       break;
+
   }
+  // next block of code for publishing the roi as an image, when target is found, circles are placed on image, with a line between pt1 and pt2
+  for(int i=0;i<(int)observation_pts_.size();i++){
+    cv::Point p;
+    p.x = observation_pts_[i].x;
+    p.y = observation_pts_[i].y;
+    circle(image_roi_,p,10.0,255,5);
+  }
+  if(observation_pts_.size()>1){
+    cv::Point p1,p2;
+    p1.x = observation_pts_[0].x; 
+    p1.y = observation_pts_[0].y; 
+    p2.x = observation_pts_[1].x; 
+    p2.y = observation_pts_[1].y; 
+    line(image_roi_,p1,p2,255,3);
+  }
+  out_bridge_->image = image_roi_;
+  results_pub_.publish(out_bridge_->toImageMsg());
+
   if (!successful_find)
   {
     ROS_WARN_STREAM("Pattern not found for pattern: "<<pattern_ <<" with symmetry: "<< sym_circle_);
@@ -147,13 +163,13 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   }
 
   ROS_INFO_STREAM("Number of points found on board: "<<observation_pts_.size());
-  camera_obs_.observations.resize(observation_pts_.size());
+  camera_obs_.resize(observation_pts_.size());
   for (int i = 0; i < observation_pts_.size(); i++)
   {
-    camera_obs_.observations.at(i).target = instance_target_;
-    camera_obs_.observations.at(i).point_id = i;
-    camera_obs_.observations.at(i).image_loc_x = observation_pts_.at(i).x;
-    camera_obs_.observations.at(i).image_loc_y = observation_pts_.at(i).y;
+    camera_obs_.at(i).target = instance_target_;
+    camera_obs_.at(i).point_id = i;
+    camera_obs_.at(i).image_loc_x = observation_pts_.at(i).x;
+    camera_obs_.at(i).image_loc_y = observation_pts_.at(i).y;
   }
 
   cam_obs = camera_obs_;
@@ -162,9 +178,10 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 
 void ROSCameraObserver::triggerCamera()
 {
-
+  ROS_INFO("rosCameraObserver, waiting for image from topic %s",image_topic_.c_str());
   sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
-  //ROS_INFO_STREAM("Waiting for image on topic: "<<image_topic_);
+
+  ROS_INFO("GOT IT");
   try
   {
     input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
@@ -176,7 +193,6 @@ void ROSCameraObserver::triggerCamera()
   {
     ROS_ERROR("Failed to convert image");
     ROS_WARN_STREAM("cv_bridge exception: "<<ex.what());
-    //return false;
     return;
   }
 

@@ -21,12 +21,14 @@
 
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/camera_definition.h>
+#include <industrial_extrinsic_cal/target.h>
 #include <ros/console.h>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace industrial_extrinsic_cal
 {
+
 
 /*! \brief a command to take a set of observations from a group of cameras upon a trigger event */
 class ObservationScene
@@ -35,19 +37,19 @@ public:
   /*! \brief Constructor,
    *   \param Trigger Trig the type of trigger to initiate this observation
    */
-  ObservationScene(Trigger trig, int scene_id) :
-      trig_(trig), scene_id_(scene_id)
+  ObservationScene(boost::shared_ptr<Trigger> trig, int scene_id) :
+      scene_id_(scene_id)
   {
-  }
-  ;
+    trig_ = trig;
+  };
 
   /*! \brief destructor, clears observation command list*/
   ObservationScene()
   {
     observation_command_list_.clear();
     cameras_in_scene_.clear();
-  }
-  ;
+  };
+
 
   /*! \brief  Clears all observations from the command */
   void clear();
@@ -58,6 +60,7 @@ public:
    *  \param roi:    the region of interest in the camera's field of view to look for target
    */
   void addObservationToScene(ObservationCmd observation_command);
+
   /*!
    * \brief Adds a camera to the scene
    * @param cameras_in_scene
@@ -71,19 +74,20 @@ public:
    * @param roi the region of interest for this observation command
    */
   void populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi);
+
   /*! \brief gets the id of this scene */
   int get_id()
   {
     return (scene_id_);
-  }
-  ;
+  };
+
 
   /*! \brief gets the trigger of this scene */
-  Trigger get_trigger()
+  boost::shared_ptr<Trigger> get_trigger()
   {
     return (trig_);
-  }
-  ;
+  };
+
   /*!
    * \brief set scene_id for this scene
    * @param sceneId
@@ -92,11 +96,12 @@ public:
   {
     scene_id_ = sceneId;
   };
+
   /*!
    * \brief set the trigger for this scene
    * @param trig
    */
-  void setTrig(const Trigger& trig)
+  void setTrig(boost::shared_ptr<Trigger>  trig)
   {
     trig_ = trig;
   };
@@ -105,7 +110,7 @@ public:
   std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scene */
 
 private:
-  Trigger trig_; /*!< event to trigger the observations in this command */
+  boost::shared_ptr<Trigger>  trig_; /*!< event to trigger the observations in this command */
   int scene_id_; /*!< unique identifier of this scene */
 };
 // end of class ObservationScene

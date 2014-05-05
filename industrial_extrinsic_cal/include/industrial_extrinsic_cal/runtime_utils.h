@@ -58,7 +58,7 @@ public:
    * @return Tranform to be published/broadcasted
    */
   tf::Transform pblockToPose(industrial_extrinsic_cal::P_BLOCK &optimized_input);
-
+  tf::Transform pblockToPose2(industrial_extrinsic_cal::P_BLOCK &optimized_input);
   /**
    * @brief saved final calibrated transforms as launch file
    * @param package_name directory to package path

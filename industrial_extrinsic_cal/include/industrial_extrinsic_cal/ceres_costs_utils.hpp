@@ -21,7 +21,6 @@
 
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
-#include <industrial_extrinsic_cal/basic_types.h>
 
 namespace industrial_extrinsic_cal
 {

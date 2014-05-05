@@ -23,6 +23,10 @@
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/camera_definition.h>
 #include "boost/make_shared.hpp"
+#include "ceres/ceres.h"
+#include "ceres/rotation.h"
+#include <iostream>
+#include <fstream>
 
 namespace industrial_extrinsic_cal
 {
@@ -70,13 +74,13 @@ public:
    */
   bool addMovingTarget(boost::shared_ptr<Target> target_to_add, int scene_id);
 
-
   /*! \brief grabs a camera from the camera list given the camera name
    *  \param camera_name is the name of the camera
    *  \param camera this is the camera from the list, either moving or static
    *  \return true on success
    */
   const boost::shared_ptr<Camera> getCameraByName(const std::string &camera_name);
+
   /*!
    * \brief grabs a target from the target list given the target name
    * @param target_name is the name of the target
@@ -85,6 +89,9 @@ public:
    */
   const boost::shared_ptr<Target>  getTargetByName(const std::string &target_name);
 
+  /*! @brief gets a pointer to the intrinsic parameters of a static camera 
+   *  @param camera_name the camera's name
+   */
   P_BLOCK getStaticCameraParameterBlockIntrinsics(std::string camera_name);
 
   /*! @brief gets a pointer to the intrinsic parameters of a moving camera
@@ -148,11 +155,50 @@ public:
    */
   P_BLOCK getMovingTargetPointParameterBlock(std::string target_name, int pnt_id);
 
-  //private:
+  /*! @brief writes a single launch file with all the static tranforms 
+   *  @param filepath  the full path to the launch file being created
+   */
+  bool writeAllStaticTransforms(std::string filepath);
+
+  /*! @brief writes info from static cameras to terminal */
+  void displayStaticCameras();
+
+  /*! @brief writes info from moving cameras to terminal */
+  void displayMovingCameras();
+
+  /*! @brief writes info from static targets to terminal */
+  void displayStaticTargets();
+
+  /*! @brief writes info from moving cameras to terminal */
+  void displayMovingTargets();
+
+  /*! @brief writes info from all cameras and targets to terminal */
+  void displayAllCamerasAndTargets()
+  {
+    displayStaticCameras();
+    displayMovingCameras();
+    displayStaticTargets();
+    displayMovingTargets();
+  };
+
+  /*! @brief sends transform to the interface*/
+  void pushTransforms();
+
+  /*! @brief gets transform from interface */
+  void pullTransforms();
+
+  /*! @brief sets reference transform from interface, and may start a timer for broadcasting*/
+  void setReferenceFrame(std::string ref_frame);
+
+  /*! @brief get reference frame name from the interface */
+  std::string getReferenceFrame(){ return(reference_frame_);};
+
   std::vector<boost::shared_ptr<Camera> > static_cameras_; /*!< all non-moving cameras in job */
   std::vector<boost::shared_ptr<MovingCamera> > moving_cameras_; /*! only one camera of a given name per scene */
   std::vector<boost::shared_ptr<Target> > static_targets_; /*!< all non-moving targets in job */
   std::vector<boost::shared_ptr<MovingTarget> > moving_targets_; /*! only one target of a given name per scene */
+  std::string reference_frame_; /*! name of reference frame, typically a ROS tf frame */
+
 };//end class
 
 }// end namespace industrial_extrinsic_cal

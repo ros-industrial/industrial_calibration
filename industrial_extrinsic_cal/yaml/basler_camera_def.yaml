@@ -1,0 +1,34 @@
+---
+
+static_cameras:
+ -
+    camera_name: BaslerAce
+    camera_optical_frame: /optical_frame1
+    trigger: NO_WAIT_TRIGGER
+    image_topic: /image_color
+    angle_axis_ax: -1.76
+    angle_axis_ay: -1.76
+    angle_axis_az: 0.73
+    position_x: 1.0
+    position_y:  0.0
+    position_z: 1.5
+    transform_interface: ros_camera_bti
+#    options for transform_interface for cameras include:
+#    ros_camera_bti  broadcast the reference_frame to camera_optical_frame, but parameters map to inverse
+#    ros_camera_lti  listens to the camera_optical_frame relative to reference directly 
+#    ros_camera_housing_lti  listens to the camera_optical_frame relative to reference directly 
+#               must define camera_housing_frame: /camera_frame, but not used
+#    ros_camera_housing_bti  broadcast the reference_frame to camera_housing_frame,
+#               must define camera_housing_frame: /camera_frame
+#    ros_lti  listens to the reference_frame to camera_optical frame, does not invert
+#    ros_bti  broadcasts to the reference_frame to camera_optical frame, does not invert
+    focal_length_x: 892.33958
+    focal_length_y: 891.15427
+    center_x: 966.01519
+    center_y: 516.59866
+    distortion_k1: -0.01124 
+    distortion_k2:  0.01366 
+    distortion_k3: -0.00164 
+    distortion_p1: -0.00145 
+    distortion_p2: 0.00000
+

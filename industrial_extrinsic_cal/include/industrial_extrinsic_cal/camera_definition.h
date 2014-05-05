@@ -19,10 +19,12 @@
 #ifndef CAMERA_CLASS_H_
 #define CAMERA_CLASS_H_
 
-#include <industrial_extrinsic_cal/basic_types.h>
+
 #include <ros/console.h>
 #include <industrial_extrinsic_cal/camera_observer.hpp>
-#include <industrial_extrinsic_cal/ros_camera_observer.h>
+#include <industrial_extrinsic_cal/basic_types.h>
+#include <industrial_extrinsic_cal/trigger.h>
+#include <industrial_extrinsic_cal/transform_interface.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
@@ -47,22 +49,52 @@ public:
   /*! \brief default destructor, nothing to do really */
   ~Camera();
 
-  /*!  is the camera's location fixed or not?
-   moving cameras get multiple pose parameters
-   static cameras get but one set of pose parameters
+  /*! \brief is the camera's location fixed or not?
+   *   moving cameras get multiple pose parameters
+   *   static cameras get but one set of pose parameters
    */
   bool isMoving();
-  boost::shared_ptr<ROSCameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
+
+  /*! \brief send the camera parameters to the transform interface 
+   *  Note: some interfaces do nothing on the operation
+   */
+  void pushTransform();
+
+  /*! \brief get the camera parameters from the transform interface 
+   *  Note: some interfaces do nothing on this operaton
+   */
+  void pullTransform();
+
+  /*! \brief set the transform interface
+   *  Transform interfaces allow hardware or simulation to provide or accept pose information
+   *  depending on whether they are a broadcaster or a listener
+   */
+  void setTransformInterface(boost::shared_ptr<TransformInterface> tranform_interface);
+
+  /*! \brief set the reference frame for the tranform interface.
+   *  Because transform interfaces need to get created when the camera or target is created, we often don't know
+   *  what the reference frame is for the interface until later, so we need to set it
+   */
+  void setTIReferenceFrame(std::string & ref_frame);
+
+  /*! \brief get the transform interface, 
+   *  Because transform interfaces need to get created when the camera or target is created, we often don't know
+   *  what the reference frame is for the interface until later, so we need to set it
+   * TODO since we have a get and set, why is it public?
+   */
+  boost::shared_ptr<TransformInterface> getTransformInterface();
+
+  boost::shared_ptr<CameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
+  boost::shared_ptr<Trigger>  trigger_; /*!< pointer to the trigger mechanism for this camera*/
   CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
-  //    ::std::ostream& operator<<(::std::ostream& os, const Camera& C){ return os<< "TODO";};
-
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
-
   bool fixed_intrinsics_; /** are the extrinsics known? */
   bool fixed_extrinsics_; /** are the extrinsics known? */
+  boost::shared_ptr<TransformInterface>  transform_interface_; /**< interface to transform, tf for example  */
 
 private:
   bool is_moving_; /*!< bool is_moving_  false for static cameras */
+
 };
 // end of class Camera
 

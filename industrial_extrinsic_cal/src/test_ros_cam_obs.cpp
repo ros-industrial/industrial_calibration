@@ -24,6 +24,7 @@
 
 using industrial_extrinsic_cal::ROSCameraObserver;
 
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "my_node_name");
@@ -34,11 +35,11 @@ int main(int argc, char **argv)
 
 	 boost::shared_ptr<industrial_extrinsic_cal::Target> target (new industrial_extrinsic_cal::Target);
 	 industrial_extrinsic_cal::Roi roi;
-	 target->target_type=0;
-	 target->is_moving=false;
-	 target->target_name="checkerboard";
-	 target->checker_board_parameters.pattern_rows=11;
-	 target->checker_board_parameters.pattern_cols=11;
+	 target->target_type_ =  pattern_options::CircleGrid;
+	 target->is_moving_=false;
+	 target->target_name_="checkerboard";
+	 target->checker_board_parameters_.pattern_rows=11;
+	 target->checker_board_parameters_.pattern_cols=11;
 	 //target->target_name="circlegrid";
 	 //target->circle_grid_parameters.pattern_rows=31;
 	 //target->circle_grid_parameters.pattern_cols=30;

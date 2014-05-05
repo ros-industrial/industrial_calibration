@@ -5,6 +5,7 @@ static_targets:
     target_name: CircleGrid100
     target_type: 1
     target_frame: target_frame
+    transform_observer: ros_transform_observer
     target_rows: 2
     target_cols: 2
     angle_axis_ax: 1.1
@@ -23,6 +24,7 @@ static_targets:
     target_name: CircleGrid200
     target_type: 1
     target_frame: target_frame
+    transform_observer: ros_transform_observer
     target_rows: 2
     target_cols: 2
     angle_axis_ax: 1.1
@@ -42,6 +44,7 @@ moving_targets:
     target_name: CircleGrid300
     target_type: 1
     target_frame: target_frame
+    transform_observer: ros_transform_observer
     target_rows: 2
     target_cols: 2
     angle_axis_ax: 1.1
@@ -61,6 +64,7 @@ moving_targets:
     target_name: CircleGrid300
     target_type: 1
     target_frame: target_frame
+    transform_observer: ros_transform_observer
     target_rows: 2
     target_cols: 2
     angle_axis_ax: 1.1
