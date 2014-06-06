@@ -24,6 +24,8 @@
 #include <actionlib/client/simple_action_client.h>
 #include <industrial_extrinsic_cal/trigger.h>
 #include <industrial_extrinsic_cal/manual_triggerAction.h>
+#include <industrial_extrinsic_cal/robot_jv_triggerAction.h>
+#include <industrial_extrinsic_cal/robot_pose_triggerAction.h>
 
 namespace industrial_extrinsic_cal
 {
@@ -57,7 +59,7 @@ namespace industrial_extrinsic_cal
     std::string parameter_name_;
   };
 
-  typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::manual_triggerAction> Client;
+  typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::manual_triggerAction> Manual_Client;
 
   class ROSActionServerTrigger : public Trigger
   {
@@ -68,7 +70,7 @@ namespace industrial_extrinsic_cal
       {
 	server_name_ = server_name;  
 	action_message_ = action_message;  
-	client_ = new Client(server_name_.c_str(),true);
+	client_ = new Manual_Client(server_name_.c_str(),true);
       };
 
     /*! \brief Destructor
@@ -87,15 +89,111 @@ namespace industrial_extrinsic_cal
       do{
 	client_->waitForResult(ros::Duration(5.0));
 	ROS_INFO("Current State: %s", client_->getState().toString().c_str());
-      } while(client_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED);
+      } while(client_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED
+	      && client_->getState() != actionlib::SimpleClientGoalState::ABORTED);
       return(true);  /**< TODO implement a timeout, cancels action and with returns false*/
     };
   private: 
-    Client *client_;
+    Manual_Client *client_;
     ros::NodeHandle nh_;	/**< node handle */
     std::string server_name_;	/**< name of server */
     std::string action_message_; /**< message sent to action server, often displayed by that server */
   };
+
+
+    typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_jv_triggerAction> Robot_JV_Client;
+
+  class ROSRobotJVActionServerTrigger : public Trigger
+  {
+  public:
+    /*! \brief Constructor,
+     */
+    ROSRobotJVActionServerTrigger(const std::string & server_name, const  std::vector<double> &jv) 
+      {
+	server_name_ = server_name;  
+	jv_.clear();
+	for(int i=0; i< (int)jv.size(); i++){
+	  jv_.push_back(jv[i]);
+	}
+	client_ = new Robot_JV_Client(server_name_.c_str(),true);
+      };
+
+    /*! \brief Destructor
+     */
+    ~ROSRobotJVActionServerTrigger(){
+      delete(client_);
+    };
+
+    /*! \brief Initiates and waits for trigger to finish
+     */
+    bool waitForTrigger()
+    {
+      ROS_INFO("ROSRobotJVActionServerTrigger: waiting for trigger server %s to complete ",server_name_.c_str());
+      client_->waitForServer();
+      industrial_extrinsic_cal::robot_jv_triggerGoal goal;
+      goal.joint_values.clear();
+      for(int i=0; i<(int)jv_.size();i++){
+	goal.joint_values.push_back(jv_[i]);
+      }
+      client_->sendGoal(goal);
+      do{
+	client_->waitForResult(ros::Duration(5.0));
+	ROS_INFO("Current State: %s", client_->getState().toString().c_str());
+      } while(client_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED
+	      && client_->getState() != actionlib::SimpleClientGoalState::ABORTED);
+      return(true);  /**< TODO implement a timeout, cancels action and with returns false*/
+    };
+  private: 
+    Robot_JV_Client *client_;
+    ros::NodeHandle nh_;	/**< node handle */
+    std::string server_name_;	/**< name of server */
+    std::vector<double> jv_; /**< joint values */
+  };
+
+    typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_pose_triggerAction> Robot_Pose_Client;
+ 
+
+  class ROSRobotPoseActionServerTrigger : public Trigger
+  {
+  public:
+    /*! \brief Constructor,
+     */
+    ROSRobotPoseActionServerTrigger(const std::string & server_name, const  geometry_msgs::Pose pose) 
+      {
+	server_name_ = server_name;  
+	jv_.clear();
+	pose_ = pose;
+	client_ = new Robot_Pose_Client(server_name_.c_str(),true);
+      };
+
+    /*! \brief Destructor
+     */
+    ~ROSRobotPoseActionServerTrigger(){};
+
+    /*! \brief Initiates and waits for trigger to finish
+     */
+    bool waitForTrigger()
+    {
+      ROS_INFO("ROSRobotPoseActionServerTrigger: waiting for trigger server %s to complete ",server_name_.c_str());
+      client_->waitForServer();
+      industrial_extrinsic_cal::robot_pose_triggerGoal goal;
+      goal.pose = pose_;
+      client_->sendGoal(goal);
+      do{
+	client_->waitForResult(ros::Duration(5.0));
+	ROS_INFO("Current State: %s", client_->getState().toString().c_str());
+      } while(client_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED
+	      && client_->getState() != actionlib::SimpleClientGoalState::ABORTED);
+      return(true);  /**< TODO implement a timeout, cancels action and with returns false*/
+    };
+  private: 
+    Robot_Pose_Client *client_;
+    ros::NodeHandle nh_;	/**< node handle */
+    std::string server_name_;	/**< name of server */
+    geometry_msgs::Pose pose_; /**< pose of robot */
+    std::vector<double> jv_; /**< joint values */
+  };
+
 }// end of namespace
 
 #endif

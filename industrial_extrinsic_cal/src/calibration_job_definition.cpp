@@ -21,6 +21,7 @@
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <ros/package.h>
+#include <geometry_msgs/Pose.h>
 #include <actionlib/client/simple_action_client.h>
 #include <industrial_extrinsic_cal/manual_triggerAction.h>
 #include <industrial_extrinsic_cal/trigger.h>
@@ -138,6 +139,27 @@ namespace industrial_extrinsic_cal
 		  (*camera_parameters)[i]["trig_action_msg"] >> trig_action_msg;
 		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
+		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
+		  std::vector<double>joint_values;
+		  (*camera_parameters)[i]["joint_values"] >> joint_values;
+		  if(joint_values.size()<0){
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		  }
+		  temp_camera->trigger_ = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		}
+		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
+		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
+		  geometry_msgs::Pose pose;
+		  (*camera_parameters)[i]["pose"][0] >> pose.position.x;
+		  (*camera_parameters)[i]["pose"][1] >> pose.position.y;
+		  (*camera_parameters)[i]["pose"][2] >> pose.position.z;
+		  (*camera_parameters)[i]["pose"][3] >> pose.orientation.x;
+		  (*camera_parameters)[i]["pose"][4] >> pose.orientation.y;
+		  (*camera_parameters)[i]["pose"][5] >> pose.orientation.z;
+		  (*camera_parameters)[i]["pose"][6] >> pose.orientation.w;
+		  temp_camera->trigger_ = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
+		}
 		if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
 		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
 		}
@@ -217,6 +239,27 @@ namespace industrial_extrinsic_cal
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
 		  (*camera_parameters)[i]["trig_action_message"] >> trig_action_msg;
 		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
+		}
+		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
+		  std::vector<double>joint_values;
+		  (*camera_parameters)[i]["joint_values"] >> joint_values;
+		  if(joint_values.size()<0){
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		  }
+		  temp_camera->trigger_ = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		}
+		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
+		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
+		  geometry_msgs::Pose pose;
+		  (*camera_parameters)[i]["pose"][0] >> pose.position.x;
+		  (*camera_parameters)[i]["pose"][1] >> pose.position.y;
+		  (*camera_parameters)[i]["pose"][2] >> pose.position.z;
+		  (*camera_parameters)[i]["pose"][3] >> pose.orientation.x;
+		  (*camera_parameters)[i]["pose"][4] >> pose.orientation.y;
+		  (*camera_parameters)[i]["pose"][5] >> pose.orientation.z;
+		  (*camera_parameters)[i]["pose"][6] >> pose.orientation.w;
+		  temp_camera->trigger_ = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
 		}
 
 		// install camera's transform interface
@@ -518,6 +561,28 @@ namespace industrial_extrinsic_cal
 		  (*caljob_scenes)[i]["trig_action_msg"] >> trig_action_msg;
 		  temp_trigger = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
+		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
+		  std::vector<double>joint_values;
+		  (*caljob_scenes)[i]["joint_values"] >> joint_values;
+		  if(joint_values.size()<1){
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		  }
+		  temp_trigger = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		}
+		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
+		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
+		  geometry_msgs::Pose pose;
+		  (*caljob_scenes)[i]["pose"][0] >> pose.position.x;
+		  (*caljob_scenes)[i]["pose"][1] >> pose.position.y;
+		  (*caljob_scenes)[i]["pose"][2] >> pose.position.z;
+		  (*caljob_scenes)[i]["pose"][3] >> pose.orientation.x;
+		  (*caljob_scenes)[i]["pose"][4] >> pose.orientation.y;
+		  (*caljob_scenes)[i]["pose"][5] >> pose.orientation.z;
+		  (*caljob_scenes)[i]["pose"][6] >> pose.orientation.w;
+		  temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
+		}
+
 		scene_list_.at(i).setTrig(temp_trigger);
 
 		scene_list_.at(i).setSceneId(scene_id_num);

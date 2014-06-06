@@ -62,26 +62,13 @@
 <!-- Launch the extrinsic calibration service -->
   <node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen" >
     <rosparam>
-      camera_file: "basler_camera_def.yaml"
+      camera_file: "godel_camera_def.yaml"
       target_file: "circlegrid5x7n7x5.yaml"
-      cal_job_file: "basler_caljob_def.yaml"
+      cal_job_file: "godel_caljob.yaml"
       store_results_package_name: "industrial_extrinsic_cal"
       store_results_file_name: "world_to_basler_tf_broadcaster.launch"
     </rosparam>
   </node>
-
-  <!-- Launch the motoman model for Rviz -->
-
-  <!-- Define location of robot relative to world_frame 
-  <node pkg="tf" type="static_transform_publisher" 
-                 name="world_frame" 
-                 args="0 0 0 0 0 0 world_frame base_link 100" />
--->
-  <!-- Define location of target fixture relative to tool0 of robot 
-  <node pkg="tf" type="static_transform_publisher" 
-                 name="target_tf" 
-                 args="0.0 0.0 0.0 0.0 3.14 0.0 tool0 target_tf 100" /> 	
--->
 
   <!-- Define location of printed target relative to the fixture -->
   <node pkg="tf" type="static_transform_publisher" 

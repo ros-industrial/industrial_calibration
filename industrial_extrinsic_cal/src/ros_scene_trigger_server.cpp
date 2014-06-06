@@ -32,7 +32,6 @@ void execute(const industrial_extrinsic_cal::manual_triggerGoalConstPtr& goal, S
   ros::NodeHandle nh;
   nh.setParam("test_scene_trigger",false);
   while(test_scene_trigger_bool == false){
-    ROS_INFO("still waiting");
     nh.getParam("test_scene_trigger",test_scene_trigger_bool);
   }
   ROS_ERROR("Scene Action Trigger has executed successfully");
