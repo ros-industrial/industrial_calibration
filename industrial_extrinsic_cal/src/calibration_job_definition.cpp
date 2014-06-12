@@ -787,9 +787,10 @@ namespace industrial_extrinsic_cal
 		double center_pnt_y   = ODP.camera_intrinsics_[3];
 		double image_x        = ODP.image_x_;
 		double image_y        = ODP.image_y_;
-		double point_x        = ODP.point_position_[0];// location of point within target frame
-		double point_y        = ODP.point_position_[1];
-		double point_z        = ODP.point_position_[2];
+		Point3d point;
+		point.x = ODP.point_position_[0];// location of point within target frame
+		point.y = ODP.point_position_[1];
+		point.z = ODP.point_position_[2];
 		unsigned int target_type    = ODP.target_type_;
 	      
 		// pull out pointers to the parameter blocks in the observation point data
@@ -801,27 +802,23 @@ namespace industrial_extrinsic_cal
 		if(target_type == pattern_options::CircleGrid){
 		  double circle_dia = ODP.circle_dia_;
 
-		  CostFunction* cost_function = CircleTargetCameraReprjErrorNoDFixedPoint::Create(image_x, image_y,
-												  circle_dia,
-												  focal_length_x,
-												  focal_length_y,
-												  center_pnt_x,
-												  center_pnt_y,
-												  point_x,
-												  point_y,
-												  point_z);
+		  CostFunction* cost_function = CircleTargetCameraReprjErrorPK::Create(image_x, image_y,
+										       circle_dia,
+										       focal_length_x,
+										       focal_length_y,
+										       center_pnt_x,
+										       center_pnt_y,
+										       point);
 		  // add it as a residual using parameter blocks
 		  problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
 		}
 		else{
-		  CostFunction* cost_function = TargetCameraReprjErrorNoDistortion::Create(image_x, image_y,
-											   focal_length_x,
-											   focal_length_y,
-											   center_pnt_x,
-											   center_pnt_y,
-											   point_x,
-											   point_y,
-											   point_z);
+		  CostFunction* cost_function = TargetCameraReprjErrorPK::Create(image_x, image_y,
+										 focal_length_x,
+										 focal_length_y,
+										 center_pnt_x,
+										 center_pnt_y,
+										 point);
 		  // add it as a residual using parameter blocks
 		  problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
 		}

@@ -151,7 +151,7 @@ namespace industrial_extrinsic_cal
     }
   }
 
-  Pose6d Pose6d::getInverse()
+  Pose6d Pose6d::getInverse() const
   {
     double newx,newy,newz;
     tf::Matrix3x3 R = getBasis();

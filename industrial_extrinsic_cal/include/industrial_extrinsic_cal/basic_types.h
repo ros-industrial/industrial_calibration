@@ -128,7 +128,7 @@ namespace industrial_extrinsic_cal
     void getQuaternion(double &qx,  double &qy, double &qz, double &qw);
 
     /** @brief get the inverse of the pose_*/
-    Pose6d getInverse();
+    Pose6d getInverse() const;
 
     /** @brief multiplication operator*/
     Pose6d operator * ( Pose6d pose2) const;

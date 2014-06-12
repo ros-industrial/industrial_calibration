@@ -12,7 +12,7 @@ namespace industrial_extrinsic_cal
 	    ellipse is not the projected center of the circle. This error model accounts for this shift.
 	    This complete version includes lens distortion
   */
-  class  CircleTargetCameraReprjError
+  class  CircleTargetCameraReprjErrorOLD
   {
   public:
 
@@ -21,7 +21,7 @@ namespace industrial_extrinsic_cal
      *    @param ob_y observation -y value in image coordinates
      *    @param c_dia diameter of circle being viewed
      */
-    CircleTargetCameraReprjError(double ob_x, double ob_y, double c_dia)
+    CircleTargetCameraReprjErrorOLD(double ob_x, double ob_y, double c_dia)
       : ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia){};
 
     /** @brief operator ()
@@ -45,9 +45,9 @@ namespace industrial_extrinsic_cal
      */
     static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia)
     {
-      return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjError, 2, 6, 6, 9, 3>
+      return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorOLD, 2, 6, 6, 9, 3>
 	      (
-	       new CircleTargetCameraReprjError(o_x, o_y, c_dia))
+	       new CircleTargetCameraReprjErrorOLD(o_x, o_y, c_dia))
 	      );
     }
 
@@ -59,7 +59,7 @@ namespace industrial_extrinsic_cal
 
   // member function definitions
   template<typename T>
-  bool industrial_extrinsic_cal::CircleTargetCameraReprjError::operator()(const T* const c_p1,
+  bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorOLD::operator()(const T* const c_p1,
 							const T* const c_p2, 
 							const T* const c_p3, 
 							const T* const point,
@@ -213,7 +213,7 @@ namespace industrial_extrinsic_cal
 	    ellipse is not the projected center of the circle. This error model accounts for this shift.
 	    This version has no lens distortion, and should be used when objects are located in rectified images
   */
-  class  CircleTargetCameraReprjErrorNoDistortion
+  class  CircleTargetCameraReprjErrorNoDistortionOLD
   {
   public:
     /** @brief Constructor
@@ -225,7 +225,7 @@ namespace industrial_extrinsic_cal
      *    @param cx optical center in x units are pixels
      *    @param cy optical center in y units are pixels
      */
-    CircleTargetCameraReprjErrorNoDistortion(double ob_x, double ob_y, double c_dia,
+    CircleTargetCameraReprjErrorNoDistortionOLD(double ob_x, double ob_y, double c_dia,
 					     double fx, double fy, double cx, double cy)
       : ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), fx_(fx), fy_(fy), cx_(cx), cy_(cy){};
 
@@ -254,9 +254,9 @@ namespace industrial_extrinsic_cal
 				       const double fx, const double fy,
 				       const double cx, const double cy)
     {
-      return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorNoDistortion, 2, 6, 6, 3>
+      return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorNoDistortionOLD, 2, 6, 6, 3>
 	      (
-	       new CircleTargetCameraReprjErrorNoDistortion(o_x, o_y, c_dia, fx, fy, cx, cy))
+	       new CircleTargetCameraReprjErrorNoDistortionOLD(o_x, o_y, c_dia, fx, fy, cx, cy))
 	      );
     }
     
@@ -272,7 +272,7 @@ namespace industrial_extrinsic_cal
   
   // member function definitions
   template<typename T>
-  bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDistortion::operator()
+  bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDistortionOLD::operator()
     (
      const T* const c_p1,	
      const T* const c_p2,	
@@ -396,7 +396,7 @@ namespace industrial_extrinsic_cal
 	    This version has no lens distortion, and the point's location within the target is fixed.
                    It should be used when objects are located in rectified images
   */
-  class  CircleTargetCameraReprjErrorNoDFixedPoint
+  class  CircleTargetCameraReprjErrorNoDFixedPointOLD
   {
   public:
         /** @brief Constructor
@@ -411,7 +411,7 @@ namespace industrial_extrinsic_cal
      *    @param point_y location of point in target frame y value
      *    @param point_z location of point in target frame z value
      */
-    CircleTargetCameraReprjErrorNoDFixedPoint(double ob_x, double ob_y,
+    CircleTargetCameraReprjErrorNoDFixedPointOLD(double ob_x, double ob_y,
 					      double c_dia,
 					      double fx, 
 					      double fy,
@@ -456,9 +456,9 @@ namespace industrial_extrinsic_cal
 				       const double cx, const double cy,
 				       const double point_x, const double point_y, const double point_z)
     {
-      return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorNoDFixedPoint, 2, 6, 6 >
+      return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorNoDFixedPointOLD, 2, 6, 6 >
 	      (
-	       new CircleTargetCameraReprjErrorNoDFixedPoint(o_x, o_y,
+	       new CircleTargetCameraReprjErrorNoDFixedPointOLD(o_x, o_y,
 							     c_dia, 
 							     fx, fy, cx, cy,
 							     point_x, point_y, point_z))
@@ -479,7 +479,7 @@ namespace industrial_extrinsic_cal
   
   // member function definitions
   template<typename T>
-  bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDFixedPoint::operator()
+  bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDFixedPointOLD::operator()
     (
      const T* const c_p1,	
      const T* const c_p2,	
