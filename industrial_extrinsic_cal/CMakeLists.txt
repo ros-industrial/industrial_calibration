@@ -132,8 +132,8 @@ target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(trigger_service ${catkin_LIBRARIES} )
 target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES} )
 
-catkin_add_gtest(utest_inds_cal test/utest.cpp)
-target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+#catkin_add_gtest(utest_inds_cal test/utest.cpp)
+#target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 catkin_add_gtest(utest_inds_cal_ceres test/ceres_utest.cpp)
 target_link_libraries(utest_inds_cal_ceres ${PROJECT_NAME} industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 

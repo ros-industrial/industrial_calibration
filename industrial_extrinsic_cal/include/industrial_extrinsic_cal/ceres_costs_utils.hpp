@@ -275,6 +275,7 @@ namespace industrial_extrinsic_cal
   template<typename T>  void rotationProduct(const T R1[9], const T R2[9], T R3[9]);
   template<typename T> inline void rotationProduct(const T R1[9], const T R2[9], T R3[9])
   {
+    // We assume that the rotation matrices are in column major order
     // x column
     R3[0] = R1[0]*R2[0] +  R1[3]*R2[1] +  R1[6]*R2[2];
     R3[1] = R1[1]*R2[0] +  R1[4]*R2[1] +  R1[7]*R2[2];
@@ -289,8 +290,8 @@ namespace industrial_extrinsic_cal
     R3[8] = R1[2]*R2[6] +  R1[5]*R2[7] +  R1[8]*R2[8];
   }
 
-  template<typename T>  void extractCameraIntrinsics(const T intrinsics[9], T fx, T fy, T cx, T cy, T k1, T k2, T k3, T p1, T p2);
-  template<typename T> inline void extractCameraIntrinsics(const T intrinsics[9], T fx, T fy, T cx, T cy, T k1, T k2, T k3, T p1, T p2)
+  template<typename T>  void extractCameraIntrinsics(const T intrinsics[9], T &fx, T &fy, T &cx, T &cy, T &k1, T &k2, T &k3, T &p1, T &p2);
+  template<typename T> inline void extractCameraIntrinsics(const T intrinsics[9], T &fx, T &fy, T &cx, T &cy, T &k1, T &k2, T &k3, T &p1, T &p2)
   {
     fx  = intrinsics[0]; /** focal length x */
     fy  = intrinsics[1]; /** focal length y */
@@ -310,7 +311,7 @@ namespace industrial_extrinsic_cal
     RI[1] = R[3]; RI[4] = R[4];  RI[7] = R[5];
     RI[2] = R[6]; RI[5] = R[7];  RI[8] = R[8];
   }
-  template<typename T>  void transformPoint(const T angle_axis[3], const T tx[3], const T point[3], T t_point[3]);
+  template<typename T> inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3], T t_point[3]);
   template<typename T> inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3], T t_point[3])
   {
     ceres::AngleAxisRotatePoint(angle_axis, point, t_point);
@@ -319,8 +320,8 @@ namespace industrial_extrinsic_cal
     t_point[2] = t_point[2] + tx[2];
   }
 
-  template<typename T> void poseTransformPoint(const Pose6d pose, const T point[3], T t_point[3]);
-  template<typename T> inline void poseTransFormPoint(const Pose6d pose, const T point[3], T t_point[3])
+  template<typename T> inline void poseTransformPoint(const Pose6d pose, const T point[3], T t_point[3]);
+  template<typename T> inline void poseTransformPoint(const Pose6d pose, const T point[3], T t_point[3])
   {
     T angle_axis[3];
     angle_axis[0]  = T(pose.ax);
@@ -332,8 +333,8 @@ namespace industrial_extrinsic_cal
     t_point[2] = t_point[2] + T(pose.z);
   }
 
-  template<typename T>  void transformPoint(const T angle_axis[3], const T tx[3], const Point3d &point, T t_point[3]);
-  template<typename T> inline void transformPoint(const T angle_axis[3], const T tx[3], const Point3d &point, T t_point[3])
+  template<typename T>  void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d &point, T t_point[3]);
+  template<typename T> inline void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d &point, T t_point[3])
   {
     T point_[3];
     point_[0] = T(point.x);
@@ -379,8 +380,9 @@ namespace industrial_extrinsic_cal
     T ypp = yp + k1 * r2 * yp + k2 * r4 * yp + k3 * r6 * yp + p1 * (r2 + T(2.0) * yp2) + T(2.0) * p2 * xp * yp;
 
     /** perform projection using focal length and camera center into image plane */
-    resid[0] = fx * xpp + cx;
-    resid[1] = fy * ypp + cy;
+    resid[0] = fx * xpp + cx - ox;
+    resid[1] = fy * ypp + cy - oy;
+
   }
   template<typename T>  void cameraCircResidualDist(T point[3], T circle_diameter, T R_TtoC[9], 
 							  T k1, T k2, T k3, T p1, T p2, 
@@ -423,8 +425,7 @@ namespace industrial_extrinsic_cal
     Vperp[0] = mysign*Vperp[0];
     Vperp[1] = mysign*Vperp[1];
     Vperp[2] = mysign*Vperp[2];
-    
-    
+        
     /** scale into the image plane by distance away from camera */
     T xp = xp1 / zp1;
     T yp = yp1 / zp1;
@@ -563,6 +564,7 @@ namespace industrial_extrinsic_cal
     /** perform projection using focal length and camera center into image plane */
     resid[0] = fx * xp + cx - ox;
     resid[1] = fy * yp + cy - oy;
+
   }
 
   class CameraReprjErrorWithDistortion
@@ -628,7 +630,7 @@ namespace industrial_extrinsic_cal
       T camera_point[3];
 
       /** transform point into camera coordinates */
-      transformPoint(camera_aa, camera_tx, point_, camera_point);
+      transformPoint3d(camera_aa, camera_tx, point_, camera_point);
 
       /** compute project point into image plane and compute residual */
       cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, T(ox_), T(oy_),  resid);
@@ -710,7 +712,7 @@ namespace industrial_extrinsic_cal
       T camera_point[3]; /** point in camera coordinates */
 
       /** transform point into camera coordinates */
-      transformPoint(camera_aa, camera_tx, point_, camera_point);
+      transformPoint3d(camera_aa, camera_tx, point_, camera_point);
 
       /** compute project point into image plane and compute residual */
       cameraPntResidual(camera_point, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_),  resid);
@@ -814,7 +816,7 @@ namespace industrial_extrinsic_cal
       T camera_point[3]; /** point in camera coordinates */
 
       /** transform point into camera coordinates */
-      transformPoint(target_aa, target_tx, point_, world_point);
+      transformPoint3d(target_aa, target_tx, point_, world_point);
       transformPoint(camera_aa, camera_tx, world_point, camera_point);
 
       /** compute project point into image plane and compute residual */
@@ -922,7 +924,7 @@ namespace industrial_extrinsic_cal
       T camera_point[3]; /** point in camera coordinates */
 
       /** transform point into camera coordinates */
-      transformPoint(target_aa, target_tx, point_, link_point);
+      transformPoint3d(target_aa, target_tx, point_, link_point);
       poseTransformPoint(link_pose_, link_point, world_point);
       transformPoint(camera_aa, camera_tx, world_point, camera_point);
 
@@ -1035,7 +1037,7 @@ namespace industrial_extrinsic_cal
       T camera_point[3]; /** point in camera coordinates */
 
       /** transform point into camera coordinates */
-      transformPoint(target_aa, target_tx, point_, world_point);
+      transformPoint3d(target_aa, target_tx, point_, world_point);
       poseTransformPoint(link_posei_, world_point, link_point);
       transformPoint(camera_aa, camera_tx, link_point, camera_point);
 
@@ -1133,7 +1135,7 @@ namespace industrial_extrinsic_cal
       T R_TtoC[9]; /** rotation from target to camera coordinates 
 
       /** find point in camera coordinates */
-      transformPoint(camera_aa, camera_tx, point_, camera_point);
+      transformPoint3d(camera_aa, camera_tx, point_, camera_point);
 
       // find rotation from target to camera coordinates
       ceres::AngleAxisToRotationMatrix(camera_aa, R_TtoC);
@@ -1220,7 +1222,7 @@ namespace industrial_extrinsic_cal
       T R_TtoC[9]; /** rotation from target to camera coordinates */
 
       /** rotate and translate point into camera coordinates*/
-      transformPoint(camera_aa, camera_tx, point_, camera_point);
+      transformPoint3d(camera_aa, camera_tx, point_, camera_point);
 
       // find rotation from target to camera coordinates
       ceres::AngleAxisToRotationMatrix(camera_aa, R_TtoC);
@@ -1335,7 +1337,7 @@ namespace industrial_extrinsic_cal
       ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
 
       /** transform point into camera coordinates */
-      transformPoint(target_aa, target_tx, point_, world_point);
+      transformPoint3d(target_aa, target_tx, point_, world_point);
       transformPoint(camera_aa, camera_tx, world_point, camera_point);
 
       // find rotation from target to camera coordinates
@@ -1444,7 +1446,7 @@ namespace industrial_extrinsic_cal
       ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
 
       /** transform point into camera frame */
-      transformPoint(target_aa, target_tx, point_, world_point);
+      transformPoint3d(target_aa, target_tx, point_, world_point);
       transformPoint(camera_aa, camera_tx, world_point, camera_point);
 
       /** find rotation from target to camera coordinates */
@@ -1569,7 +1571,7 @@ namespace industrial_extrinsic_cal
       poseRotationMatrix(link_pose_,R_LtoW);
 
       /** transform point into camera frame */
-      transformPoint(target_aa, target_tx, point_, link_point);
+      transformPoint3d(target_aa, target_tx, point_, link_point);
       poseTransformPoint(link_pose_, link_point, world_point);
       transformPoint(camera_aa, camera_tx, world_point, camera_point);
 
