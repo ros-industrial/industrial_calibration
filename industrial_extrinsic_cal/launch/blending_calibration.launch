@@ -1,7 +1,6 @@
 <?xml version="1.0" ?>
 <launch>
 
-
   <!-- Basler camera node   -->
   <node pkg="aravis_camera_driver" type="aravis_camera_node" name="aravis_camera_node">
     <param name="camera_id" value="Basler-21135423"/>
@@ -45,6 +44,7 @@
 <!-- Launch service which when called will move robot and then indicate scene is ready   -->
   <node pkg="industrial_extrinsic_cal" type="ros_robot_trigger_action_service" name="rosRobotSceneTrigger" output="screen" />
 
+
 <!-- Launch the extrinsic calibration service -->
   <node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen" >
     <rosparam>
@@ -55,5 +55,7 @@
       store_results_file_name: "world_to_basler_tf_broadcaster.launch"
     </rosparam>
   </node>
+
+<!-- NOTE ONE STILL NEEDS TO CALL THE CALIBRATION SERVICE WITH -->
 
 </launch>

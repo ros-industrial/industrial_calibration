@@ -856,7 +856,7 @@ namespace industrial_extrinsic_cal
   }
   void CalibrationJob::pullTransforms()
   {
-    ceres_blocks_.pushTransforms();
+    ceres_blocks_.pullTransforms();
   }
   void CalibrationJob::pushTransforms()
   {

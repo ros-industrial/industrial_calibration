@@ -135,6 +135,7 @@ namespace industrial_extrinsic_cal
       for(int i=0; i<(int)jv_.size();i++){
 	goal.joint_values.push_back(jv_[i]);
       }
+      ROS_INFO("SENDING GOAL");
       client_->sendGoal(goal);
       do{
 	client_->waitForResult(ros::Duration(5.0));

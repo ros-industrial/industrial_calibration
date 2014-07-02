@@ -18,9 +18,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 1
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -38,9 +38,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 2
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -58,9 +58,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 3
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -78,9 +78,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 4
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -98,9 +98,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 5
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -118,9 +118,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 6
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -138,9 +138,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 7
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -158,9 +158,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 8
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -178,9 +178,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 9
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -198,9 +198,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 10
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -218,9 +218,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 11
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -238,9 +238,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 12
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -258,9 +258,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 13
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -278,9 +278,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 14
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -298,9 +298,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 15
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -318,9 +318,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 15
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -338,9 +338,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 16
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -358,9 +358,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 17
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -378,9 +378,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 18
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -398,9 +398,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 19
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -418,9 +418,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 20
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -438,9 +438,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 21
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -458,9 +458,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 22
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -478,9 +478,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 23
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -498,9 +498,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 24
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -518,9 +518,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 25
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -538,9 +538,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 26
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -558,9 +558,9 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 -
      scene_id: 27
      trigger: ROS_ROBOT_JV_ACTION_TRIGGER
@@ -578,8 +578,8 @@ scenes:
           camera: WristAsus
           target: CircleGrid7x5
           roi_x_min: 0
-          roi_x_max: 1280
+          roi_x_max: 640
           roi_y_min: 0
-          roi_y_max: 1020
+          roi_y_max: 480
 
 optimization_parameters: xx

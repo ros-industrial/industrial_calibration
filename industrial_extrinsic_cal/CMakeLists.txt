@@ -4,7 +4,7 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib genmsg actionlib_msgs actionlib moveit_ros_planning_interface)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib genmsg actionlib_msgs actionlib moveit_ros_planning_interface )
 
 # Opencv
 FIND_PACKAGE(OpenCV REQUIRED)
@@ -44,11 +44,12 @@ ENDIF (EIGEN_FOUND)
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+ add_service_files(
+   FILES
+   get_mutable_joint_states.srv
+   set_mutable_joint_states.srv
+   store_mutable_joint_states.srv
+ )
 
 add_action_files(DIRECTORY action FILES manual_trigger.action robot_jv_trigger.action robot_pose_trigger.action)
 
@@ -115,10 +116,12 @@ add_executable(test_obs src/test_ros_cam_obs.cpp)
 add_executable(service_node src/calibration_service.cpp)
 add_executable(trigger_service src/ros_scene_trigger_server.cpp)
 add_executable(ros_robot_trigger_action_service src/ros_robot_scene_trigger_action_server.cpp)
+add_executable(mutable_joint_state_publisher src/mutable_joint_state_publisher.cpp)
 
 ## These insure the message, action and service headers are created first
 add_dependencies(trigger_service industrial_extrinsic_cal_generate_messages_cpp)
 add_dependencies(ros_robot_trigger_action_service  industrial_extrinsic_cal_generate_messages_cpp)
+add_dependencies(mutable_joint_state_publisher  industrial_extrinsic_cal_generate_messages_cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -131,7 +134,7 @@ target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRAR
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(trigger_service ${catkin_LIBRARIES} )
 target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES} )
-
+target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} yaml-cpp )
 #catkin_add_gtest(utest_inds_cal test/utest.cpp)
 #target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 catkin_add_gtest(utest_inds_cal_ceres test/ceres_utest.cpp)
