@@ -124,11 +124,37 @@ namespace industrial_extrinsic_cal
     return(V);
   }
 
-  //TODO
-  //  void Pose6d::get_eulerZYX(double &ez, double &ey, double & ex)
-  //  {
-  //    
-  //  }
+    void Pose6d::getEulerZYX(double &ez, double &ey, double &ex) const
+   {
+     double PI = 4*atan(1);
+     double theta;
+     double psi;
+     double phi;
+     tf::Matrix3x3 R = this->getBasis();
+     
+     if( fabs(R[2][0]) != 1.0 ){ // cos(theta) = 0.0
+       theta = -asin(R[2][0]);
+       double ct = cos(theta);
+       psi = atan2(R[2][1]/ct, R[2][2]/ct);
+       phi = atan2(R[1][0]/ct,R[0][0]/ct);
+     }
+     else{
+       phi = 0.0; // could be anything
+       if(R[2][0] == -1.0){
+	 theta = PI/2.0;
+	 psi = phi + atan2(R[0][1], R[0][2]);
+       }
+       else{
+	 theta = -PI/2.0;
+	 psi = -phi + atan2(-R[0][1], -R[0][2]);
+       }
+     } // end of cos(theta) = 0
+
+     // Rz(phi) * Ry(theta) * Rx(psi)
+     ez = phi;
+     ey = theta;
+     ex = psi;
+   }
   void Pose6d::getQuaternion(double &qx,  double &qy, double &qz, double &qw)
   {
     // the following was taken from ceres equivalent function

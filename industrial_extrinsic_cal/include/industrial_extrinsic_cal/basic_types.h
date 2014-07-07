@@ -114,6 +114,13 @@ namespace industrial_extrinsic_cal
     /** @brief get the rotational part of pose as a tf::Matrix3x3 */
     tf::Matrix3x3 getBasis() const;
 
+    /** @brief get the euler angles  
+     * @param ez angle of rotation around z axis 
+     * @param ey angle of rotation around y axis 
+     * @param ex angle of rotation around x axis 
+     */
+    void getEulerZYX(double &ez, double &ey, double &ex) const;
+
     /** @brief get the translationalpart of pose as a tf::Vector3*/
     tf::Vector3 getOrigin() const;
 
