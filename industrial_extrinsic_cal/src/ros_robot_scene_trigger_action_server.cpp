@@ -40,7 +40,7 @@ public:
   {
     jv_server_.start();
     pose_server_.start();
-    move_group_ = new moveit::planning_interface::MoveGroup("manipulator");
+    move_group_ = new moveit::planning_interface::MoveGroup("Manipulator");
     move_group_->setPlanningTime(10.0); // give it 10 seconds to plan
     move_group_->setNumPlanningAttempts(30.0); // Allow parallel planner to hybridize this many plans
     move_group_->setPlannerId("RRTConnectkConfigDefault"); // use this planner
@@ -57,7 +57,7 @@ public:
     std::vector<double> group_variable_values;
     moveit::core::RobotStatePtr current_state = move_group_->getCurrentState();
     double *jv = current_state->getVariablePositions();
-    ROS_ERROR("starting jv = %lf %lf %lf %lf %lf %lf %lf",jv[0],jv[1],jv[2],jv[3],jv[4],jv[5],jv[6]);
+    ROS_INFO("jv_cb:: starting jv = %lf %lf %lf %lf %lf %lf %lf",jv[0],jv[1],jv[2],jv[3],jv[4],jv[5],jv[6]);
     move_group_->setStartState(*current_state);
     move_group_->setJointValueTarget(goal->joint_values);
     if(move_group_->move()){

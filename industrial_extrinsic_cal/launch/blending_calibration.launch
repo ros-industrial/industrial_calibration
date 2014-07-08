@@ -1,36 +1,9 @@
 <?xml version="1.0" ?>
 <launch>
 
-  <!-- Basler camera node   -->
-  <node pkg="aravis_camera_driver" type="aravis_camera_node" name="aravis_camera_node">
-    <param name="camera_id" value="Basler-21135423"/>
-    <param name="pixel_format" value="bayer_bggr8"/>
-    <param name="exposure_mode" value="auto_once"/>
-    <param name="exposure_time" value="1000"/>
-    <param name="auto_white_balance_once" value="true"/>
-    <param name="gain_mode" value="auto_once"/>
-    <param name="gain" value="0"/>
-    <param name="digital_shift" value="0"/>
-    <param name="mtu" value="1500"/>
-    <param name="bin_x" value="1"/>
-    <param name="bin_y" value="1"/>
-    <param name="roi_x" value="0"/>
-    <param name="roi_y" value="0"/>
-    <param name="roi_width" value="1624"/>
-    <param name="roi_height" value="1234"/>
-    <param name="frame_rate" value="30"/>
-  </node>
-
-  <node pkg="nodelet" type="nodelet" name="image_proc_nodelet"  args="manager"/>
-  <node pkg="nodelet" type="nodelet" name="debayer" args="load image_proc/debayer image_proc_nodelet">
-    <remap from="image_raw" to="image"/>
-  </node>
-
-  <!-- Kinect Camera Launch -->
-
-  <!-- Launch kinect  -->
+  <!-- Asus on wrist launch -->
   <arg name="namespace1" value="WristAsus"/>
-  <arg name="sensor_name1" value="$(arg namespace1)_WristAsus"/>
+  <arg name="sensor_name1" value="$(arg namespace1)/WristAsus"/>
 
   <remap from="/$(arg sensor_name1)/depth/points"
 	to="/$(arg namespace1)/camera/depth_registered/points"/>
@@ -44,7 +17,6 @@
 <!-- Launch service which when called will move robot and then indicate scene is ready   -->
   <node pkg="industrial_extrinsic_cal" type="ros_robot_trigger_action_service" name="rosRobotSceneTrigger" output="screen" />
 
-
 <!-- Launch the extrinsic calibration service -->
   <node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen" >
     <rosparam>
@@ -56,6 +28,11 @@
     </rosparam>
   </node>
 
-<!-- NOTE ONE STILL NEEDS TO CALL THE CALIBRATION SERVICE WITH -->
+  <!-- Define location of printed target relative to world -->
+  <node pkg="tf" type="static_transform_publisher" 
+                 name="target_frame" 
+                 args="0.070 0.120 0.0 0.707 0.0 0.0 world_frame target_frame 100" /> 
+
+<!-- NOTE ONE STILL NEEDS TO CALL THE CALIBRATION SERVICE -->
 
 </launch>

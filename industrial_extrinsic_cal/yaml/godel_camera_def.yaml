@@ -2,17 +2,17 @@
 
 static_cameras:
  -
-    camera_name: BaslerAce
-    camera_optical_frame: /optical_frame1
+    camera_name: WristAsus
+    camera_optical_frame: /asus_rgb_optical_frame
     trigger: NO_WAIT_TRIGGER
-    image_topic: /image_color
-    angle_axis_ax: -1.76
-    angle_axis_ay: -1.76
-    angle_axis_az: 0.73
-    position_x: 1.0
-    position_y:  0.0
+    image_topic: /camera/rgb/image_raw
+    angle_axis_ax: 1.0
+    angle_axis_ay: 1.1
+    angle_axis_az: 1.2
+    position_x: 1.3
+    position_y: 1.4
     position_z: 1.5
-    transform_interface: ros_camera_bti
+    transform_interface: ros_camera_housing_cti
 #    options for transform_interface for cameras include:
 #    ros_camera_bti  broadcast the reference_frame to camera_optical_frame, but parameters map to inverse
 #    ros_camera_lti  listens to the camera_optical_frame relative to reference directly 
@@ -22,27 +22,11 @@ static_cameras:
 #               must define camera_housing_frame: /camera_frame
 #    ros_lti  listens to the reference_frame to camera_optical frame, does not invert
 #    ros_bti  broadcasts to the reference_frame to camera_optical frame, does not invert
-    focal_length_x: 892.33958
-    focal_length_y: 891.15427
-    center_x: 966.01519
-    center_y: 516.59866
-    distortion_k1: -0.01124 
-    distortion_k2:  0.01366 
-    distortion_k3: -0.00164 
-    distortion_p1: -0.00145 
-    distortion_p2: 0.00000
- -
-    camera_name: WristAsus
-    camera_optical_frame: /ns1_kinect_rgb_optical_frame
-    trigger: NO_WAIT_TRIGGER
-    image_topic: /camera/rgb/image_raw
-    angle_axis_ax: 1.0
-    angle_axis_ay: 1.1
-    angle_axis_az: 1.2
-    position_x: 1.3
-    position_y: 1.4
-    position_z: 1.5
-    transform_interface: ros_camera_bti
+#    ros_camera_housing_cti  interfaces to the mutable_joint_state_publisher 
+#           must define camera_housing_frame: /camera_housing_frame
+#           must define camera_mounting_frame: /camera_mounting_frame
+    camera_housing_frame: asus_link
+    camera_mounting_frame: asus_mount
     focal_length_x: 525
     focal_length_y: 525
     center_x: 320
@@ -52,25 +36,25 @@ static_cameras:
     distortion_k3: 0.03
     distortion_p1: 0.01
     distortion_p2: 0.01
- -
-    camera_name: CellAsus
-    camera_optical_frame: /ns2_kinect_rgb_optical_frame
-    trigger: NO_WAIT_TRIGGER
-    image_topic: /camera/rgb/image_raw
-    angle_axis_ax: 1.990
-    angle_axis_ay: 1.001
-    angle_axis_az: 1.992
-    position_x: 1.399
-    position_y: 1.994
-    position_z: 1.599
-    transform_interface: ros_camera_bti
-    focal_length_x: 525
-    focal_length_y: 525
-    center_x: 320
-    center_y: 240
-    distortion_k1: 0.001
-    distortion_k2: 0.009
-    distortion_k3: 0.009
-    distortion_p1: 0.009
-    distortion_p2: 0.007
-
+# -
+#    camera_name: CellAsus
+#    camera_optical_frame: /ns2_kinect_rgb_optical_frame
+#    trigger: NO_WAIT_TRIGGER
+#    image_topic: /camera/rgb/image_raw
+#    angle_axis_ax: 1.990
+#    angle_axis_ay: 1.001
+#    angle_axis_az: 1.992
+#    position_x: 1.399
+#    position_y: 1.994
+#    position_z: 1.599
+#    transform_interface: ros_camera_bti
+#    focal_length_x: 525
+#    focal_length_y: 525
+#    center_x: 320
+#    center_y: 240
+#    distortion_k1: 0.001
+#    distortion_k2: 0.009
+#    distortion_k3: 0.009
+#    distortion_p1: 0.009
+#    distortion_p2: 0.007
+#

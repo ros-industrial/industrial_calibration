@@ -39,9 +39,9 @@ namespace industrial_extrinsic_cal
     }
     else{
       tf::StampedTransform transform;
-      ros::Time now = ros::Time::now();
+      ros::Time now = ros::Time::now()-ros::Duration(.5);
       while(! tf_listener_.waitForTransform(transform_frame_,ref_frame_, now, ros::Duration(1.0))){
-	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
+	ROS_INFO("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
       }
       tf_listener_.lookupTransform(transform_frame_,ref_frame_, now, transform);
       pose_.setBasis(transform.getBasis());
@@ -68,7 +68,7 @@ namespace industrial_extrinsic_cal
       tf::StampedTransform transform;
       ros::Time now = ros::Time::now();
       while(! tf_listener_.waitForTransform(ref_frame_,transform_frame_, now, ros::Duration(1.0))){
-	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
+	ROS_INFO("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
       }
       tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, transform);
       pose_.setBasis(transform.getBasis());
@@ -99,9 +99,9 @@ namespace industrial_extrinsic_cal
     }
     else{
       tf::StampedTransform transform;
-      ros::Time now = ros::Time::now();
+      ros::Time now = ros::Time::now()-ros::Duration(.5);
       while(! tf_listener_.waitForTransform(ref_frame_,transform_frame_, now, ros::Duration(1.0))){
-	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
+	ROS_INFO("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
       }
       tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, transform);
       pose_.setBasis(transform.getBasis());
@@ -256,9 +256,9 @@ namespace industrial_extrinsic_cal
       
       Pose6d T_co2ch;
       tf::StampedTransform transform;
-      ros::Time now = ros::Time::now();
+      ros::Time now = ros::Time::now()-ros::Duration(.5);
       while(! tf_listener_.waitForTransform(transform_frame_,housing_frame_, now, ros::Duration(1.0))){
-	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
+	ROS_INFO("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
       }
       tf_listener_.lookupTransform(transform_frame_, housing_frame_, now, transform);
       T_co2ch.setBasis(transform.getBasis());
@@ -302,9 +302,9 @@ namespace industrial_extrinsic_cal
 
     Pose6d T_co2ch;
     tf::StampedTransform transform;
-    ros::Time now = ros::Time::now();
+    ros::Time now = ros::Time::now()-ros::Duration(.5);
     while(! tf_listener_.waitForTransform(transform_frame_,housing_frame_, now, ros::Duration(1.0))){
-      ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
+      ROS_INFO("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
     }
     tf_listener_.lookupTransform(transform_frame_, housing_frame_, now, transform);
     T_co2ch.setBasis(transform.getBasis());
@@ -329,9 +329,11 @@ namespace industrial_extrinsic_cal
     mounting_frame_               = mounting_frame;
     ref_frame_initialized_         = false;    // still need to initialize ref_frame_
     nh_ = new ros::NodeHandle;
-    get_client_    = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
-    set_client_    = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
-    store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
+
+    std::string bn("mutable_joint_state_publisher/");
+    get_client_    = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>(bn + "get_mutable_joint_states");
+    set_client_    = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>(bn + "set_mutable_joint_states");
+    store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>(bn + "store_mutable_joint_states");
 
     get_request_.joint_names.push_back(housing_frame+"_x_joint");
     get_request_.joint_names.push_back(housing_frame+"_y_joint");
@@ -347,9 +349,13 @@ namespace industrial_extrinsic_cal
     set_request_.joint_names.push_back(housing_frame+"_yaw_joint");
     set_request_.joint_names.push_back(housing_frame+"_roll_joint");
 
-    get_client_.call(get_request_,get_response_);
-    for(int i=0;i<6;i++){
-      joint_values_[i] = get_response_.joint_values[i];
+    if(get_client_.call(get_request_,get_response_)){
+      for(int i=0;i<(int) get_response_.joint_values.size();i++){
+	joint_values_.push_back(get_response_.joint_values[i]);
+      }
+    }
+    else{
+      ROS_ERROR("get_client_ returned false");
     }
 
   }				
@@ -370,9 +376,9 @@ namespace industrial_extrinsic_cal
 
     // get all the information from tf and from the mutable joint state publisher
     tf::StampedTransform o2h_transform; // Optical to housing frame
-    ros::Time now = ros::Time::now();
+    ros::Time now = ros::Time::now()-ros::Duration(.5);
     while(! tf_listener_.waitForTransform(transform_frame_,housing_frame_, now, ros::Duration(1.0))){
-      ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
+      ROS_INFO("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
     }
     tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, o2h_transform);
     Pose6d optical2housing;
@@ -381,8 +387,9 @@ namespace industrial_extrinsic_cal
 
     tf::StampedTransform m2r_transform; // Mounting to reference frame
     while(! tf_listener_.waitForTransform(ref_frame_,mounting_frame_, now, ros::Duration(1.0))){
-      ROS_ERROR("waiting for tranform: %s to reference: %s",mounting_frame_.c_str(),ref_frame_.c_str());
+      ROS_INFO("waiting for tranform: %s to reference: %s",mounting_frame_.c_str(),ref_frame_.c_str());
     }
+
     tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, m2r_transform);
     Pose6d mount2ref;
     mount2ref.setBasis(m2r_transform.getBasis());
@@ -403,9 +410,9 @@ namespace industrial_extrinsic_cal
   {
     // get all the information from tf and from the mutable joint state publisher
     tf::StampedTransform o2h_transform; // Optical to housing frame
-    ros::Time now = ros::Time::now();
+    ros::Time now = ros::Time::now()-ros::Duration(.5);
     while(! tf_listener_.waitForTransform(transform_frame_,housing_frame_, now, ros::Duration(1.0))){
-      ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
+      ROS_INFO("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
     }
     tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, o2h_transform);
     Pose6d optical2housing;
@@ -414,7 +421,7 @@ namespace industrial_extrinsic_cal
 
     tf::StampedTransform m2r_transform; // Mounting to reference frame
     while(! tf_listener_.waitForTransform(ref_frame_,mounting_frame_, now, ros::Duration(1.0))){
-      ROS_ERROR("waiting for tranform: %s to reference: %s",mounting_frame_.c_str(),ref_frame_.c_str());
+      ROS_INFO("waiting for tranform: %s to reference: %s",mounting_frame_.c_str(),ref_frame_.c_str());
     }
     tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, m2r_transform);
     Pose6d mount2ref;

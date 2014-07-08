@@ -627,9 +627,14 @@ namespace industrial_extrinsic_cal
     ROS_INFO("RUNNING_OBSERVATION");
     runObservations();
     ROS_INFO("RUNNING_OPTIMIZATIONS");
-    bool did_optimization_run_ok = runOptimization();
-    pushTransforms(); // sends updated transforms to their intefaces
-    return(did_optimization_run_ok);
+    bool optimization_ran_ok = runOptimization();
+    if(optimization_ran_ok){
+      pushTransforms(); // sends updated transforms to their intefaces
+    }
+    else{
+      ROS_ERROR("OPTIMIZATION FAILED");
+    }
+    return(optimization_ran_ok);
   }
 
   bool CalibrationJob::runObservations()

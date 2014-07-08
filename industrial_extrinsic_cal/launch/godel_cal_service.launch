@@ -28,9 +28,9 @@
     <remap from="image_raw" to="image"/>
   </node>
 
-  <!-- Kinect Camera Launch -->
+  <!-- Asus launch for one fixed in work cell -->
 
-  <!-- Define location of camera relative to world_frame 
+  <!-- Define location of camera relative to world_frame    -->
   <node pkg="tf" type="static_transform_publisher" 
                  name="kinect_rgb_frame" 
                  args="3 4 5 0 0 0 world_frame  camera_rgb_optical_frame 100" />
@@ -38,8 +38,9 @@
   <node pkg="tf" type="static_transform_publisher" 
                  name="kinect_frame" 
                  args="2 2 2 0 0 0 world_frame  ns1_kinect_depth_optical_frame 100" />
-   -->
-  <!-- Launch kinect  
+
+
+  <!-- Asus launch for one attached to wrist -->
   <arg name="namespace1" value="ns1"/>
   <arg name="sensor_name1" value="$(arg namespace1)_Asus"/>
 
@@ -51,13 +52,12 @@
 	<arg name="publish_tf" value="true" />
   </include> 
 
--->
-<!-- Launch service which is called to to indicate scene is ready   -->
+
+<!-- Launch service which is called to to indicate scene is ready  when someone needs to set a parameter to indicate scene is ready -->
   <node pkg="industrial_extrinsic_cal" type="trigger_service" name="rosSceneTrigger" output="screen" />
 
-<!-- Launch service which is called to to indicate scene is ready   -->
+<!-- Launch service which is called to to indicate scene is ready  when a robot action is required to update the scene -->
   <node pkg="industrial_extrinsic_cal" type="ros_robot_trigger_action_service" name="rosRobotSceneTrigger" output="screen" />
-
 
 <!-- Launch the extrinsic calibration service -->
   <node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen" >

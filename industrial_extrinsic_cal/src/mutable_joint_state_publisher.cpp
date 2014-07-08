@@ -65,6 +65,8 @@ namespace industrial_extrinsic_cal
 	return_val= false;
       }
     }
+    ROS_ERROR("returning from setCallback");
+
     return(return_val);
   }
 
@@ -85,17 +87,12 @@ namespace industrial_extrinsic_cal
       }
     }
     return(return_val);
-
-    for (std::map<string, double>::iterator it= joints_.begin(); it!=joints_.end(); ++it){
-      res.joint_names.push_back(it->first);
-      res.joint_values.push_back(it->second);
-    }
-    return(true);
   }
 
   bool MutableJointStatePublisher::storeCallBack(industrial_extrinsic_cal::store_mutable_joint_states::Request &req,
 						 industrial_extrinsic_cal::store_mutable_joint_states::Response &res)
   {
+    ROS_ERROR("Inside storeCallback");
     std::ofstream fout(yaml_file_name_.c_str());
     YAML::Emitter yaml_emitter;
     yaml_emitter << YAML::Comment << "This is a simple list of mutable joint states";
