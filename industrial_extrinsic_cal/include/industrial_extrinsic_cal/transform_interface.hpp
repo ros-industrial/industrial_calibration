@@ -46,7 +46,7 @@ namespace industrial_extrinsic_cal
     /** @brief get the transform reference frame of transform  
      *   @param ref_frame the reference frame name
     */
-    virtual void setReferenceFrame(std::string & ref_frame) { ref_frame_ = ref_frame;};
+    virtual void setReferenceFrame(std::string &ref_frame) =0;
 
     /** @brief set the transform reference frame of transform */
     std::string getReferenceFrame() { return(ref_frame_);};
@@ -94,7 +94,13 @@ namespace industrial_extrinsic_cal
      *    @param the file path name, a dummy argument in this case
      *    @return   always true
      */
-    bool store(std::string & filePath){ return(true);}; 
+    bool store(std::string &filePath){ return(true);}; 
+
+    /** @brief sets the reference frame of the transform interface, sometimes not used */
+    void setReferenceFrame(std::string &ref_frame) {
+      ref_frame_ = ref_frame;
+      ref_frame_initialized_ = true;
+    }
 
   protected:
     Pose6d pose_; /*!< 6dof pose  */

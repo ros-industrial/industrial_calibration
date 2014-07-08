@@ -151,7 +151,7 @@ namespace industrial_extrinsic_cal
       }//end if writing to file
   }
 
-  void  ROSBroadcastTransInterface::setReferenceFrame(string & ref_frame)
+  void  ROSBroadcastTransInterface::setReferenceFrame(string &ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
@@ -210,7 +210,7 @@ namespace industrial_extrinsic_cal
       }//end if writing to file
   }
 
-  void  ROSCameraBroadcastTransInterface::setReferenceFrame(string & ref_frame)
+  void ROSCameraBroadcastTransInterface::setReferenceFrame(string &ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
@@ -284,7 +284,7 @@ namespace industrial_extrinsic_cal
     }//end if writing to file
   }
 
-  void  ROSCameraHousingBroadcastTInterface::setReferenceFrame(string & ref_frame)
+  void  ROSCameraHousingBroadcastTInterface::setReferenceFrame(std::string &ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
@@ -439,11 +439,16 @@ namespace industrial_extrinsic_cal
     return(true);
   }
 
-  bool ROSCameraHousingCalTInterface::storeTransform(std::string filePath)
+  bool ROSCameraHousingCalTInterface::store(std::string &filePath)
   {
     // NOTE, file_name is not used, but is kept here for consistency with store functions of other transform interfaces
     store_client_.call(store_request_, store_response_);
     return(true);
   }
 
+  void ROSCameraHousingCalTInterface::setReferenceFrame(std::string &ref_frame)
+  {
+    ref_frame_ = ref_frame;
+    ref_frame_initialized_ = true;
+  }
 } // end namespace industrial_extrinsic_cal

@@ -79,7 +79,7 @@ namespace industrial_extrinsic_cal
 	return (false);
       }
 
-    string temp_name, temp_topic, camera_optical_frame, camera_housing_frame;
+    string temp_name, temp_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame;
     CameraParameters temp_parameters;
     P_BLOCK extrinsics;
 
@@ -179,6 +179,13 @@ namespace industrial_extrinsic_cal
 		else if(transform_interface == std::string("ros_camera_housing_bti")){ 
 		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; // note, this is unused
 		  temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame,  pose);
+		}
+		else if(transform_interface == std::string("ros_camera_housing_cti")){ 
+		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; 
+		  (*camera_parameters)[i]["camera_mounting_frame"] >> camera_mounting_frame; 
+		  temp_ti = make_shared<ROSCameraHousingCalTInterface>(camera_optical_frame, 
+								       camera_housing_frame,
+								       camera_mounting_frame);
 		}
 		else if(transform_interface == std::string("default_ti")){
 		  temp_ti = make_shared<DefaultTransformInterface>(pose);
