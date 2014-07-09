@@ -107,8 +107,9 @@ add_library(industrial_extrinsic_cal
    src/calibration_job_definition.cpp
    src/runtime_utils.cpp
 )
+
 ## This insures the creation of headers for all ros messages, services and actions 
-add_dependencies(industrial_extrinsic_cal industrial_extrinsic_cal_generate_messages_cpp)
+add_dependencies(industrial_extrinsic_cal industrial_extrinsic_cal_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 ## Declare a cpp executable
 add_executable(mono_ex_cal src/mono_ex_cal.cpp)
@@ -119,7 +120,7 @@ add_executable(ros_robot_trigger_action_service src/ros_robot_scene_trigger_acti
 add_executable(mutable_joint_state_publisher src/mutable_joint_state_publisher.cpp)
 
 ## These insure the message, action and service headers are created first
-add_dependencies(trigger_service industrial_extrinsic_cal_generate_messages_cpp)
+add_dependencies(trigger_service industrial_extrinsic_cal_generate_messages_cpp )
 add_dependencies(ros_robot_trigger_action_service  industrial_extrinsic_cal_generate_messages_cpp)
 add_dependencies(mutable_joint_state_publisher  industrial_extrinsic_cal_generate_messages_cpp)
 
@@ -137,10 +138,7 @@ target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES} )
 target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} yaml-cpp )
 #catkin_add_gtest(utest_inds_cal test/utest.cpp)
 #target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
-catkin_add_gtest(utest_inds_cal_ceres test/ceres_utest.cpp)
-target_link_libraries(utest_inds_cal_ceres ${PROJECT_NAME} industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 
-add_dependencies(industrial_extrinsic_cal ${catkin_EXPORTED_TARGETS})
 add_dependencies(ros_robot_trigger_action_service ${catkin_EXPORTED_TARGETS})
 
 #############
