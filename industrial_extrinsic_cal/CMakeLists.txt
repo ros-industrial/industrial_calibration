@@ -5,7 +5,8 @@ project(industrial_extrinsic_cal)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib)
-
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Ceres
 FIND_PACKAGE(Ceres REQUIRED)
