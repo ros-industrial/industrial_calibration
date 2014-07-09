@@ -19,6 +19,9 @@
 
 <!-- Launch the extrinsic calibration service -->
   <node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen" >
+    <!--remap from="get_mutable_joint_states" to="calibrated/get_mutable_joint_states" />
+    <remap from="set_mutable_joint_states" to="calibrated/set_mutable_joint_states" />
+    <remap from="get_mutable_joint_states" to="calibrated/store_mutable_joint_states" /-->
     <rosparam>
       camera_file: "godel_camera_def.yaml"
       target_file: "circlegrid5x7n7x5.yaml"
