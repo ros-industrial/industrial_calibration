@@ -423,7 +423,7 @@ namespace industrial_extrinsic_cal
     while(! tf_listener_.waitForTransform(ref_frame_,mounting_frame_, now, ros::Duration(1.0))){
       ROS_INFO("waiting for tranform: %s to reference: %s",mounting_frame_.c_str(),ref_frame_.c_str());
     }
-    tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, m2r_transform);
+    tf_listener_.lookupTransform(ref_frame_,mounting_frame_, now, m2r_transform);
     Pose6d mount2ref;
     mount2ref.setBasis(m2r_transform.getBasis());
     mount2ref.setOrigin(m2r_transform.getOrigin());
@@ -458,4 +458,19 @@ namespace industrial_extrinsic_cal
     ref_frame_ = ref_frame;
     ref_frame_initialized_ = true;
   }
+
+  Pose6d ROSCameraHousingCalTInterface::getIntermediateFrame()
+  {
+    tf::StampedTransform r2m_transform; // ref to mounting frame
+    ros::Time now = ros::Time::now()-ros::Duration(.5);
+    while(! tf_listener_.waitForTransform(mounting_frame_,ref_frame_, now, ros::Duration(1.0))){
+      ROS_INFO("waiting for tranform: %s to reference: %s",mounting_frame_.c_str(),ref_frame_.c_str());
+    }
+    tf_listener_.lookupTransform(mounting_frame_, ref_frame_, now, r2m_transform);
+    Pose6d mount2ref;
+    mount2ref.setBasis(r2m_transform.getBasis());
+    mount2ref.setOrigin(r2m_transform.getOrigin());
+    return(mount2ref);
+  }
+
 } // end namespace industrial_extrinsic_cal

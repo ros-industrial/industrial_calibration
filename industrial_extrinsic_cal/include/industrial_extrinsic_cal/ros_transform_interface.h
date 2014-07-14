@@ -350,6 +350,11 @@ namespace industrial_extrinsic_cal
     /** @brief sets the reference frame of the transform interface, sometimes not used */
     void setReferenceFrame(std::string &ref_frame);
 
+    /** @brief used to get the pose of the mounting frame in ref_frame coordinates
+     *   @return returns the pose from ref_frame to mounting frame in the case where necessary, identity otherwise
+     */
+    Pose6d getIntermediateFrame();
+
   private:
     ros::NodeHandle *nh_;
     std::string housing_frame_; /**< housing frame name */

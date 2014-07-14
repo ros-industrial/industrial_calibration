@@ -20,7 +20,7 @@
 #define TRANSFORM_INTERFACE_HPP_
 
 #include <industrial_extrinsic_cal/basic_types.h> /* Pose6d,Roi,Observation,CameraObservations */
-
+#include <ros/ros.h>
 namespace industrial_extrinsic_cal
 {
 
@@ -61,6 +61,14 @@ namespace industrial_extrinsic_cal
      */
     std::string getTransformFrame() { return(transform_frame_);};
 
+    /** @brief get an intermediate pose of a transform by name
+     *    @param name of desired transform 
+     *    @return the pose
+     */
+    virtual Pose6d getIntermediateFrame() { 
+      Pose6d Identity;// default constructor is all zero's for translation and anlge axis. 
+      return(Identity);
+      };
   protected:
     std::string ref_frame_; /*!< name of reference frame for transform (parent frame_id in  Rviz) */
     std::string transform_frame_; /*!< name of frame being defined (frame_id in Rviz) */

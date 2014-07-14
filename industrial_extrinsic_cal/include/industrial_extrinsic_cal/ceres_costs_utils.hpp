@@ -25,6 +25,7 @@
 
 namespace industrial_extrinsic_cal
 {
+
   struct TargetCameraReprjErrorNoDistortionOLD
   {
     TargetCameraReprjErrorNoDistortionOLD(double ob_x, double ob_y,
@@ -320,8 +321,8 @@ namespace industrial_extrinsic_cal
     t_point[2] = t_point[2] + tx[2];
   }
 
-  template<typename T> inline void poseTransformPoint(const Pose6d pose, const T point[3], T t_point[3]);
-  template<typename T> inline void poseTransformPoint(const Pose6d pose, const T point[3], T t_point[3])
+  template<typename T> inline void poseTransformPoint(const Pose6d &pose, const T point[3], T t_point[3]);
+  template<typename T> inline void poseTransformPoint(const Pose6d &pose, const T point[3], T t_point[3])
   {
     T angle_axis[3];
     angle_axis[0]  = T(pose.ax);
@@ -346,8 +347,8 @@ namespace industrial_extrinsic_cal
     t_point[2] = t_point[2] + tx[2];
   }
 
-  template<typename T>  void poseRotationMatrix(const Pose6d pose, T R[9]);
-  template<typename T> inline void poseRotationMatrix(const Pose6d pose, T R[9])
+  template<typename T>  void poseRotationMatrix(const Pose6d &pose, T R[9]);
+  template<typename T> inline void poseRotationMatrix(const Pose6d &pose, T R[9])
   {
     T angle_axis[3];
     angle_axis[0] = T(pose.ax);
@@ -356,8 +357,8 @@ namespace industrial_extrinsic_cal
     ceres::AngleAxisToRotationMatrix(angle_axis, R);
   }
   
-  template<typename T>  void cameraPntResidualDist(T point[3], T k1, T k2, T k3, T p1, T p2, T fx, T fy, T cx, T cy, T ox, T oy, T resid[2]);
-  template<typename T> inline void cameraPntResidualDist(T point[3], T k1, T k2, T k3, T p1, T p2, T fx, T fy, T cx, T cy, T ox, T oy, T resid[2])
+  template<typename T>  void cameraPntResidualDist(T point[3], T &k1, T &k2, T &k3, T &p1, T &p2, T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2]);
+  template<typename T> inline void cameraPntResidualDist(T point[3], T &k1, T &k2, T &k3, T &p1, T &p2, T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2])
   {
     T xp1 = point[0];
     T yp1 = point[1];
@@ -384,12 +385,12 @@ namespace industrial_extrinsic_cal
     resid[1] = fy * ypp + cy - oy;
 
   }
-  template<typename T>  void cameraCircResidualDist(T point[3], T circle_diameter, T R_TtoC[9], 
-							  T k1, T k2, T k3, T p1, T p2, 
-							  T fx, T fy, T cx, T cy, T ox, T oy, T resid[2]);
-  template<typename T> inline void cameraCircResidualDist(T point[3], T circle_diameter, T R_TtoC[9],
-							  T k1, T k2, T k3, T p1, T p2, 
-							  T fx, T fy, T cx, T cy, T ox, T oy, T resid[2])
+  template<typename T>  void cameraCircResidualDist(T point[3], T &circle_diameter, T R_TtoC[9], 
+							  T &k1, T &k2, T &k3, T &p1, T &p2, 
+							  T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2]);
+  template<typename T> inline void cameraCircResidualDist(T point[3], T &circle_diameter, T R_TtoC[9],
+							  T &k1, T &k2, T &k3, T &p1, T &p2, 
+							  T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2])
   {
     T xp1 = point[0];
     T yp1 = point[1];
@@ -478,10 +479,10 @@ namespace industrial_extrinsic_cal
     resid[1] = fy * ypp + cy - oy;
   }
 
-  template<typename T>  void cameraCircResidual(T point[3], T circle_diameter, T R_TtoC[9],
-						      T fx, T fy, T cx, T cy, T ox, T oy, T resid[2]);
-  template<typename T> inline void cameraCircResidual(T point[3], T circle_diameter, T R_TtoC[9],
-						      T fx, T fy, T cx, T cy, T ox, T oy, T resid[2])
+  template<typename T>  void cameraCircResidual(T point[3], T &circle_diameter, T R_TtoC[9],
+						      T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2]);
+  template<typename T> inline void cameraCircResidual(T point[3], T &circle_diameter, T R_TtoC[9],
+						      T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2])
   {
     T xp1 = point[0];
     T yp1 = point[1];
@@ -550,8 +551,8 @@ namespace industrial_extrinsic_cal
     resid[1] = fy * yp + cy - oy;
   }
 
-  template<typename T>  void cameraPntResidual(T point[3], T fx, T fy, T cx, T cy, T ox, T oy, T resid[2]);
-  template<typename T> inline void cameraPntResidual(T point[3], T fx, T fy, T cx, T cy, T ox, T oy, T resid[2])
+  template<typename T>  void cameraPntResidual(T point[3], T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2]);
+  template<typename T> inline void cameraPntResidual(T point[3], T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2])
   {
     T xp1 = point[0];
     T yp1 = point[1];
@@ -591,7 +592,9 @@ namespace industrial_extrinsic_cal
       transformPoint(camera_aa, camera_tx, point, camera_point);
 
       /** compute project point into image plane and compute residual */
-      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, T(ox_), T(oy_),  resid);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,  resid);
 
       return true;
     } /** end of operator() */
@@ -633,7 +636,9 @@ namespace industrial_extrinsic_cal
       transformPoint3d(camera_aa, camera_tx, point_, camera_point);
 
       /** compute project point into image plane and compute residual */
-      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, T(ox_), T(oy_),  resid);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,  resid);
       
       return true;
     } /** end of operator() */
@@ -672,7 +677,13 @@ namespace industrial_extrinsic_cal
       transformPoint(camera_aa, camera_tx, point, camera_point);
 
       /** compute project point into image plane and compute residual */
-      cameraPntResidual(camera_point, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_),  resid);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
 
       return true;
     } /** end of operator() */
@@ -715,7 +726,13 @@ namespace industrial_extrinsic_cal
       transformPoint3d(camera_aa, camera_tx, point_, camera_point);
 
       /** compute project point into image plane and compute residual */
-      cameraPntResidual(camera_point, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_),  resid);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
 
       return true;
     } /** end of operator() */
@@ -769,7 +786,13 @@ namespace industrial_extrinsic_cal
       transformPoint(camera_aa, camera_tx, world_point, camera_point);
 
       /** compute project point into image plane and compute residual */
-      cameraPntResidual(camera_point, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_),  resid);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
 
       return true;
     } /** end of operator() */
@@ -820,7 +843,13 @@ namespace industrial_extrinsic_cal
       transformPoint(camera_aa, camera_tx, world_point, camera_point);
 
       /** compute project point into image plane and compute residual */
-      cameraPntResidual(camera_point, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_),  resid);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
 
       return true;
     } /** end of operator() */
@@ -875,7 +904,13 @@ namespace industrial_extrinsic_cal
       transformPoint(camera_aa, camera_tx, world_point, camera_point);
 
       /** compute project point into image plane and compute residual */
-      cameraPntResidual(camera_point,  T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_),  resid);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
 
       return true;
     } /** end of operator() */
@@ -929,7 +964,13 @@ namespace industrial_extrinsic_cal
       transformPoint(camera_aa, camera_tx, world_point, camera_point);
 
       /** compute project point into image plane and compute residual */
-      cameraPntResidual(camera_point, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_),  resid);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
 
       return true;
     } /** end of operator() */
@@ -986,7 +1027,13 @@ namespace industrial_extrinsic_cal
       transformPoint(camera_aa, camera_tx, link_point, camera_point);
 
       /** compute project point into image plane and compute residual */
-      cameraPntResidual(camera_point, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_),  resid);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
 
       return true;
     } /** end of operator() */
@@ -1042,7 +1089,13 @@ namespace industrial_extrinsic_cal
       transformPoint(camera_aa, camera_tx, link_point, camera_point);
 
       /** compute project point into image plane and compute residual */
-      cameraPntResidual(camera_point, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_),  resid);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
 
       return true;
     } /** end of operator() */
@@ -1097,7 +1150,10 @@ namespace industrial_extrinsic_cal
       ceres::AngleAxisToRotationMatrix(camera_aa,R_TtoC);
 
       /** compute project point into image plane and compute residual */
-      cameraCircResidualDist(camera_point, T(circle_diameter_), R_TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1,p2, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
@@ -1141,7 +1197,10 @@ namespace industrial_extrinsic_cal
       ceres::AngleAxisToRotationMatrix(camera_aa, R_TtoC);
 
       /** compute project point into image plane and compute residual */
-      cameraCircResidualDist(camera_point, T(circle_diameter_), R_TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
@@ -1183,7 +1242,14 @@ namespace industrial_extrinsic_cal
       ceres::AngleAxisToRotationMatrix(camera_aa,R_TtoC);
 
       /** compute project point into image plane and compute residual */
-      cameraCircResidual(camera_point, T(circle_diameter_), R_TtoC, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
@@ -1228,7 +1294,14 @@ namespace industrial_extrinsic_cal
       ceres::AngleAxisToRotationMatrix(camera_aa, R_TtoC);
 
       /** compute project point into image plane and compute residual */
-      cameraCircResidual(camera_point, T(circle_diameter_), R_TtoC, T(fx_),T(fy_), T(cx_), T(cy_), T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
@@ -1261,17 +1334,17 @@ namespace industrial_extrinsic_cal
 
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
-		    const T* const c_p2, /** 6Dof transform of target into world frame [6]*/
-		    const T* const c_p3, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
+		    const T* const c_p2, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
+		    const T* const c_p3, /** 6Dof transform of target into world frame [6]*/
 		    const T* const point, /** point described in target frame that is being seen [3]*/
 		    T* resid) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
-      const T *target_aa(& c_p2[0]);
-      const T *target_tx(& c_p2[3]);
+      const T *target_aa(& c_p3[0]);
+      const T *target_tx(& c_p3[3]);
       T fx, fy, cx, cy, k1, k2, k3, p1, p2;      
-      extractCameraIntrinsics(c_p3, fx, fy, cx, cy, k1, k2, k3, p1, p2);
+      extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
       T world_point[3]; /** point in world coordinates */
       T camera_point[3];  /** point in camera coordinates*/ 
       T R_WtoC[9]; // rotation from world to camera coordinates
@@ -1290,7 +1363,10 @@ namespace industrial_extrinsic_cal
       rotationProduct(R_WtoC, R_TtoW, R_TtoC); // R_WtoC*R_TtoW = R_TtoC
 
       /** compute project point into image plane and compute residual */
-      cameraCircResidualDist(camera_point, T(circle_diameter_), R_TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
@@ -1322,10 +1398,10 @@ namespace industrial_extrinsic_cal
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
-      const T *target_aa(& c_p2[0]);
-      const T *target_tx(& c_p2[3]);
+      const T *target_aa(& c_p3[0]);
+      const T *target_tx(& c_p3[3]);
       T fx, fy, cx, cy, k1, k2, k3, p1, p2;      
-      extractCameraIntrinsics(c_p3, fx, fy, cx, cy, k1, k2, k3, p1, p2);
+      extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
       T world_point[3]; /** point in world coordinates */
       T camera_point[3]; /** point in world coordinates */
       T R_WtoC[9]; // rotation from world to camera coordinates
@@ -1344,7 +1420,10 @@ namespace industrial_extrinsic_cal
       rotationProduct(R_WtoC, R_TtoW, R_TtoC); // R_WtoC*R_TtoW = R_TtoC
 
       /** compute project point into image plane and compute residual */
-      cameraCircResidualDist(camera_point, T(circle_diameter_), R_TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
@@ -1397,7 +1476,14 @@ namespace industrial_extrinsic_cal
       rotationProduct(R_WtoC, R_TtoW, R_TtoC); // R_WtoC*R_TtoW = R_TtoC
       
       /** compute project point into image plane and compute residual */
-      cameraCircResidual(camera_point, T(circle_diameter_), R_TtoC, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
@@ -1453,7 +1539,14 @@ namespace industrial_extrinsic_cal
       rotationProduct(R_WtoC, R_TtoW, R_TtoC); // R_WtoC*R_TtoW = R_TtoC
       
       /** compute project point into image plane and compute residual */
-      cameraCircResidual(camera_point, T(circle_diameter_), R_TtoC, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
@@ -1479,8 +1572,8 @@ namespace industrial_extrinsic_cal
   class  LinkCircleTargetCameraReprjError
   {
   public:
-    LinkCircleTargetCameraReprjError(double ob_x, double ob_y, double c_dia, Pose6d link_pose) :
-      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), link_pose_(link_pose)
+    LinkCircleTargetCameraReprjError(double ob_x, double ob_y, double c_dia, double fx, double fy, double cx, double cy, Pose6d link_pose) :
+      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), fx_(fx), fy_(fy), cx_(cx), cy_(cy), link_pose_(link_pose)
     {
     }
 
@@ -1518,16 +1611,26 @@ namespace industrial_extrinsic_cal
       rotationProduct(R_LtoC, R_TtoL, R_TtoC); // R_WtoC*R_LtoW*R_TtoL = R_TtoC
       
       /** compute project point into image plane and compute residual */
-      cameraCircResidual(camera_point, T(circle_diameter_), R_TtoC, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
     
     /** Factory to hide the construction of the CostFunction object from */
     /** the client code. */
-    static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, const Pose6d pose)
+    static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia,
+				       const double fx,  const double fy,
+				       const double cx,  const double cy,
+				       const Pose6d pose)
     {
-      return (new ceres::AutoDiffCostFunction<LinkCircleTargetCameraReprjError, 2, 6, 6, 3>(new LinkCircleTargetCameraReprjError(o_x, o_y, c_dia, pose)));
+      return (new ceres::AutoDiffCostFunction<LinkCircleTargetCameraReprjError, 2, 6, 6, 3>(new LinkCircleTargetCameraReprjError(o_x, o_y, c_dia, fx, fy, cx, cy, pose)));
     }
     double ox_; /** observed x location of object in image */
     double oy_; /** observed y location of object in image */
@@ -1542,8 +1645,9 @@ namespace industrial_extrinsic_cal
   class  LinkCircleTargetCameraReprjErrorPK
   {
   public:
-    LinkCircleTargetCameraReprjErrorPK(double ob_x, double ob_y, double c_dia, Pose6d link_pose, Point3d point) :
-      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), link_pose_(link_pose), point_(point)
+  LinkCircleTargetCameraReprjErrorPK(double ob_x, double ob_y, double c_dia, double fx, double fy, double cx, double cy, 
+				     Pose6d link_pose, Point3d point) :
+    ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), fx_(fx), fy_(fy), cx_(cx), cy_(cy), link_pose_(link_pose), point_(point)
     {
     }
 
@@ -1580,16 +1684,30 @@ namespace industrial_extrinsic_cal
       rotationProduct(R_LtoC, R_TtoL, R_TtoC); // R_WtoC*R_LtoW*R_TtoL = R_TtoC
       
       /** compute project point into image plane and compute residual */
-      cameraCircResidual(camera_point, T(circle_diameter_), R_TtoC, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
 
     /** Factory to hide the construction of the CostFunction object from */
     /** the client code. */
-    static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, const Pose6d pose, Point3d point)
+    static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia,
+				       const double fx,  const double fy,
+				       const double cx,  const double cy,
+				       const Pose6d pose, Point3d point)
     {
-      return (new ceres::AutoDiffCostFunction<LinkCircleTargetCameraReprjErrorPK, 2, 6, 6>(											       new LinkCircleTargetCameraReprjErrorPK(o_x, o_y, c_dia, pose, point)));
+      return (new ceres::AutoDiffCostFunction<LinkCircleTargetCameraReprjErrorPK, 2, 6, 6>
+	      (
+	       new LinkCircleTargetCameraReprjErrorPK(o_x, o_y, c_dia, fx, fy, cx, cy, pose, point)
+	       )
+	      );
     }
     double ox_; /** observed x location of object in image */
     double oy_; /** observed y location of object in image */
@@ -1606,8 +1724,9 @@ namespace industrial_extrinsic_cal
   class  LinkCameraCircleTargetReprjError
   {
   public:
-    LinkCameraCircleTargetReprjError(double ob_x, double ob_y, double c_dia, Pose6d link_pose) :
-      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), link_pose_(link_pose)
+    LinkCameraCircleTargetReprjError(double ob_x, double ob_y, double c_dia,
+				     double fx, double fy, double cx, double cy, Pose6d link_pose) :
+      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), fx_(fx), fy_(fy), cx_(cx), cy_(cy), link_pose_(link_pose)
     {
       link_posei_ = link_pose_.getInverse();
     }
@@ -1646,16 +1765,25 @@ namespace industrial_extrinsic_cal
       rotationProduct(R_WtoC, R_TtoW, R_TtoC); 
       
       /** compute project point into image plane and compute residual */
-      cameraCircResidual(camera_point, T(circle_diameter_), R_TtoC, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
     
     /** Factory to hide the construction of the CostFunction object from */
     /** the client code. */
-    static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, const Pose6d pose)
+    static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia,
+				       double fx, double fy, double cx, double cy, const Pose6d pose)
     {
-      return (new ceres::AutoDiffCostFunction<LinkCameraCircleTargetReprjError, 2, 6, 6, 3>(new LinkCameraCircleTargetReprjError(o_x, o_y, c_dia, pose)));
+      return (new ceres::AutoDiffCostFunction<LinkCameraCircleTargetReprjError, 2, 6, 6, 3>
+	      (new LinkCameraCircleTargetReprjError(o_x, o_y, c_dia, fx, fy, cx, cy, pose)));
     }
     double ox_; /** observed x location of object in image */
     double oy_; /** observed y location of object in image */
@@ -1672,8 +1800,10 @@ namespace industrial_extrinsic_cal
   class  LinkCameraCircleTargetReprjErrorPK
   {
   public:
-    LinkCameraCircleTargetReprjErrorPK(double ob_x, double ob_y, double c_dia, Pose6d link_pose, Point3d point) :
-      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), link_pose_(link_pose), point_(point)
+    LinkCameraCircleTargetReprjErrorPK(const double &ob_x, const double &ob_y, const double &c_dia,
+				       const double &fx, const double &fy, const double &cx, const double &cy,
+				       const Pose6d &link_pose, const Point3d &point) :
+      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), fx_(fx), fy_(fy), cx_(cx), cy_(cy), link_pose_(link_pose), point_(point)
     {
       link_posei_ = link_pose_.getInverse();
     }
@@ -1712,16 +1842,27 @@ namespace industrial_extrinsic_cal
       rotationProduct(R_WtoC, R_TtoW, R_TtoC); 
 
       /** compute project point into image plane and compute residual */
-      cameraCircResidual(camera_point, T(circle_diameter_), R_TtoC, T(fx_), T(fy_), T(cx_), T(cy_), T(ox_), T(oy_), resid);
+      T circle_diameter = T(circle_diameter_);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */
 
     /** Factory to hide the construction of the CostFunction object from */
     /** the client code. */
-    static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, const Pose6d pose, Point3d point)
+    static ceres::CostFunction* Create(const double &o_x, const double &o_y, const double &c_dia,
+				       const double &fx,  const double &fy,
+				       const double &cx, const double &cy,
+				       const Pose6d &pose, Point3d &point)
     {
-      return (new ceres::AutoDiffCostFunction<LinkCameraCircleTargetReprjErrorPK, 2, 6, 6>(											       new LinkCameraCircleTargetReprjErrorPK(o_x, o_y, c_dia, pose, point)));
+      return (new ceres::AutoDiffCostFunction<LinkCameraCircleTargetReprjErrorPK, 2, 6, 6>
+	      (new LinkCameraCircleTargetReprjErrorPK(o_x, o_y, c_dia, fx, fy, cx, cy, pose, point)));
     }
     double ox_; /** observed x location of object in image */
     double oy_; /** observed y location of object in image */

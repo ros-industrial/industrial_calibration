@@ -26,6 +26,7 @@
 #include <industrial_extrinsic_cal/manual_triggerAction.h>
 #include <industrial_extrinsic_cal/trigger.h>
 #include <industrial_extrinsic_cal/ros_triggers.h>
+#include <industrial_extrinsic_cal/ceres_costs_utils.h>
 
 using std::string;
 using boost::shared_ptr;
@@ -290,6 +291,13 @@ namespace industrial_extrinsic_cal
 		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; // note, this is unused
 		  temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, pose);
 		}
+		else if(transform_interface == std::string("ros_camera_housing_cti")){ 
+		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; 
+		  (*camera_parameters)[i]["camera_mounting_frame"] >> camera_mounting_frame; 
+		  temp_ti = make_shared<ROSCameraHousingCalTInterface>(camera_optical_frame, 
+								       camera_housing_frame,
+								       camera_mounting_frame);
+		}
 		else if(transform_interface == std::string("default_ti")){
 		  temp_ti = make_shared<DefaultTransformInterface>(pose);
 		}
@@ -527,6 +535,7 @@ namespace industrial_extrinsic_cal
     std::string trig_action_msg;
     std::string camera_name;
     std::string target_name;
+    std::string cost_type;
     std::string reference_frame;
     shared_ptr<Camera> temp_cam = make_shared<Camera>();
     shared_ptr<Target> temp_targ = make_shared<Target>();
@@ -603,12 +612,12 @@ namespace industrial_extrinsic_cal
 		    (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
 		    (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
 		    (*obs_node)[j]["target"] >> target_name;
-
+		    (*obs_node)[j]["cost_type"] >> cost_type;
 		    // TODO CHECK FOR valid return
 		    temp_cam = ceres_blocks_.getCameraByName(camera_name);
 		    temp_targ = ceres_blocks_.getTargetByName(target_name);
 		    scene_list_.at(i).addCameraToScene(temp_cam);
-		    scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi);
+		    scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi, cost_type);
 		  }
 	      }
 	  }
@@ -664,13 +673,13 @@ namespace industrial_extrinsic_cal
 
 	BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
 	  {	// add each target and roi each camera's list of observations
-	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi);
+	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi, o_command.cost_type_str);
 	  }
 	
 	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
 
 	pullTransforms(); // gets transforms of targets and cameras from their interfaces
-
+	
 	BOOST_FOREACH( shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {// trigger the cameras
 	    current_camera->camera_observer_->triggerCamera();
@@ -684,6 +693,7 @@ namespace industrial_extrinsic_cal
 	std::string camera_name;
 	std::string target_name;
 	int target_type;
+	std::string cost_type_str;
 
 	// for each camera in scene get a list of observations, and add camera parameters to ceres_blocks
 	ObservationDataPointList listpercamera;
@@ -711,7 +721,7 @@ namespace industrial_extrinsic_cal
 	    // Get the observations from this camera whose P_BLOCKs are intrinsics and extrinsics
 	    CameraObservations camera_observations;
 	    int number_returned;
-	    number_returned = camera->camera_observer_->getObservations(camera_observations);
+	    number_returned = camera->getObservations(camera_observations);
 
 	    ROS_DEBUG_STREAM("Processing " << camera_observations.size() << " Observations");
 	    ROS_INFO("Processing %d Observations ", (int) camera_observations.size());
@@ -719,6 +729,7 @@ namespace industrial_extrinsic_cal
 	      {
 		target_name = observation.target->target_name_;
 		target_type = observation.target->target_type_;
+		cost_type_str = observation.cost_type_str;
 		double circle_dia=0.0;
 		if(target_type == pattern_options::CircleGrid){
 		  circle_dia = observation.target->circle_grid_parameters_.circle_diameter;
@@ -740,7 +751,9 @@ namespace industrial_extrinsic_cal
 		  }
 		ObservationDataPoint temp_ODP(camera_name, target_name, target_type,
 					      scene_id, intrinsics, extrinsics, pnt_id, target_pose,
-					      pnt_pos, observation_x, observation_y, circle_dia);
+					      pnt_pos, observation_x, observation_y, 
+					      cost_type_str, observation.intermediate_frame,
+					      circle_dia);
 		listpercamera.addObservationPoint(temp_ODP);
 	      }//end for each observed point
 	  }//end for each camera
@@ -772,6 +785,7 @@ namespace industrial_extrinsic_cal
 	    ROS_DEBUG_STREAM("Current observation data point list size: "<<observation_data_point_list_.at(scene_id).items_.size());
 	    // take all the data collected and create a Ceres optimization problem and run it
 	    P_BLOCK extrinsics;
+	    P_BLOCK intrinsics;
 	    P_BLOCK target_pose;
 	    P_BLOCK point_position;
 	    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items_)
@@ -792,67 +806,295 @@ namespace industrial_extrinsic_cal
 		// 5. the same as 4, but with target in known location
 		//    "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z,p_tx,p_ty,p_tz,p_ax,p_ay,p_az)"
 		// pull out the constants from the observation point data
-
+		intrinsics = ODP.camera_intrinsics_;
 		double focal_length_x = ODP.camera_intrinsics_[0]; // TODO, make this not so ugly
 		double focal_length_y = ODP.camera_intrinsics_[1];
-		double center_pnt_x   = ODP.camera_intrinsics_[2];
-		double center_pnt_y   = ODP.camera_intrinsics_[3];
+		double center_x   = ODP.camera_intrinsics_[2];
+		double center_y   = ODP.camera_intrinsics_[3];
 		double image_x        = ODP.image_x_;
 		double image_y        = ODP.image_y_;
 		Point3d point;
+		Pose6d link_pose = ODP.intermediate_frame_; // identity except when camera mounted on robot
 		point.x = ODP.point_position_[0];// location of point within target frame
 		point.y = ODP.point_position_[1];
 		point.z = ODP.point_position_[2];
 		unsigned int target_type    = ODP.target_type_;
+		double circle_dia = ODP.circle_dia_; // sometimes this is not needed
 	      
 		// pull out pointers to the parameter blocks in the observation point data
 		extrinsics        = ODP.camera_extrinsics_;
 		target_pose     = ODP.target_pose_;
 		point_position = ODP.point_position_;
-	      
-		// create the cost function
-		if(target_type == pattern_options::CircleGrid){
-		  double circle_dia = ODP.circle_dia_;
+		
+		switch(  string2CostType(ODP.cost_type_str_) ){
+		case cost_functions::CameraReprjErrorWithDistortion:
+		  {
+		    CostFunction* cost_function =
+		      CameraReprjErrorWithDistortion::Create(image_x, image_y);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+		  }
+		  break;
+		case cost_functions::CameraReprjErrorWithDistortionPK:
+		  {
+		    CostFunction* cost_function =
+		      CameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
+							       point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
+		  }
+		  break;
+		case cost_functions::CameraReprjError:
+		  {
+		    CostFunction* cost_function =
+		      CameraReprjError::Create(image_x, image_y, 
+					       focal_length_x, focal_length_y,
+					       center_x, center_y);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, point.pb);
+		  }
+		  break;
+		case cost_functions::CameraReprjErrorPK:
+		  {
+		    CostFunction* cost_function =
+		      CameraReprjErrorPK::Create(image_x, image_y, 
+						 focal_length_x, focal_length_y,
+						 center_x, center_y,
+						 point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics);
+		  }
+		  break;
+		case cost_functions::TargetCameraReprjError:
+		  {
+		    CostFunction* cost_function =
+		      TargetCameraReprjError::Create(image_x, image_y, 
+						     focal_length_x, focal_length_y,
+						     center_x, center_y);
 
-		  CostFunction* cost_function = CircleTargetCameraReprjErrorPK::Create(image_x, image_y,
-										       circle_dia,
-										       focal_length_x,
-										       focal_length_y,
-										       center_pnt_x,
-										       center_pnt_y,
-										       point);
-		  // add it as a residual using parameter blocks
-		  problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
-		}
-		else{
-		  CostFunction* cost_function = TargetCameraReprjErrorPK::Create(image_x, image_y,
-										 focal_length_x,
-										 focal_length_y,
-										 center_pnt_x,
-										 center_pnt_y,
-										 point);
-		  // add it as a residual using parameter blocks
-		  problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
-		}
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+		  }
+		  break;
+		case cost_functions::TargetCameraReprjErrorPK:
+		  {
+		    CostFunction* cost_function = 
+		      TargetCameraReprjErrorPK::Create(image_x, image_y,
+						       focal_length_x,
+						       focal_length_y,
+						       center_x,
+						       center_y,
+						       point);
+		    // add it as a residual using parameter blocks
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		  }
+		  break;
+		case cost_functions::LinkTargetCameraReprjError:
+		  {
+		    CostFunction* cost_function =
+		      LinkTargetCameraReprjError::Create(image_x, image_y, 
+							 focal_length_x,
+							 focal_length_y,
+							 center_x,
+							 center_y,
+							 link_pose);
+		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+		  }
+		  break;
+		case cost_functions::LinkTargetCameraReprjErrorPK:
+		  {
+		    CostFunction* cost_function =
+		      LinkTargetCameraReprjErrorPK::Create(image_x, image_y, 
+							   focal_length_x,
+							   focal_length_y,
+							   center_x,
+							   center_y,
+							   link_pose,
+							   point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		  }
+		  break;
+		case cost_functions::LinkCameraTargetReprjError:
+		  {
+		    CostFunction* cost_function =
+		      LinkCameraTargetReprjError::Create(image_x, image_y, 
+							 focal_length_x,
+							 focal_length_y,
+							 center_x,
+							 center_y,
+							 link_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+		  }
+		  break;
+		case cost_functions::LinkCameraTargetReprjErrorPK:
+		    {
+		      CostFunction* cost_function =
+			LinkCameraTargetReprjErrorPK::Create(image_x, image_y, 
+							     focal_length_x,
+							     focal_length_y,
+							     center_x,
+							     center_y,
+							     link_pose,
+							     point);
+		      
+		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    }
+		    break;
+		case cost_functions::CircleCameraReprjErrorWithDistortion:
+		  {
+		    CostFunction* cost_function =
+		      CircleCameraReprjErrorWithDistortion::Create(image_x, image_y, circle_dia);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+		  }
+		  break;
+		case cost_functions::CircleCameraReprjErrorWithDistortionPK:
+		  {
+		    CostFunction* cost_function =
+		      CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y,
+								     circle_dia,
+								     point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+		  }
+		  break;
+		case cost_functions::CircleCameraReprjError:
+		  {
+		    CostFunction* cost_function =
+		      CircleCameraReprjError::Create(image_x, image_y, 
+						     circle_dia,
+						     focal_length_x,
+						     focal_length_y,
+						     center_x,
+						     center_y);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, point.pb);
+		  }
+		  break;
+		case cost_functions::CircleCameraReprjErrorPK:
+		  {
+		    CostFunction* cost_function =
+		      CircleCameraReprjErrorPK::Create(image_x, image_y, 
+						       circle_dia,
+						       focal_length_x,
+						       focal_length_y,
+						       center_x,
+						       center_y,
+						       point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics);
+		  }
+		  break;
+		case cost_functions::CircleTargetCameraReprjErrorWithDistortion:
+		  {
+		    CostFunction* cost_function =
+		      CircleTargetCameraReprjErrorWithDistortion::Create(image_x, image_y,
+									 circle_dia);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose, point.pb);
+		  }
+		  break;
+		case cost_functions::CircleTargetCameraReprjErrorWithDistortionPK:
+		  {
+		    CostFunction* cost_function =
+		      CircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
+									   circle_dia,
+									   point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose);
+		  }
+		  break;
+		case cost_functions::CircleTargetCameraReprjError:
+		  {
+		    CostFunction* cost_function =
+		      CircleTargetCameraReprjError::Create(image_x, image_y, 
+							   circle_dia,
+							   focal_length_x,
+							   focal_length_y,
+							   center_x,
+							   center_y);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+		  }
+		  break;
+		case cost_functions::CircleTargetCameraReprjErrorPK:
+		  {
+		    CostFunction* cost_function = 
+		      CircleTargetCameraReprjErrorPK::Create(image_x,  image_y,
+							     circle_dia,
+							     focal_length_x,
+							     focal_length_y,
+							     center_x,
+							     center_y,
+							     point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		  }
+		  break;
+		case cost_functions::LinkCircleTargetCameraReprjError:
+		  {
+		    CostFunction* cost_function =
+		      LinkCircleTargetCameraReprjError::Create(image_x, image_y, 
+							       circle_dia,
+							       focal_length_x,
+							       focal_length_y,
+							       center_x,
+							       center_y,
+							       link_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+		  }
+		  break;
+		case cost_functions::LinkCircleTargetCameraReprjErrorPK:
+		  {
+		    CostFunction* cost_function =
+		      LinkCircleTargetCameraReprjErrorPK::Create(image_x, image_y, 
+								 circle_dia,
+								 focal_length_x,
+								 focal_length_y,
+								 center_x,
+								 center_y,
+								 link_pose,
+								 point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		  }
+		  break;
+		case cost_functions::LinkCameraCircleTargetReprjError:
+		  {
+		    CostFunction* cost_function =
+		      LinkCameraCircleTargetReprjError::Create(image_x, image_y, 
+							       circle_dia,
+							       focal_length_x,
+							       focal_length_y,
+							       center_x,
+							       center_y,
+							       link_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+		  }
+		  break;
+		case cost_functions::LinkCameraCircleTargetReprjErrorPK:
+		  {
+		    CostFunction* cost_function =
+		      LinkCameraCircleTargetReprjErrorPK::Create(image_x, image_y, 
+								 circle_dia,
+								 focal_length_x,
+								 focal_length_y,
+								 center_x,
+								 center_y,
+								 link_pose,
+								 point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		  }
+		  break;
+		default:
+		  {
+		    ROS_ERROR("NO COST FUNTION WITH TYPE %s",ODP.cost_type_str_.c_str());
+		  }
+		  break;
+		}// end of switch
 	      }//for each observation
-	    problem_.SetParameterBlockConstant(target_pose);
-	  
 	  }//for each camera
       }//for each scene
-    ROS_INFO("total observations: %d ",total_observations);
-
-    // Make Ceres automatically detect the bundle structure. Note that the
-    // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
-    // for standard bundle adjustment problems.
-    ceres::Solver::Options options;
-    ceres::Solver::Summary summary;
-    options.linear_solver_type = ceres::DENSE_SCHUR;
-    options.minimizer_progress_to_stdout = true;
-    options.max_num_iterations = 1000;
-    ceres::Solve(options, &problem_, &summary);
-
-    return true;
-  }//end runOptimization
+  ROS_INFO("total observations: %d ",total_observations);
+  
+  // Make Ceres automatically detect the bundle structure. Note that the
+  // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
+  // for standard bundle adjustment problems.
+  ceres::Solver::Options options;
+  ceres::Solver::Summary summary;
+  options.linear_solver_type = ceres::DENSE_SCHUR;
+  options.minimizer_progress_to_stdout = true;
+  options.max_num_iterations = 1000;
+  ceres::Solve(options, &problem_, &summary);
+  
+  return true;
+}//end runOptimization
 
   bool CalibrationJob::store()
   {

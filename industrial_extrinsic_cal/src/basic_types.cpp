@@ -38,9 +38,14 @@ namespace industrial_extrinsic_cal
     double trace_R = m[0][0]+m[1][1]+m[2][2];
     double angle = acos((trace_R - 1.0)/2.0);
     double st = sin(angle);
+
+    // avoid division by zero, but don't solve the problem STILL A TODO
+    if(st>0.0 && st<1e-5) st = 1.0e-5;
+    if(st<0.0 && st>-1e-5) st = -1.0e-5;
     ax = (m[2][1]-m[1][2])/(2.0*st)*angle;
     ay = (m[0][2]-m[2][0])/(2.0*st)*angle;
     az = (m[1][0]-m[0][1])/(2.0*st)*angle;
+
   }
 
   void Pose6d::setOrigin(tf::Vector3 & v)

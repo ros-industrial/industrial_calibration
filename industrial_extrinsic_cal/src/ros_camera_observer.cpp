@@ -28,8 +28,13 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
   results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
 }
 
-bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
+bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, std::string &cost_type_str)
 {
+  // TODO make a list of targets so that the camera may make more than one set of observations at a time
+  // This was what was inteneded by the interface definition, I'm not sure why the first implementation didn't do it.
+
+  cost_type_str_ = cost_type_str; // This too should be a vector, each target may have a different cost function associated with it
+
   //set pattern based on target
   ROS_INFO_STREAM("Target type: "<<targ->target_type_);
   instance_target_ = targ;
@@ -170,6 +175,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     camera_obs_.at(i).point_id = i;
     camera_obs_.at(i).image_loc_x = observation_pts_.at(i).x;
     camera_obs_.at(i).image_loc_y = observation_pts_.at(i).y;
+    camera_obs_.at(i).cost_type_str = cost_type_str_;
   }
 
   cam_obs = camera_obs_;
