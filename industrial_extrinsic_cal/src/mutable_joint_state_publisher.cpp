@@ -65,7 +65,6 @@ namespace industrial_extrinsic_cal
 	return_val= false;
       }
     }
-    ROS_ERROR("returning from setCallback");
 
     return(return_val);
   }
@@ -98,9 +97,12 @@ namespace industrial_extrinsic_cal
     yaml_emitter << YAML::Comment << "This is a simple list of mutable joint states";
     yaml_emitter << YAML::Comment << "each line has the form";
     yaml_emitter << YAML::Comment << "joint_name: <double_value>";
-    for (std::map<string, double>::iterator it= joints_.begin(); it!=joints_.end(); ++it){
+    yaml_emitter << YAML::BeginMap;
+    for (std::map<std::string, double>::iterator it= joints_.begin(); it != joints_.end(); ++it){
       yaml_emitter << YAML::Key << it->first.c_str() << YAML::Value << it->second;
+      ROS_ERROR("mutable joint %s has value %lf",it->first.c_str(), it->second);
     }
+    yaml_emitter << YAML::EndMap;
     fout << yaml_emitter.c_str();
     fout.close();
     return(true);
@@ -131,6 +133,11 @@ namespace industrial_extrinsic_cal
       ROS_ERROR_STREAM("Failed with exception "<< e.what());
       return (false);
     }
+    // output so we know they have been read in correctly
+    for (std::map<std::string, double>::iterator it= joints_.begin(); it != joints_.end(); ++it){
+      ROS_ERROR("mutable joint %s has value %lf",it->first.c_str(), it->second);
+    }
+
     return(true);
   } 					     
 

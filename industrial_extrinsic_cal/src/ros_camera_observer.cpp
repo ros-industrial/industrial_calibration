@@ -159,7 +159,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     line(image_roi_,p1,p2,255,3);
   }
   out_bridge_->image = image_roi_;
-  results_pub_.publish(out_bridge_->toImageMsg());
+  //  results_pub_.publish(output_bridge_->toImageMsg());
 
   if (!successful_find)
   {
@@ -184,8 +184,11 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 
 void ROSCameraObserver::triggerCamera()
 {
+  ROS_ERROR("calling camera's trigger");
   ROS_INFO("rosCameraObserver, waiting for image from topic %s",image_topic_.c_str());
   sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
+
+  results_pub_.publish(recent_image);
 
   ROS_INFO("GOT IT");
   try

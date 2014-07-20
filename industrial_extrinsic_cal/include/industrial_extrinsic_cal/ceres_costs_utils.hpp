@@ -52,13 +52,12 @@ namespace industrial_extrinsic_cal
       const T& tz    = c_p1[q++]; /**  translation of camera z */
 
       q=0; /** extract target pose block of parameters */
-      const T& target_x   = t_p1[q++]; /**  target's x location */
-      const T& target_y   = t_p1[q++]; /**  target's y location */
-      const T& target_z   = t_p1[q++]; /**  target's z location */
       const T& target_ax  = t_p1[q++]; /**  target's ax angle axis value */
       const T& target_ay  = t_p1[q++]; /**  target's ay angle axis value */
       const T& target_az  = t_p1[q++]; /**  target's az angle axis value */
-
+      const T& target_x   = t_p1[q++]; /**  target's x location */
+      const T& target_y   = t_p1[q++]; /**  target's y location */
+      const T& target_z   = t_p1[q++]; /**  target's z location */
       
       // create a vector from the location of the point in the target's frame
       T point[3];
@@ -778,6 +777,7 @@ namespace industrial_extrinsic_cal
       const T *camera_tx(&c_p1[3]);
       const T *target_aa(& c_p2[0]);
       const T *target_tx(& c_p2[3]);
+
       T world_point[3]; /** point in world coordinates */
       T camera_point[3]; /** point in camera coordinates */
 

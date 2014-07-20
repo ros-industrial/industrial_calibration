@@ -34,18 +34,42 @@ namespace industrial_extrinsic_cal
     x=y=z=ax=ay=az=0.0;
   }
   void Pose6d::setBasis( tf::Matrix3x3 & m)
-  { // TODO this may have issues see rotation.h from ceres to fix STILL A TODO, st =0 will cause divide by zero
-    double trace_R = m[0][0]+m[1][1]+m[2][2];
-    double angle = acos((trace_R - 1.0)/2.0);
-    double st = sin(angle);
-
-    // avoid division by zero, but don't solve the problem STILL A TODO
-    if(st>0.0 && st<1e-5) st = 1.0e-5;
-    if(st<0.0 && st>-1e-5) st = -1.0e-5;
-    ax = (m[2][1]-m[1][2])/(2.0*st)*angle;
-    ay = (m[0][2]-m[2][0])/(2.0*st)*angle;
-    az = (m[1][0]-m[0][1])/(2.0*st)*angle;
-
+  { 
+    // see Google ceres rotation.h for the source of these computations, I copied them
+    // from the RotationMatrixToAngleAxis()
+    ax = m[2][1] - m[1][2]; // R[5] - R[7]
+    ay = m[0][2] - m[2][0]; // R[6] - R[2]
+    az = m[1][0] - m[0][1]; // R[1] - R[3]
+    double costheta = std::min(std::max((m[0][0] + m[1][1] + m[2][2] - 1.0) / 2.0, -1.0), 1.0);
+    double sintheta = std::min(sqrt(ax * ax + ay*ay + az*az) / 2.0, 1.0);
+    double theta = atan2(sintheta, costheta);
+    static double kThreshold = 1e-12; 
+    if ((sintheta > kThreshold) || (sintheta < -kThreshold)) {
+      double r = theta / (2.0 * sintheta);
+      ax *= r;
+      ay *= r;
+      az *= r;
+      return;
+    }
+    if (costheta > 0.0) {
+      ax *= 0.5;
+      ay *= 0.5;
+      az *= 0.5;
+      return;
+    }
+    double inv_one_minus_costheta = 1.0/ (1.0 - costheta);
+    ax = theta * sqrt((m[0][0] - costheta) * inv_one_minus_costheta);
+    if (((sintheta < 0.0) && (ax > 0.0)) ||((sintheta > 0.0) && (ax < 0.0))) {
+      ax = -ax;
+    }
+    ay = theta * sqrt((m[1][1] - costheta) * inv_one_minus_costheta);
+    if (((sintheta < 0.0) && (ay > 0.0)) ||((sintheta > 0.0) && (ay < 0.0))) {
+      ay = -ay;
+    }
+    az = theta * sqrt((m[2][2] - costheta) * inv_one_minus_costheta);
+    if (((sintheta < 0.0) && (az > 0.0)) ||((sintheta > 0.0) && (az < 0.0))) {
+      az = -az;
+    }
   }
 
   void Pose6d::setOrigin(tf::Vector3 & v)
@@ -130,7 +154,7 @@ namespace industrial_extrinsic_cal
   }
 
     void Pose6d::getEulerZYX(double &ez, double &ey, double &ex) const
-   {
+    {
      double PI = 4*atan(1);
      double theta;
      double psi;

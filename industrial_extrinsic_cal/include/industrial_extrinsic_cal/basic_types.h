@@ -143,17 +143,17 @@ namespace industrial_extrinsic_cal
     {
       struct
       {
-	double x; /**< position x */
-	double y; /**< position y */
-	double z; /**< position z */
 	double ax; /**< angle axis x value */
 	double ay; /**< angle axis y value */
 	double az; /**< angle axis z value */
+	double x; /**< position x */
+	double y; /**< position y */
+	double z; /**< position z */
       };
       struct
       {
-	double pb_loc[3]; /**< parameter block for position */
 	double pb_aa[3]; /**< parameter block for rotation */
+	double pb_loc[3]; /**< parameter block for position */
       };
       struct
       {

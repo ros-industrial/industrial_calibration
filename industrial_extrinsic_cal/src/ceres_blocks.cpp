@@ -83,6 +83,7 @@ P_BLOCK CeresBlocks::getStaticCameraParameterBlockExtrinsics(string camera_name)
       return (extrinsics);
     }
   }
+  ROS_ERROR("COULD NOT FIND STATIC CAMERA NAMED %s", camera_name.c_str());
   return (NULL);
 
 }
@@ -158,6 +159,10 @@ bool CeresBlocks::addStaticCamera(shared_ptr<Camera> camera_to_add)
       return (false); // camera already exists
   }
   camera_to_add->setTIReferenceFrame(reference_frame_);
+  if(camera_to_add->isMoving()){
+    ROS_ERROR("trying to add a static camera that is moving");
+  }
+  ROS_ERROR("adding static camera %s",camera_to_add->camera_name_.c_str());
   static_cameras_.push_back(camera_to_add);
   //ROS_INFO_STREAM("Camera added to static_cameras_");
   return (true);
@@ -172,6 +177,10 @@ bool CeresBlocks::addStaticTarget(shared_ptr<Target> target_to_add)
       }
   }
   target_to_add->setTIReferenceFrame(reference_frame_);
+  if(target_to_add->is_moving_){
+    ROS_ERROR("trying to add a static target that is moving");
+  }
+  ROS_ERROR("adding static target %s",target_to_add->target_name_.c_str());
   static_targets_.push_back(target_to_add);
 
   return (true);
@@ -191,6 +200,7 @@ bool CeresBlocks::addMovingCamera(shared_ptr<Camera> camera_to_add, int scene_id
   temp_moving_camera->cam = temp_camera;
   temp_moving_camera->scene_id = scene_id;
   temp_moving_camera->cam->setTIReferenceFrame(reference_frame_);
+  ROS_ERROR("adding moving camera %s scene = %d",camera_to_add->camera_name_.c_str(), scene_id);
   moving_cameras_.push_back(temp_moving_camera);
   return (true);
 }
@@ -206,6 +216,7 @@ bool CeresBlocks::addMovingTarget(shared_ptr<Target> target_to_add, int scene_id
   temp_moving_target->targ_ = target_to_add;
   temp_moving_target->scene_id_ = scene_id;
   temp_moving_target->targ_->setTIReferenceFrame(reference_frame_);
+  ROS_ERROR("adding moving target %s scene = %d",target_to_add->target_name_.c_str(), scene_id);
   moving_targets_.push_back(temp_moving_target);
   return (true);
 }
@@ -233,7 +244,7 @@ const boost::shared_ptr<Camera> CeresBlocks::getCameraByName(const std::string &
   }
   if (!cam)
   {
-    ROS_ERROR_STREAM("Fail");
+    ROS_ERROR("getCameraByName Failed for %s", camera_name.c_str());
   }
   return cam;
   //return true;
@@ -265,7 +276,7 @@ const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string &
   }
   if (!found)
   {
-    ROS_ERROR_STREAM("Fail");
+    ROS_ERROR("getStaticTargetByName Failed for %s",target_name.c_str());
   }
   return target;
 }
@@ -438,18 +449,22 @@ void CeresBlocks::pushTransforms()
 {
   BOOST_FOREACH(shared_ptr<Camera> cam, static_cameras_)
     {
+      ROS_ERROR("pushing static camera %s",cam->camera_name_.c_str());
       cam->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
     {
+      ROS_ERROR("pushing moving camera %s",mcam->cam->camera_name_.c_str());
       mcam->cam->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
     {
+      ROS_ERROR("pushing static target %s",targ->target_name_.c_str());
       targ->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<MovingTarget> mtarg, moving_targets_)
     {
+      ROS_ERROR("pushing moving target %s from scene %d",mtarg->targ_->target_name_.c_str(), mtarg->scene_id_);
       mtarg->targ_->pushTransform();
     }
 

@@ -5,13 +5,13 @@ static_cameras:
     camera_name: WristAsus
     camera_optical_frame: /asus_rgb_optical_frame
     trigger: NO_WAIT_TRIGGER
-    image_topic: /camera/rgb/image_rect_color
-    angle_axis_ax: 1.0
-    angle_axis_ay: 1.1
-    angle_axis_az: 1.2
-    position_x: 1.3
-    position_y: 1.4
-    position_z: 1.5
+    image_topic: /WristAsus/rgb/image_rect_color
+    angle_axis_ax: 3.14
+    angle_axis_ay: 0.0
+    angle_axis_az: 0.0
+    position_x: 0.0
+    position_y: -0.08
+    position_z: 0.02
     transform_interface: ros_camera_housing_cti
 #    options for transform_interface for cameras include:
 #    ros_camera_bti  broadcast the reference_frame to camera_optical_frame, but parameters map to inverse

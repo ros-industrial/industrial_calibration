@@ -35,6 +35,39 @@ using ceres::CostFunction;
 
 namespace industrial_extrinsic_cal
 {
+void  show_intrinsics(P_BLOCK intrinsics, int num_param){
+    double fx,fy,cx,cy,k1,k2,k3,p1,p2;
+    fx  = intrinsics[0]; /** focal length x */
+    fy  = intrinsics[1]; /** focal length y */
+    cx  = intrinsics[2]; /** central point x */
+    cy  = intrinsics[3]; /** central point y */
+    ROS_ERROR("fx = %lf fy=%lf cx=%lf cy=%lf", fx, fy, cx, cy);
+    if(num_param>4){
+      k1  = intrinsics[4]; /** distortion k1  */
+      k2  = intrinsics[5]; /** distortion k2  */
+      k3  = intrinsics[6]; /** distortion k3  */
+      p1  = intrinsics[7]; /** distortion p1  */
+      p2  = intrinsics[8]; /** distortion p2  */
+      ROS_ERROR("k1 = %lf k2 = %lf k3 = %lf p1 = %lf p2 = %lf", k1, k2, k3, p1, p2);
+    }
+  }
+void  showPose(P_BLOCK extrinsics, std::string message){
+    double ax,ay,az,px,py,pz;
+    ax  = extrinsics[0]; 
+    ay  = extrinsics[1]; 
+    az  = extrinsics[2]; 
+    px  = extrinsics[3]; 
+    py  = extrinsics[4]; 
+    pz  = extrinsics[5];
+    Pose6d pose(px,py,pz,ax,ay,az);
+    tf::Matrix3x3 basis = pose.getBasis();
+    ROS_ERROR("%s:\n %6.2lf  %6.2lf  %6.2lf  %6.2lf\n  %6.2lf  %6.2lf  %6.2lf  %6.2lf\n  %6.2lf  %6.2lf %6.2lf  %6.2lf",
+	      message.c_str(),
+	      basis[0][0],basis[0][1], basis[0][2],px,
+	      basis[1][0],basis[1][1], basis[1][2],py,
+	      basis[2][0],basis[2][1], basis[2][2],pz);
+	      //    ROS_ERROR("%s ax = %lf ay=%lf az=%lf px=%lf py=%lf pz=%lf", message.c_str(), ax, ay, az, px, py, pz);
+  }
 
   bool CalibrationJob::load()
   {
@@ -80,7 +113,7 @@ namespace industrial_extrinsic_cal
 	return (false);
       }
 
-    string temp_name, temp_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame;
+    string temp_name, temp_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame, parent_frame;
     CameraParameters temp_parameters;
     P_BLOCK extrinsics;
 
@@ -188,6 +221,10 @@ namespace industrial_extrinsic_cal
 								       camera_housing_frame,
 								       camera_mounting_frame);
 		}
+		else if(transform_interface == std::string("ros_scti")){ 
+		  (*camera_parameters)[i]["parent_frame"] >> camera_mounting_frame; 
+		  temp_ti = make_shared<ROSSimpleCalTInterface>(camera_optical_frame,  camera_mounting_frame);
+		}
 		else if(transform_interface == std::string("default_ti")){
 		  temp_ti = make_shared<DefaultTransformInterface>(pose);
 		}
@@ -201,6 +238,7 @@ namespace industrial_extrinsic_cal
 		camera_optical_frames_.push_back(camera_optical_frame);
 		camera_housing_frames_.push_back(camera_housing_frame);
 		extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
+		showPose(extrinsics,"extrinsics as read in");
 		original_extrinsics_.push_back(extrinsics);
 	      }
 	  }
@@ -298,6 +336,10 @@ namespace industrial_extrinsic_cal
 								       camera_housing_frame,
 								       camera_mounting_frame);
 		}
+		else if(transform_interface == std::string("ros_scti")){ 
+		  (*camera_parameters)[i]["parent_frame"] >> camera_mounting_frame; 
+		  temp_ti = make_shared<ROSSimpleCalTInterface>(camera_optical_frame,  camera_mounting_frame);
+		}
 		else if(transform_interface == std::string("default_ti")){
 		  temp_ti = make_shared<DefaultTransformInterface>(pose);
 		}
@@ -307,10 +349,12 @@ namespace industrial_extrinsic_cal
 		}
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
+		ROS_ERROR("adding moving camera",temp_camera->camera_name_.c_str());
 		ceres_blocks_.addMovingCamera(temp_camera, scene_id);
 		camera_optical_frames_.push_back(camera_optical_frame);
 		camera_housing_frames_.push_back(camera_housing_frame);
-		extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
+		extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(temp_name, 0);
+		showPose(extrinsics,"extrinsics as read in");
 		original_extrinsics_.push_back(extrinsics);
 	      }
 	  }
@@ -347,11 +391,10 @@ namespace industrial_extrinsic_cal
 	if (const YAML::Node *target_parameters = target_doc.FindValue("static_targets"))
 	  {
 	    ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<" targets ");
-	    shared_ptr<Target> temp_target = make_shared<Target>();
-	    temp_target->is_moving_ = false;
 	    for (unsigned int i = 0; i < target_parameters->size(); i++)
 	      {
 		shared_ptr<Target> temp_target = make_shared<Target>();
+		temp_target->is_moving_ = false;
 		(*target_parameters)[i]["target_name"] >> temp_target->target_name_;
 		(*target_parameters)[i]["target_frame"] >> temp_target->target_frame_;
 		(*target_parameters)[i]["target_type"] >> temp_target->target_type_;
@@ -389,6 +432,12 @@ namespace industrial_extrinsic_cal
 		else if(transform_interface == std::string("ros_bti")){ 
 		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_, temp_target->pose_);
 		}
+		else if(transform_interface == std::string("ros_scti")){ 
+		  std::string parent_frame;
+		  (*target_parameters)[i]["parent_frame"] >> parent_frame; 
+		  temp_ti = make_shared<ROSSimpleCalTInterface>(temp_target->target_frame_,  parent_frame);
+		}
+
 		else if(transform_interface == std::string("default_ti")){
 		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
 		}
@@ -412,6 +461,10 @@ namespace industrial_extrinsic_cal
 		    temp_pnt3d.z = temp_pnt[2];
 		    temp_target->pts_.push_back(temp_pnt3d);
 		  }
+		//		ROS_ERROR("adding target: %s as static target",temp_target->target_name_.c_str());
+		if(temp_target->is_moving_ == true){
+		  ROS_ERROR("WHAT THE HELL");
+		}
 		ceres_blocks_.addStaticTarget(temp_target);
 		target_frames_.push_back(temp_frame);
 	      }
@@ -420,12 +473,13 @@ namespace industrial_extrinsic_cal
 	// read in all moving targets
 	if (const YAML::Node *target_parameters = target_doc.FindValue("moving_targets"))
 	  {
+	    ROS_ERROR("Found %d moving targets", (int) target_parameters->size());
 	    ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<"  moving targets ");
-	    shared_ptr<Target> temp_target = make_shared<Target>();
 	    unsigned int scene_id;
-	    temp_target->is_moving_ = true;
 	    for (unsigned int i = 0; i < target_parameters->size(); i++)
 	      {
+		shared_ptr<Target> temp_target = make_shared<Target>();
+		temp_target->is_moving_ = true;
 		(*target_parameters)[i]["target_name"] >> temp_target->target_name_;
 		(*target_parameters)[i]["target_frame"] >> temp_frame;
 		(*target_parameters)[i]["transform_interface"] >> transform_interface;
@@ -467,8 +521,8 @@ namespace industrial_extrinsic_cal
 		    break;
 		  }
 		(*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose_.ax;
-		(*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose_.ay;
-		(*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose_.az;
+		(*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose_.ay;
+		(*target_parameters)[i]["angle_axis_az"] >> temp_target->pose_.az;
 		(*target_parameters)[i]["position_x"] >> temp_target->pose_.x;
 		(*target_parameters)[i]["position_y"] >> temp_target->pose_.y;
 		(*target_parameters)[i]["position_z"] >> temp_target->pose_.z;
@@ -501,6 +555,7 @@ namespace industrial_extrinsic_cal
 		    temp_pnt3d.z = temp_pnt[2];
 		    temp_target->pts_.push_back(temp_pnt3d);
 		  }
+		//		ROS_ERROR("adding target: %s as moving target",temp_target->target_name_.c_str());
 		ceres_blocks_.addMovingTarget(temp_target, scene_id);
 		target_frames_.push_back(temp_frame);
 	      }
@@ -558,6 +613,7 @@ namespace industrial_extrinsic_cal
 	    for (unsigned int i = 0; i < caljob_scenes->size(); i++)
 	      {
 		(*caljob_scenes)[i]["scene_id"] >> scene_id_num;
+
 		(*caljob_scenes)[i]["trigger"] >> trigger_name;
 		string ros_bool_param;
 		string message;
@@ -613,9 +669,12 @@ namespace industrial_extrinsic_cal
 		    (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
 		    (*obs_node)[j]["target"] >> target_name;
 		    (*obs_node)[j]["cost_type"] >> cost_type;
-		    // TODO CHECK FOR valid return
-		    temp_cam = ceres_blocks_.getCameraByName(camera_name);
-		    temp_targ = ceres_blocks_.getTargetByName(target_name);
+		    if((temp_cam = ceres_blocks_.getCameraByName(camera_name)) == NULL){
+		      ROS_ERROR("Couldn't find camea %s",camera_name.c_str());
+		    }
+		    if((temp_targ = ceres_blocks_.getTargetByName(target_name)) == NULL){;
+		      ROS_ERROR("Couldn't find target %s",target_name.c_str());
+		    }
 		    scene_list_.at(i).addCameraToScene(temp_cam);
 		    scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi, cost_type);
 		  }
@@ -669,6 +728,9 @@ namespace industrial_extrinsic_cal
 	  {			// clear camera of existing observations
 	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
+	    if(current_camera->isMoving()){
+	      ROS_ERROR("CAMERA %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
+	    }
 	  }
 
 	BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
@@ -682,6 +744,7 @@ namespace industrial_extrinsic_cal
 	
 	BOOST_FOREACH( shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {// trigger the cameras
+	    P_BLOCK tmp;
 	    current_camera->camera_observer_->triggerCamera();
 	  }
 
@@ -825,6 +888,13 @@ namespace industrial_extrinsic_cal
 		extrinsics        = ODP.camera_extrinsics_;
 		target_pose     = ODP.target_pose_;
 		point_position = ODP.point_position_;
+		
+		if(point.x == 0.0 && point.y == 0.0 && point.z == 0.0){
+		  ROS_ERROR("Observing Target Origin");
+		  showPose(target_pose, "target");
+		  showPose(extrinsics,"extrinsics");
+		  showPose((P_BLOCK) &link_pose.pb_pose[0], "link_pose");
+		}
 		
 		switch(  string2CostType(ODP.cost_type_str_) ){
 		case cost_functions::CameraReprjErrorWithDistortion:
@@ -1092,7 +1162,7 @@ namespace industrial_extrinsic_cal
   options.minimizer_progress_to_stdout = true;
   options.max_num_iterations = 1000;
   ceres::Solve(options, &problem_, &summary);
-  
+  ROS_ERROR("PROBLEM SOLVED");
   return true;
 }//end runOptimization
 
@@ -1101,7 +1171,11 @@ namespace industrial_extrinsic_cal
     std::string path = ros::package::getPath("industrial_extrinsic_cal");
     std::string file_path = "/launch/target_to_camera_optical_transform_publisher.launch";
     std::string filepath = path+file_path;
-    return ceres_blocks_.writeAllStaticTransforms(filepath);
+
+    //    bool rnt =  ceres_blocks_.writeAllStaticTransforms(filepath);
+    ROS_ERROR("WARNING WRITTING OF OUTPUT IS OFF");
+    bool rtn = true;
+    return rtn;
   }
 
   void CalibrationJob::show()
