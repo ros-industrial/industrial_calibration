@@ -74,9 +74,9 @@ namespace industrial_extrinsic_cal
 
   void Pose6d::setOrigin(tf::Vector3 & v)
   {
-    x = v[0];
-    y = v[1];
-    z = v[2];
+    x = v.m_floats[0];
+    y = v.m_floats[1];
+    z = v.m_floats[2];
   }
 
   void Pose6d::setOrigin(double tx, double ty, double tz)
@@ -146,10 +146,7 @@ namespace industrial_extrinsic_cal
 
   tf::Vector3 Pose6d::getOrigin() const
   {
-    tf::Vector3 V;
-    V[0] = x;
-    V[1] = y;
-    V[2] = z;
+    tf::Vector3 V(x, y, z);
     return(V);
   }
 
@@ -237,11 +234,12 @@ namespace industrial_extrinsic_cal
      R3[1][2] = R1[1][0] * R2[0][2] + R1[1][1]*R2[1][2] + R1[1][2]*R2[2][2];
      R3[2][2] = R1[2][0] * R2[0][2] + R1[2][1]*R2[1][2] + R1[2][2]*R2[2][2];
 
-    tf::Vector3 T3;
-    T3[0] = R1[0][0] * T2[0] + R1[0][1]*T2[1] + R1[0][2]*T2[2] + T1[0] ;
-    T3[1] = R1[1][0] * T2[0] + R1[1][1]*T2[1] + R1[1][2]*T2[2] + T1[1] ;
-    T3[2] = R1[1][0] * T2[0] + R1[2][1]*T2[1] + R1[2][2]*T2[2] + T1[2] ;
-    
+    double tempx, tempy, tempz;
+    tempx = R1[0][0] * T2.x() + R1[0][1]*T2.y() + R1[0][2]*T2.z() + T1.x();
+    tempy = R1[1][0] * T2.x() + R1[1][1]*T2.y() + R1[1][2]*T2.z() + T1.y();
+    tempz = R1[1][0] * T2.x() + R1[2][1]*T2.y() + R1[2][2]*T2.z() + T1.z();
+    tf::Vector3 T3(tempx, tempy, tempz);
+
     Pose6d pose;
     pose.setBasis(R3);
     pose.setOrigin(T3);

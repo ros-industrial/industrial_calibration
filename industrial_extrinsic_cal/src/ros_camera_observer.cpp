@@ -117,6 +117,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 
   image_roi_ = input_bridge_->image(input_roi_);
 
+  observation_pts_.clear();
   std::vector<cv::KeyPoint> key_points;
   ROS_INFO("Pattern type %d, rows %d, cols %d",pattern_,pattern_rows_,pattern_cols_);
   switch (pattern_)
@@ -144,26 +145,32 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 
   }
   // next block of code for publishing the roi as an image, when target is found, circles are placed on image, with a line between pt1 and pt2
-  for(int i=0;i<(int)observation_pts_.size();i++){
-    cv::Point p;
-    p.x = observation_pts_[i].x;
-    p.y = observation_pts_[i].y;
-    circle(image_roi_,p,10.0,255,5);
+  if(successful_find){
+    for(int i=0;i<(int)observation_pts_.size();i++){
+      cv::Point p;
+      p.x = observation_pts_[i].x;
+      p.y = observation_pts_[i].y;
+      circle(image_roi_,p,10.0,255,5);
+    }
+    if(observation_pts_.size()>1){
+      cv::Point p1,p2;
+      p1.x = observation_pts_[0].x; 
+      p1.y = observation_pts_[0].y; 
+      p2.x = observation_pts_[6].x; 
+      p2.y = observation_pts_[6].y; 
+      line(image_roi_,p1,p2,255,3);
+    }
+    out_bridge_->image = image_roi_;
+    results_pub_.publish(out_bridge_->toImageMsg());
   }
-  if(observation_pts_.size()>1){
-    cv::Point p1,p2;
-    p1.x = observation_pts_[0].x; 
-    p1.y = observation_pts_[0].y; 
-    p2.x = observation_pts_[1].x; 
-    p2.y = observation_pts_[1].y; 
-    line(image_roi_,p1,p2,255,3);
-  }
-  out_bridge_->image = image_roi_;
-  //  results_pub_.publish(output_bridge_->toImageMsg());
-
-  if (!successful_find)
-  {
+  else  {
     ROS_WARN_STREAM("Pattern not found for pattern: "<<pattern_ <<" with symmetry: "<< sym_circle_);
+      cv::Point p;
+      p.x = image_roi_.cols/2;
+      p.y = image_roi_.rows/2;
+      circle(image_roi_,p,10.0,255,10);
+      out_bridge_->image = image_roi_;
+      results_pub_.publish(out_bridge_->toImageMsg());
     return 0;
   }
 
@@ -184,11 +191,8 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 
 void ROSCameraObserver::triggerCamera()
 {
-  ROS_ERROR("calling camera's trigger");
   ROS_INFO("rosCameraObserver, waiting for image from topic %s",image_topic_.c_str());
   sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
-
-  results_pub_.publish(recent_image);
 
   ROS_INFO("GOT IT");
   try

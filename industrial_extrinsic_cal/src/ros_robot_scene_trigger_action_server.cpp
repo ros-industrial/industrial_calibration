@@ -54,13 +54,23 @@ public:
 
   void jv_cb(const industrial_extrinsic_cal::robot_jv_triggerGoalConstPtr& goal)
   {
+    // TODO send both values and names and make sure they match. This is critical or else robots will crash into stuff
     std::vector<double> group_variable_values;
     moveit::core::RobotStatePtr current_state = move_group_->getCurrentState();
     double *jv = current_state->getVariablePositions();
-    ROS_INFO("jv_cb:: starting jv = %lf %lf %lf %lf %lf %lf %lf",jv[0],jv[1],jv[2],jv[3],jv[4],jv[5],jv[6]);
+    std::vector<std::string> var_names = current_state->getVariableNames();
+    ROS_ERROR("%d variables %s %s %s %s %s %s %s", (int)var_names.size(),
+	      var_names[0].c_str(),
+	      var_names[1].c_str(),
+	      var_names[2].c_str(),
+	      var_names[3].c_str(),
+	      var_names[4].c_str(),
+	      var_names[5].c_str(),
+	      var_names[6].c_str());
     move_group_->setStartState(*current_state);
     move_group_->setJointValueTarget(goal->joint_values);
     if(move_group_->move()){
+      sleep(1);
       jv_server_.setSucceeded();
     }
     else{

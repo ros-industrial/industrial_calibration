@@ -61,12 +61,18 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     pz  = extrinsics[5];
     Pose6d pose(px,py,pz,ax,ay,az);
     tf::Matrix3x3 basis = pose.getBasis();
-    ROS_ERROR("%s:\n %6.2lf  %6.2lf  %6.2lf  %6.2lf\n  %6.2lf  %6.2lf  %6.2lf  %6.2lf\n  %6.2lf  %6.2lf %6.2lf  %6.2lf",
+    double ez_yaw, ey_pitch, ex_roll;
+    double qx, qy, qz, qw;
+    pose.getEulerZYX(ez_yaw,ey_pitch,ex_roll);
+    pose.getQuaternion(qx, qy, qz, qw);
+    ROS_ERROR("%s =[\n %6.2lf  %6.2lf  %6.2lf  %6.2lf\n  %6.2lf  %6.2lf  %6.2lf  %6.2lf\n  %6.2lf  %6.2lf %6.2lf  %6.2lf\n  %6.2lf  %6.2lf %6.2lf  %6.2lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf ",
 	      message.c_str(),
 	      basis[0][0],basis[0][1], basis[0][2],px,
 	      basis[1][0],basis[1][1], basis[1][2],py,
-	      basis[2][0],basis[2][1], basis[2][2],pz);
-	      //    ROS_ERROR("%s ax = %lf ay=%lf az=%lf px=%lf py=%lf pz=%lf", message.c_str(), ax, ay, az, px, py, pz);
+	      basis[2][0],basis[2][1], basis[2][2],pz,
+	      0.0, 0.0, 0.0, 1.0,
+	      ez_yaw, ey_pitch, ex_roll,
+	      qx, qy, qz, qw);
   }
 
   bool CalibrationJob::load()
@@ -123,7 +129,6 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     std::string trig_action_server;
     std::string trig_action_msg;
     std::string transform_interface;
-    shared_ptr<TransformInterface> temp_ti;
     try
       {
 	YAML::Parser camera_parser(camera_input_file);
@@ -158,8 +163,10 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		(*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
 		Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
 			    temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
-		// create a static camera
+		// create a shared camera and a shared transform interface
 		shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
+		shared_ptr<TransformInterface> temp_ti;
+    
 		// handle all the different trigger cases
 		if(trigger_name == std::string("NO_WAIT_TRIGGER")){
 		  temp_camera->trigger_ = make_shared<NoWaitTrigger>();
@@ -238,7 +245,6 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		camera_optical_frames_.push_back(camera_optical_frame);
 		camera_housing_frames_.push_back(camera_housing_frame);
 		extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
-		showPose(extrinsics,"extrinsics as read in");
 		original_extrinsics_.push_back(extrinsics);
 	      }
 	  }
@@ -272,7 +278,10 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		(*camera_parameters)[i]["scene_id"] >> scene_id;
 		Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
 			    temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
+		// create a shared camera and a shared transform interface
 		shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, true);
+		shared_ptr<TransformInterface> temp_ti;
+
 		// handle all the different trigger cases
 		if(trigger_name == std::string("NO_WAIT_TRIGGER")){
 		  temp_camera->trigger_ = make_shared<NoWaitTrigger>();
@@ -349,12 +358,10 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		}
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
-		ROS_ERROR("adding moving camera",temp_camera->camera_name_.c_str());
 		ceres_blocks_.addMovingCamera(temp_camera, scene_id);
 		camera_optical_frames_.push_back(camera_optical_frame);
 		camera_housing_frames_.push_back(camera_housing_frame);
 		extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(temp_name, 0);
-		showPose(extrinsics,"extrinsics as read in");
 		original_extrinsics_.push_back(extrinsics);
 	      }
 	  }
@@ -381,7 +388,6 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     Target temp_target;
     std::string temp_frame;
     std::string transform_interface;
-    shared_ptr<TransformInterface> temp_ti;
     try
       {
 	YAML::Parser target_parser(target_input_file);
@@ -393,7 +399,10 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	    ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<" targets ");
 	    for (unsigned int i = 0; i < target_parameters->size(); i++)
 	      {
+		// create shared target and transform interface
 		shared_ptr<Target> temp_target = make_shared<Target>();
+		shared_ptr<TransformInterface> temp_ti;
+
 		temp_target->is_moving_ = false;
 		(*target_parameters)[i]["target_name"] >> temp_target->target_name_;
 		(*target_parameters)[i]["target_frame"] >> temp_target->target_frame_;
@@ -461,7 +470,6 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		    temp_pnt3d.z = temp_pnt[2];
 		    temp_target->pts_.push_back(temp_pnt3d);
 		  }
-		//		ROS_ERROR("adding target: %s as static target",temp_target->target_name_.c_str());
 		if(temp_target->is_moving_ == true){
 		  ROS_ERROR("WHAT THE HELL");
 		}
@@ -478,7 +486,10 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	    unsigned int scene_id;
 	    for (unsigned int i = 0; i < target_parameters->size(); i++)
 	      {
+		// create shared target and transform interface
 		shared_ptr<Target> temp_target = make_shared<Target>();
+		shared_ptr<TransformInterface> temp_ti;
+
 		temp_target->is_moving_ = true;
 		(*target_parameters)[i]["target_name"] >> temp_target->target_name_;
 		(*target_parameters)[i]["target_frame"] >> temp_frame;
@@ -555,7 +566,6 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		    temp_pnt3d.z = temp_pnt[2];
 		    temp_target->pts_.push_back(temp_pnt3d);
 		  }
-		//		ROS_ERROR("adding target: %s as moving target",temp_target->target_name_.c_str());
 		ceres_blocks_.addMovingTarget(temp_target, scene_id);
 		target_frames_.push_back(temp_frame);
 	      }
@@ -888,8 +898,9 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		extrinsics        = ODP.camera_extrinsics_;
 		target_pose     = ODP.target_pose_;
 		point_position = ODP.point_position_;
-		
+		bool point_zero=false;
 		if(point.x == 0.0 && point.y == 0.0 && point.z == 0.0){
+		  point_zero=true;
 		  ROS_ERROR("Observing Target Origin");
 		  showPose(target_pose, "target");
 		  showPose(extrinsics,"extrinsics");
@@ -1140,6 +1151,25 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 								 link_pose,
 								 point);
 		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    if(point_zero){
+		      double residual[2];
+		      double *params[2];
+		      params[0] = &extrinsics[0];
+		      params[1] = &target_pose[0];
+		      cost_function->Evaluate(params, residual, NULL);
+		      ROS_ERROR("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
+		      point_zero=false;
+		      LinkCameraCircleTargetReprjErrorPK testIt(image_x, image_y, 
+								circle_dia,
+								focal_length_x,
+								focal_length_y,
+								center_x,
+								center_y,
+								link_pose,
+								point);
+		      testIt.test_residual(extrinsics, target_pose, residual);
+
+		    }
 		  }
 		  break;
 		default:

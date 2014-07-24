@@ -59,6 +59,7 @@ namespace industrial_extrinsic_cal
     for(int i=0; i<(int)req.joint_names.size(); i++){
       if(joints_.find(req.joint_names[i]) != joints_.end()){
 	joints_[req.joint_names[i]] = req.joint_values[i];
+	ROS_ERROR("setting %s to %lf",req.joint_names[i].c_str(), req.joint_values[i]);
       }
       else{
 	ROS_ERROR("%s does not have joint named %s",node_name_.c_str(),req.joint_names[i].c_str());

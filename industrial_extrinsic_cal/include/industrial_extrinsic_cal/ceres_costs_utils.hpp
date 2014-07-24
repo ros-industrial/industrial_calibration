@@ -1808,6 +1808,77 @@ namespace industrial_extrinsic_cal
       link_posei_ = link_pose_.getInverse();
     }
 
+    void test_residual(const double *c_p1, const double  *c_p2, double *resid)
+    {
+      const double *camera_aa(&c_p1[0]);
+      const double *camera_tx(&c_p1[3]);
+      const double *target_aa(&c_p2[0]);
+      const double *target_tx(&c_p2[3]);
+      double point[3]; /** point in target coordinates */
+      double world_point[3]; /** point in world coordinates */
+      double link_point[3]; /** point in link coordinates */
+      double camera_point[3];  /** point in camera coordinates*/ 
+      double R_LtoC[9]; // rotation from link to camera coordinates
+      double R_WtoL[9]; // rotation from world to link coordinates
+      double R_WtoC[9]; // rotation from world to camera coordinates, and intermediate transform
+      double R_TtoW[9]; // rotation from target to world coordinates
+      double R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
+      point[0] = point_.x;
+      point[1] = point_.y;
+      point[2] = point_.z;
+      /** get necessary rotation matrices */
+      ceres::AngleAxisToRotationMatrix(camera_aa, R_LtoC);  
+      printf("camera_aa = %6.3lf %6.3lf %6.3lf\n", camera_aa[0], camera_aa[1], camera_aa[2]);
+      printf("R_camera \n");
+      for(int i=0;i<3;i++){
+	for(int j=0;j<3;j++){
+	  printf("%6.3lf",R_LtoC[i+j*3]);
+	  }
+	printf("\n");
+      }
+      poseRotationMatrix(link_posei_,R_WtoL);
+      printf("R_inverse link\n");
+      for(int i=0;i<3;i++){
+	for(int j=0;j<3;j++){
+	  printf("%6.3lf",R_WtoL[i+j*3]);
+	  }
+	printf("\n");
+      }
+
+      ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
+      printf("R_target\n");
+      for(int i=0;i<3;i++){
+	for(int j=0;j<3;j++){
+	  printf("%6.3lf",R_TtoW[i+j*3]);
+	  }
+	printf("\n");
+      }
+      
+      printf("point = %6.3lf  %6.3lf %6.3lf\n", point[0], point[1], point[2]);
+      /** transform point into camera coordinates */
+      transformPoint(target_aa, target_tx, point, world_point);
+      printf("world_point = %6.3lf  %6.3lf %6.3lf\n", world_point[0], world_point[1], world_point[2]);
+      poseTransformPoint(link_posei_, world_point, link_point);
+      printf("link_point = %6.3lf  %6.3lf %6.3lf\n", link_point[0], link_point[1], link_point[2]);
+      transformPoint(camera_aa, camera_tx, link_point, camera_point);
+      printf("camera_point = %6.3lf  %6.3lf %6.3lf\n", camera_point[0], camera_point[1], camera_point[2]);
+
+      /** find rotation from target to camera coordinates */
+      rotationProduct(R_LtoC, R_WtoL, R_WtoC);
+      rotationProduct(R_WtoC, R_TtoW, R_TtoC); 
+
+      /** compute project point into image plane and compute residual */
+      double circle_diameter = circle_diameter_;
+      double fx = fx_;
+      double fy = fy_;
+      double cx = cx_;
+      double cy = cy_;
+      double ox = ox_;
+      double oy = oy_;
+      //      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
+      cameraPntResidual(camera_point, fx, fy,cx,cy, ox, oy, resid);
+      
+    }
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
 		    const T* const c_p2,  /** 6Dof transform of target into world frame [6] */
@@ -1826,6 +1897,9 @@ namespace industrial_extrinsic_cal
       T R_WtoC[9]; // rotation from world to camera coordinates, and intermediate transform
       T R_TtoW[9]; // rotation from target to world coordinates
       T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
+      point[0] = T(point_.x);
+      point[1] = T(point_.y);
+      point[2] = T(point_.z);
 
       /** get necessary rotation matrices */
       ceres::AngleAxisToRotationMatrix(camera_aa, R_LtoC);  
@@ -1850,7 +1924,7 @@ namespace industrial_extrinsic_cal
       T ox = T(ox_);
       T oy = T(oy_);
       cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
-
+      // cameraPntResidual(camera_point, fx, fy,cx,cy, ox, oy, resid);
       return true;
     } /** end of operator() */
 
