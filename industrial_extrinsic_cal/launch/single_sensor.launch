@@ -13,6 +13,7 @@
     <arg name="rgb_camera_info_url" default=""/>
     <arg name="depth_camera_info_url" default="" />
     <arg name="device_id" default="$(arg device_id)" />
+    <arg name="depth_registration" value="true"/>
   </include>
 
 </launch>

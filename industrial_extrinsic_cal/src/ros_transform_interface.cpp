@@ -365,6 +365,7 @@ namespace industrial_extrinsic_cal
 
   bool  ROSCameraHousingCalTInterface::pushTransform(Pose6d &pose)
   {
+    pose.getInverse().show("results being pushed");
     // get transform from optical frame to housing frame from tf
     Pose6d optical2housing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
     
@@ -383,6 +384,8 @@ namespace industrial_extrinsic_cal
     set_request_.joint_values.push_back(ex);
     set_client_.call(set_request_,set_response_);
 
+    Pose6d resulting_pose = getPoseFromTF(mounting_frame_, transform_frame_, tf_listener_);
+    resulting_pose.show("resulting_pose");
     return(true);
   }
 

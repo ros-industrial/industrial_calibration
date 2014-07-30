@@ -137,6 +137,11 @@ namespace industrial_extrinsic_cal
     /** @brief get the inverse of the pose_*/
     Pose6d getInverse() const;
 
+    /** @brief output pose info 
+     *    @param message to display along with pose info
+     */
+    void show(std::string message);
+
     /** @brief multiplication operator*/
     Pose6d operator * ( Pose6d pose2) const;
     union

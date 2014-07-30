@@ -65,7 +65,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     double qx, qy, qz, qw;
     pose.getEulerZYX(ez_yaw,ey_pitch,ex_roll);
     pose.getQuaternion(qx, qy, qz, qw);
-    ROS_ERROR("%s =[\n %6.2lf  %6.2lf  %6.2lf  %6.2lf\n  %6.2lf  %6.2lf  %6.2lf  %6.2lf\n  %6.2lf  %6.2lf %6.2lf  %6.2lf\n  %6.2lf  %6.2lf %6.2lf  %6.2lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf ",
+    ROS_ERROR("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf ",
 	      message.c_str(),
 	      basis[0][0],basis[0][1], basis[0][2],px,
 	      basis[1][0],basis[1][1], basis[1][2],py,
@@ -1202,8 +1202,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     std::string file_path = "/launch/target_to_camera_optical_transform_publisher.launch";
     std::string filepath = path+file_path;
 
-    //    bool rnt =  ceres_blocks_.writeAllStaticTransforms(filepath);
-    ROS_ERROR("WARNING WRITTING OF OUTPUT IS OFF");
+    bool rnt =  ceres_blocks_.writeAllStaticTransforms(filepath);
     bool rtn = true;
     return rtn;
   }

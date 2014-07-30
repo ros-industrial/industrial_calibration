@@ -31,7 +31,7 @@ namespace industrial_extrinsic_cal
     double qx,qy,qz,qw;
     pose.getEulerZYX(ez_yaw,ey_pitch,ex_roll);
     pose.getQuaternion(qx, qy, qz, qw);
-    ROS_INFO("%s =[\n %6.2lf  %6.2lf  %6.2lf  %6.2lf\n  %6.2lf  %6.2lf  %6.2lf  %6.2lf\n  %6.2lf  %6.2lf %6.2lf  %6.2lf\n  %6.2lf  %6.2lf %6.2lf  %6.2lf];\n rpy= %lf %lf %lf\n quat= %6.3lf %6.3lf %6.3lf %6.3lf ",
+    ROS_INFO("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %lf %lf %lf\n quat= %6.3lf %6.3lf %6.3lf %6.3lf ",
 	      message.c_str(),
 	      basis[0][0],basis[0][1], basis[0][2], pose.x,
 	     basis[1][0],basis[1][1], basis[1][2], pose.y,

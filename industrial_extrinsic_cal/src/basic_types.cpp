@@ -17,6 +17,7 @@
  */
 #include <stdio.h>
 #include <industrial_extrinsic_cal/basic_types.h>
+
 namespace industrial_extrinsic_cal
 {
 
@@ -214,6 +215,23 @@ namespace industrial_extrinsic_cal
     return(new_pose);
   }
 
+  void Pose6d::show(std::string message)
+  {
+    tf::Matrix3x3 basis = this->getBasis();
+    double ez_yaw, ey_pitch, ex_roll;
+    double qx, qy, qz, qw;
+    this->getEulerZYX(ez_yaw,ey_pitch,ex_roll);
+    this->getQuaternion(qx, qy, qz, qw);
+   printf("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf\n ",
+	      message.c_str(),
+	      basis[0][0],basis[0][1], basis[0][2],this->x,
+	      basis[1][0],basis[1][1], basis[1][2],this->y,
+	      basis[2][0],basis[2][1], basis[2][2],this->z,
+	      0.0, 0.0, 0.0, 1.0,
+	      ez_yaw, ey_pitch, ex_roll,
+	      qx, qy, qz, qw);
+  }
+
   Pose6d Pose6d::operator * ( Pose6d pose2) const
   {
     tf::Matrix3x3  R1   = getBasis();
@@ -237,7 +255,7 @@ namespace industrial_extrinsic_cal
     double tempx, tempy, tempz;
     tempx = R1[0][0] * T2.x() + R1[0][1]*T2.y() + R1[0][2]*T2.z() + T1.x();
     tempy = R1[1][0] * T2.x() + R1[1][1]*T2.y() + R1[1][2]*T2.z() + T1.y();
-    tempz = R1[1][0] * T2.x() + R1[2][1]*T2.y() + R1[2][2]*T2.z() + T1.z();
+    tempz = R1[2][0] * T2.x() + R1[2][1]*T2.y() + R1[2][2]*T2.z() + T1.z();
     tf::Vector3 T3(tempx, tempy, tempz);
 
     Pose6d pose;

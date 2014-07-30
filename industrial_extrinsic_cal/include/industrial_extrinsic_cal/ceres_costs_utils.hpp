@@ -1823,9 +1823,6 @@ namespace industrial_extrinsic_cal
       double R_WtoC[9]; // rotation from world to camera coordinates, and intermediate transform
       double R_TtoW[9]; // rotation from target to world coordinates
       double R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
-      point[0] = point_.x;
-      point[1] = point_.y;
-      point[2] = point_.z;
       /** get necessary rotation matrices */
       ceres::AngleAxisToRotationMatrix(camera_aa, R_LtoC);  
       printf("camera_aa = %6.3lf %6.3lf %6.3lf\n", camera_aa[0], camera_aa[1], camera_aa[2]);
@@ -1854,9 +1851,9 @@ namespace industrial_extrinsic_cal
 	printf("\n");
       }
       
-      printf("point = %6.3lf  %6.3lf %6.3lf\n", point[0], point[1], point[2]);
+      printf("point_ = %6.3lf  %6.3lf %6.3lf\n", point_.x, point_.y, point_.z);
       /** transform point into camera coordinates */
-      transformPoint(target_aa, target_tx, point, world_point);
+      transformPoint3d(target_aa, target_tx, point_, world_point);
       printf("world_point = %6.3lf  %6.3lf %6.3lf\n", world_point[0], world_point[1], world_point[2]);
       poseTransformPoint(link_posei_, world_point, link_point);
       printf("link_point = %6.3lf  %6.3lf %6.3lf\n", link_point[0], link_point[1], link_point[2]);
@@ -1897,9 +1894,6 @@ namespace industrial_extrinsic_cal
       T R_WtoC[9]; // rotation from world to camera coordinates, and intermediate transform
       T R_TtoW[9]; // rotation from target to world coordinates
       T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
-      point[0] = T(point_.x);
-      point[1] = T(point_.y);
-      point[2] = T(point_.z);
 
       /** get necessary rotation matrices */
       ceres::AngleAxisToRotationMatrix(camera_aa, R_LtoC);  
@@ -1907,7 +1901,7 @@ namespace industrial_extrinsic_cal
       ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
 
       /** transform point into camera coordinates */
-      transformPoint(target_aa, target_tx, point, world_point);
+      transformPoint3d(target_aa, target_tx, point_, world_point);
       poseTransformPoint(link_posei_, world_point, link_point);
       transformPoint(camera_aa, camera_tx, link_point, camera_point);
 
