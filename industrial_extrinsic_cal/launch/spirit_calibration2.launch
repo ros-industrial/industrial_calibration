@@ -10,7 +10,7 @@
   <arg name="disable_rviz" default="false" />
 
   <!-- This include file does all of the above -->
-  <include file="$(find data_acquisition_launch)/launch/data_acquisition_live.launch" >
+  <include file="$(find data_acquisition_launch)/launch/data_acquisition_live2.launch" >
         <arg name="show_jsp_control" value="$(arg show_jsp_control)" />
         <arg name="disable_rviz" value="$(arg disable_rviz)" />
   </include>
@@ -18,9 +18,9 @@
   <!-- Launch the extrinsic calibration service -->
   <node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen" >
     <rosparam>
-      camera_file: "spirit_cameras.yaml"
-      target_file: "spirit_targets.yaml"
-      cal_job_file: "spirit_caljob.yaml"
+      camera_file: "spirit_cameras2.yaml"
+      target_file: "spirit_targets2.yaml"
+      cal_job_file: "spirit_caljob2.yaml"
       store_results_package_name: "data_acquisition_launch"
       store_results_file_name: "spriti_asus_transforms.launch"
     </rosparam>

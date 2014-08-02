@@ -2,10 +2,10 @@
 
 static_cameras:
  -
-    camera_name: Camera_1
-    camera_optical_frame: /camera_1_rgb_frame
+    camera_name: Camera_5
+    camera_optical_frame: /camera_5_rgb_frame
     trigger: NO_WAIT_TRIGGER
-    image_topic: /camera_1/rgb/image_rect_color
+    image_topic: /camera_5/rgb/image_rect_color
     angle_axis_ax: 0.0
     angle_axis_ay: 0.0
     angle_axis_az: 0.0
@@ -13,7 +13,7 @@ static_cameras:
     position_y: 0.0
     position_z: 0.0
     transform_interface: ros_camera_housing_lti
-    camera_housing_frame: camera_1_bodycenter
+    camera_housing_frame: camera_5_bodycenter
     camera_mounting_frame: sensor_base
     focal_length_x: 525
     focal_length_y: 525
@@ -25,10 +25,10 @@ static_cameras:
     distortion_p1: 0.01
     distortion_p2: 0.01
  -
-    camera_name: Camera_2
-    camera_optical_frame: /camera_2_rgb_frame
+    camera_name: Camera_6
+    camera_optical_frame: /camera_6_rgb_frame
     trigger: NO_WAIT_TRIGGER
-    image_topic: /camera_2/rgb/image_rect_color
+    image_topic: /camera_6/rgb/image_rect_color
     angle_axis_ax: 0.0
     angle_axis_ay: 0.0
     angle_axis_az: 0.0
@@ -36,7 +36,7 @@ static_cameras:
     position_y: 0.0
     position_z: 0.0
     transform_interface: ros_camera_housing_lti
-    camera_housing_frame: camera_2_bodycenter
+    camera_housing_frame: camera_6_bodycenter
     camera_mounting_frame: sensor_base
     focal_length_x: 525
     focal_length_y: 525
@@ -48,10 +48,10 @@ static_cameras:
     distortion_p1: 0.01
     distortion_p2: 0.01
  -
-    camera_name: Camera_3
-    camera_optical_frame: /camera_3_rgb_frame
+    camera_name: Camera_7
+    camera_optical_frame: /camera_7_rgb_frame
     trigger: NO_WAIT_TRIGGER
-    image_topic: /camera_3/rgb/image_rect_color
+    image_topic: /camera_7/rgb/image_rect_color
     angle_axis_ax: 0.0
     angle_axis_ay: 0.0
     angle_axis_az: 0.0
@@ -59,7 +59,7 @@ static_cameras:
     position_y: 0.0
     position_z: 0.0
     transform_interface: ros_camera_housing_lti
-    camera_housing_frame: camera_3_bodycenter
+    camera_housing_frame: camera_7_bodycenter
     camera_mounting_frame: sensor_base
     focal_length_x: 525
     focal_length_y: 525
@@ -71,10 +71,10 @@ static_cameras:
     distortion_p1: 0.01
     distortion_p2: 0.01
  -
-    camera_name: Camera_4
-    camera_optical_frame: /camera_4_rgb_frame
+    camera_name: Camera_8
+    camera_optical_frame: /camera_8_rgb_frame
     trigger: NO_WAIT_TRIGGER
-    image_topic: /camera_4/rgb/image_rect_color
+    image_topic: /camera_8/rgb/image_rect_color
     angle_axis_ax: 0.0
     angle_axis_ay: 0.0
     angle_axis_az: 0.0
@@ -82,7 +82,7 @@ static_cameras:
     position_y: 0.0
     position_z: 0.0
     transform_interface: ros_camera_housing_lti
-    camera_housing_frame: camera_4_bodycenter
+    camera_housing_frame: camera_8_bodycenter
     camera_mounting_frame: sensor_base
     focal_length_x: 525
     focal_length_y: 525

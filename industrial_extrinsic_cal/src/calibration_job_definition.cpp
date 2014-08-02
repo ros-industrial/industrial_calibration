@@ -736,7 +736,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 
 	BOOST_FOREACH(shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {			// clear camera of existing observations
-	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
+       	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
 	    if(current_camera->isMoving()){
 	      ROS_ERROR("CAMERA %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
