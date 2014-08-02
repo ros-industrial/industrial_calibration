@@ -17,6 +17,7 @@
  */
 #include <stdio.h>
 #include <industrial_extrinsic_cal/basic_types.h>
+
 namespace industrial_extrinsic_cal
 {
 
@@ -34,20 +35,49 @@ namespace industrial_extrinsic_cal
     x=y=z=ax=ay=az=0.0;
   }
   void Pose6d::setBasis( tf::Matrix3x3 & m)
-  { // TODO this may have issues see rotation.h from ceres to fix STILL A TODO, st =0 will cause divide by zero
-    double trace_R = m[0][0]+m[1][1]+m[2][2];
-    double angle = acos((trace_R - 1.0)/2.0);
-    double st = sin(angle);
-    ax = (m[2][1]-m[1][2])/(2.0*st)*angle;
-    ay = (m[0][2]-m[2][0])/(2.0*st)*angle;
-    az = (m[1][0]-m[0][1])/(2.0*st)*angle;
+  { 
+    // see Google ceres rotation.h for the source of these computations, I copied them
+    // from the RotationMatrixToAngleAxis()
+    ax = m[2][1] - m[1][2]; // R[5] - R[7]
+    ay = m[0][2] - m[2][0]; // R[6] - R[2]
+    az = m[1][0] - m[0][1]; // R[1] - R[3]
+    double costheta = std::min(std::max((m[0][0] + m[1][1] + m[2][2] - 1.0) / 2.0, -1.0), 1.0);
+    double sintheta = std::min(sqrt(ax * ax + ay*ay + az*az) / 2.0, 1.0);
+    double theta = atan2(sintheta, costheta);
+    static double kThreshold = 1e-12; 
+    if ((sintheta > kThreshold) || (sintheta < -kThreshold)) {
+      double r = theta / (2.0 * sintheta);
+      ax *= r;
+      ay *= r;
+      az *= r;
+      return;
+    }
+    if (costheta > 0.0) {
+      ax *= 0.5;
+      ay *= 0.5;
+      az *= 0.5;
+      return;
+    }
+    double inv_one_minus_costheta = 1.0/ (1.0 - costheta);
+    ax = theta * sqrt((m[0][0] - costheta) * inv_one_minus_costheta);
+    if (((sintheta < 0.0) && (ax > 0.0)) ||((sintheta > 0.0) && (ax < 0.0))) {
+      ax = -ax;
+    }
+    ay = theta * sqrt((m[1][1] - costheta) * inv_one_minus_costheta);
+    if (((sintheta < 0.0) && (ay > 0.0)) ||((sintheta > 0.0) && (ay < 0.0))) {
+      ay = -ay;
+    }
+    az = theta * sqrt((m[2][2] - costheta) * inv_one_minus_costheta);
+    if (((sintheta < 0.0) && (az > 0.0)) ||((sintheta > 0.0) && (az < 0.0))) {
+      az = -az;
+    }
   }
 
   void Pose6d::setOrigin(tf::Vector3 & v)
   {
-    x = v[0];
-    y = v[1];
-    z = v[2];
+    x = v.m_floats[0];
+    y = v.m_floats[1];
+    z = v.m_floats[2];
   }
 
   void Pose6d::setOrigin(double tx, double ty, double tz)
@@ -117,18 +147,41 @@ namespace industrial_extrinsic_cal
 
   tf::Vector3 Pose6d::getOrigin() const
   {
-    tf::Vector3 V;
-    V[0] = x;
-    V[1] = y;
-    V[2] = z;
+    tf::Vector3 V(x, y, z);
     return(V);
   }
 
-  //TODO
-  //  void Pose6d::get_eulerZYX(double &ez, double &ey, double & ex)
-  //  {
-  //    
-  //  }
+    void Pose6d::getEulerZYX(double &ez, double &ey, double &ex) const
+    {
+     double PI = 4*atan(1);
+     double theta;
+     double psi;
+     double phi;
+     tf::Matrix3x3 R = this->getBasis();
+     
+     if( fabs(R[2][0]) != 1.0 ){ // cos(theta) = 0.0
+       theta = -asin(R[2][0]);
+       double ct = cos(theta);
+       psi = atan2(R[2][1]/ct, R[2][2]/ct);
+       phi = atan2(R[1][0]/ct,R[0][0]/ct);
+     }
+     else{
+       phi = 0.0; // could be anything
+       if(R[2][0] == -1.0){
+	 theta = PI/2.0;
+	 psi = phi + atan2(R[0][1], R[0][2]);
+       }
+       else{
+	 theta = -PI/2.0;
+	 psi = -phi + atan2(-R[0][1], -R[0][2]);
+       }
+     } // end of cos(theta) = 0
+
+     // Rz(phi) * Ry(theta) * Rx(psi)
+     ez = phi;
+     ey = theta;
+     ex = psi;
+   }
   void Pose6d::getQuaternion(double &qx,  double &qy, double &qz, double &qw)
   {
     // the following was taken from ceres equivalent function
@@ -151,7 +204,7 @@ namespace industrial_extrinsic_cal
     }
   }
 
-  Pose6d Pose6d::getInverse()
+  Pose6d Pose6d::getInverse() const
   {
     double newx,newy,newz;
     tf::Matrix3x3 R = getBasis();
@@ -160,6 +213,23 @@ namespace industrial_extrinsic_cal
     newz = -(R[0][2] * x + R[1][2] * y + R[2][2] * z);
     Pose6d new_pose(newx, newy, newz, -ax,- ay, -az);
     return(new_pose);
+  }
+
+  void Pose6d::show(std::string message)
+  {
+    tf::Matrix3x3 basis = this->getBasis();
+    double ez_yaw, ey_pitch, ex_roll;
+    double qx, qy, qz, qw;
+    this->getEulerZYX(ez_yaw,ey_pitch,ex_roll);
+    this->getQuaternion(qx, qy, qz, qw);
+   printf("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf\n ",
+	      message.c_str(),
+	      basis[0][0],basis[0][1], basis[0][2],this->x,
+	      basis[1][0],basis[1][1], basis[1][2],this->y,
+	      basis[2][0],basis[2][1], basis[2][2],this->z,
+	      0.0, 0.0, 0.0, 1.0,
+	      ez_yaw, ey_pitch, ex_roll,
+	      qx, qy, qz, qw);
   }
 
   Pose6d Pose6d::operator * ( Pose6d pose2) const
@@ -182,11 +252,12 @@ namespace industrial_extrinsic_cal
      R3[1][2] = R1[1][0] * R2[0][2] + R1[1][1]*R2[1][2] + R1[1][2]*R2[2][2];
      R3[2][2] = R1[2][0] * R2[0][2] + R1[2][1]*R2[1][2] + R1[2][2]*R2[2][2];
 
-    tf::Vector3 T3;
-    T3[0] = R1[0][0] * T2[0] + R1[0][1]*T2[1] + R1[0][2]*T2[2] + T1[0] ;
-    T3[1] = R1[1][0] * T2[0] + R1[1][1]*T2[1] + R1[1][2]*T2[2] + T1[1] ;
-    T3[2] = R1[1][0] * T2[0] + R1[2][1]*T2[1] + R1[2][2]*T2[2] + T1[2] ;
-    
+    double tempx, tempy, tempz;
+    tempx = R1[0][0] * T2.x() + R1[0][1]*T2.y() + R1[0][2]*T2.z() + T1.x();
+    tempy = R1[1][0] * T2.x() + R1[1][1]*T2.y() + R1[1][2]*T2.z() + T1.y();
+    tempz = R1[2][0] * T2.x() + R1[2][1]*T2.y() + R1[2][2]*T2.z() + T1.z();
+    tf::Vector3 T3(tempx, tempy, tempz);
+
     Pose6d pose;
     pose.setBasis(R3);
     pose.setOrigin(T3);

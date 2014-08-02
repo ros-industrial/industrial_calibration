@@ -25,6 +25,38 @@ using boost::shared_ptr;
 
 namespace industrial_extrinsic_cal
 {
+  void  showPose(Pose6d pose, std::string message){
+    tf::Matrix3x3 basis = pose.getBasis();
+    double ez_yaw, ey_pitch, ex_roll;
+    double qx,qy,qz,qw;
+    pose.getEulerZYX(ez_yaw,ey_pitch,ex_roll);
+    pose.getQuaternion(qx, qy, qz, qw);
+    ROS_INFO("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %lf %lf %lf\n quat= %6.3lf %6.3lf %6.3lf %6.3lf ",
+	      message.c_str(),
+	      basis[0][0],basis[0][1], basis[0][2], pose.x,
+	     basis[1][0],basis[1][1], basis[1][2], pose.y,
+	      basis[2][0],basis[2][1], basis[2][2], pose.z,
+	     0.0, 0.0, 0.0, 1.0,
+	      ez_yaw, ey_pitch, ex_roll,
+	      qx,qy,qz,qw);
+  }
+  void  showIntrinsics(P_BLOCK intrinsics, int num_param){
+    double fx,fy,cx,cy,k1,k2,k3,p1,p2;
+    fx  = intrinsics[0]; /** focal length x */
+    fy  = intrinsics[1]; /** focal length y */
+    cx  = intrinsics[2]; /** central point x */
+    cy  = intrinsics[3]; /** central point y */
+    ROS_INFO("fx = %lf fy=%lf cx=%lf cy=%lf", fx, fy, cx, cy);
+    if(num_param>4){
+      k1  = intrinsics[4]; /** distortion k1  */
+      k2  = intrinsics[5]; /** distortion k2  */
+      k3  = intrinsics[6]; /** distortion k3  */
+      p1  = intrinsics[7]; /** distortion p1  */
+      p2  = intrinsics[8]; /** distortion p2  */
+      ROS_INFO("k1 = %lf k2 = %lf k3 = %lf p1 = %lf p2 = %lf", k1, k2, k3, p1, p2);
+    }
+  }
+
 CeresBlocks::CeresBlocks()
 {
 }
@@ -83,6 +115,7 @@ P_BLOCK CeresBlocks::getStaticCameraParameterBlockExtrinsics(string camera_name)
       return (extrinsics);
     }
   }
+  ROS_ERROR("COULD NOT FIND STATIC CAMERA NAMED %s", camera_name.c_str());
   return (NULL);
 
 }
@@ -158,6 +191,9 @@ bool CeresBlocks::addStaticCamera(shared_ptr<Camera> camera_to_add)
       return (false); // camera already exists
   }
   camera_to_add->setTIReferenceFrame(reference_frame_);
+  if(camera_to_add->isMoving()){
+    ROS_ERROR("trying to add a static camera that is moving");
+  }
   static_cameras_.push_back(camera_to_add);
   //ROS_INFO_STREAM("Camera added to static_cameras_");
   return (true);
@@ -172,6 +208,9 @@ bool CeresBlocks::addStaticTarget(shared_ptr<Target> target_to_add)
       }
   }
   target_to_add->setTIReferenceFrame(reference_frame_);
+  if(target_to_add->is_moving_){
+    ROS_ERROR("trying to add a static target that is moving");
+  }
   static_targets_.push_back(target_to_add);
 
   return (true);
@@ -233,7 +272,7 @@ const boost::shared_ptr<Camera> CeresBlocks::getCameraByName(const std::string &
   }
   if (!cam)
   {
-    ROS_ERROR_STREAM("Fail");
+    ROS_ERROR("getCameraByName Failed for %s", camera_name.c_str());
   }
   return cam;
   //return true;
@@ -265,7 +304,7 @@ const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string &
   }
   if (!found)
   {
-    ROS_ERROR_STREAM("Fail");
+    ROS_ERROR("getStaticTargetByName Failed for %s",target_name.c_str());
   }
   return target;
 }
@@ -273,45 +312,24 @@ const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string &
 
  void CeresBlocks::displayStaticCameras()
 {
-  double R[9];
-  double aa[3];
-  double camera_to_world[3];
-  double world_to_camera[3];
-  double quat[4];
 
   if(static_cameras_.size() !=0)   ROS_INFO("Static Cameras");
   BOOST_FOREACH(shared_ptr<Camera> cam, static_cameras_)
     {
-      aa[0] = -cam->camera_parameters_.angle_axis[0];
-      aa[1] = -cam->camera_parameters_.angle_axis[1];
-      aa[2] = -cam->camera_parameters_.angle_axis[2];
-      camera_to_world[0] = -cam->camera_parameters_.position[0];
-      camera_to_world[1] = -cam->camera_parameters_.position[1];
-      camera_to_world[2] = -cam->camera_parameters_.position[2];
-      ceres::AngleAxisToQuaternion(aa, quat);
-      ceres::AngleAxisRotatePoint(aa,camera_to_world,world_to_camera);
-      ceres::AngleAxisToRotationMatrix(aa,R);
-      ROS_INFO("%s \nPose:\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf \n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf\n",
-	       cam->camera_name_.c_str(),
-	       R[0],R[1],R[2],world_to_camera[0],
-	       R[3],R[4],R[5],world_to_camera[1],
-	       R[6],R[7],R[8],world_to_camera[2],
-	       0.0,0.0,0.0,1.0);
-      ROS_INFO("Intrinsics:\n fx = %lf fy = %lf\n cx = %lf cy = %lf\n D=[ %7.4lf %7.4lf %7.4lf %7.4lf %7.4lf]",
-	       cam->camera_parameters_.focal_length_x,
-	       cam->camera_parameters_.focal_length_y,
-	       cam->camera_parameters_.center_x,
-	       cam->camera_parameters_.center_y,
-	       cam->camera_parameters_.distortion_k1,
-	       cam->camera_parameters_.distortion_k2,
-	       cam->camera_parameters_.distortion_k3,
-	       cam->camera_parameters_.distortion_p1,
-	       cam->camera_parameters_.distortion_p2);
+      Pose6d pose(cam->camera_parameters_.position[0],
+		  cam->camera_parameters_.position[1],
+		  cam->camera_parameters_.position[2],
+		  cam->camera_parameters_.angle_axis[0],
+		  cam->camera_parameters_.angle_axis[1],
+		  cam->camera_parameters_.angle_axis[2]);
+      Pose6d ipose = pose.getInverse();
+      showPose(ipose, cam->camera_name_);
+      showIntrinsics(cam->camera_parameters_.pb_intrinsics, 9);
     }
 }
 void CeresBlocks::displayMovingCameras()
 {
-  double R[9];
+  tf::Matrix3x3 R;
   double aa[3];
   double camera_to_world[3];
   double world_to_camera[3];
@@ -320,31 +338,15 @@ void CeresBlocks::displayMovingCameras()
   if(moving_cameras_.size() !=0) ROS_INFO("Moving Cameras");
   BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
     {
-      aa[0] = -mcam->cam->camera_parameters_.angle_axis[0];
-      aa[1] = -mcam->cam->camera_parameters_.angle_axis[1];
-      aa[2] = -mcam->cam->camera_parameters_.angle_axis[2];
-      camera_to_world[0] = -mcam->cam->camera_parameters_.position[0];
-      camera_to_world[1] = -mcam->cam->camera_parameters_.position[1];
-      camera_to_world[2] = -mcam->cam->camera_parameters_.position[2];
-      ceres::AngleAxisToQuaternion(aa, quat);
-      ceres::AngleAxisRotatePoint(aa,camera_to_world,world_to_camera);
-      ceres::AngleAxisToRotationMatrix(aa,R);
-      ROS_INFO("%s \nPose:\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf \n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf",
-	       mcam->cam->camera_name_.c_str(),
-	       R[0],R[1],R[2],world_to_camera[0],
-	       R[3],R[4],R[5],world_to_camera[1],
-	       R[6],R[7],R[8],world_to_camera[2],
-	       0.0,0.0,0.0,1.0);
-      ROS_INFO("Intrinsics:\n fx = %lf fy = %lf\n cx = %lf cy = %lf\n D=[ %7.4lf %7.4lf %7.4lf %7.4lf %7.4lf]",
-	       mcam->cam->camera_parameters_.focal_length_x,
-	       mcam->cam->camera_parameters_.focal_length_y,
-	       mcam->cam->camera_parameters_.center_x,
-	       mcam->cam->camera_parameters_.center_y,
-	       mcam->cam->camera_parameters_.distortion_k1,
-	       mcam->cam->camera_parameters_.distortion_k2,
-	       mcam->cam->camera_parameters_.distortion_k3,
-	       mcam->cam->camera_parameters_.distortion_p1,
-	       mcam->cam->camera_parameters_.distortion_p2);
+      Pose6d pose(mcam->cam->camera_parameters_.position[0],
+		  mcam->cam->camera_parameters_.position[1],
+		  mcam->cam->camera_parameters_.position[2],
+		  mcam->cam->camera_parameters_.angle_axis[0],
+		  mcam->cam->camera_parameters_.angle_axis[1],
+		  mcam->cam->camera_parameters_.angle_axis[2]);
+      Pose6d ipose = pose.getInverse();
+      showPose(ipose, mcam->cam->camera_name_);
+      showIntrinsics(mcam->cam->camera_parameters_.pb_intrinsics, 9);
     }
 }
 void CeresBlocks::displayStaticTargets()
@@ -354,14 +356,7 @@ void CeresBlocks::displayStaticTargets()
   if(static_targets_.size() !=0)   ROS_INFO("Static Targets:");
   BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
     {
-      ceres::AngleAxisToRotationMatrix(targ->pose_.pb_aa,R);
-      ROS_INFO("%s \nPose:\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf \n %d points",
-	       targ->target_name_.c_str(),
-	       R[0],R[3],R[6],targ->pose_.x,
-	       R[1],R[4],R[7],targ->pose_.y,
-	       R[2],R[5],R[8],targ->pose_.z,
-	       0.0,0.0,0.0,1.0,
-	       targ->num_points_);
+      showPose(targ->pose_, targ->target_name_);
     }
 }
 void CeresBlocks::displayMovingTargets()
@@ -371,14 +366,7 @@ void CeresBlocks::displayMovingTargets()
   if(moving_targets_.size() !=0)   ROS_INFO("Moving Targets:");
   BOOST_FOREACH(shared_ptr<MovingTarget> mtarg, moving_targets_)
     {
-      ceres::AngleAxisToRotationMatrix(mtarg->targ_->pose_.pb_aa,R);
-      ROS_INFO("%s Pose:\n %6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf \n%6.3lf %6.3lf %6.3lf  %6.3lf\n %6.3lf %6.3lf %6.3lf  %6.3lf\n%d points",
-	       mtarg->targ_->target_name_.c_str(),
-	       R[0],R[3],R[6],mtarg->targ_->pose_.x,
-	       R[1],R[4],R[7],mtarg->targ_->pose_.y,
-	       R[2],R[5],R[8],mtarg->targ_->pose_.z,
-	       0.0,0.0,0.0,1.0,
-	       mtarg->targ_->num_points_);
+      showPose(mtarg->targ_->pose_, mtarg->targ_->target_name_);
     }
 }
 using std::string;
@@ -438,18 +426,22 @@ void CeresBlocks::pushTransforms()
 {
   BOOST_FOREACH(shared_ptr<Camera> cam, static_cameras_)
     {
+      ROS_ERROR("pushing static camera %s",cam->camera_name_.c_str());
       cam->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
     {
+      ROS_ERROR("pushing moving camera %s",mcam->cam->camera_name_.c_str());
       mcam->cam->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
     {
+      ROS_ERROR("pushing static target %s",targ->target_name_.c_str());
       targ->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<MovingTarget> mtarg, moving_targets_)
     {
+      ROS_ERROR("pushing moving target %s from scene %d",mtarg->targ_->target_name_.c_str(), mtarg->scene_id_);
       mtarg->targ_->pushTransform();
     }
 

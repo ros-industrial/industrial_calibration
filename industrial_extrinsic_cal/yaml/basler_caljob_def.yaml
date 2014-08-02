@@ -27,7 +27,7 @@ scenes:
 -
      scene_id: 2
      trigger: ROS_ACTION_TRIGGER
-     trig_action_server: ros_scene_trigger
+     trig_action_server: rosSceneTrigger
      trig_action_msg: "Prepare Next Scene"
      observations: 
      -
@@ -50,7 +50,16 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 4
-     trigger: NO_WAIT_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+      - -1.24
+      -  0.908
+      - -0.133
+      - -1.068
+      -  0.006
+      - -0.737
+      -  2.33
      observations: 
      -
           camera: BaslerAce
@@ -61,7 +70,16 @@ scenes:
           roi_y_max: 1233
 -
      scene_id: 5
-     trigger: NO_WAIT_TRIGGER
+     trigger: ROS_ROBOT_POSE_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_pose
+     pose: 
+       -  0.446403
+       - -0.821855
+       -  0.585988 
+       -  0.847691
+       -  0.482319
+       -  -0.105911
+       -   0.193830
      observations: 
      -
           camera: BaslerAce

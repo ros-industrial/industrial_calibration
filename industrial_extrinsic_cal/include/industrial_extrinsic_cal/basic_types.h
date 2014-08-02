@@ -114,6 +114,13 @@ namespace industrial_extrinsic_cal
     /** @brief get the rotational part of pose as a tf::Matrix3x3 */
     tf::Matrix3x3 getBasis() const;
 
+    /** @brief get the euler angles  
+     * @param ez angle of rotation around z axis 
+     * @param ey angle of rotation around y axis 
+     * @param ex angle of rotation around x axis 
+     */
+    void getEulerZYX(double &ez, double &ey, double &ex) const;
+
     /** @brief get the translationalpart of pose as a tf::Vector3*/
     tf::Vector3 getOrigin() const;
 
@@ -128,7 +135,12 @@ namespace industrial_extrinsic_cal
     void getQuaternion(double &qx,  double &qy, double &qz, double &qw);
 
     /** @brief get the inverse of the pose_*/
-    Pose6d getInverse();
+    Pose6d getInverse() const;
+
+    /** @brief output pose info 
+     *    @param message to display along with pose info
+     */
+    void show(std::string message);
 
     /** @brief multiplication operator*/
     Pose6d operator * ( Pose6d pose2) const;
@@ -136,17 +148,17 @@ namespace industrial_extrinsic_cal
     {
       struct
       {
-	double x; /**< position x */
-	double y; /**< position y */
-	double z; /**< position z */
 	double ax; /**< angle axis x value */
 	double ay; /**< angle axis y value */
 	double az; /**< angle axis z value */
+	double x; /**< position x */
+	double y; /**< position y */
+	double z; /**< position z */
       };
       struct
       {
-	double pb_loc[3]; /**< parameter block for position */
 	double pb_aa[3]; /**< parameter block for rotation */
+	double pb_loc[3]; /**< parameter block for position */
       };
       struct
       {

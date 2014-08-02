@@ -77,6 +77,13 @@ public:
    */
   void setTIReferenceFrame(std::string & ref_frame);
 
+  /*! \brief get the observations from the observer
+   *  @param camera_observations a vector of observations
+     * @return 0 if failed to get observations, 1 if successful
+   */
+  int getObservations(CameraObservations &camera_observations);
+
+
   /*! \brief get the transform interface, 
    *  Because transform interfaces need to get created when the camera or target is created, we often don't know
    *  what the reference frame is for the interface until later, so we need to set it
@@ -88,9 +95,8 @@ public:
   boost::shared_ptr<Trigger>  trigger_; /*!< pointer to the trigger mechanism for this camera*/
   CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
-  bool fixed_intrinsics_; /** are the extrinsics known? */
-  bool fixed_extrinsics_; /** are the extrinsics known? */
   boost::shared_ptr<TransformInterface>  transform_interface_; /**< interface to transform, tf for example  */
+  Pose6d intermediate_frame_; /**< Sometimes there is an intermediate transform from ref to origin of intrinsics */
 
 private:
   bool is_moving_; /*!< bool is_moving_  false for static cameras */
@@ -104,6 +110,7 @@ typedef struct
   boost::shared_ptr<Camera> camera;
   boost::shared_ptr<Target> target;
   Roi roi;
+  std::string cost_type_str;
 } ObservationCmd;
 
 /*! \brief moving cameras need a new pose with each scene in which they are used */

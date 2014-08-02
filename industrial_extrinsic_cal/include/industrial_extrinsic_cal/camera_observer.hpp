@@ -31,6 +31,8 @@ namespace industrial_extrinsic_cal
     int point_id; /**< point's id in target's point array */
     double image_loc_x; /**< target point was found at image location x */
     double image_loc_y; /**< target point image location y */
+    std::string cost_type_str;  /**< type of cost associated with this observation */
+    Pose6d intermediate_frame; /**< sometimes one needs the transform from ref_frame to the frame of extrinics for camera */
   } Observation;
 
   /*! \brief A vector of observations made by a single camera of posibly multiple targets */
@@ -52,7 +54,7 @@ public:
   /** @brief add a target to look for */
   /** @param targ a target to look for */
   /** @param roi Region of interest for target */
-  virtual bool addTarget(boost::shared_ptr<Target> targ, Roi &roi)=0;
+  virtual bool addTarget(boost::shared_ptr<Target> targ, Roi &roi, std::string &cost_type_str)=0;
 
   /** @brief remove all targets */
   virtual void clearTargets()=0;

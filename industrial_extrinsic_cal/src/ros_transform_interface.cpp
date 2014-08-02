@@ -21,6 +21,21 @@
 #include <fstream>
 namespace industrial_extrinsic_cal
 {
+  Pose6d getPoseFromTF(const std::string &from_frame, const std::string &to_frame, const tf::TransformListener &tf_listener)
+  {
+    // get all the information from tf and from the mutable joint state publisher
+    tf::StampedTransform tf_transform; 
+    ros::Time now = ros::Time::now()-ros::Duration(.5);
+    while(! tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0))){
+      ROS_INFO("waiting for tranform from  %s to  %s",from_frame.c_str(),to_frame.c_str());
+    }
+    tf_listener.lookupTransform(from_frame, to_frame, now, tf_transform);
+    Pose6d pose;
+    pose.setBasis(tf_transform.getBasis());
+    pose.setOrigin(tf_transform.getOrigin());
+    return(pose);
+  }
+
   using std::string;
 
   ROSListenerTransInterface::ROSListenerTransInterface(const string & transform_frame) 
@@ -38,14 +53,7 @@ namespace industrial_extrinsic_cal
       return(pose);
     }
     else{
-      tf::StampedTransform transform;
-      ros::Time now = ros::Time::now();
-      while(! tf_listener_.waitForTransform(transform_frame_,ref_frame_, now, ros::Duration(1.0))){
-	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
-      }
-      tf_listener_.lookupTransform(transform_frame_,ref_frame_, now, transform);
-      pose_.setBasis(transform.getBasis());
-      pose_.setOrigin(transform.getOrigin());
+      pose_ = getPoseFromTF(transform_frame_, ref_frame_, tf_listener_);
       return(pose_);
     }
   }
@@ -65,14 +73,7 @@ namespace industrial_extrinsic_cal
       return(pose);
     }
     else{
-      tf::StampedTransform transform;
-      ros::Time now = ros::Time::now();
-      while(! tf_listener_.waitForTransform(ref_frame_,transform_frame_, now, ros::Duration(1.0))){
-	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
-      }
-      tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, transform);
-      pose_.setBasis(transform.getBasis());
-      pose_.setOrigin(transform.getOrigin());
+      pose_ = getPoseFromTF(transform_frame_, ref_frame_, tf_listener_);
       return(pose_);
     }
   }
@@ -98,14 +99,7 @@ namespace industrial_extrinsic_cal
       return(pose);
     }
     else{
-      tf::StampedTransform transform;
-      ros::Time now = ros::Time::now();
-      while(! tf_listener_.waitForTransform(ref_frame_,transform_frame_, now, ros::Duration(1.0))){
-	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),ref_frame_.c_str());
-      }
-      tf_listener_.lookupTransform(ref_frame_,transform_frame_, now, transform);
-      pose_.setBasis(transform.getBasis());
-      pose_.setOrigin(transform.getOrigin());
+      pose_ = getPoseFromTF(transform_frame_, ref_frame_, tf_listener_);
       return(pose_);
     }
   }
@@ -151,7 +145,7 @@ namespace industrial_extrinsic_cal
       }//end if writing to file
   }
 
-  void  ROSBroadcastTransInterface::setReferenceFrame(string & ref_frame)
+  void  ROSBroadcastTransInterface::setReferenceFrame(string &ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
@@ -210,7 +204,7 @@ namespace industrial_extrinsic_cal
       }//end if writing to file
   }
 
-  void  ROSCameraBroadcastTransInterface::setReferenceFrame(string & ref_frame)
+  void ROSCameraBroadcastTransInterface::setReferenceFrame(string &ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
@@ -249,28 +243,19 @@ namespace industrial_extrinsic_cal
   {
     std::ofstream outputFile(filePath.c_str(), std::ios::app); // open for appending
     if (outputFile.is_open()){
-      // Camer optical frame to ref is estimated by bundle adjustment  T_co2ref
-      // Camer housing to camera optical frame is specified by urdf   T_ch2co
-      // Desired T_ref2ch = T_co2ref^(-1) * T_ch2co^(-1)
-      // To get T_ch2co^(-1) we may use the tf listener
+      // Camer optical frame to ref is estimated by bundle adjustment  optical2ref
+      // Camer housing to camera optical frame is specified by urdf   optical2housing
+      // Desired ref2optical = optical2ref^-1 * optical2housing
       
-      Pose6d T_co2ch;
-      tf::StampedTransform transform;
-      ros::Time now = ros::Time::now();
-      while(! tf_listener_.waitForTransform(transform_frame_,housing_frame_, now, ros::Duration(1.0))){
-	ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
-      }
-      tf_listener_.lookupTransform(transform_frame_, housing_frame_, now, transform);
-      T_co2ch.setBasis(transform.getBasis());
-      T_co2ch.setOrigin(transform.getOrigin());
-      Pose6d T_ref2ch = pose_.getInverse() * T_co2ch;
+      Pose6d optical2housing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
+      Pose6d ref2housing        = pose_.getInverse() * optical2housing;
       
       // append the transform to a launch file
       double qx,qy,qz,qw;
-      T_ref2ch.getQuaternion(qx, qy, qz, qw);
+      ref2housing.getQuaternion(qx, qy, qz, qw);
       outputFile<<"<node pkg=\"tf\" type=\"static_transform_publisher\" name=\"";
       outputFile<<transform_frame_<<"_tf_broadcaster"<<"\" args=\"";
-      outputFile<< T_ref2ch.x << ' '<< T_ref2ch.y << ' '<< T_ref2ch.z << ' ';
+      outputFile<< ref2housing.x << ' '<< ref2housing.y << ' '<< ref2housing.z << ' ';
       outputFile<< qx << ' '<< qy << ' '<<qz << ' ' << qw ;
       outputFile<<" "<<ref_frame_;
       outputFile<<" "<<transform_frame_;
@@ -284,7 +269,7 @@ namespace industrial_extrinsic_cal
     }//end if writing to file
   }
 
-  void  ROSCameraHousingBroadcastTInterface::setReferenceFrame(string & ref_frame)
+  void  ROSCameraHousingBroadcastTInterface::setReferenceFrame(std::string &ref_frame)
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
@@ -295,28 +280,220 @@ namespace industrial_extrinsic_cal
   void  ROSCameraHousingBroadcastTInterface::timerCallback(const ros::TimerEvent & timer_event)
   { // broadcast current value of pose.inverse() as a transform each time called
 
-    // Camer optical frame to ref is estimated by bundle adjustment  T_co2ref
-    // Camer housing to camera optical frame is specified by urdf   T_ch2co
-    // Desired T_ref2ch = T_co2ref^(-1) * T_ch2co^(-1)
-    // To get T_ch2co^(-1) we may use the tf listener
+    // Camer optical frame to ref is estimated by bundle adjustment  pose_ = optical2ref
+    // Camer housing to camera optical frame is specified by urdf   optical2housing
+    // Desired ref2housing = optical2ref^-1 * optical2housing
 
-    Pose6d T_co2ch;
-    tf::StampedTransform transform;
-    ros::Time now = ros::Time::now();
-    while(! tf_listener_.waitForTransform(transform_frame_,housing_frame_, now, ros::Duration(1.0))){
-      ROS_ERROR("waiting for tranform: %s to reference: %s",transform_frame_.c_str(),housing_frame_.c_str());
-    }
-    tf_listener_.lookupTransform(transform_frame_, housing_frame_, now, transform);
-    T_co2ch.setBasis(transform.getBasis());
-    T_co2ch.setOrigin(transform.getOrigin());
-    Pose6d T_ref2ch = pose_.getInverse() * T_co2ch;
+    Pose6d optical2housing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
+    Pose6d ref2housing = pose_.getInverse() * optical2housing;
     
     // copy into the stamped transform
-    transform_.setBasis(T_ref2ch.getBasis());
-    transform_.setOrigin(T_ref2ch.getOrigin());
+    transform_.setBasis(ref2housing.getBasis());
+    transform_.setOrigin(ref2housing.getOrigin());
     transform_.child_frame_id_ = housing_frame_;
     transform_.frame_id_ = ref_frame_;
-    //    ROS_INFO("broadcasting %s in %s",housing_frame_.c_str(),ref_frame_.c_str());
     tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), housing_frame_, ref_frame_));
   }
+
+  ROSCameraHousingCalTInterface::ROSCameraHousingCalTInterface(const string &transform_frame, 
+							       const string &housing_frame, 
+							       const string &mounting_frame) 
+  {
+    transform_frame_               = transform_frame;
+    housing_frame_                  = housing_frame; 
+    mounting_frame_               = mounting_frame;
+    ref_frame_initialized_         = false;    // still need to initialize ref_frame_
+    nh_ = new ros::NodeHandle;
+
+    std::string bn("mutable_joint_state_publisher/");
+    get_client_    = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+    set_client_    = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
+    store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
+
+    get_request_.joint_names.push_back(housing_frame+"_x_joint");
+    get_request_.joint_names.push_back(housing_frame+"_y_joint");
+    get_request_.joint_names.push_back(housing_frame+"_z_joint");
+    get_request_.joint_names.push_back(housing_frame+"_yaw_joint");
+    get_request_.joint_names.push_back(housing_frame+"_pitch_joint");
+    get_request_.joint_names.push_back(housing_frame+"_roll_joint");
+
+    set_request_.joint_names.push_back(housing_frame+"_x_joint");
+    set_request_.joint_names.push_back(housing_frame+"_y_joint");
+    set_request_.joint_names.push_back(housing_frame+"_z_joint");
+    set_request_.joint_names.push_back(housing_frame+"_yaw_joint");
+    set_request_.joint_names.push_back(housing_frame+"_pitch_joint");
+    set_request_.joint_names.push_back(housing_frame+"_roll_joint");
+
+    if(get_client_.call(get_request_,get_response_)){
+      for(int i=0;i<(int) get_response_.joint_values.size();i++){
+	joint_values_.push_back(get_response_.joint_values[i]);
+      }
+    }
+    else{
+      ROS_ERROR("get_client_ returned false");
+    }
+
+  }				
+
+  Pose6d  ROSCameraHousingCalTInterface::pullTransform()
+  {
+    // The computed transform from the optical frame to the mounting frame is composed of 2 transforms
+    // one from the optical frame to the housing, and
+    // one from the housing to the mounting frame which is composed of the 6DOF unknowns we are trying to calibrate
+    // there is also an intermediate frame from the mount point to the reference frame which is known
+
+    if(!ref_frame_initialized_){ // still need the reference frame in order to return the transform!!
+      Pose6d pose(0,0,0,0,0,0);
+      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
+      return(pose);
+    }
+
+    // get all the information from tf and from the mutable joint state publisher
+    Pose6d optical2housing = getPoseFromTF( transform_frame_, housing_frame_, tf_listener_);
+
+    // get the transform from housing 2 mount  from the client
+    Pose6d mount2housing;
+    get_client_.call(get_request_,get_response_);
+    mount2housing.setOrigin(get_response_.joint_values[0],get_response_.joint_values[1],get_response_.joint_values[2]);
+    mount2housing.setEulerZYX(get_response_.joint_values[3],get_response_.joint_values[4],get_response_.joint_values[5]);
+    Pose6d housing2mount = mount2housing.getInverse();
+    Pose6d optical2mount = optical2housing * housing2mount;
+    pose_ = optical2mount;
+    getIntermediateFrame(); // update intermediate frame from tf
+    return(optical2mount);
+  }
+
+  bool  ROSCameraHousingCalTInterface::pushTransform(Pose6d &pose)
+  {
+    pose.getInverse().show("results being pushed");
+    // get transform from optical frame to housing frame from tf
+    Pose6d optical2housing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
+    
+    // compute the desired transform
+    Pose6d mount2housing =  pose.getInverse() * optical2housing;
+
+    // convert to xyz, roll, pitch and yaw for client
+    double ez,ey,ex;
+    mount2housing.getEulerZYX(ez,ey,ex);
+    set_request_.joint_values.clear();
+    set_request_.joint_values.push_back(mount2housing.x);
+    set_request_.joint_values.push_back(mount2housing.y);
+    set_request_.joint_values.push_back(mount2housing.z);
+    set_request_.joint_values.push_back(ez);
+    set_request_.joint_values.push_back(ey);
+    set_request_.joint_values.push_back(ex);
+    set_client_.call(set_request_,set_response_);
+
+    Pose6d resulting_pose = getPoseFromTF(mounting_frame_, transform_frame_, tf_listener_);
+    resulting_pose.show("resulting_pose");
+    return(true);
+  }
+
+  bool ROSCameraHousingCalTInterface::store(std::string &filePath)
+  {
+    // NOTE, file_name is not used, but is kept here for consistency with store functions of other transform interfaces
+    store_client_.call(store_request_, store_response_);
+    return(true);
+  }
+
+  void ROSCameraHousingCalTInterface::setReferenceFrame(std::string &ref_frame)
+  {
+    ref_frame_ = ref_frame;
+    ref_frame_initialized_ = true;
+  }
+
+  Pose6d ROSCameraHousingCalTInterface::getIntermediateFrame()
+  {
+    ROS_ERROR("intermediate frame from %s to %s",ref_frame_.c_str(), mounting_frame_.c_str());
+    Pose6d pose =  getPoseFromTF(ref_frame_, mounting_frame_, tf_listener_);
+    return(pose);
+  }
+
+  ROSSimpleCalTInterface::ROSSimpleCalTInterface(const string &transform_frame,  const string &parent_frame)
+  {
+    transform_frame_               = transform_frame;
+    parent_frame_                     = parent_frame; 
+    ref_frame_initialized_         = false;    // still need to initialize ref_frame_
+    nh_ = new ros::NodeHandle;
+
+    std::string bn("mutable_joint_state_publisher/");
+    get_client_    = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+    set_client_    = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
+    store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
+
+    get_request_.joint_names.push_back(transform_frame+"_x_joint");
+    get_request_.joint_names.push_back(transform_frame+"_y_joint");
+    get_request_.joint_names.push_back(transform_frame+"_z_joint");
+    get_request_.joint_names.push_back(transform_frame+"_yaw_joint");
+    get_request_.joint_names.push_back(transform_frame+"_pitch_joint");
+    get_request_.joint_names.push_back(transform_frame+"_roll_joint");
+
+    set_request_.joint_names.push_back(transform_frame+"_x_joint");
+    set_request_.joint_names.push_back(transform_frame+"_y_joint");
+    set_request_.joint_names.push_back(transform_frame+"_z_joint");
+    set_request_.joint_names.push_back(transform_frame+"_yaw_joint");
+    set_request_.joint_names.push_back(transform_frame+"_pitch_joint");
+    set_request_.joint_names.push_back(transform_frame+"_roll_joint");
+
+    if(get_client_.call(get_request_,get_response_)){
+      for(int i=0;i<(int) get_response_.joint_values.size();i++){
+	joint_values_.push_back(get_response_.joint_values[i]);
+      }
+    }
+    else{
+      ROS_ERROR("get_client_ returned false");
+    }
+
+  }				
+
+  Pose6d  ROSSimpleCalTInterface::pullTransform()
+  {
+    // The computed transform from the reference frame to the optical frame is composed of 3 transforms
+    // one from reference frame to mounting frame
+    // one composed of the 6DOF unknowns we are trying to calibrate
+    // from the mounting frame to the housing. It's values are maintained by the mutable joint state publisher
+    // the third is from housing to optical frame
+
+    if(!ref_frame_initialized_){ // still need the reference frame in order to return the transform!!
+      Pose6d pose(0,0,0,0,0,0);
+      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
+      return(pose);
+    }
+
+    get_client_.call(get_request_,get_response_);
+    pose_.setOrigin(get_response_.joint_values[0],get_response_.joint_values[1],get_response_.joint_values[2]);
+    pose_.setEulerZYX(get_response_.joint_values[3],get_response_.joint_values[4],get_response_.joint_values[5]);
+    return(pose_);
+  }
+
+  bool  ROSSimpleCalTInterface::pushTransform(Pose6d &pose)
+  {
+    double ez,ey,ex;
+    pose.getEulerZYX(ez,ey,ex);
+    
+    set_request_.joint_values.clear();
+    set_request_.joint_values.push_back(pose.x);
+    set_request_.joint_values.push_back(pose.y);
+    set_request_.joint_values.push_back(pose.z);
+    set_request_.joint_values.push_back(ez);
+    set_request_.joint_values.push_back(ey);
+    set_request_.joint_values.push_back(ex);
+    set_client_.call(set_request_,set_response_);
+
+    return(true);
+  }
+
+  bool ROSSimpleCalTInterface::store(std::string &filePath)
+  {
+    // NOTE, file_name is not used, but is kept here for consistency with store functions of other transform interfaces
+    store_client_.call(store_request_, store_response_);
+    return(true);
+  }
+
+  void ROSSimpleCalTInterface::setReferenceFrame(std::string &ref_frame)
+  {
+    ref_frame_ = ref_frame;
+    ref_frame_initialized_ = true;
+  }
+
 } // end namespace industrial_extrinsic_cal

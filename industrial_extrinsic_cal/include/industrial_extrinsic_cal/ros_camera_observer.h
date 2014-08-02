@@ -76,7 +76,7 @@ namespace industrial_extrinsic_cal
      * @param roi Region of interest for target
      * @return true if successful, false if error in setting target or roi
      */
-    bool addTarget(boost::shared_ptr<Target> targ, Roi &roi);
+    bool addTarget(boost::shared_ptr<Target> targ, Roi &roi, std::string &cost_type_str);
 
     /**
      * @brief remove all targets
@@ -137,6 +137,11 @@ namespace industrial_extrinsic_cal
      *  @brief circle grid target pattern true=symmetric
      */
     bool sym_circle_;
+
+    /**
+     * @brief cost type string
+     */
+    std::string cost_type_str_;
 
     /**
      *  @brief 2D values of corner/circle locations returned from cv methods
