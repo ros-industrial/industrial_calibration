@@ -92,7 +92,6 @@ namespace industrial_extrinsic_cal
   bool MutableJointStatePublisher::storeCallBack(industrial_extrinsic_cal::store_mutable_joint_states::Request &req,
 						 industrial_extrinsic_cal::store_mutable_joint_states::Response &res)
   {
-    ROS_ERROR("Inside storeCallback");
     std::ofstream fout(yaml_file_name_.c_str());
     YAML::Emitter yaml_emitter;
     yaml_emitter << YAML::Comment << "This is a simple list of mutable joint states";
@@ -134,6 +133,8 @@ namespace industrial_extrinsic_cal
       ROS_ERROR_STREAM("Failed with exception "<< e.what());
       return (false);
     }
+    if(joints_.size() == 0) ROS_ERROR("mutable_joint_state_publisher has no joints");
+
     // output so we know they have been read in correctly
     for (std::map<std::string, double>::iterator it= joints_.begin(); it != joints_.end(); ++it){
       ROS_ERROR("mutable joint %s has value %lf",it->first.c_str(), it->second);
@@ -164,7 +165,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "mutable_joint_state_publisher");
   ros::NodeHandle nh;
   industrial_extrinsic_cal::MutableJointStatePublisher MJSP(nh);
-  ros::Rate loop_rate(100);
+  ros::Rate loop_rate(10);
   while(ros::ok()){
     MJSP.publishJointStates();
     ros::spinOnce();

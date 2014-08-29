@@ -4,7 +4,7 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib genmsg actionlib_msgs actionlib moveit_ros_planning_interface )
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib genmsg actionlib_msgs actionlib moveit_ros_planning_interface geometry_msgs)
 
 # Opencv
 FIND_PACKAGE(OpenCV REQUIRED)
