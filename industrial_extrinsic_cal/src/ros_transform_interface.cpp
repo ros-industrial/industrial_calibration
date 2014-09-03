@@ -25,7 +25,7 @@ namespace industrial_extrinsic_cal
   {
     // get all the information from tf and from the mutable joint state publisher
     tf::StampedTransform tf_transform; 
-    ros::Time now = ros::Time::now()-ros::Duration(.5);
+    ros::Time now = ros::Time::now();
     while(! tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0))){
       ROS_INFO("waiting for tranform from  %s to  %s",from_frame.c_str(),to_frame.c_str());
     }
@@ -53,7 +53,7 @@ namespace industrial_extrinsic_cal
       return(pose);
     }
     else{
-      pose_ = getPoseFromTF(transform_frame_, ref_frame_, tf_listener_);
+      pose_ = getPoseFromTF(ref_frame_, transform_frame_, tf_listener_);
       return(pose_);
     }
   }
@@ -359,22 +359,24 @@ namespace industrial_extrinsic_cal
     Pose6d housing2mount = mount2housing.getInverse();
     Pose6d optical2mount = optical2housing * housing2mount;
     pose_ = optical2mount;
-    getIntermediateFrame(); // update intermediate frame from tf
     return(optical2mount);
   }
 
   bool  ROSCameraHousingCalTInterface::pushTransform(Pose6d &pose)
   {
-    pose.getInverse().show("results being pushed");
+    Pose6d pose_inverse = pose.getInverse();
+    pose_inverse.show("results being pushed");
+
     // get transform from optical frame to housing frame from tf
     Pose6d optical2housing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
     
     // compute the desired transform
-    Pose6d mount2housing =  pose.getInverse() * optical2housing;
+    Pose6d mount2housing =  pose_inverse * optical2housing;
 
     // convert to xyz, roll, pitch and yaw for client
     double ez,ey,ex;
     mount2housing.getEulerZYX(ez,ey,ex);
+
     set_request_.joint_values.clear();
     set_request_.joint_values.push_back(mount2housing.x);
     set_request_.joint_values.push_back(mount2housing.y);
@@ -383,7 +385,7 @@ namespace industrial_extrinsic_cal
     set_request_.joint_values.push_back(ey);
     set_request_.joint_values.push_back(ex);
     set_client_.call(set_request_,set_response_);
-
+    sleep(1); // need to wait until pose takes hold before comparing results
     Pose6d resulting_pose = getPoseFromTF(mounting_frame_, transform_frame_, tf_listener_);
     resulting_pose.show("resulting_pose");
     return(true);

@@ -45,7 +45,8 @@ namespace industrial_extrinsic_cal
       LinkCircleTargetCameraReprjError,
       LinkCircleTargetCameraReprjErrorPK,
       LinkCameraCircleTargetReprjError,
-      LinkCameraCircleTargetReprjErrorPK
+      LinkCameraCircleTargetReprjErrorPK,
+      FixedCircleTargetCameraReprjErrorPK
     };
   }// end of namespace cost_functions
   typedef cost_functions::Cost_function Cost_function;
@@ -74,6 +75,7 @@ namespace industrial_extrinsic_cal
     if(cost_type_str == "LinkCircleTargetCameraReprjErrorPK") return(cost_functions::LinkCircleTargetCameraReprjErrorPK);
     if(cost_type_str == "LinkCameraCircleTargetReprjError") return(cost_functions::LinkCameraCircleTargetReprjError);
     if(cost_type_str == "LinkCameraCircleTargetReprjErrorPK") return(cost_functions::LinkCameraCircleTargetReprjErrorPK);
+    if(cost_type_str == "FixedCircleTargetCameraReprjErrorPK") return(cost_functions::FixedCircleTargetCameraReprjErrorPK);
   }
 } // end of namespace industrial_extrinsic_cal
 #endif

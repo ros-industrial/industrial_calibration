@@ -478,6 +478,18 @@ namespace industrial_extrinsic_cal
     resid[1] = fy * ypp + cy - oy;
   }
 
+    /*! \brief find residual for a camera looking at a planar circle at some distance
+     * @param point[3] center of circle point in camera coordinates
+     * @param circle_diameter diameter of circle being observed, note cirle is in xy plane
+     * @param R_TtoC rotation of target to camera
+     * @param fx focal length x
+     * @param fx focal length y
+     * @param cx optical axis x
+     * @param cy optical axis y
+     * @param ox observation x
+     * @param oy observation y
+     * @param resid[2] residual in x and y
+     */
   template<typename T>  void cameraCircResidual(T point[3], T &circle_diameter, T R_TtoC[9],
 						      T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2]);
   template<typename T> inline void cameraCircResidual(T point[3], T &circle_diameter, T R_TtoC[9],
@@ -1944,6 +1956,119 @@ namespace industrial_extrinsic_cal
     Point3d point_; /** point expressed in target coordinates */
 
   };
+
+  class  FixedCircleTargetCameraReprjErrorPK
+  {
+  public:
+    FixedCircleTargetCameraReprjErrorPK(const double &ob_x, const double &ob_y, const double &c_dia,
+					const double &fx, const double &fy, const double &cx, const double &cy,
+					const Pose6d &target_pose,
+					const Pose6d &camera_mounting_pose,
+					const Point3d &point) :
+      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), fx_(fx), fy_(fy), cx_(cx), cy_(cy), 
+      target_pose_(target_pose), camera_mounting_pose_(camera_mounting_pose), point_(point)
+    {
+      // compute pose which transforms point in target frame to the mounting frame
+      mount_to_target_pose_ = camera_mounting_pose_.getInverse() * target_pose_;
+    }
+
+    void test_residual(const double *c_p1, double *resid)
+    {
+      const double *camera_aa(&c_p1[0]);
+      const double *camera_tx(&c_p1[3]);
+      double mount_point[3]; /** point in world coordinates */
+      double camera_point[3];  /** point in camera coordinates */ 
+      double point[3]; /** point in world coordinates  */
+      point[0] = point_.x;
+      point[1] = point_.y;
+      point[2] = point_.z;
+      /** transform point into camera coordinates */
+      poseTransformPoint(mount_to_target_pose_, point, mount_point);
+      printf("mount_point = %6.3lf  %6.3lf %6.3lf\n", mount_point[0], mount_point[1], mount_point[2]);
+      transformPoint(camera_aa, camera_tx, mount_point, camera_point);
+      printf("camera_point = %6.3lf  %6.3lf %6.3lf\n", camera_point[0], camera_point[1], camera_point[2]);
+
+      double R_optical_to_mount[9]; /** rotation from optical to camera mounting frame */
+      double R_mount_to_target[9]; /** rotation from mounting frame to target frame */
+
+      /** get necessary rotation matrices */
+      ceres::AngleAxisToRotationMatrix(camera_aa, R_optical_to_mount);  
+      poseRotationMatrix(mount_to_target_pose_, R_mount_to_target);
+
+      /** compute project point into image plane and compute residual */
+      double circle_diameter = circle_diameter_;
+      double fx = fx_;
+      double fy = fy_;
+      double cx = cx_;
+      double cy = cy_;
+      double ox = ox_;
+      double oy = oy_;
+      cameraCircResidual(camera_point, circle_diameter, R_mount_to_target, fx, fy,cx,cy, ox, oy, resid);
+    }
+    template<typename T>
+    bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
+		    T* resid) const
+    {
+      const T *camera_aa(&c_p1[0]);
+      const T *camera_tx(&c_p1[3]);
+      T mount_point[3]; /** point in world coordinates */
+      T camera_point[3];  /** point in camera coordinates */ 
+      T R_optical_to_mount[9]; /** rotation from optical to camera mounting frame */
+      T R_mount_to_target[9]; /** rotation from mounting frame to target frame */
+      T R_optical_to_target[9]; /** rotation from optical frame to target frame */
+      T point[3];
+      point[0] = T(point_.x);
+      point[1] = T(point_.y);
+      point[2] = T(point_.z);
+
+      /** get necessary rotation matrices */
+      ceres::AngleAxisToRotationMatrix(camera_aa, R_optical_to_mount);  
+      poseRotationMatrix(mount_to_target_pose_,R_mount_to_target);
+
+      /** transform point into camera coordinates */
+      poseTransformPoint(mount_to_target_pose_, point, mount_point);
+      transformPoint(camera_aa, camera_tx, mount_point, camera_point);
+
+      /** find rotation from target to camera coordinates */
+      rotationProduct(R_optical_to_mount, R_mount_to_target, R_optical_to_target);
+
+      /** compute project point into image plane and compute residual */
+      T circle_diameter = T(circle_diameter_);
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidual(camera_point, circle_diameter, R_optical_to_target, fx, fy,cx,cy, ox, oy, resid);
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double &o_x, const double &o_y, const double &c_dia,
+				       const double &fx,  const double &fy,
+				       const double &cx, const double &cy,
+				       const Pose6d &target_pose, 
+				       const Pose6d &camera_mounting_pose,
+				       Point3d &point)
+    {
+      return (new ceres::AutoDiffCostFunction< FixedCircleTargetCameraReprjErrorPK, 2, 6>
+	      (new FixedCircleTargetCameraReprjErrorPK(o_x, o_y, c_dia, fx, fy, cx, cy, target_pose, camera_mounting_pose, point)));
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double circle_diameter_; //** diameter of circle being observed */
+    Pose6d target_pose_; /** pose of target relative to the reference coordinate frame */
+    Pose6d camera_mounting_pose_; /** pose camera mounting frame relative to the reference coordinate frame */
+    Pose6d mount_to_target_pose_; /** pose of target frame relative to camera's mounting frame */
+    double fx_; /** focal length of camera in x (pixels) */
+    double fy_; /** focal length of camera in y (pixels) */
+    double cx_; /** focal center of camera in x (pixels) */
+    double cy_; /** focal center of camera in y (pixels) */
+    Point3d point_; /** point expressed in target coordinates */
+  };
+
 
 
 } // end of namespace

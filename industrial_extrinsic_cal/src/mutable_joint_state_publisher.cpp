@@ -59,7 +59,7 @@ namespace industrial_extrinsic_cal
     for(int i=0; i<(int)req.joint_names.size(); i++){
       if(joints_.find(req.joint_names[i]) != joints_.end()){
 	joints_[req.joint_names[i]] = req.joint_values[i];
-	ROS_ERROR("setting %s to %lf",req.joint_names[i].c_str(), req.joint_values[i]);
+	ROS_INFO("setting %s to %lf",req.joint_names[i].c_str(), req.joint_values[i]);
       }
       else{
 	ROS_ERROR("%s does not have joint named %s",node_name_.c_str(),req.joint_names[i].c_str());
@@ -92,7 +92,8 @@ namespace industrial_extrinsic_cal
   bool MutableJointStatePublisher::storeCallBack(industrial_extrinsic_cal::store_mutable_joint_states::Request &req,
 						 industrial_extrinsic_cal::store_mutable_joint_states::Response &res)
   {
-    std::ofstream fout(yaml_file_name_.c_str());
+    std::string new_file_name =  yaml_file_name_ + "new";
+    std::ofstream fout(new_file_name.c_str());
     YAML::Emitter yaml_emitter;
     yaml_emitter << YAML::Comment << "This is a simple list of mutable joint states";
     yaml_emitter << YAML::Comment << "each line has the form";
@@ -100,7 +101,7 @@ namespace industrial_extrinsic_cal
     yaml_emitter << YAML::BeginMap;
     for (std::map<std::string, double>::iterator it= joints_.begin(); it != joints_.end(); ++it){
       yaml_emitter << YAML::Key << it->first.c_str() << YAML::Value << it->second;
-      ROS_ERROR("mutable joint %s has value %lf",it->first.c_str(), it->second);
+      ROS_INFO("mutable joint %s has value %lf",it->first.c_str(), it->second);
     }
     yaml_emitter << YAML::EndMap;
     fout << yaml_emitter.c_str();
@@ -137,7 +138,7 @@ namespace industrial_extrinsic_cal
 
     // output so we know they have been read in correctly
     for (std::map<std::string, double>::iterator it= joints_.begin(); it != joints_.end(); ++it){
-      ROS_ERROR("mutable joint %s has value %lf",it->first.c_str(), it->second);
+      ROS_INFO("mutable joint %s has value %lf",it->first.c_str(), it->second);
     }
 
     return(true);
