@@ -191,7 +191,7 @@ bool CeresBlocks::addStaticCamera(shared_ptr<Camera> camera_to_add)
       return (false); // camera already exists
   }
   camera_to_add->setTIReferenceFrame(reference_frame_);
-  if(camera_to_add->isMoving()){
+  if(camera_to_add->is_moving()){
     ROS_ERROR("trying to add a static camera that is moving");
   }
   static_cameras_.push_back(camera_to_add);

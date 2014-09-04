@@ -35,20 +35,20 @@ using ceres::CostFunction;
 
 namespace industrial_extrinsic_cal
 {
-void  show_intrinsics(P_BLOCK intrinsics, int num_param){
+void  showIntrinsics(P_BLOCK intrinsics, int num_param){
     double fx,fy,cx,cy,k1,k2,k3,p1,p2;
     fx  = intrinsics[0]; /** focal length x */
     fy  = intrinsics[1]; /** focal length y */
     cx  = intrinsics[2]; /** central point x */
     cy  = intrinsics[3]; /** central point y */
-    ROS_ERROR("fx = %lf fy=%lf cx=%lf cy=%lf", fx, fy, cx, cy);
+    ROS_INFO("fx = %lf fy=%lf cx=%lf cy=%lf", fx, fy, cx, cy);
     if(num_param>4){
       k1  = intrinsics[4]; /** distortion k1  */
       k2  = intrinsics[5]; /** distortion k2  */
       k3  = intrinsics[6]; /** distortion k3  */
       p1  = intrinsics[7]; /** distortion p1  */
       p2  = intrinsics[8]; /** distortion p2  */
-      ROS_ERROR("k1 = %lf k2 = %lf k3 = %lf p1 = %lf p2 = %lf", k1, k2, k3, p1, p2);
+      ROS_INFO("k1 = %lf k2 = %lf k3 = %lf p1 = %lf p2 = %lf", k1, k2, k3, p1, p2);
     }
   }
 void  showPose(P_BLOCK extrinsics, std::string message){
@@ -65,7 +65,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     double qx, qy, qz, qw;
     pose.getEulerZYX(ez_yaw,ey_pitch,ex_roll);
     pose.getQuaternion(qx, qy, qz, qw);
-    ROS_ERROR("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf ",
+    ROS_INFO("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf ",
 	      message.c_str(),
 	      basis[0][0],basis[0][1], basis[0][2],px,
 	      basis[1][0],basis[1][1], basis[1][2],py,
@@ -180,14 +180,14 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  (*camera_parameters)[i]["trig_action_msg"] >> trig_action_msg;
 		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
-		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
 		  std::vector<double>joint_values;
 		  (*camera_parameters)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<0){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
-		  temp_camera->trigger_ = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
 		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
@@ -295,14 +295,14 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  (*camera_parameters)[i]["trig_action_message"] >> trig_action_msg;
 		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
-		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
 		  std::vector<double>joint_values;
 		  (*camera_parameters)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<0){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
-		  temp_camera->trigger_ = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
 		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
@@ -471,7 +471,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		    temp_target->pts_.push_back(temp_pnt3d);
 		  }
 		if(temp_target->is_moving_ == true){
-		  ROS_ERROR("WHAT THE HELL");
+		  ROS_ERROR("Static Target set to moving????");
 		}
 		ceres_blocks_.addStaticTarget(temp_target);
 		target_frames_.push_back(temp_frame);
@@ -643,14 +643,14 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  (*caljob_scenes)[i]["trig_action_msg"] >> trig_action_msg;
 		  temp_trigger = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
-		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
 		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
 		  std::vector<double>joint_values;
 		  (*caljob_scenes)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<1){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
-		  temp_trigger = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		  temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
 		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
 		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
@@ -665,7 +665,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
 		}
 
-		scene_list_.at(i).setTrig(temp_trigger);
+		scene_list_.at(i).setTrigger(temp_trigger);
 
 		scene_list_.at(i).setSceneId(scene_id_num);
 		const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
@@ -738,7 +738,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	  {			// clear camera of existing observations
        	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
-	    if(current_camera->isMoving()){
+	    if(current_camera->is_moving()){
 	      ROS_ERROR("CAMERA %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
 	    }
 	  }
@@ -776,7 +776,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	    while (!camera->camera_observer_->observationsDone()) ;
 
 	    camera_name = camera->camera_name_;
-	    if (camera->isMoving())
+	    if (camera->is_moving())
 	      {
 		// next line does nothing if camera already exist in blocks
 		ceres_blocks_.addMovingCamera(camera, scene_id);
@@ -901,7 +901,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		bool point_zero=false;
 		if(point.x == 0.0 && point.y == 0.0 && point.z == 0.0){
 		  point_zero=true;
-		  ROS_ERROR("Observing Target Origin");
+		  ROS_INFO("Observing Target Origin");
 		  showPose(target_pose, "target");
 		  showPose(extrinsics,"extrinsics");
 		  showPose((P_BLOCK) &link_pose.pb_pose[0], "link_pose");
@@ -1157,7 +1157,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		      params[0] = &extrinsics[0];
 		      params[1] = &target_pose[0];
 		      cost_function->Evaluate(params, residual, NULL);
-		      ROS_ERROR("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
+		      ROS_INFO("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
 		      point_zero=false;
 		      LinkCameraCircleTargetReprjErrorPK testIt(image_x, image_y, 
 								circle_dia,
@@ -1192,7 +1192,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
   options.minimizer_progress_to_stdout = true;
   options.max_num_iterations = 1000;
   ceres::Solve(options, &problem_, &summary);
-  ROS_ERROR("PROBLEM SOLVED");
+  ROS_INFO("PROBLEM SOLVED");
   return true;
 }//end runOptimization
 

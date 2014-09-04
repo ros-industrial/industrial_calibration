@@ -46,12 +46,12 @@ ENDIF (EIGEN_FOUND)
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
-   get_mutable_joint_states.srv
-   set_mutable_joint_states.srv
-   store_mutable_joint_states.srv
+   GetMutableJointStates.srv
+   SetMutableJointStates.srv
+   StoreMutableJointStates.srv
  )
 
-add_action_files(DIRECTORY action FILES manual_trigger.action robot_jv_trigger.action robot_pose_trigger.action)
+add_action_files(DIRECTORY action FILES manual_trigger.action robot_joint_values_trigger.action robot_pose_trigger.action)
 
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
@@ -112,12 +112,12 @@ add_library(industrial_extrinsic_cal
 add_dependencies(industrial_extrinsic_cal industrial_extrinsic_cal_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 ## Declare a cpp executable
-add_executable(mono_ex_cal src/mono_ex_cal.cpp)
-add_executable(test_obs src/test_ros_cam_obs.cpp)
-add_executable(service_node src/calibration_service.cpp)
-add_executable(trigger_service src/ros_scene_trigger_server.cpp)
-add_executable(ros_robot_trigger_action_service src/ros_robot_scene_trigger_action_server.cpp)
-add_executable(mutable_joint_state_publisher src/mutable_joint_state_publisher.cpp)
+add_executable(mono_ex_cal src/nodes/mono_ex_cal.cpp)
+add_executable(test_obs src/old/test_ros_cam_obs.cpp)
+add_executable(service_node src/nodes/calibration_service.cpp)
+add_executable(trigger_service src/nodes/ros_scene_trigger_server.cpp)
+add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
+add_executable(mutable_joint_state_publisher src/nodes/mutable_joint_state_publisher.cpp)
 
 ## These insure the message, action and service headers are created first
 add_dependencies(trigger_service industrial_extrinsic_cal_generate_messages_cpp )

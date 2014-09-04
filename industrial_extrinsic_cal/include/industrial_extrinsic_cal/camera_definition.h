@@ -53,7 +53,7 @@ public:
    *   moving cameras get multiple pose parameters
    *   static cameras get but one set of pose parameters
    */
-  bool isMoving();
+  bool is_moving();
 
   /*! \brief send the camera parameters to the transform interface 
    *  Note: some interfaces do nothing on the operation

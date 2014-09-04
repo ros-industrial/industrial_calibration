@@ -40,7 +40,7 @@ Camera::~Camera()
 {
 }
 
-bool Camera::isMoving()
+bool Camera::is_moving()
 {
   return (is_moving_);
 }
