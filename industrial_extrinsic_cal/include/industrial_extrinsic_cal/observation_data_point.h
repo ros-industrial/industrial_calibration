@@ -20,7 +20,7 @@
 #define OBSERVATION_DATA_POINT_H_
 
 #include <industrial_extrinsic_cal/basic_types.h>
-
+#include <industrial_extrinsic_cal/ceres_cost_utils.h>
 
 namespace industrial_extrinsic_cal
 {
@@ -50,7 +50,7 @@ public:
   ObservationDataPoint(const std::string &c_name, const  std::string &t_name, const  int &t_type, 
 		       const int s_id, const  P_BLOCK &c_intrinsics, const  P_BLOCK &c_extrinsics,
 		       const int &point_id, const  P_BLOCK &t_pose, const  P_BLOCK &p_position,
-		       const  double &image_x, const  double &image_y, const std::string &cost_type_str, 
+		       const  double &image_x, const  double &image_y, const Cost_function cost_type, 
 		       const  Pose6d &intermediate_frame, const  double &circle_dia=0.0)
   {
     camera_name_ = c_name;
@@ -64,7 +64,7 @@ public:
     point_position_ = p_position;
     image_x_ = image_x;
     image_y_ = image_y;
-    cost_type_str_ = cost_type_str;
+    cost_type_ = cost_type;
     circle_dia_ = circle_dia;
     intermediate_frame_ = intermediate_frame;
   };
@@ -83,7 +83,7 @@ public:
   P_BLOCK point_position_;	/**< pointer to block of point's position parameters */
   double image_x_;		/**< location of point in image (observation) */
   double image_y_;		/**< location of point in image (observation) */
-  std::string   cost_type_str_;  /**< type of the cost function as a string **/
+  Cost_function cost_type;      /**< type of cost function */
   double circle_dia_;		/**< diameter of circle being observed (only appies to circular fiducials) */
   Pose6d intermediate_frame_; /**< indentity unless camera was mounted on robot link */
 };

@@ -600,7 +600,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     std::string trig_action_msg;
     std::string camera_name;
     std::string target_name;
-    std::string cost_type;
+    std::string cost_type_string;
+    Cost_function cost_type;
     std::string reference_frame;
     shared_ptr<Camera> temp_cam = make_shared<Camera>();
     shared_ptr<Target> temp_targ = make_shared<Target>();
@@ -678,7 +679,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		    (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
 		    (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
 		    (*obs_node)[j]["target"] >> target_name;
-		    (*obs_node)[j]["cost_type"] >> cost_type;
+		    (*obs_node)[j]["cost_type"] >> cost_type_string;
 		    if((temp_cam = ceres_blocks_.getCameraByName(camera_name)) == NULL){
 		      ROS_ERROR("Couldn't find camea %s",camera_name.c_str());
 		    }
@@ -686,6 +687,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		      ROS_ERROR("Couldn't find target %s",target_name.c_str());
 		    }
 		    scene_list_.at(i).addCameraToScene(temp_cam);
+		    cost_type = string2CostType(cost_type_string);
 		    scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi, cost_type);
 		  }
 	      }
@@ -745,7 +747,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 
 	BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
 	  {	// add each target and roi each camera's list of observations
-	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi, o_command.cost_type_str);
+	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi, o_command.cost_type);
 	  }
 	
 	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
@@ -766,7 +768,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	std::string camera_name;
 	std::string target_name;
 	int target_type;
-	std::string cost_type_str;
+	Cost_function cost_type;
 
 	// for each camera in scene get a list of observations, and add camera parameters to ceres_blocks
 	ObservationDataPointList listpercamera;
@@ -802,7 +804,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	      {
 		target_name = observation.target->target_name_;
 		target_type = observation.target->target_type_;
-		cost_type_str = observation.cost_type_str;
+		cost_type = observation.cost_type;
 		double circle_dia=0.0;
 		if(target_type == pattern_options::CircleGrid){
 		  circle_dia = observation.target->circle_grid_parameters_.circle_diameter;
@@ -825,7 +827,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		ObservationDataPoint temp_ODP(camera_name, target_name, target_type,
 					      scene_id, intrinsics, extrinsics, pnt_id, target_pose,
 					      pnt_pos, observation_x, observation_y, 
-					      cost_type_str, observation.intermediate_frame,
+					      cost_type, observation.intermediate_frame,
 					      circle_dia);
 		listpercamera.addObservationPoint(temp_ODP);
 	      }//end for each observed point
@@ -907,7 +909,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  showPose((P_BLOCK) &link_pose.pb_pose[0], "link_pose");
 		}
 		
-		switch(  string2CostType(ODP.cost_type_str_) ){
+		switch( ODP.cost_type_ ){
 		case cost_functions::CameraReprjErrorWithDistortion:
 		  {
 		    CostFunction* cost_function =
@@ -1174,7 +1176,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  break;
 		default:
 		  {
-		    ROS_ERROR("NO COST FUNTION WITH TYPE %s",ODP.cost_type_str_.c_str());
+		    ROS_ERROR("NO COST FUNTION WITH TYPE %s",costType2String(ODP.cost_type_str_).c_str());
 		  }
 		  break;
 		}// end of switch
