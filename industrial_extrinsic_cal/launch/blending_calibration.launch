@@ -7,6 +7,7 @@
 
   <remap from="/$(arg sensor_name1)/depth/points"
 	to="/$(arg namespace1)/camera/depth_registered/points"/>
+
   <include  file="$(find industrial_extrinsic_cal)/launch/single_sensor.launch">
 	<arg name="arm_prefix" value="asus"/>
 	<arg name="camera_name" value="WristAsus"/>
