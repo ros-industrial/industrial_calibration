@@ -52,8 +52,8 @@ namespace industrial_extrinsic_cal
     }
   }
 
-  bool MutableJointStatePublisher::setCallBack(industrial_extrinsic_cal::SetMutableJointStates::Request &req,
-					       industrial_extrinsic_cal::SetMutableJointStates::Response &res)
+  bool MutableJointStatePublisher::setCallBack(industrial_extrinsic_cal::set_mutable_joint_states::Request &req,
+					       industrial_extrinsic_cal::set_mutable_joint_states::Response &res)
   {
     bool return_val= true;
     for(int i=0; i<(int)req.joint_names.size(); i++){
@@ -70,8 +70,8 @@ namespace industrial_extrinsic_cal
     return(return_val);
   }
 
-  bool MutableJointStatePublisher::getCallBack(industrial_extrinsic_cal::GetMutableJointStates::Request &req,
-					       industrial_extrinsic_cal::GetMutableJointStates::Response &res)
+  bool MutableJointStatePublisher::getCallBack(industrial_extrinsic_cal::get_mutable_joint_states::Request &req,
+					       industrial_extrinsic_cal::get_mutable_joint_states::Response &res)
   {
     bool return_val=true;
     res.joint_names.clear();
@@ -89,8 +89,8 @@ namespace industrial_extrinsic_cal
     return(return_val);
   }
 
-  bool MutableJointStatePublisher::storeCallBack(industrial_extrinsic_cal::StoreMutableJointStates::Request &req,
-						 industrial_extrinsic_cal::StoreMutableJointStates::Response &res)
+  bool MutableJointStatePublisher::storeCallBack(industrial_extrinsic_cal::store_mutable_joint_states::Request &req,
+						 industrial_extrinsic_cal::store_mutable_joint_states::Response &res)
   {
     std::ofstream fout(yaml_file_name_.c_str());
     YAML::Emitter yaml_emitter;

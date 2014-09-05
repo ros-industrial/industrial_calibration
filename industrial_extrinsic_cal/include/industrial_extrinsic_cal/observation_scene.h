@@ -74,7 +74,7 @@ public:
    * @param roi the region of interest for this observation command
    * @param cost_type type of cost function to build with this observation
    */
-  void populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi, std::string &cost_type);
+  void populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi, Cost_function cost_type);
 
   /*! \brief gets the id of this scene */
   int get_id()

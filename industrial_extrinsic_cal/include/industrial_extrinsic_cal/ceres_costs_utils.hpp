@@ -22,9 +22,11 @@
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
 #include <industrial_extrinsic_cal/basic_types.h>
+#include <industrial_extrinsic_cal/ceres_costs_utils.h>
 
 namespace industrial_extrinsic_cal
 {
+
 
   // HELPER TEMPLATES  
 

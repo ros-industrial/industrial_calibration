@@ -182,7 +182,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     camera_obs_.at(i).point_id = i;
     camera_obs_.at(i).image_loc_x = observation_pts_.at(i).x;
     camera_obs_.at(i).image_loc_y = observation_pts_.at(i).y;
-    camera_obs_.at(i).cost_type_ = cost_type_;
+    camera_obs_.at(i).cost_type = cost_type_;
   }
 
   cam_obs = camera_obs_;

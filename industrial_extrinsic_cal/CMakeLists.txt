@@ -46,9 +46,9 @@ ENDIF (EIGEN_FOUND)
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
-   GetMutableJointStates.srv
-   SetMutableJointStates.srv
-   StoreMutableJointStates.srv
+   get_mutable_joint_states.srv
+   set_mutable_joint_states.srv
+   store_mutable_joint_states.srv
  )
 
 add_action_files(DIRECTORY action FILES manual_trigger.action robot_joint_values_trigger.action robot_pose_trigger.action)
@@ -105,7 +105,7 @@ add_library(industrial_extrinsic_cal
    src/basic_types.cpp
    src/ros_transform_interface.cpp
    src/calibration_job_definition.cpp
-   src/runtime_utils.cpp
+   src/ceres_costs_utils.cpp
 )
 
 ## This insures the creation of headers for all ros messages, services and actions 
@@ -113,7 +113,7 @@ add_dependencies(industrial_extrinsic_cal industrial_extrinsic_cal_generate_mess
 
 ## Declare a cpp executable
 add_executable(mono_ex_cal src/nodes/mono_ex_cal.cpp)
-add_executable(test_obs src/old/test_ros_cam_obs.cpp)
+#add_executable(test_obs src/old/test_ros_cam_obs.cpp)
 add_executable(service_node src/nodes/calibration_service.cpp)
 add_executable(trigger_service src/nodes/ros_scene_trigger_server.cpp)
 add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
@@ -131,7 +131,7 @@ add_dependencies(mutable_joint_state_publisher  industrial_extrinsic_cal_generat
 ## Specify libraries to link a library or executable target against
 target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 target_link_libraries(mono_ex_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
-target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+#target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(trigger_service ${catkin_LIBRARIES} )
 target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES} )

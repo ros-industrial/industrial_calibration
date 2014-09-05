@@ -30,7 +30,7 @@ protected:
 
 public:
   
-  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_joint_value_triggerAction> JointValuesServer;
+  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_joint_values_triggerAction> JointValuesServer;
   typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_pose_triggerAction> PoseServer;
 
   ServersNode(std::string name) :

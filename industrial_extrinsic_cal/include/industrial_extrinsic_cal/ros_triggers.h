@@ -24,7 +24,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <industrial_extrinsic_cal/trigger.h>
 #include <industrial_extrinsic_cal/manual_triggerAction.h>
-#include <industrial_extrinsic_cal/robot_joint_value_triggerAction.h>
+#include <industrial_extrinsic_cal/robot_joint_values_triggerAction.h>
 #include <industrial_extrinsic_cal/robot_pose_triggerAction.h>
 
 namespace industrial_extrinsic_cal
@@ -101,26 +101,26 @@ namespace industrial_extrinsic_cal
   };
 
 
-    typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_joint_value_triggerAction> RobotJointValueClient;
+    typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_joint_values_triggerAction> RobotJointValuesClient;
 
-  class ROSRobotJointValueActionServerTrigger : public Trigger
+  class ROSRobotJointValuesActionServerTrigger : public Trigger
   {
   public:
     /*! \brief Constructor,
      */
-    ROSRobotJointValueActionServerTrigger(const std::string & server_name, const  std::vector<double> &joint_values) 
+    ROSRobotJointValuesActionServerTrigger(const std::string & server_name, const  std::vector<double> &joint_values) 
       {
 	server_name_ = server_name;  
 	joint_values_.clear();
 	for(int i=0; i< (int)joint_values.size(); i++){
 	  joint_values_.push_back(joint_values[i]);
 	}
-	client_ = new RobotJointValueClient(server_name_.c_str(),true);
+	client_ = new RobotJointValuesClient(server_name_.c_str(),true);
       };
 
     /*! \brief Destructor
      */
-    ~ROSRobotJointValueActionServerTrigger(){
+    ~ROSRobotJointValuesActionServerTrigger(){
       delete(client_);
     };
 
@@ -128,9 +128,9 @@ namespace industrial_extrinsic_cal
      */
     bool waitForTrigger()
     {
-      ROS_INFO("ROSRobotJointValueActionServerTrigger: waiting for trigger server %s to complete ",server_name_.c_str());
+      ROS_INFO("ROSRobotJointValuesActionServerTrigger: waiting for trigger server %s to complete ",server_name_.c_str());
       client_->waitForServer();
-      industrial_extrinsic_cal::robot_joint_value_triggerGoal goal;
+      industrial_extrinsic_cal::robot_joint_values_triggerGoal goal;
       goal.joint_values.clear();
       for(int i=0; i<(int)joint_values_.size();i++){
 	goal.joint_values.push_back(joint_values_[i]);
@@ -145,7 +145,7 @@ namespace industrial_extrinsic_cal
       return(true);  /**< TODO implement a timeout, cancels action and with returns false*/
     };
   private: 
-    RobotJointValueClient *client_;
+    RobotJointValuesClient *client_;
     ros::NodeHandle nh_;	/**< node handle */
     std::string server_name_;	/**< name of server */
     std::vector<double> joint_values_; /**< joint values */

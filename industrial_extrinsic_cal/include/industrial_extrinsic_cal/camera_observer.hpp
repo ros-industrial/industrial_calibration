@@ -21,7 +21,7 @@
 
 #include <industrial_extrinsic_cal/basic_types.h> /* Target,Roi,Observation,CameraObservations */
 #include <industrial_extrinsic_cal/target.h> /* Roi,Observation,CameraObservations */
-#include <industrial_extrinsic_cal/ceres_cost_utils.h>
+#include <industrial_extrinsic_cal/ceres_costs_utils.h>
 
 namespace industrial_extrinsic_cal
 {

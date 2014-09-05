@@ -21,7 +21,7 @@
 
 #include <industrial_extrinsic_cal/camera_observer.hpp>
 #include <industrial_extrinsic_cal/basic_types.h>
-#include <industrial_extrinsic_cal/ceres_cost_utils.h> 
+#include <industrial_extrinsic_cal/ceres_costs_utils.h> 
 
 #include <iostream>
 #include <sstream>

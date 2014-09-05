@@ -35,45 +35,6 @@ using ceres::CostFunction;
 
 namespace industrial_extrinsic_cal
 {
-void  showIntrinsics(P_BLOCK intrinsics, int num_param){
-    double fx,fy,cx,cy,k1,k2,k3,p1,p2;
-    fx  = intrinsics[0]; /** focal length x */
-    fy  = intrinsics[1]; /** focal length y */
-    cx  = intrinsics[2]; /** central point x */
-    cy  = intrinsics[3]; /** central point y */
-    ROS_INFO("fx = %lf fy=%lf cx=%lf cy=%lf", fx, fy, cx, cy);
-    if(num_param>4){
-      k1  = intrinsics[4]; /** distortion k1  */
-      k2  = intrinsics[5]; /** distortion k2  */
-      k3  = intrinsics[6]; /** distortion k3  */
-      p1  = intrinsics[7]; /** distortion p1  */
-      p2  = intrinsics[8]; /** distortion p2  */
-      ROS_INFO("k1 = %lf k2 = %lf k3 = %lf p1 = %lf p2 = %lf", k1, k2, k3, p1, p2);
-    }
-  }
-void  showPose(P_BLOCK extrinsics, std::string message){
-    double ax,ay,az,px,py,pz;
-    ax  = extrinsics[0]; 
-    ay  = extrinsics[1]; 
-    az  = extrinsics[2]; 
-    px  = extrinsics[3]; 
-    py  = extrinsics[4]; 
-    pz  = extrinsics[5];
-    Pose6d pose(px,py,pz,ax,ay,az);
-    tf::Matrix3x3 basis = pose.getBasis();
-    double ez_yaw, ey_pitch, ex_roll;
-    double qx, qy, qz, qw;
-    pose.getEulerZYX(ez_yaw,ey_pitch,ex_roll);
-    pose.getQuaternion(qx, qy, qz, qw);
-    ROS_INFO("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf ",
-	      message.c_str(),
-	      basis[0][0],basis[0][1], basis[0][2],px,
-	      basis[1][0],basis[1][1], basis[1][2],py,
-	      basis[2][0],basis[2][1], basis[2][2],pz,
-	      0.0, 0.0, 0.0, 1.0,
-	      ez_yaw, ey_pitch, ex_roll,
-	      qx, qy, qz, qw);
-  }
 
   bool CalibrationJob::load()
   {
@@ -1176,7 +1137,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  break;
 		default:
 		  {
-		    ROS_ERROR("NO COST FUNTION WITH TYPE %s",costType2String(ODP.cost_type_str_).c_str());
+		    std::string cost_type_string = costType2String(ODP.cost_type_);
+		    ROS_ERROR("NO COST FUNTION WITH TYPE %s", cost_type_string.c_str());
 		  }
 		  break;
 		}// end of switch

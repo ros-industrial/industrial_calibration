@@ -20,7 +20,7 @@
 #define OBSERVATION_DATA_POINT_H_
 
 #include <industrial_extrinsic_cal/basic_types.h>
-#include <industrial_extrinsic_cal/ceres_cost_utils.h>
+#include <industrial_extrinsic_cal/ceres_costs_utils.h>
 
 namespace industrial_extrinsic_cal
 {
@@ -83,7 +83,7 @@ public:
   P_BLOCK point_position_;	/**< pointer to block of point's position parameters */
   double image_x_;		/**< location of point in image (observation) */
   double image_y_;		/**< location of point in image (observation) */
-  Cost_function cost_type;      /**< type of cost function */
+  Cost_function cost_type_;      /**< type of cost function */
   double circle_dia_;		/**< diameter of circle being observed (only appies to circular fiducials) */
   Pose6d intermediate_frame_; /**< indentity unless camera was mounted on robot link */
 };

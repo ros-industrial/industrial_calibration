@@ -21,9 +21,9 @@
 
 #include <stdio.h>
 #include <ros/ros.h> 
-#include <industrial_extrinsic_cal/SetMutableJointStates.h>
-#include <industrial_extrinsic_cal/GetMutableJointStates.h>
-#include <industrial_extrinsic_cal/StoreMutableJointStates.h>
+#include <industrial_extrinsic_cal/set_mutable_joint_states.h>
+#include <industrial_extrinsic_cal/get_mutable_joint_states.h>
+#include <industrial_extrinsic_cal/store_mutable_joint_states.h>
 #include <sensor_msgs/JointState.h>
 namespace industrial_extrinsic_cal
 {
@@ -60,16 +60,16 @@ namespace industrial_extrinsic_cal
     /** @brief  set the values of all 6 joints
      *
      */
-    bool setCallBack(industrial_extrinsic_cal::SetMutableJointStates::Request &req,
-					       industrial_extrinsic_cal::SetMutableJointStates::Response &res);
+    bool setCallBack(industrial_extrinsic_cal::set_mutable_joint_states::Request &req,
+					       industrial_extrinsic_cal::set_mutable_joint_states::Response &res);
 
     /** @brief gets the mutable joint state's names and values */
-    bool getCallBack(industrial_extrinsic_cal::GetMutableJointStates::Request &req,
-					       industrial_extrinsic_cal::GetMutableJointStates::Response &res);
+    bool getCallBack(industrial_extrinsic_cal::get_mutable_joint_states::Request &req,
+					       industrial_extrinsic_cal::get_mutable_joint_states::Response &res);
 
     /** @brief writes the mutable joint states to the yaml file*/
-    bool storeCallBack(industrial_extrinsic_cal::StoreMutableJointStates::Request &req,
-						 industrial_extrinsic_cal::StoreMutableJointStates::Response &res);
+    bool storeCallBack(industrial_extrinsic_cal::store_mutable_joint_states::Request &req,
+						 industrial_extrinsic_cal::store_mutable_joint_states::Response &res);
 
     /** @brief publishes the joint states as a joint state message*/
     bool publishJointStates();

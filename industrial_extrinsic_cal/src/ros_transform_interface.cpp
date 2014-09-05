@@ -306,9 +306,9 @@ namespace industrial_extrinsic_cal
     nh_ = new ros::NodeHandle;
 
     std::string bn("mutable_joint_state_publisher/");
-    get_client_    = nh_->serviceClient<industrial_extrinsic_cal::GetMutableJointStates>("get_mutable_joint_states");
-    set_client_    = nh_->serviceClient<industrial_extrinsic_cal::SetMutableJointStates>("set_mutable_joint_states");
-    store_client_ = nh_->serviceClient<industrial_extrinsic_cal::StoreMutableJointStates>("store_mutable_joint_states");
+    get_client_    = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+    set_client_    = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
+    store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
 
     get_request_.joint_names.push_back(housing_frame+"_x_joint");
     get_request_.joint_names.push_back(housing_frame+"_y_joint");
@@ -417,9 +417,9 @@ namespace industrial_extrinsic_cal
     nh_ = new ros::NodeHandle;
 
     std::string bn("mutable_joint_state_publisher/");
-    get_client_    = nh_->serviceClient<industrial_extrinsic_cal::GetMutableJointStates>("get_mutable_joint_states");
-    set_client_    = nh_->serviceClient<industrial_extrinsic_cal::SetMutableJointStates>("set_mutable_joint_states");
-    store_client_ = nh_->serviceClient<industrial_extrinsic_cal::StoreMutableJointStates>("store_mutable_joint_states");
+    get_client_    = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+    set_client_    = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
+    store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
 
     get_request_.joint_names.push_back(transform_frame+"_x_joint");
     get_request_.joint_names.push_back(transform_frame+"_y_joint");
