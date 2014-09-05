@@ -51,7 +51,8 @@ int main(int argc, char **argv)
 	 roi.x_max=460;
 	 roi.y_max=430;
 
-	 if (cam_observer.addTarget(target , roi))
+	 std::string cost_type_str("dummy_cost_function");
+	 if (cam_observer.addTarget(target , roi, cost_type_str))
 	 {
 		 ROS_INFO_STREAM("Added target successfully");
 	 }

@@ -28,8 +28,13 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
   results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
 }
 
-bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi)
+bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost_function cost_type)
 {
+  // TODO make a list of targets so that the camera may make more than one set of observations at a time
+  // This was what was inteneded by the interface definition, I'm not sure why the first implementation didn't do it.
+
+  cost_type_ = cost_type; 
+
   //set pattern based on target
   ROS_INFO_STREAM("Target type: "<<targ->target_type_);
   instance_target_ = targ;
@@ -112,6 +117,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 
   image_roi_ = input_bridge_->image(input_roi_);
 
+  observation_pts_.clear();
   std::vector<cv::KeyPoint> key_points;
   ROS_INFO("Pattern type %d, rows %d, cols %d",pattern_,pattern_rows_,pattern_cols_);
   switch (pattern_)
@@ -139,26 +145,32 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 
   }
   // next block of code for publishing the roi as an image, when target is found, circles are placed on image, with a line between pt1 and pt2
-  for(int i=0;i<(int)observation_pts_.size();i++){
-    cv::Point p;
-    p.x = observation_pts_[i].x;
-    p.y = observation_pts_[i].y;
-    circle(image_roi_,p,10.0,255,5);
+  if(successful_find){
+    for(int i=0;i<(int)observation_pts_.size();i++){
+      cv::Point p;
+      p.x = observation_pts_[i].x;
+      p.y = observation_pts_[i].y;
+      circle(image_roi_,p,10.0,255,5);
+    }
+    if(observation_pts_.size()>1){
+      cv::Point p1,p2;
+      p1.x = observation_pts_[0].x; 
+      p1.y = observation_pts_[0].y; 
+      p2.x = observation_pts_[6].x; 
+      p2.y = observation_pts_[6].y; 
+      line(image_roi_,p1,p2,255,3);
+    }
+    out_bridge_->image = image_roi_;
+    results_pub_.publish(out_bridge_->toImageMsg());
   }
-  if(observation_pts_.size()>1){
-    cv::Point p1,p2;
-    p1.x = observation_pts_[0].x; 
-    p1.y = observation_pts_[0].y; 
-    p2.x = observation_pts_[1].x; 
-    p2.y = observation_pts_[1].y; 
-    line(image_roi_,p1,p2,255,3);
-  }
-  out_bridge_->image = image_roi_;
-  results_pub_.publish(out_bridge_->toImageMsg());
-
-  if (!successful_find)
-  {
+  else  {
     ROS_WARN_STREAM("Pattern not found for pattern: "<<pattern_ <<" with symmetry: "<< sym_circle_);
+      cv::Point p;
+      p.x = image_roi_.cols/2;
+      p.y = image_roi_.rows/2;
+      circle(image_roi_,p,10.0,255,10);
+      out_bridge_->image = image_roi_;
+      results_pub_.publish(out_bridge_->toImageMsg());
     return 0;
   }
 
@@ -170,6 +182,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     camera_obs_.at(i).point_id = i;
     camera_obs_.at(i).image_loc_x = observation_pts_.at(i).x;
     camera_obs_.at(i).image_loc_y = observation_pts_.at(i).y;
+    camera_obs_.at(i).cost_type = cost_type_;
   }
 
   cam_obs = camera_obs_;

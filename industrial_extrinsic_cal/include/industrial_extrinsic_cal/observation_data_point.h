@@ -20,7 +20,7 @@
 #define OBSERVATION_DATA_POINT_H_
 
 #include <industrial_extrinsic_cal/basic_types.h>
-
+#include <industrial_extrinsic_cal/ceres_costs_utils.h>
 
 namespace industrial_extrinsic_cal
 {
@@ -35,6 +35,7 @@ public:
   /** @brief constructor
    * @param c_name camera name
    * @param t_name target name
+   * @param t_type target type
    * @param s_id   scene id
    * @param c_intrinsics  camera's intrinsic parameter block
    * @param c_extrinsics  camera's extrinsic parameter block
@@ -43,10 +44,14 @@ public:
    * @param p_position    position of point parameter block
    * @param image_x       image location x
    * @param image_y       image location y
+   * @param cost_type     Type of cost function to use
+   * @param circle_dia    diameter of circles in the target, if it is a circle target
    */
-  ObservationDataPoint(std::string c_name, std::string t_name, int t_type,
-		       int s_id, P_BLOCK c_intrinsics, P_BLOCK c_extrinsics,
-                       int point_id, P_BLOCK t_pose, P_BLOCK p_position, double image_x, double image_y, double circle_dia=0.0)
+  ObservationDataPoint(const std::string &c_name, const  std::string &t_name, const  int &t_type, 
+		       const int s_id, const  P_BLOCK &c_intrinsics, const  P_BLOCK &c_extrinsics,
+		       const int &point_id, const  P_BLOCK &t_pose, const  P_BLOCK &p_position,
+		       const  double &image_x, const  double &image_y, const Cost_function cost_type, 
+		       const  Pose6d &intermediate_frame, const  double &circle_dia=0.0)
   {
     camera_name_ = c_name;
     target_name_ = t_name;
@@ -59,7 +64,9 @@ public:
     point_position_ = p_position;
     image_x_ = image_x;
     image_y_ = image_y;
+    cost_type_ = cost_type;
     circle_dia_ = circle_dia;
+    intermediate_frame_ = intermediate_frame;
   };
 
   /** @brief Destructor */
@@ -76,7 +83,9 @@ public:
   P_BLOCK point_position_;	/**< pointer to block of point's position parameters */
   double image_x_;		/**< location of point in image (observation) */
   double image_y_;		/**< location of point in image (observation) */
+  Cost_function cost_type_;      /**< type of cost function */
   double circle_dia_;		/**< diameter of circle being observed (only appies to circular fiducials) */
+  Pose6d intermediate_frame_; /**< indentity unless camera was mounted on robot link */
 };
 // end of class ObservationDataPoint
 

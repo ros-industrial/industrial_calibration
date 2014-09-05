@@ -54,7 +54,7 @@ Camera::~Camera()
 {
 }
 
-bool Camera::isMoving()
+bool Camera::is_moving()
 {
   return (is_moving_);
 }
@@ -268,7 +268,7 @@ bool CalibrationJob::runObservations()
         ;
 
       camera_name = camera->camera_name_;
-      if (camera->isMoving())
+      if (camera->is_moving())
       {
         // next line does nothing if camera already exist in blocks
         ceres_blocks_.addMovingCamera(camera, scene_id);

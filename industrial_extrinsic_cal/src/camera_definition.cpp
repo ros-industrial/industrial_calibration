@@ -32,8 +32,7 @@ Camera::Camera()
 }
 
 Camera::Camera(string name, CameraParameters camera_parameters, bool is_moving) :
-    camera_name_(name), camera_parameters_(camera_parameters), is_moving_(is_moving),
-    fixed_intrinsics_(true), fixed_extrinsics_(false)
+    camera_name_(name), camera_parameters_(camera_parameters), is_moving_(is_moving)
 {
 }
 
@@ -41,7 +40,7 @@ Camera::~Camera()
 {
 }
 
-bool Camera::isMoving()
+bool Camera::is_moving()
 {
   return (is_moving_);
 }
@@ -61,6 +60,7 @@ void Camera::pullTransform()
   camera_parameters_.position[0]    = pose.x;
   camera_parameters_.position[1]    = pose.y;
   camera_parameters_.position[2]    = pose.z;
+  intermediate_frame_ = transform_interface_->getIntermediateFrame();
 }
 void Camera::setTransformInterface(boost::shared_ptr<TransformInterface> transform_interface)
 {
@@ -73,6 +73,16 @@ boost::shared_ptr<TransformInterface> Camera::getTransformInterface()
 void Camera::setTIReferenceFrame(std::string & ref_frame)
 {
   transform_interface_->setReferenceFrame(ref_frame);
+}
+
+int Camera::getObservations(CameraObservations &camera_observations)
+{
+  camera_observations.clear();
+  camera_observer_->getObservations(camera_observations);
+  for(int i=0; i<(int) camera_observations.size(); i++){// Add last pulled frame to observation's intermediate frame
+    camera_observations[i].intermediate_frame = intermediate_frame_;
+    if(i==0) ROS_ERROR("intermediate frame pos = %lf %lf %lf",intermediate_frame_.x, intermediate_frame_.y, intermediate_frame_.z);
+  }
 }
 }//end namespace industrial_extrinsic_cal
 

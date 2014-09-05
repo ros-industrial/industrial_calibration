@@ -17,7 +17,6 @@
  */
 
 
-#include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
 
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
@@ -26,86 +25,310 @@
 
 #include <Eigen/Geometry>
 #include <Eigen/Core>
+#include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
 
 using namespace industrial_extrinsic_cal;
 
-Point3d transformPoint(Point3d &original_point, double &ax, double &ay, double &az, double &x, double&y, double &z);
 
+Point3d xformPoint(Point3d &original_point, double &ax, double &ay, double &az, double &x, double&y, double &z);
+
+
+class Observation
+{
+public:
+  Observation()
+  {
+    point_id = 0;
+    image_loc_x = 0.0;
+    image_loc_y = 0.0;
+  };
+  ~Observation(){};
+  int point_id;
+  double image_loc_x;
+  double image_loc_y;
+};
+
+Observation projectPoint(CameraParameters C, Point3d P)
+{
+  double p[3];
+  double pt[3];
+  pt[0] = P.x;
+  pt[1] = P.y;
+  pt[2] = P.z;
+
+  /* transform point into camera frame */
+  /* note, camera transform takes points from camera frame into world frame */
+  ceres::AngleAxisRotatePoint(C.angle_axis, pt, p);
+
+  p[0] += C.position[0];
+  p[1] += C.position[1];
+  p[2] += C.position[2];
+
+  double xp = p[0] / p[2];
+  double yp = p[1] / p[2];
+
+  double r2 = xp * xp + yp * yp;
+  double r4 = r2 * r2;
+  double r6 = r2 * r4;
+
+  double xp2 = xp * xp; /* temporary variables square of others */
+  double yp2 = yp * yp;
+
+  /* apply the distortion coefficients to refine pixel location */
+  double xpp = xp + C.distortion_k1 * r2 * xp 
+    + C.distortion_k2 * r4 * xp  
+    + C.distortion_k3 * r6 * xp  
+    + C.distortion_p2 * (r2 + 2 * xp2) 
+    + C.distortion_p1 * xp * yp * 2.0;
+  double ypp = yp + C.distortion_k1 * r2 * yp 
+    + C.distortion_k2 * r4 * yp 
+    + C.distortion_k3 * r6 * yp 
+    + C.distortion_p1 * (r2 + 2 * yp2) 
+    + C.distortion_p2 * xp * yp * 2.0;
+
+  /* perform projection using focal length and camera center into image plane */
+  Observation O;
+  O.point_id = 0;
+  O.image_loc_x = C.focal_length_x * xpp + C.center_x;
+  O.image_loc_y = C.focal_length_y * ypp + C.center_y;
+
+  return (O);
+}
+
+// GLOBAL VARIABLES FOR TESTING
 std::vector<Point3d> created_points;
 double aa[3]; // angle axis known/set
 double p[3]; // point rotated known/set
 std::vector<Point3d> transformed_points;
+std::vector<Observation> observations;
+CameraParameters C;
 
-struct PointReprjErrorNoDistortion
+TEST(IndustrialExtrinsicCalCeresSuite, rotationProduct)
 {
-  PointReprjErrorNoDistortion(double ob_x, double ob_y, double fx) :
-      px_(ob_x), py_(ob_y), pz_(fx)
-  {
+  double R1[9];
+  double R2[9];
+  double R3[9];
+  double R1p[9];
+  double R2p[9];
+
+  // create 2 poses, one the inverse of the other
+  // multiply them and see if we get identity
+  Pose6d P1, P2;
+  P1.setAngleAxis(.1, .2, 3.0);
+  P2 = P1.getInverse();
+  ceres::AngleAxisToRotationMatrix(P1.pb_aa,R1);
+  ceres::AngleAxisToRotationMatrix(P2.pb_aa,R2);
+  rotationProduct(R1,  R2,  R3);
+  // NOTE, this should work regardless of row/column major snaffos
+  for(int i=0; i<3; i++){
+    for(int j=0; j<3; j++){
+      if(i==j){
+	ASSERT_NEAR( 1.0, R3[i+3*j], .001);
+      }
+      else{
+	ASSERT_NEAR( 0.0, R3[i+3*j], .001);
+      }
+    }
   }
+}
+TEST(IndustrialExtrinsicCalCeresSuite, extractCameraIntrinsics)
+{
+  C.angle_axis[0]=0.0;
+  C.angle_axis[1]=0.0;
+  C.angle_axis[2]=0.0;
+  C.position[0]=0.0;
+  C.position[1]=0.0;
+  C.position[2]=0.0;
+  C.focal_length_x=525;
+  C.focal_length_y=525;
+  C.center_x=320;
+  C.center_y=240;
+  C.distortion_k1=0.01;
+  C.distortion_k2=0.02;
+  C.distortion_k3=0.03;
+  C.distortion_p1=0.01;
+  C.distortion_p2=0.01;
 
-  template<typename T>
-    bool operator()(const T* const c_p1, /** extrinsic parameters */
-                    //const T* c_p2, /** intrinsic parameters */
-                    const T* point, /** point being projected, yes this is has 3 parameters */
-                    T* resid) const
-    {
-      /** extract the variables from the camera parameters */
-      int q = 0; /** extrinsic block of parameters */
-      const T& x = c_p1[0]; /**  angle_axis x for rotation of camera           */
-      const T& y = c_p1[1]; /**  angle_axis y for rotation of camera */
-      const T& z = c_p1[2]; /**  angle_axis z for rotation of camera */
-      const T& tx = c_p1[3]; /**  translation of camera x */
-      const T& ty = c_p1[4]; /**  translation of camera y */
-      const T& tz = c_p1[5]; /**  translation of camera z */
+  double intrinsics[9];
+  intrinsics[0] = C.focal_length_x;
+  intrinsics[1] = C.focal_length_y;
+  intrinsics[2] = C.center_x;
+  intrinsics[3] = C.center_y;
+  intrinsics[4] = C.distortion_k1;
+  intrinsics[5] = C.distortion_k2;
+  intrinsics[6] = C.distortion_k3;
+  intrinsics[7] = C.distortion_p1;
+  intrinsics[8] = C.distortion_p2;
 
-      //std::cout<<"x, y, z: "<<c_p1[3]<<", "<<c_p1[4]<<", "<<c_p1[5]<<std::endl;
+  double fx, fy, cx, cy, k1, k2, k3, p1, p2;
+  extractCameraIntrinsics(C.pb_intrinsics, fx, fy, cx, cy, k1, k2, k3, p1, p2);
 
-      //q = 0; /** intrinsic block of parameters */
-      //const T& fx = c_p2[q++]; /**  focal length x */
-      //const T& fy = c_p2[q++]; /**  focal length x */
-      //const T& cx = c_p2[q++]; /**  center point x */
-      //const T& cy = c_p2[q++]; /**  center point y */
-
-      /** rotate and translate points into camera frame*/
-      T aa[3]; /** angle axis*/
-      T p[3]; /** point rotated*/
-      aa[0] = x;
-      aa[1] = y;
-      aa[2] = z;
-      ceres::AngleAxisRotatePoint(aa, point, p);
-
-      /** apply camera translation*/
-      T xp1 = p[0] + tx; /** point rotated and translated*/
-      T yp1 = p[1] + ty;
-      T zp1 = p[2] + tz;
-
-      /** scale into the image plane by distance away from camera
-      T xp = xp1 / zp1;
-      T yp = yp1 / zp1;*/
-      T xp=xp1;
-      T yp=yp1;
-      T zp=zp1;
-
-      /** perform projection using focal length and camera center into image plane
-      resid[0] = T(fx_) * xp + T(cx_) - T(ox_);
-      resid[1] = T(fy_) * yp + T(cy_) - T(oy_);*/
-      resid[0] = T(xp)-T(px_);
-      resid[1] = T(yp)-T(py_);
-      resid[2] = T(zp)-T(pz_);
-
-      return true;
-    } /** end of operator() */
-
-  /** Factory to hide the construction of the CostFunction object from */
-  /** the client code. */
-  static ceres::CostFunction* Create(const double p_x, const double p_y, const double p_z)
-  {
-    return (new ceres::AutoDiffCostFunction<PointReprjErrorNoDistortion, 3, 6, 3>(new PointReprjErrorNoDistortion(p_x, p_y, p_z)));
+  ASSERT_NEAR(C.focal_length_x, fx, .00001);
+  ASSERT_NEAR(C.focal_length_y, fy, .00001);
+  ASSERT_NEAR(C.center_x, cx, .00001);
+  ASSERT_NEAR(C.center_y, cy, .00001);
+  ASSERT_NEAR(C.distortion_k1, k1, .00001);
+  ASSERT_NEAR(C.distortion_k2, k2, .00001);
+  ASSERT_NEAR(C.distortion_k3, k3, .00001);
+  ASSERT_NEAR(C.distortion_p1, p1, .00001);
+  ASSERT_NEAR(C.distortion_p2, p2, .00001);
+}
+TEST(IndustrialExtrinsicCalCeresSuite, rotationInverse)
+{
+  double R1[9], R2[9];
+  double angle_axis[3];
+  angle_axis[0] = .1;
+  angle_axis[1] = -3.0;
+  angle_axis[2] = .5;
+  ceres::AngleAxisToRotationMatrix(angle_axis, R1);
+  rotationInverse(R1, R2);
+  for(int i=0; i<3; i++){
+    for(int j=0; j<3; j++){
+      int index1 = i*3+j;
+      int index2 = i+j*3;
+      ASSERT_NEAR(R1[index1],R2[index2], .00001);
+    }
   }
-  double px_; /** observed x location of object in image */
-  double py_; /** observed y location of object in image */
-  double pz_; /*!< known focal length of camera in x */
-};
+}
+TEST(IndustrialExtrinsicCalCeresSuite, transformPoint)
+{
+  double point[3], tx[3];
+  tx[0] = 15.0;
+  tx[1] = 30.0;
+  tx[2] = 23;
+  point[0] = 10.0; 
+  point[1] = -35;
+  point[2] = -100;
+  double angle_axis[3];
+  angle_axis[0] = .1;
+  angle_axis[1] = -3.0;
+  angle_axis[2] = .5;
+  double t_point[3];
+  transformPoint(angle_axis, tx, point, t_point);
+
+  Pose6d pose;
+  pose.setAngleAxis(angle_axis[0], angle_axis[1], angle_axis[2]);
+  pose.setOrigin(tx[0],tx[1],tx[2]);
+
+  // invert transformation and apply
+  Pose6d posei = pose.getInverse();
+  angle_axis[0] = posei.ax;
+  angle_axis[1] = posei.ay;
+  angle_axis[2] = posei.az;
+  tx[0] = posei.x;
+  tx[1] = posei.y;
+  tx[2] = posei.z;
+  double tt_point[3];
+  transformPoint(angle_axis, tx, t_point, tt_point);
+  ASSERT_NEAR(tt_point[0], point[0], .00001);
+  ASSERT_NEAR(tt_point[1], point[1], .00001);
+  ASSERT_NEAR(tt_point[2], point[2], .00001);
+}
+
+TEST(IndustrialExtrinsicCalCeresSuite, poseTransformPoint)
+{
+  Pose6d pose;
+  Pose6d posei;
+  double point[3];
+  point[0] = 10.0; 
+  point[1] = -35;
+  point[2] = -100;
+  pose.setAngleAxis(1.2, 2.2, 3.3);
+  pose.setOrigin(1.2, 2.2, 3.3);
+  posei  = pose.getInverse();
+  
+  double t_point[3];
+  double tt_point[3];
+  poseTransformPoint(pose, point, t_point);
+  poseTransformPoint(posei, t_point, tt_point);
+  ASSERT_NEAR(tt_point[0], point[0], .00001);
+  ASSERT_NEAR(tt_point[1], point[1], .00001);
+  ASSERT_NEAR(tt_point[2], point[2], .00001);
+  
+}
+
+TEST(IndustrialExtrinsicCalCeresSuite, transformPoint3d)
+{
+  double  tx[3];
+  tx[0] = 15.0;
+  tx[1] = 30.0;
+  tx[2] = 23;
+  Point3d point;
+  point.x = 10.0; 
+  point.y = -35;
+  point.z = -100;
+  double angle_axis[3];
+  angle_axis[0] = .1;
+  angle_axis[1] = -3.0;
+  angle_axis[2] = .5;
+  double t_point[3];
+  transformPoint3d(angle_axis, tx, point, t_point);
+  Point3d t_point3d;
+  t_point3d.x = t_point[0];
+  t_point3d.y = t_point[1];
+  t_point3d.z = t_point[2];
+
+  Pose6d pose;
+  pose.setAngleAxis(angle_axis[0], angle_axis[1], angle_axis[2]);
+  pose.setOrigin(tx[0],tx[1],tx[2]);
+
+  // invert transformation and apply
+  Pose6d posei = pose.getInverse();
+  angle_axis[0] = posei.ax;
+  angle_axis[1] = posei.ay;
+  angle_axis[2] = posei.az;
+  tx[0] = posei.x;
+  tx[1] = posei.y;
+  tx[2] = posei.z;
+
+  double tt_point[3];
+  transformPoint3d(angle_axis, tx, t_point3d, tt_point);
+  ASSERT_NEAR(tt_point[0], point.x, .00001);
+  ASSERT_NEAR(tt_point[1], point.y, .00001);
+  ASSERT_NEAR(tt_point[2], point.z, .00001);
+  
+}
+TEST(IndustrialExtrinsicCalCeresSuite, poseRotationMatrix)
+{
+  Pose6d pose;
+  double ax = .5; // must use small values to avoid alternate solutions
+  double ay = .23;
+  double az = .45;
+  pose.setAngleAxis(ax, ay, az);
+  pose.setOrigin(11.5, 21.5, 31.5);
+  double R[9];
+  poseRotationMatrix(pose, R);
+  double aa[3];
+  ceres::RotationMatrixToAngleAxis(R, aa);
+  ASSERT_NEAR(aa[0], ax, .00001);
+  ASSERT_NEAR(aa[1], ay, .00001);
+  ASSERT_NEAR(aa[2], az, .00001);
+}
+
+TEST(IndustrialExtrinsicCalCeresSuite, cameraPntResidualDist)
+{
+}
+
+TEST(IndustrialExtrinsicCalCeresSuite, cameraCircResidualDist)
+{
+}
+TEST(IndustrialExtrinsicCalCeresSuite, cameraCircResidual)
+{
+}
+// used for intrinsic cal 
+// Camera may move to several locations (multiple extrinsics)
+// target has no transform, origin is origin of target, single static target
+// points are known, no calibraition of the target itself
+TEST(IndustrialExtrinsicCalCeresSuite, CircleCameraReprjErrorWithDistortion)
+{
+}
+// used for extrinsic cal of camera on robot with target on ground
+// finds transform from link to camera, and transform from robot to target
+// should have multiple images from different robot locations
+TEST(IndustrialExtrinsicCalCeresSuite, LinkCameraCircleTargetReprjError)
+{
+}
+
 
 TEST(IndustrialExtrinsicCalCeresSuite, create_points)
 {
@@ -159,188 +382,249 @@ TEST(IndustrialExtrinsicCalCeresSuite, create_points)
   p[0]=0.2;
   p[1]=0.4;
   p[2]=0.5;
-  Point3d t_point;
-  for (int i=0; i<created_points.size();i++)
-  {
-    t_point=transformPoint(created_points.at(i), aa[0], aa[1], aa[2], p[0], p[1], p[2]);
-    transformed_points.push_back(t_point);
-  }
 
+  // initialize the camera parameters
+  C.angle_axis[0]=0.0;
+  C.angle_axis[1]=0.0;
+  C.angle_axis[2]=0.0;
+  C.position[0]=0.0;
+  C.position[1]=0.0;
+  C.position[2]=0.0;
+  C.focal_length_x=525;
+  C.focal_length_y=525;
+  C.center_x=320;
+  C.center_y=240;
+  C.distortion_k1=0.01;
+  C.distortion_k2=0.02;
+  C.distortion_k3=0.03;
+  C.distortion_p1=0.01;
+  C.distortion_p2=0.01;
+
+  // transform points, and then project into image plane
+  Point3d t_point;
+  Observation o_point;
+  for (int i=0; i<created_points.size();i++)
+    {
+      t_point = xformPoint(created_points.at(i), aa[0], aa[1], aa[2], p[0], p[1], p[2]);
+      o_point = projectPoint(C,t_point);
+      transformed_points.push_back(t_point);
+      observations.push_back(o_point);
+    }
 }
 
 TEST(IndustrialExtrinsicCalCeresSuite, points_costfunction)
 {
-double extrinsics[6];
-ceres::Problem problem;
-  for (int j = 0; j < transformed_points.size(); ++j)
-  {
-    ceres::CostFunction* cost_function = PointReprjErrorNoDistortion::Create(transformed_points.at(j).pb[0], transformed_points.at(j).pb[1], transformed_points.at(j).pb[2]);
+  //create known transform to move created points to transformed points
+  aa[0] = 2.7;
+  aa[1] = 0.3;
+  aa[2] = 0.1;
+  p[0]=0.2;
+  p[1]=0.4;
+  p[2]=0.5;
 
-    problem.AddResidualBlock(cost_function, NULL, extrinsics, created_points[j].pb);
-    //problem.SetParameterBlockConstant(C.PB_intrinsics);
-    problem.SetParameterBlockConstant(created_points[j].pb);
-  }
+  // initialize the camera parameters
+  C.angle_axis[0]=0.0;
+  C.angle_axis[1]=0.0;
+  C.angle_axis[2]=0.0;
+  C.position[0]=0.0;
+  C.position[1]=0.0;
+  C.position[2]=0.0;
+  C.focal_length_x=525;
+  C.focal_length_y=525;
+  C.center_x=320;
+  C.center_y=240;
+  C.distortion_k1=0.01;
+  C.distortion_k2=0.02;
+  C.distortion_k3=0.03;
+  C.distortion_p1=0.01;
+  C.distortion_p2=0.01;
+
+  // transform points, and then project into image plane
+  Point3d t_point;
+  Observation o_point;
+  for (int i=0; i<created_points.size();i++)
+    {
+      t_point = xformPoint(created_points.at(i), aa[0], aa[1], aa[2], p[0], p[1], p[2]);
+      o_point = projectPoint(C,t_point);
+      transformed_points.push_back(t_point);
+      observations.push_back(o_point);
+    }
+
+  double extrinsics[6];
+  extrinsics[0] = C.angle_axis[0];
+  extrinsics[1] = C.angle_axis[1];
+  extrinsics[2] = C.angle_axis[2];
+  extrinsics[3] = C.position[0];
+  extrinsics[4] = C.position[1];
+  extrinsics[5] = C.position[2];
+  
+  double intrinsics[9];
+  intrinsics[0] = C.focal_length_x;
+  intrinsics[1] = C.focal_length_y;
+  intrinsics[2] = C.center_x;
+  intrinsics[3] = C.center_y;
+  intrinsics[4] = C.distortion_k1;
+  intrinsics[5] = C.distortion_k2;
+  intrinsics[6] = C.distortion_k3;
+  intrinsics[7] = C.distortion_p1;
+  intrinsics[8] = C.distortion_p2;
+  ceres::Problem problem;
+  // when points, extrinsics, and intrinsics are not perturbed, there should be very little re-projection error
+  for (int j = 0; j < transformed_points.size(); ++j)
+    {
+      double ox = observations[j].image_loc_x;
+      double oy = observations[j].image_loc_y;
+      ceres::CostFunction* cost_function = CameraReprjErrorWithDistortion::Create(ox, oy);
+      problem.AddResidualBlock(cost_function, NULL, extrinsics, intrinsics, transformed_points[j].pb);
+      double residual[2];
+      CameraReprjErrorWithDistortion CFC(ox, oy);
+      CFC(extrinsics, intrinsics, transformed_points[j].pb, residual);
+      // no reprojection error should be observed
+      ASSERT_NEAR(0.0, residual[0], .1);
+      ASSERT_NEAR(0.0, residual[1], .1);
+    }
+
+  // optimization should therefore not do anything either
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::DENSE_SCHUR;
   options.minimizer_progress_to_stdout = false;
   options.max_num_iterations = 1000;
-
+  
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
-  //std::cout << summary.FullReport() << "\n";
-  std::cout << summary.BriefReport() << "\n";
+  
+  // no changes due to optimization
+  ASSERT_NEAR(C.angle_axis[0], extrinsics[0], .1);
+  ASSERT_NEAR(C.angle_axis[1], extrinsics[1], .1);
+  ASSERT_NEAR(C.angle_axis[2], extrinsics[2], .1);
+  ASSERT_NEAR(C.position[0], extrinsics[3], .1);
+  ASSERT_NEAR(C.position[1], extrinsics[4], .1);
+  ASSERT_NEAR(C.position[2], extrinsics[5], .1);
 
-  EXPECT_FLOAT_EQ(-2.7,extrinsics[0]);
-  EXPECT_FLOAT_EQ(-0.3,extrinsics[1]);
-  EXPECT_FLOAT_EQ(-0.1,extrinsics[2]);
-  EXPECT_FLOAT_EQ(0.2,extrinsics[3]);
-  EXPECT_FLOAT_EQ(0.4,extrinsics[4]);
-  EXPECT_FLOAT_EQ(0.5,extrinsics[5]);
-  std::cout<<"Original aa rot and translation: "<<aa[0]<<" "<<aa[1]<<" "<<aa[2]
-                                     <<" "<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
+  ASSERT_NEAR(C.focal_length_x, intrinsics[0], .1);
+  ASSERT_NEAR(C.focal_length_y, intrinsics[1], .1);
+  ASSERT_NEAR(C.center_x, intrinsics[2], .1);
+  ASSERT_NEAR(C.center_y, intrinsics[3], .1);
+  ASSERT_NEAR(C.distortion_k1, intrinsics[4], .1);
+  ASSERT_NEAR(C.distortion_k2, intrinsics[5], .1);
+  ASSERT_NEAR(C.distortion_k3, intrinsics[6], .1);
+  ASSERT_NEAR(C.distortion_p1, intrinsics[7], .1);
+  ASSERT_NEAR(C.distortion_p2, intrinsics[8], .1);
 
-  std::cout<<"Optimized Extrinsics rot/transl: "<<extrinsics[0]<<" "<<extrinsics[1]<<" "<<extrinsics[2]<<" "
-      <<extrinsics[3]<<" "<<extrinsics[4]<<" "<<extrinsics[5]<<std::endl;
 }
 
-TEST(DISABLED_IndustrialExtrinsicCalCeresSuite, camera_costfunction)
-//void test()//
-{
-  CameraParameters c_parameters;
-  c_parameters.angle_axis[0]=0.0;//aa[0];//0.3;//
-  c_parameters.angle_axis[1]=0.0;//aa[1];//0.7;//
-  c_parameters.angle_axis[2]=0.0;//aa[2];//2.9;//
-  c_parameters.position[0]=0.0;//p[0];//0.9;//
-  c_parameters.position[1]=0.0;//p[1];//0.3;//
-  c_parameters.position[2]=0.0;//p[2];//1.8;//
-  c_parameters.focal_length_x=525;
-  c_parameters.focal_length_y=525;
-  c_parameters.center_x=320;
-  c_parameters.center_y=240;
-  c_parameters.distortion_k1=0.01;
-  c_parameters.distortion_k2=0.02;
-  c_parameters.distortion_k3=0.03;
-  c_parameters.distortion_p1=0.01;
-  c_parameters.distortion_p2=0.01;
 
-  std::vector<Observation> projected_observations;
-  Observation proj_point;
-  for (int m=0; m<transformed_points.size(); m++)
-  {
-    proj_point=industrial_extrinsic_cal::projectPointWithDistortion(c_parameters, transformed_points.at(m));
-    projected_observations.push_back(proj_point);
-  }
+TEST(IndustrialExtrinsicCalCeresSuite, circle_cost)
+{
+  //create known transform to move created points to transformed points
+  aa[0] = 2.7;
+  aa[1] = 0.3;
+  aa[2] = 0.1;
+  p[0]=0.2;
+  p[1]=0.4;
+  p[2]=0.5;
+
+  // initialize the camera parameters
+  C.angle_axis[0]=0.0;
+  C.angle_axis[1]=0.0;
+  C.angle_axis[2]=0.0;
+  C.position[0]=0.0;
+  C.position[1]=0.0;
+  C.position[2]=0.0;
+  C.focal_length_x=525;
+  C.focal_length_y=525;
+  C.center_x=320;
+  C.center_y=240;
+  C.distortion_k1=0.01;
+  C.distortion_k2=0.02;
+  C.distortion_k3=0.03;
+  C.distortion_p1=0.01;
+  C.distortion_p2=0.01;
+
+  // transform points, and then project into image plane
+  Point3d t_point;
+  Observation o_point;
+  for (int i=0; i<created_points.size();i++)
+    {
+      t_point = xformPoint(created_points.at(i), aa[0], aa[1], aa[2], p[0], p[1], p[2]);
+      o_point = projectPoint(C,t_point);
+      transformed_points.push_back(t_point);
+      observations.push_back(o_point);
+    }
 
   double extrinsics[6];
-  extrinsics[0]=c_parameters.pb_extrinsics[0];//0.2;//
-  extrinsics[1]=c_parameters.pb_extrinsics[1];//0.1;//
-  extrinsics[2]=c_parameters.pb_extrinsics[2];//0.9;//
-  extrinsics[3]=c_parameters.pb_extrinsics[3];//1.3;//
-  extrinsics[4]=c_parameters.pb_extrinsics[4];//0.1;//
-  extrinsics[5]=c_parameters.pb_extrinsics[5];//2.0;//
+  extrinsics[0] = C.angle_axis[0];
+  extrinsics[1] = C.angle_axis[1];
+  extrinsics[2] = C.angle_axis[2];
+  extrinsics[3] = C.position[0];
+  extrinsics[4] = C.position[1];
+  extrinsics[5] = C.position[2];
+  
+  double intrinsics[9];
+  intrinsics[0] = C.focal_length_x;
+  intrinsics[1] = C.focal_length_y;
+  intrinsics[2] = C.center_x;
+  intrinsics[3] = C.center_y;
+  intrinsics[4] = C.distortion_k1;
+  intrinsics[5] = C.distortion_k2;
+  intrinsics[6] = C.distortion_k3;
+  intrinsics[7] = C.distortion_p1;
+  intrinsics[8] = C.distortion_p2;
   ceres::Problem problem;
-  double original_points[3];
-    for (int j = 0; j < projected_observations.size(); ++j)
+  // when points, extrinsics, and intrinsics are not perturbed, there should be very little re-projection error
+  for (int j = 0; j < transformed_points.size(); ++j)
     {
-      ceres::CostFunction* cost_function = CameraReprjErrorWithDistortion::Create(projected_observations.at(j).image_loc_x,
-             projected_observations.at(j).image_loc_y);
-
-
-      problem.AddResidualBlock(cost_function, NULL, extrinsics, c_parameters.pb_intrinsics, created_points[j].pb);
-      problem.SetParameterBlockConstant(c_parameters.pb_intrinsics);
-      problem.SetParameterBlockConstant(created_points[j].pb);
+      double ox = observations[j].image_loc_x;
+      double oy = observations[j].image_loc_y;
+      ceres::CostFunction* cost_function = CameraReprjErrorWithDistortion::Create(ox, oy);
+      problem.AddResidualBlock(cost_function, NULL, extrinsics, intrinsics, transformed_points[j].pb);
+      double residual[2];
+      CameraReprjErrorWithDistortion CFC(ox, oy);
+      CFC(extrinsics, intrinsics, transformed_points[j].pb, residual);
+      // no reprojection error should be observed
+      ASSERT_NEAR(0.0, residual[0], .1);
+      ASSERT_NEAR(0.0, residual[1], .1);
     }
-    ceres::Solver::Options options;
-    options.linear_solver_type = ceres::DENSE_SCHUR;
-    options.minimizer_progress_to_stdout = true;
-    options.max_num_iterations = 1000;
 
-    ceres::Solver::Summary summary;
-    ceres::Solve(options, &problem, &summary);
-    //std::cout << summary.FullReport() << "\n";
-    std::cout << summary.BriefReport() << "\n";
+  // optimization should therefore not do anything either
+  ceres::Solver::Options options;
+  options.linear_solver_type = ceres::DENSE_SCHUR;
+  options.minimizer_progress_to_stdout = false;
+  options.max_num_iterations = 1000;
+  
+  ceres::Solver::Summary summary;
+  ceres::Solve(options, &problem, &summary);
+  
+  // no changes due to optimization
+  ASSERT_NEAR(C.angle_axis[0], extrinsics[0], .1);
+  ASSERT_NEAR(C.angle_axis[1], extrinsics[1], .1);
+  ASSERT_NEAR(C.angle_axis[2], extrinsics[2], .1);
+  ASSERT_NEAR(C.position[0], extrinsics[3], .1);
+  ASSERT_NEAR(C.position[1], extrinsics[4], .1);
+  ASSERT_NEAR(C.position[2], extrinsics[5], .1);
 
-    std::cout<<"Expected aa rot and translation: "<<aa[0]<<" "<<aa[1]<<" "<<aa[2]
-                                       <<" "<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
+  ASSERT_NEAR(C.focal_length_x, intrinsics[0], .1);
+  ASSERT_NEAR(C.focal_length_y, intrinsics[1], .1);
+  ASSERT_NEAR(C.center_x, intrinsics[2], .1);
+  ASSERT_NEAR(C.center_y, intrinsics[3], .1);
+  ASSERT_NEAR(C.distortion_k1, intrinsics[4], .1);
+  ASSERT_NEAR(C.distortion_k2, intrinsics[5], .1);
+  ASSERT_NEAR(C.distortion_k3, intrinsics[6], .1);
+  ASSERT_NEAR(C.distortion_p1, intrinsics[7], .1);
+  ASSERT_NEAR(C.distortion_p2, intrinsics[8], .1);
 
-    std::cout<<"Optimized Extrinsics rot/transl: "<<extrinsics[0]<<" "<<extrinsics[1]<<" "
-        <<extrinsics[2]<<" "<<extrinsics[3]<<" "<<extrinsics[4]<<" "
-        <<extrinsics[5]<<std::endl;
 }
 
-//void test()
-TEST(DISABLED_IndustrialExtrinsicCalCeresSuite, camera_no_dist_costfunction)
-{
-  CameraParameters c_parameters;
-  c_parameters.angle_axis[0]=0.0;//aa[0];//0.3;//
-  c_parameters.angle_axis[1]=0.0;//aa[1];//0.7;//
-  c_parameters.angle_axis[2]=0.0;//aa[2];//2.9;//
-  c_parameters.position[0]=0.0;//p[0];//0.9;//
-  c_parameters.position[1]=0.0;//p[1];//0.3;//
-  c_parameters.position[2]=0.0;//p[2];//1.8;//
-  c_parameters.focal_length_x=525;
-  c_parameters.focal_length_y=525;
-  c_parameters.center_x=320;
-  c_parameters.center_y=240;
-  c_parameters.distortion_k1=0.01;
-  c_parameters.distortion_k2=0.02;
-  c_parameters.distortion_k3=0.03;
-  c_parameters.distortion_p1=0.01;
-  c_parameters.distortion_p2=0.01;
 
-  std::vector<Observation> projected_observations;
-  Observation proj_point;
-  for (int m=0; m<transformed_points.size(); m++)
-  {
 
-    proj_point=industrial_extrinsic_cal::projectPointNoDistortion(c_parameters, transformed_points.at(m));
-    projected_observations.push_back(proj_point);
-  }
-
-  double extrinsics[6];
-  extrinsics[0]=c_parameters.pb_extrinsics[0];//0.2;//
-  extrinsics[1]=c_parameters.pb_extrinsics[1];//0.1;//
-  extrinsics[2]=c_parameters.pb_extrinsics[2];//0.9;//
-  extrinsics[3]=c_parameters.pb_extrinsics[3];//1.3;//
-  extrinsics[4]=c_parameters.pb_extrinsics[4];//0.1;//
-  extrinsics[5]=c_parameters.pb_extrinsics[5];//2.0;//
-  ceres::Problem problem;
-    for (int j = 0; j < projected_observations.size(); ++j)
-    {
-      ceres::CostFunction* cost_function = CameraReprjErrorNoDistortion::Create(projected_observations.at(j).image_loc_x,
-             projected_observations.at(j).image_loc_y, c_parameters.focal_length_x, c_parameters.focal_length_y,
-             c_parameters.center_x, c_parameters.center_y);
-
-      problem.AddResidualBlock(cost_function, NULL, extrinsics, c_parameters.pb_intrinsics, created_points.at(j).pb);
-      problem.SetParameterBlockConstant(c_parameters.pb_intrinsics);
-      problem.SetParameterBlockConstant(created_points.at(j).pb);
-    }
-    ceres::Solver::Options options;
-    options.linear_solver_type = ceres::DENSE_SCHUR;
-    options.minimizer_progress_to_stdout = true;
-    options.max_num_iterations = 1000;
-
-    ceres::Solver::Summary summary;
-    ceres::Solve(options, &problem, &summary);
-    //std::cout << summary.FullReport() << "\n";
-    std::cout << summary.BriefReport() << "\n";
-
-    std::cout<<"Expected aa rot and translation: "<<aa[0]<<" "<<aa[1]<<" "<<aa[2]
-                                       <<" "<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
-
-    std::cout<<"Optimized Extrinsics rot/transl: "<<extrinsics[0]<<" "<<extrinsics[1]<<" "
-        <<extrinsics[2]<<" "<<extrinsics[3]<<" "<<extrinsics[4]<<" "
-        <<extrinsics[5]<<std::endl;
-}
-
-Point3d transformPoint(Point3d &original_point, double &ax, double &ay, double &az, double &x, double&y, double &z)
+Point3d xformPoint(Point3d &original_point, double &ax, double &ay, double &az, double &x, double&y, double &z)
 {
   //std::cout<<"ange axis inputs ax, ay, az: "<<ax<<", "<<ay<<", "<<az<<std::endl;
   Eigen::Matrix3f m_ceres;
   Eigen::Matrix3f m_eigen;
   m_eigen = Eigen::AngleAxisf(ax, Eigen::Vector3f::UnitX())
-  * Eigen::AngleAxisf(ay, Eigen::Vector3f::UnitY())
-  * Eigen::AngleAxisf(az, Eigen::Vector3f::UnitZ());
+    * Eigen::AngleAxisf(ay, Eigen::Vector3f::UnitY())
+    * Eigen::AngleAxisf(az, Eigen::Vector3f::UnitZ());
   //std::cout<<"m_eigen : "<<std::endl<< m_eigen <<std::endl;
   double aa[3]; // angle axis
   double p[3]; // point rotated
@@ -353,8 +637,8 @@ Point3d transformPoint(Point3d &original_point, double &ax, double &ay, double &
   double R[9];
   ceres::AngleAxisToRotationMatrix(aa, R);
   m_ceres << R[0], R[1],R[2],
-      R[3], R[4], R[5],
-      R[6], R[7], R[8];
+    R[3], R[4], R[5],
+    R[6], R[7], R[8];
   //std::cout<<"m_ceres : "<<std::endl<< m_ceres <<std::endl;
   Eigen::Vector3f rot_point=m_ceres*orig_point;
   //std::cout<<"within transformPoint, rotated point Vector3f x, y, z: "<<rot_point.x()<<", "<<rot_point.y()<<", "<<rot_point.z()<<std::endl;

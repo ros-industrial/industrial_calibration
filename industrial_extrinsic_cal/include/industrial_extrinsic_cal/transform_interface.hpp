@@ -20,7 +20,7 @@
 #define TRANSFORM_INTERFACE_HPP_
 
 #include <industrial_extrinsic_cal/basic_types.h> /* Pose6d,Roi,Observation,CameraObservations */
-
+#include <ros/ros.h>
 namespace industrial_extrinsic_cal
 {
 
@@ -46,7 +46,7 @@ namespace industrial_extrinsic_cal
     /** @brief get the transform reference frame of transform  
      *   @param ref_frame the reference frame name
     */
-    virtual void setReferenceFrame(std::string & ref_frame) { ref_frame_ = ref_frame;};
+    virtual void setReferenceFrame(std::string &ref_frame) =0;
 
     /** @brief set the transform reference frame of transform */
     std::string getReferenceFrame() { return(ref_frame_);};
@@ -61,6 +61,14 @@ namespace industrial_extrinsic_cal
      */
     std::string getTransformFrame() { return(transform_frame_);};
 
+    /** @brief get an intermediate pose of a transform by name
+     *    @param name of desired transform 
+     *    @return the pose
+     */
+    virtual Pose6d getIntermediateFrame() { 
+      Pose6d Identity;// default constructor is all zero's for translation and anlge axis. 
+      return(Identity);
+      };
   protected:
     std::string ref_frame_; /*!< name of reference frame for transform (parent frame_id in  Rviz) */
     std::string transform_frame_; /*!< name of frame being defined (frame_id in Rviz) */
@@ -94,7 +102,13 @@ namespace industrial_extrinsic_cal
      *    @param the file path name, a dummy argument in this case
      *    @return   always true
      */
-    bool store(std::string & filePath){ return(true);}; 
+    bool store(std::string &filePath){ return(true);}; 
+
+    /** @brief sets the reference frame of the transform interface, sometimes not used */
+    void setReferenceFrame(std::string &ref_frame) {
+      ref_frame_ = ref_frame;
+      ref_frame_initialized_ = true;
+    }
 
   protected:
     Pose6d pose_; /*!< 6dof pose  */

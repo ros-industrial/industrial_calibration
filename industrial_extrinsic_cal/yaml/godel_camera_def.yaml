@@ -1,0 +1,60 @@
+---
+
+static_cameras:
+ -
+    camera_name: WristAsus
+    camera_optical_frame: /asus_rgb_optical_frame
+    trigger: NO_WAIT_TRIGGER
+    image_topic: /WristAsus/rgb/image_rect_color
+    angle_axis_ax: 3.14
+    angle_axis_ay: 0.0
+    angle_axis_az: 0.0
+    position_x: 0.0
+    position_y: -0.08
+    position_z: 0.02
+    transform_interface: ros_camera_housing_cti
+#    options for transform_interface for cameras include:
+#    ros_camera_bti  broadcast the reference_frame to camera_optical_frame, but parameters map to inverse
+#    ros_camera_lti  listens to the camera_optical_frame relative to reference directly 
+#    ros_camera_housing_lti  listens to the camera_optical_frame relative to reference directly 
+#               must define camera_housing_frame: /camera_frame, but not used
+#    ros_camera_housing_bti  broadcast the reference_frame to camera_housing_frame,
+#               must define camera_housing_frame: /camera_frame
+#    ros_lti  listens to the reference_frame to camera_optical frame, does not invert
+#    ros_bti  broadcasts to the reference_frame to camera_optical frame, does not invert
+#    ros_camera_housing_cti  interfaces to the mutable_joint_state_publisher 
+#           must define camera_housing_frame: /camera_housing_frame
+#           must define camera_mounting_frame: /camera_mounting_frame
+    camera_housing_frame: asus_link
+    camera_mounting_frame: asus_mount
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 320
+    center_y: 240
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01
+# -
+#    camera_name: CellAsus
+#    camera_optical_frame: /ns2_kinect_rgb_optical_frame
+#    trigger: NO_WAIT_TRIGGER
+#    image_topic: /camera/rgb/image_raw
+#    angle_axis_ax: 1.990
+#    angle_axis_ay: 1.001
+#    angle_axis_az: 1.992
+#    position_x: 1.399
+#    position_y: 1.994
+#    position_z: 1.599
+#    transform_interface: ros_camera_bti
+#    focal_length_x: 525
+#    focal_length_y: 525
+#    center_x: 320
+#    center_y: 240
+#    distortion_k1: 0.001
+#    distortion_k2: 0.009
+#    distortion_k3: 0.009
+#    distortion_p1: 0.009
+#    distortion_p2: 0.007
+#

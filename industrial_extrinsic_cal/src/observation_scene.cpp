@@ -57,13 +57,16 @@ void ObservationScene::addCameraToScene(boost::shared_ptr<Camera> camera_in_scen
   ROS_DEBUG_STREAM("Added camera "<<camera_in_scene->camera_name_<<" to cameras_in_scene list of size: "<<cameras_in_scene_.size());
 }
 
-void ObservationScene::populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi)
+void ObservationScene::populateObsCmdList(boost::shared_ptr<Camera> camera, 
+					  boost::shared_ptr<Target> target, 
+					  Roi roi, 
+					  Cost_function cost_type)
 {
   ObservationCmd current_obs_cmd;
   current_obs_cmd.camera=camera;
   current_obs_cmd.target=target;
   current_obs_cmd.roi=roi;
-
+  current_obs_cmd.cost_type = cost_type;
   observation_command_list_.push_back(current_obs_cmd);
 }
 

@@ -5,6 +5,7 @@ static_targets:
     target_name: CircleGrid
     target_type: 1
     target_frame: target_frame
+    circle_dia: 0.0254
     target_rows: 7
     target_cols: 5
     angle_axis_ax: 0.0
