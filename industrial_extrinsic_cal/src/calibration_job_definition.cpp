@@ -123,7 +123,6 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     CameraParameters temp_parameters;
     P_BLOCK extrinsics;
 
-    unsigned int scene_id;
     std::string trigger_name;
     std::string trig_param;
     std::string trig_action_server;
@@ -242,10 +241,6 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
 		ceres_blocks_.addStaticCamera(temp_camera);
-		camera_optical_frames_.push_back(camera_optical_frame);
-		camera_housing_frames_.push_back(camera_housing_frame);
-		extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
-		original_extrinsics_.push_back(extrinsics);
 	      }
 	  }
 
@@ -275,7 +270,6 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		(*camera_parameters)[i]["distortion_k3"] >> temp_parameters.distortion_k3;
 		(*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
 		(*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
-		(*camera_parameters)[i]["scene_id"] >> scene_id;
 		Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
 			    temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
 		// create a shared camera and a shared transform interface
@@ -358,11 +352,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		}
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
-		ceres_blocks_.addMovingCamera(temp_camera, scene_id);
-		camera_optical_frames_.push_back(camera_optical_frame);
-		camera_housing_frames_.push_back(camera_housing_frame);
-		extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(temp_name, 0);
-		original_extrinsics_.push_back(extrinsics);
+		ceres_blocks_.addMovingCamera(temp_camera, 0); // moving cameras added with observations
 	      }
 	  }
       } // end try
@@ -739,7 +729,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
 	    if(current_camera->isMoving()){
-	      ROS_ERROR("CAMERA %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
+	      ROS_INFO("CAMERA %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
 	    }
 	  }
 
@@ -750,7 +740,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	
 	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
 
-	pullTransforms(); // gets transforms of targets and cameras from their interfaces
+	pullTransforms(scene_id); // gets transforms of targets and cameras from their interfaces
 	
 	BOOST_FOREACH( shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {// trigger the cameras
@@ -780,6 +770,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	      {
 		// next line does nothing if camera already exist in blocks
 		ceres_blocks_.addMovingCamera(camera, scene_id);
+		pullTransforms(scene_id); // gets transforms of targets and cameras from their interfaces
 		intrinsics = ceres_blocks_.getMovingCameraParameterBlockIntrinsics(camera_name);
 		extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(camera_name, scene_id);
 	      }
@@ -845,6 +836,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
       ROS_ERROR("TOO FEW OBSERVATIONS: %d",total_observations);
       return(false);
     }
+    
+    ceres_blocks_.displayMovingCameras();
 
     // take all the data collected and create a Ceres optimization problem and run it
     ROS_INFO("Running Optimization with %d scenes",(int)scene_list_.size());
@@ -899,6 +892,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		target_pose     = ODP.target_pose_;
 		point_position = ODP.point_position_;
 		bool point_zero=false;
+		/*
 		if(point.x == 0.0 && point.y == 0.0 && point.z == 0.0){
 		  point_zero=true;
 		  ROS_ERROR("Observing Target Origin");
@@ -906,7 +900,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  showPose(extrinsics,"extrinsics");
 		  showPose((P_BLOCK) &link_pose.pb_pose[0], "link_pose");
 		}
-		
+		*/
 		switch(  string2CostType(ODP.cost_type_str_) ){
 		case cost_functions::CameraReprjErrorWithDistortion:
 		  {
@@ -1029,7 +1023,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		      CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y,
 								     circle_dia,
 								     point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
 		  }
 		  break;
 		case cost_functions::CircleCameraReprjError:
@@ -1211,9 +1205,9 @@ void  showPose(P_BLOCK extrinsics, std::string message){
   {
     ceres_blocks_.displayAllCamerasAndTargets();
   }
-  void CalibrationJob::pullTransforms()
+  void CalibrationJob::pullTransforms(int scene_id)
   {
-    ceres_blocks_.pullTransforms();
+    ceres_blocks_.pullTransforms( scene_id);
   }
   void CalibrationJob::pushTransforms()
   {

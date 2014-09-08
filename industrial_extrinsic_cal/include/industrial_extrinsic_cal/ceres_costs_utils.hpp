@@ -367,22 +367,30 @@ namespace industrial_extrinsic_cal
     T xp = xp1 / zp1;
     T yp = yp1 / zp1;
 
-    /** calculate terms for polynomial distortion */
-    T r2 = xp * xp + yp * yp;
-    T r4 = r2 * r2;
-    T r6 = r2 * r4;
-
-    T xp2 = xp * xp; /** temporary variables square of others */
-    T yp2 = yp * yp;
-
-    /*apply the distortion coefficients to refine pixel location */
-    T xpp = xp + k1 * r2 * xp + k2 * r4 * xp + k3 * r6 * xp + p2 * (r2 + T(2.0) * xp2) + T(2.0) * p1 * xp * yp;
-    T ypp = yp + k1 * r2 * yp + k2 * r4 * yp + k3 * r6 * yp + p1 * (r2 + T(2.0) * yp2) + T(2.0) * p2 * xp * yp;
-
+    /* temporary variables for distortion model */
+    T xp2 = xp * xp;		/* x^2 */
+    T yp2 = yp * yp;		/* y^2 */
+    T r2  = xp2 + yp2;	/* r^2 radius squared */
+    T r4  = r2 * r2;		/* r^4 */
+    T r6  = r2 * r4;		/* r^6 */
+    
+    /* apply the distortion coefficients to refine pixel location */
+    T xpp = xp 
+      + k1 * r2 * xp		// 2nd order term
+      + k2 * r4 * xp		// 4th order term
+      + k3 * r6 * xp		// 6th order term
+      + p2 * (r2 + T(2.0) * xp2) // tangential
+      + p1 * xp * yp * T(2.0); // other tangential term
+    T ypp = yp 
+      + k1 * r2 * yp		// 2nd order term
+      + k2 * r4 * yp		// 4th order term
+      + k3 * r6 * yp		// 6th order term
+      + p1 * (r2 + T(2.0) * yp2) // tangential term
+      + p2 * xp * yp * T(2.0); // other tangential term
+    
     /** perform projection using focal length and camera center into image plane */
     resid[0] = fx * xpp + cx - ox;
     resid[1] = fy * ypp + cy - oy;
-
   }
   template<typename T>  void cameraCircResidualDist(T point[3], T &circle_diameter, T R_TtoC[9], 
 							  T &k1, T &k2, T &k3, T &p1, T &p2, 
@@ -1194,13 +1202,18 @@ namespace industrial_extrinsic_cal
       transformPoint3d(camera_aa, camera_tx, point_, camera_point);
 
       // find rotation from target to camera coordinates
-      ceres::AngleAxisToRotationMatrix(camera_aa, R_TtoC);
+      T T2C_angle_axis[3];
+      T2C_angle_axis[0] = T(-camera_aa[0]);
+      T2C_angle_axis[1] = T(-camera_aa[1]);
+      T2C_angle_axis[2] = T(-camera_aa[2]);
+      ceres::AngleAxisToRotationMatrix(T2C_angle_axis, R_TtoC);
 
       /** compute project point into image plane and compute residual */
       T circle_diameter = T(circle_diameter_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, resid);
+      cameraPntResidualDist(camera_point,  k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, resid);
+      //      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, resid);
 
       return true;
     } /** end of operator() */

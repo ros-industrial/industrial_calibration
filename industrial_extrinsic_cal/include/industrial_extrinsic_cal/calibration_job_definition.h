@@ -97,15 +97,6 @@ public:
     return original_extrinsics_;
   }
 
-  const std::vector<std::string>& getCameraHousingFrame() const
-  {
-    return camera_housing_frames_;
-  }
-
-  const std::vector<std::string>& getCameraOpticalFrame() const
-  {
-    return camera_optical_frames_;
-  }
 
   const std::string& getReferenceFrame() const
   {
@@ -186,8 +177,10 @@ protected:
   /** @brief each camera and each target have a transform interface, push the current values to the interface */
   void pushTransforms();
 
-  /** @brief each camera and each target have a transform interface, pull the current values from the interface */
-  void pullTransforms();
+  /** @brief each camera and each target have a transform interface, pull the current values from the interface 
+   *    @param scene_id the id for the scene, only pull transforms from targets and cameras of this scene
+*/
+  void pullTransforms(int scene_id);
 
 private:
   std::vector<ObservationDataPointList> observation_data_point_list_; /*!< a list of observation data points */
@@ -196,8 +189,6 @@ private:
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
   std::vector<std::string> target_frames_; /*!< this the frame of the target points */
-  std::vector<std::string> camera_optical_frames_; /*!< this the frame in which observations were made */
-  std::vector<std::string> camera_housing_frames_; /*!< this the frame which links camera optical frame to reference frame */
   int current_scene_; /*!< id of current scene under review or construction */
   std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
