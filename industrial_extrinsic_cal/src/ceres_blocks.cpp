@@ -222,14 +222,23 @@ bool CeresBlocks::addMovingCamera(shared_ptr<Camera> camera_to_add, int scene_id
     if (cam->cam->camera_name_ == camera_to_add->camera_name_ && cam->scene_id == scene_id)
       return (false); // camera already exists
   }
+
   // this next line allocates the memory for a moving camera
   shared_ptr<MovingCamera> temp_moving_camera = boost::make_shared<MovingCamera>();
+
   // this next line allocates the memory for the actual camera
   shared_ptr<Camera> temp_camera = boost::make_shared<Camera>(camera_to_add->camera_name_, camera_to_add->camera_parameters_,
                                                        true);
+
+  // set things not done by constructor using values from camera_to_add
+  temp_camera->setTransformInterface(camera_to_add->getTransformInterface());
+  temp_camera->setTIReferenceFrame(reference_frame_);
+  temp_camera->camera_observer_ = camera_to_add->camera_observer_;
+  temp_camera->intermediate_frame_ = camera_to_add->intermediate_frame_;
+
   temp_moving_camera->cam = temp_camera;
   temp_moving_camera->scene_id = scene_id;
-  temp_moving_camera->cam->setTIReferenceFrame(reference_frame_);
+
   moving_cameras_.push_back(temp_moving_camera);
   return (true);
 }
@@ -345,8 +354,10 @@ void CeresBlocks::displayMovingCameras()
 		  mcam->cam->camera_parameters_.angle_axis[1],
 		  mcam->cam->camera_parameters_.angle_axis[2]);
       Pose6d ipose = pose.getInverse();
+      ROS_INFO("scene_id = %d", mcam->scene_id);
       showPose(ipose, mcam->cam->camera_name_);
-      showIntrinsics(mcam->cam->camera_parameters_.pb_intrinsics, 9);
+      P_BLOCK intrinsics = getMovingCameraParameterBlockIntrinsics(mcam->cam->camera_name_);
+      showIntrinsics(intrinsics, 9);
     }
 }
 void CeresBlocks::displayStaticTargets()
@@ -432,6 +443,14 @@ void CeresBlocks::pushTransforms()
   BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
     {
       ROS_ERROR("pushing moving camera %s",mcam->cam->camera_name_.c_str());
+      Pose6d pose;
+      pose.setAngleAxis(mcam->cam->camera_parameters_.angle_axis[0], 
+			mcam->cam->camera_parameters_.angle_axis[1], 
+			mcam->cam->camera_parameters_.angle_axis[2]);
+      pose.setOrigin(mcam->cam->camera_parameters_.position[0],
+		     mcam->cam->camera_parameters_.position[1],
+		     mcam->cam->camera_parameters_.position[2]);
+      pose.show("moving camera");
       mcam->cam->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
@@ -446,7 +465,7 @@ void CeresBlocks::pushTransforms()
     }
 
 }
-void CeresBlocks::pullTransforms()
+void CeresBlocks::pullTransforms(int scene_id)
 {
   BOOST_FOREACH(shared_ptr<Camera> cam, static_cameras_)
     {
@@ -454,7 +473,9 @@ void CeresBlocks::pullTransforms()
     }
   BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
     {
-      mcam->cam->pullTransform();
+      if(mcam->scene_id == scene_id){ // only pull transforms for cameras in current scene
+	mcam->cam->pullTransform();
+      }
     }
   BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
     {
@@ -462,7 +483,9 @@ void CeresBlocks::pullTransforms()
     }
   BOOST_FOREACH(shared_ptr<MovingTarget> mtarg, moving_targets_)
     {
-      mtarg->targ_->pullTransform();
+      if(mtarg->scene_id_ == scene_id){ // only pull transforms for targets in current scene
+	mtarg->targ_->pullTransform();
+      }
     }
 }
 void CeresBlocks::setReferenceFrame(std::string ref_frame)
