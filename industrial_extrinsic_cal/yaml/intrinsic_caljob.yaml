@@ -1,0 +1,719 @@
+---
+reference_frame: zcirclegrid7x5
+scenes: 
+-
+     scene_id: 0
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.8748633861541748
+       - 1.1680071353912354
+       - 1.3754184246063232
+       - 0.8896066546440125
+       - 3.135897159576416
+       - -1.5094826221466064
+       - 0.748131513595581
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 1
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.8280428647994995
+       - 1.1666606664657593
+       - 1.3537721633911133
+       - 0.9768730998039246
+       - 3.1021039485931396
+       - -1.3804612159729004
+       - 0.779021680355072
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 2
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.6489591598510742
+       - 1.1635926961898804
+       - 1.3132580518722534
+       - 1.128600835800171
+       - 2.9753150939941406
+       - -1.0777050256729126
+       - 0.8960855007171631
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 3
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.5770665407180786
+       - 1.1633881330490112
+       - 1.3108718395233154
+       - 1.1369866132736206
+       - 2.9272301197052
+       - -1.0106958150863647
+       - 0.9356080293655396
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 4
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.4881468117237091
+       - 1.1635586023330688
+       - 1.31307053565979
+       - 1.1292314529418945
+       - 2.868908405303955
+       - -0.9467394948005676
+       - 0.9807552099227905
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 5
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+        - 0.06187056005001068
+        - 1.287453055381775
+        - 0.9581755995750427
+        - 1.3849972486495972
+        - 1.465650200843811
+        -  -1.3335456848144531
+        -  2.2191591262817383
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 6
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.06187056005001068
+       - 1.287453055381775
+       - 0.9581755995750427
+       - 1.3849972486495972
+       - 1.5722695589065552
+       - -1.3335456848144531
+       - 2.432231903076172
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 7
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - -0.21687079966068268
+       - 1.287453055381775
+       - 0.9581755995750427
+       - 1.3849972486495972
+       - 1.5654349327087402
+       - -1.4435821771621704
+       - 2.0738821029663086
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 8
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - -0.44730880856513977
+       - 1.287453055381775
+       - 0.9581755995750427
+       - 1.3849972486495972
+       - 1.5052907466888428
+       - -1.5037263631820679
+       - 1.9244542121887207
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 9
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.8830616474151611
+       - 1.1581214666366577
+       - 1.255239486694336
+       - 1.3197178840637207
+       - 3.0559325218200684
+       - -1.0894756317138672
+       - 0.8818284869194031
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 10
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.9225360751152039
+       - 1.1590248346328735
+       - 1.2639150619506836
+       - 1.2929924726486206
+       - 3.0844554901123047
+       - -1.1492552757263184
+       - 0.8537355661392212
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 11
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.9762254357337952
+       - 1.1607633829116821
+       - 1.2816921472549438
+       - 1.2363033294677734
+       - 3.123032808303833
+       - -1.2521839141845703
+       - 0.8135813474655151
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 12
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.0012633800506592
+       - 1.161905288696289
+       - 1.293998122215271
+       - 1.1952438354492188
+       - 3.1415772438049316
+       - -1.315441608428955
+       - 0.7930982112884521
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 13
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.0533676147460938
+       - 1.2244064807891846
+       - 1.332552194595337
+       - 1.2246110439300537
+       - 3.1342568397521973
+       - -1.3486576080322266
+       - 0.7198280692100525
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 14
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.6176509857177734
+       - 1.4207390546798706
+       - 1.3471249341964722
+       - 2.166867256164551
+       - 3.1140568256378174
+       - -0.9825829863548279
+       - 0.5720244646072388
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 15
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.5094372034072876
+       - 1.4131543636322021
+       - 1.322035789489746
+       - 2.256349563598633
+       - 3.0818281173706055
+       - -0.7894229292869568
+       - 0.6396399736404419
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 15
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.5006763935089111
+       - 1.3968770503997803
+       - 1.2972534894943237
+       - 2.254986047744751
+       - 3.011143445968628
+       - -0.7989761233329773
+       - 0.7210612893104553
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 16
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.3609819412231445
+       - 1.411773681640625
+       - 1.3495111465454102
+       - 2.0721864700317383
+       - 2.959975242614746
+       - -0.8515567779541016
+       - 0.7136620879173279
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 17
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.1910849809646606
+       - 1.4222558736801147
+       - 1.3969281911849976
+       - 1.8374704122543335
+       - 2.926379680633545
+       - -0.9215731024742126
+       - 0.690832793712616
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 18
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.228463053703308
+       - 1.4232103824615479
+       - 1.401990294456482
+       - 1.807148814201355
+       - 2.946685791015625
+       - -0.9846941232681274
+       - 0.6602133512496948
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 19
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.1492244005203247
+       - 1.426261305809021
+       - 1.4198015928268433
+       - 1.6902424097061157
+       - 2.937527656555176
+       - -1.0232107639312744
+       - 0.6467985510826111
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 20
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.9860599637031555
+       - 1.4232274293899536
+       - 1.4021437168121338
+       - 1.8062113523483276
+       - 2.8307411670684814
+       - -0.7673852443695068
+       - 0.7920154333114624
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 21
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 0.8963902592658997
+       - 1.4226990938186646
+       - 1.3992291688919067
+       - 1.8238861560821533
+       - 2.759373188018799
+       - -0.6748907566070557
+       - 0.8733464479446411
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 22
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.0634067058563232
+       - 1.3994337320327759
+       - 1.3053325414657593
+       - 2.230578660964966
+       - 2.6210262775421143
+       - -0.46298879384994507
+       - 1.1337021589279175
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 23
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.0629123449325562
+       - 1.4084330797195435
+       - 1.3196496963500977
+       - 2.226522207260132
+       - 2.707855701446533
+       - -0.45670101046562195
+       - 1.160441517829895
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 24
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.0502485036849976
+       - 1.3787078857421875
+       - 1.277652621269226
+       - 2.2102789878845215
+       - 2.536672592163086
+       - -0.5533114075660706
+       - 1.3576633930206299
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 25
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.26106858253479
+       - 1.3862414360046387
+       - 1.3042757511138916
+       - 2.129404067993164
+       - 2.8029472827911377
+       - -0.7693900465965271
+       - 1.0285191535949707
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 26
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.072849154472351
+       - 1.4027743339538574
+       - 1.376185417175293
+       - 1.830703854560852
+       - 2.7832181453704834
+       - -0.8798518776893616
+       - 0.9560310244560242
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 27
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+       - 1.1337652206420898
+       - 1.4038993120193481
+       - 1.3821338415145874
+       - 1.799103856086731
+       - 2.8253495693206787
+       - -0.9594821929931641
+       - 0.8968073725700378
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 28
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+        - 0.8391386866569519
+        - 1.2005445957183838
+        - 1.2759653329849243
+        - 1.3780431747436523
+        - 2.869197130203247
+        -  -1.1035548448562622
+        - 1.0653948783874512
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 29
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+        - 0.8541035056114197
+        - 1.1215957403182983 
+        - 1.2759653329849243
+        - 1.3781113624572754
+        - 2.8823649883270264
+        - -0.5796321034431458
+        - 1.0654550790786743
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 30
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+        - 0.8911747336387634
+        - 1.0976485013961792
+        - 1.118408441543579
+        - 1.7238706350326538
+        - 2.3390777111053467
+        - -0.3629155457019806
+        - 1.7032601833343506
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 31
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+        - 0.8755451440811157
+        - 1.072320818901062
+        - 0.958158552646637
+        - 1.9551949501037598
+        - 1.6399013996124268
+        - -0.406793475151062
+        - 2.5153377056121826
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+-
+     scene_id: 31
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_joint_values
+     joint_values: 
+        - 1.1969141960144043
+        - 1.0620090961456299
+        - 0.8514957427978516
+        - 2.0950770378112793
+        - 1.6457942724227905
+        - -0.39959439635276794
+        - 2.625182867050171
+     observations: 
+     -
+          camera: WristAsus
+          target: CircleGrid7x5
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: CircleCameraReprjErrorWithDistortionPK
+
+optimization_parameters: xx
