@@ -35,45 +35,6 @@ using ceres::CostFunction;
 
 namespace industrial_extrinsic_cal
 {
-void  show_intrinsics(P_BLOCK intrinsics, int num_param){
-    double fx,fy,cx,cy,k1,k2,k3,p1,p2;
-    fx  = intrinsics[0]; /** focal length x */
-    fy  = intrinsics[1]; /** focal length y */
-    cx  = intrinsics[2]; /** central point x */
-    cy  = intrinsics[3]; /** central point y */
-    ROS_ERROR("fx = %lf fy=%lf cx=%lf cy=%lf", fx, fy, cx, cy);
-    if(num_param>4){
-      k1  = intrinsics[4]; /** distortion k1  */
-      k2  = intrinsics[5]; /** distortion k2  */
-      k3  = intrinsics[6]; /** distortion k3  */
-      p1  = intrinsics[7]; /** distortion p1  */
-      p2  = intrinsics[8]; /** distortion p2  */
-      ROS_ERROR("k1 = %lf k2 = %lf k3 = %lf p1 = %lf p2 = %lf", k1, k2, k3, p1, p2);
-    }
-  }
-void  showPose(P_BLOCK extrinsics, std::string message){
-    double ax,ay,az,px,py,pz;
-    ax  = extrinsics[0]; 
-    ay  = extrinsics[1]; 
-    az  = extrinsics[2]; 
-    px  = extrinsics[3]; 
-    py  = extrinsics[4]; 
-    pz  = extrinsics[5];
-    Pose6d pose(px,py,pz,ax,ay,az);
-    tf::Matrix3x3 basis = pose.getBasis();
-    double ez_yaw, ey_pitch, ex_roll;
-    double qx, qy, qz, qw;
-    pose.getEulerZYX(ez_yaw,ey_pitch,ex_roll);
-    pose.getQuaternion(qx, qy, qz, qw);
-    ROS_ERROR("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf ",
-	      message.c_str(),
-	      basis[0][0],basis[0][1], basis[0][2],px,
-	      basis[1][0],basis[1][1], basis[1][2],py,
-	      basis[2][0],basis[2][1], basis[2][2],pz,
-	      0.0, 0.0, 0.0, 1.0,
-	      ez_yaw, ey_pitch, ex_roll,
-	      qx, qy, qz, qw);
-  }
 
   bool CalibrationJob::load()
   {
@@ -180,14 +141,14 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  (*camera_parameters)[i]["trig_action_msg"] >> trig_action_msg;
 		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
-		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
 		  std::vector<double>joint_values;
 		  (*camera_parameters)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<0){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
-		  temp_camera->trigger_ = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
 		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
@@ -295,14 +256,14 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  (*camera_parameters)[i]["trig_action_message"] >> trig_action_msg;
 		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
-		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
 		  std::vector<double>joint_values;
 		  (*camera_parameters)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<0){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
-		  temp_camera->trigger_ = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
 		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
@@ -471,7 +432,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		    temp_target->pts_.push_back(temp_pnt3d);
 		  }
 		if(temp_target->is_moving_ == true){
-		  ROS_ERROR("WHAT THE HELL");
+		  ROS_ERROR("Static Target set to moving????");
 		}
 		ceres_blocks_.addStaticTarget(temp_target);
 		target_frames_.push_back(temp_frame);
@@ -600,7 +561,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     std::string trig_action_msg;
     std::string camera_name;
     std::string target_name;
-    std::string cost_type;
+    std::string cost_type_string;
+    Cost_function cost_type;
     std::string reference_frame;
     shared_ptr<Camera> temp_cam = make_shared<Camera>();
     shared_ptr<Target> temp_targ = make_shared<Target>();
@@ -643,14 +605,14 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  (*caljob_scenes)[i]["trig_action_msg"] >> trig_action_msg;
 		  temp_trigger = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
-		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
 		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
 		  std::vector<double>joint_values;
 		  (*caljob_scenes)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<1){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
-		  temp_trigger = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		  temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
 		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
 		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
@@ -665,7 +627,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
 		}
 
-		scene_list_.at(i).setTrig(temp_trigger);
+		scene_list_.at(i).setTrigger(temp_trigger);
 
 		scene_list_.at(i).setSceneId(scene_id_num);
 		const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
@@ -678,7 +640,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		    (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
 		    (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
 		    (*obs_node)[j]["target"] >> target_name;
-		    (*obs_node)[j]["cost_type"] >> cost_type;
+		    (*obs_node)[j]["cost_type"] >> cost_type_string;
+		    cost_type = string2CostType(cost_type_string);
 		    if((temp_cam = ceres_blocks_.getCameraByName(camera_name)) == NULL){
 		      ROS_ERROR("Couldn't find camea %s",camera_name.c_str());
 		    }
@@ -686,6 +649,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		      ROS_ERROR("Couldn't find target %s",target_name.c_str());
 		    }
 		    scene_list_.at(i).addCameraToScene(temp_cam);
+		    cost_type = string2CostType(cost_type_string);
 		    scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi, cost_type);
 		  }
 	      }
@@ -736,11 +700,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 
 	BOOST_FOREACH(shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {			// clear camera of existing observations
-	    if(current_camera->camera_name_ == "NONE"){
-	      ROS_ERROR("Scene %d Observation uses a non-existent camera", scene_id);
-	      return(false);
-	    }
-	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
+       	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
 	    if(current_camera->isMoving()){
 	      ROS_ERROR("CAMERA %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
@@ -749,8 +709,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 
 	BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
 	  {	// add each target and roi each camera's list of observations
-	    ROS_INFO("adding target");
-	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi, o_command.cost_type_str);
+	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi, o_command.cost_type);
 	  }
 	
 	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
@@ -771,7 +730,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	std::string camera_name;
 	std::string target_name;
 	int target_type;
-	std::string cost_type_str;
+	Cost_function cost_type;
 
 	// for each camera in scene get a list of observations, and add camera parameters to ceres_blocks
 	ObservationDataPointList listpercamera;
@@ -807,7 +766,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	      {
 		target_name = observation.target->target_name_;
 		target_type = observation.target->target_type_;
-		cost_type_str = observation.cost_type_str;
+		cost_type = observation.cost_type;
 		double circle_dia=0.0;
 		if(target_type == pattern_options::CircleGrid){
 		  circle_dia = observation.target->circle_grid_parameters_.circle_diameter;
@@ -830,7 +789,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		ObservationDataPoint temp_ODP(camera_name, target_name, target_type,
 					      scene_id, intrinsics, extrinsics, pnt_id, target_pose,
 					      pnt_pos, observation_x, observation_y, 
-					      cost_type_str, observation.intermediate_frame,
+					      cost_type, observation.intermediate_frame,
 					      circle_dia);
 		listpercamera.addObservationPoint(temp_ODP);
 	      }//end for each observed point
@@ -891,9 +850,9 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		double center_y   = ODP.camera_intrinsics_[3];
 		double image_x        = ODP.image_x_;
 		double image_y        = ODP.image_y_;
-		Pose6d camera_mounting_pose = ODP.intermediate_frame_; 
-		Point3d point;	// location of point within target frame
-		point.x = ODP.point_position_[0]; 
+		Point3d point;
+		Pose6d camera_mounting_pose = ODP.intermediate_frame_; // identity except when camera mounted on robot
+		point.x = ODP.point_position_[0];// location of point within target frame
 		point.y = ODP.point_position_[1];
 		point.z = ODP.point_position_[2];
 		unsigned int target_type    = ODP.target_type_;
@@ -915,7 +874,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  showPose((P_BLOCK) &camera_mounting_pose.pb_pose[0], "camera_mounting_pose");
 		}
 		
-		switch(  string2CostType(ODP.cost_type_str_) ){
+		switch( ODP.cost_type_ ){
 		case cost_functions::CameraReprjErrorWithDistortion:
 		  {
 		    CostFunction* cost_function =
@@ -1165,7 +1124,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		      params[0] = &extrinsics[0];
 		      params[1] = &target_pose_params[0];
 		      cost_function->Evaluate(params, residual, NULL);
-		      ROS_ERROR("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
+		      ROS_INFO("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
 		      point_zero=false;
 		      LinkCameraCircleTargetReprjErrorPK testIt(image_x, image_y, 
 								circle_dia,
@@ -1216,7 +1175,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  break;
 		default:
 		  {
-		    ROS_ERROR("NO COST FUNTION WITH TYPE %s",ODP.cost_type_str_.c_str());
+		    std::string cost_type_string = costType2String(ODP.cost_type_);
+		    ROS_ERROR("NO COST FUNTION WITH TYPE %s", cost_type_string.c_str());
 		  }
 		  break;
 		}// end of switch
@@ -1234,7 +1194,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
   options.minimizer_progress_to_stdout = true;
   options.max_num_iterations = 1000;
   ceres::Solve(options, &problem_, &summary);
-  ROS_ERROR("PROBLEM SOLVED");
+  ROS_INFO("PROBLEM SOLVED");
   return true;
 }//end runOptimization
 

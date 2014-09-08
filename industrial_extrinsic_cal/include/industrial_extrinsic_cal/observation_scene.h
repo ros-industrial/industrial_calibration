@@ -35,12 +35,12 @@ class ObservationScene
 {
 public:
   /*! \brief Constructor,
-   *   \param Trigger Trig the type of trigger to initiate this observation
+   *   \param Trigger the type of trigger to initiate this observation
    */
-  ObservationScene(boost::shared_ptr<Trigger> trig, int scene_id) :
+  ObservationScene(boost::shared_ptr<Trigger> trigger, int scene_id) :
       scene_id_(scene_id)
   {
-    trig_ = trig;
+    trigger_ = trigger;
   };
 
   /*! \brief destructor, clears observation command list*/
@@ -74,7 +74,7 @@ public:
    * @param roi the region of interest for this observation command
    * @param cost_type type of cost function to build with this observation
    */
-  void populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi, std::string &cost_type);
+  void populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi, Cost_function cost_type);
 
   /*! \brief gets the id of this scene */
   int get_id()
@@ -86,7 +86,7 @@ public:
   /*! \brief gets the trigger of this scene */
   boost::shared_ptr<Trigger> get_trigger()
   {
-    return (trig_);
+    return (trigger_);
   };
 
   /*!
@@ -100,18 +100,18 @@ public:
 
   /*!
    * \brief set the trigger for this scene
-   * @param trig
+   * @param trigger
    */
-  void setTrig(boost::shared_ptr<Trigger>  trig)
+  void setTrigger(boost::shared_ptr<Trigger>  trigger)
   {
-    trig_ = trig;
+    trigger_ = trigger;
   };
 
   std::vector<ObservationCmd> observation_command_list_; /*!< list of observations for a scene */
   std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scene */
 
 private:
-  boost::shared_ptr<Trigger>  trig_; /*!< event to trigger the observations in this command */
+  boost::shared_ptr<Trigger>  trigger_; /*!< event to trigger the observations in this command */
   int scene_id_; /*!< unique identifier of this scene */
 };
 // end of class ObservationScene

@@ -22,6 +22,7 @@
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
 #include <industrial_extrinsic_cal/basic_types.h>
+#include <industrial_extrinsic_cal/ceres_costs_utils.h>
 
 namespace industrial_extrinsic_cal
 {
@@ -272,6 +273,11 @@ namespace industrial_extrinsic_cal
 
   // HELPER TEMPLATES  
 
+  /*! \brief ceres compliant template to compute product of two rotations
+   *   @param R1 first rotation matrix in column major order
+   *   @param R1 second rotation matrix in column major order
+   *   @param R3 matrix product of R1*R2
+   */
   template<typename T>  void rotationProduct(const T R1[9], const T R2[9], T R3[9]);
   template<typename T> inline void rotationProduct(const T R1[9], const T R2[9], T R3[9])
   {
@@ -290,6 +296,20 @@ namespace industrial_extrinsic_cal
     R3[8] = R1[2]*R2[6] +  R1[5]*R2[7] +  R1[8]*R2[8];
   }
 
+
+  /*! \brief ceres compliant template to extract the camera parameters from an ambigious vector of parameters
+   *   @param intrinsics[9] vector of parameters
+   *   @param fx focal length in x
+   *   @param fy focal length in y
+   *   @param cx optical center in x
+   *   @param cy optical center in y
+   *   @param k1 radial distortion coefficient k1
+   *   @param k2 radial distortion coefficient k2
+   *   @param k3 radial distortion coefficient k3
+   *   @param p1 tangential distortion coefficient p1
+   *   @param p2 tangential distortion coefficient p2
+   */
+
   template<typename T>  void extractCameraIntrinsics(const T intrinsics[9], T &fx, T &fy, T &cx, T &cy, T &k1, T &k2, T &k3, T &p1, T &p2);
   template<typename T> inline void extractCameraIntrinsics(const T intrinsics[9], T &fx, T &fy, T &cx, T &cy, T &k1, T &k2, T &k3, T &p1, T &p2)
   {
@@ -304,6 +324,11 @@ namespace industrial_extrinsic_cal
     p2  = intrinsics[8]; /** distortion p2  */
   }
 
+  /*! \brief ceres compliant to compute inverse of a rotation matrix
+   *  @param R the input rotation
+   *  @param RI the output inverse rotation
+   */
+
   template<typename T>  void rotationInverse(const T R[9], const T RI[9]);
   template<typename T> inline void rotationInverse(const T R[9], T RI[9])
   {
@@ -311,6 +336,14 @@ namespace industrial_extrinsic_cal
     RI[1] = R[3]; RI[4] = R[4];  RI[7] = R[5];
     RI[2] = R[6]; RI[5] = R[7];  RI[8] = R[8];
   }
+
+  /*! \brief ceres compliant function to apply an angle-axis and translation to transform a point
+   *  @param angle_axis, ax, ay, and az
+   *  @param tx translation tx, ty and tz
+   *  @param point the original point
+   *  @param t_point the transformed point
+   */
+
   template<typename T> inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3], T t_point[3]);
   template<typename T> inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3], T t_point[3])
   {
@@ -319,6 +352,12 @@ namespace industrial_extrinsic_cal
     t_point[1] = t_point[1] + tx[1];
     t_point[2] = t_point[2] + tx[2];
   }
+
+  /*! \brief ceres compliant function to apply a pose to transform a point
+   *  @param pose, contains both rotation and translation in a structure
+   *  @param point the original point
+   *  @param t_point the transformed point
+   */
 
   template<typename T> inline void poseTransformPoint(const Pose6d &pose, const T point[3], T t_point[3]);
   template<typename T> inline void poseTransformPoint(const Pose6d &pose, const T point[3], T t_point[3])
@@ -333,6 +372,13 @@ namespace industrial_extrinsic_cal
     t_point[2] = t_point[2] + T(pose.z);
   }
 
+
+  /*! \brief ceres compliant function to apply an angle-axis and translation to transform a point in Point3d form
+   *  @param angle_axis, ax, ay, and az
+   *  @param tx translation tx, ty and tz
+   *  @param point the original point in a Point3d form
+   *  @param t_point the transformed point
+   */
   template<typename T>  void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d &point, T t_point[3]);
   template<typename T> inline void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d &point, T t_point[3])
   {
@@ -346,6 +392,10 @@ namespace industrial_extrinsic_cal
     t_point[2] = t_point[2] + tx[2];
   }
 
+  /*! \brief ceres compliant function get a templated rotation from a Pose6d structure
+   *  @param pose the input pose
+   *  @param pose the output rotatation matrix
+   */
   template<typename T>  void poseRotationMatrix(const Pose6d &pose, T R[9]);
   template<typename T> inline void poseRotationMatrix(const Pose6d &pose, T R[9])
   {
@@ -356,8 +406,23 @@ namespace industrial_extrinsic_cal
     ceres::AngleAxisToRotationMatrix(angle_axis, R);
   }
   
-  template<typename T>  void cameraPntResidualDist(T point[3], T &k1, T &k2, T &k3, T &p1, T &p2, T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2]);
-  template<typename T> inline void cameraPntResidualDist(T point[3], T &k1, T &k2, T &k3, T &p1, T &p2, T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2])
+  /*! \brief ceres compliant function to compute the residual from a distorted pinhole camera model
+   *  @param point[3] the input point
+   *  @param k1 radial distortion parameter k1
+   *  @param k2 radial distortion parameter k2
+   *  @param k3 radial distortion parameter k3
+   *  @param p1 tangential distortion parameter p1
+   *  @param p2 tangential distortion parameter p2
+   *  @param fx focal length in x
+   *  @param fy focal length in y
+   *  @param cx optical center in x
+   *  @param cy optical center in y
+   *  @param ox observation in x
+   *  @param oy observation in y
+   *  @param residual the output or difference between where the point should appear given the parameters, and where it was observed
+   */
+  template<typename T>  void cameraPntResidualDist(T point[3], T &k1, T &k2, T &k3, T &p1, T &p2, T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T residual[2]);
+  template<typename T> inline void cameraPntResidualDist(T point[3], T &k1, T &k2, T &k3, T &p1, T &p2, T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T residual[2])
   {
     T xp1 = point[0];
     T yp1 = point[1];
@@ -380,16 +445,35 @@ namespace industrial_extrinsic_cal
     T ypp = yp + k1 * r2 * yp + k2 * r4 * yp + k3 * r6 * yp + p1 * (r2 + T(2.0) * yp2) + T(2.0) * p2 * xp * yp;
 
     /** perform projection using focal length and camera center into image plane */
-    resid[0] = fx * xpp + cx - ox;
-    resid[1] = fy * ypp + cy - oy;
+    residual[0] = fx * xpp + cx - ox;
+    residual[1] = fy * ypp + cy - oy;
 
   }
+
+  /*! \brief ceres compliant function to compute the residual from a distorted pinhole camera model, in this case,
+   *   the point is actually a planar circle with some diameter. There observation is not the projected center,
+   *   but is offset due to the angle between the plane and the imaging plane
+   *  @param point[3] the input point
+   *  @param circle_diameter the diameter of the circle being observed
+   *  @param k1 radial distortion parameter k1
+   *  @param k2 radial distortion parameter k2
+   *  @param k3 radial distortion parameter k3
+   *  @param p1 tangential distortion parameter p1
+   *  @param p2 tangential distortion parameter p2
+   *  @param fx focal length in x
+   *  @param fy focal length in y
+   *  @param cx optical center in x
+   *  @param cy optical center in y
+   *  @param ox observation in x
+   *  @param oy observation in y
+   *  @param residual the output or difference between where the point should appear given the parameters, and where it was observed
+   */
   template<typename T>  void cameraCircResidualDist(T point[3], T &circle_diameter, T R_TtoC[9], 
 							  T &k1, T &k2, T &k3, T &p1, T &p2, 
-							  T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2]);
+							  T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T residual[2]);
   template<typename T> inline void cameraCircResidualDist(T point[3], T &circle_diameter, T R_TtoC[9],
 							  T &k1, T &k2, T &k3, T &p1, T &p2, 
-							  T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2])
+							  T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T residual[2])
   {
     T xp1 = point[0];
     T yp1 = point[1];
@@ -474,26 +558,27 @@ namespace industrial_extrinsic_cal
       + p2 * xp * yp * T(2.0); // other tangential term
     
     /** perform projection using focal length and camera center into image plane */
-    resid[0] = fx * xpp + cx - ox;
-    resid[1] = fy * ypp + cy - oy;
+    residual[0] = fx * xpp + cx - ox;
+    residual[1] = fy * ypp + cy - oy;
   }
 
-    /*! \brief find residual for a camera looking at a planar circle at some distance
-     * @param point[3] center of circle point in camera coordinates
-     * @param circle_diameter diameter of circle being observed, note cirle is in xy plane
-     * @param R_TtoC rotation of target to camera
-     * @param fx focal length x
-     * @param fx focal length y
-     * @param cx optical axis x
-     * @param cy optical axis y
-     * @param ox observation x
-     * @param oy observation y
-     * @param resid[2] residual in x and y
-     */
+  /*! \brief ceres compliant function to compute the residual from a pinhole camera model without distortion, in this case,
+   *   the point is actually a planar circle with some diameter. There observation is not the projected center,
+   *   but is offset due to the angle between the plane and the imaging plane
+   *  @param point[3] the input point
+   *  @param circle_diameter the diameter of the circle being observed
+   *  @param fx focal length in x
+   *  @param fy focal length in y
+   *  @param cx optical center in x
+   *  @param cy optical center in y
+   *  @param ox observation in x
+   *  @param oy observation in y
+   *  @param residual the output or difference between where the point should appear given the parameters, and where it was observed
+   */
   template<typename T>  void cameraCircResidual(T point[3], T &circle_diameter, T R_TtoC[9],
-						      T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2]);
+						      T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T residual[2]);
   template<typename T> inline void cameraCircResidual(T point[3], T &circle_diameter, T R_TtoC[9],
-						      T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2])
+						      T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T residual[2])
   {
     T xp1 = point[0];
     T yp1 = point[1];
@@ -558,12 +643,23 @@ namespace industrial_extrinsic_cal
     }
     
     /** perform projection using focal length and camera center into image plane */
-    resid[0] = fx * xp + cx - ox;
-    resid[1] = fy * yp + cy - oy;
+    residual[0] = fx * xp + cx - ox;
+    residual[1] = fy * yp + cy - oy;
   }
 
-  template<typename T>  void cameraPntResidual(T point[3], T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2]);
-  template<typename T> inline void cameraPntResidual(T point[3], T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T resid[2])
+  /*! \brief ceres compliant function to compute the residual from a pinhole camera model without distortion
+   *  @param point[3] the input point
+   *  @param fx focal length in x
+   *  @param fy focal length in y
+   *  @param cx optical center in x
+   *  @param cy optical center in y
+   *  @param ox observation in x
+   *  @param oy observation in y
+   *  @param residual the output or difference between where the point should appear given the parameters, and where it was observed
+   */
+
+  template<typename T>  void cameraPntResidual(T point[3], T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T residual[2]);
+  template<typename T> inline void cameraPntResidual(T point[3], T &fx, T &fy, T &cx, T &cy, T &ox, T &oy, T residual[2])
   {
     T xp1 = point[0];
     T yp1 = point[1];
@@ -574,8 +670,8 @@ namespace industrial_extrinsic_cal
     T yp = yp1 / zp1;
 
     /** perform projection using focal length and camera center into image plane */
-    resid[0] = fx * xp + cx - ox;
-    resid[1] = fy * yp + cy - oy;
+    residual[0] = fx * xp + cx - ox;
+    residual[1] = fy * yp + cy - oy;
 
   }
 
@@ -591,7 +687,7 @@ namespace industrial_extrinsic_cal
     bool operator()(const T* const c_p1, /** extrinsic parameters */
                     const T* c_p2, /** intrinsic parameters */
                     const T* point, /** point being projected, has 3 parameters */
-                    T* resid) const
+                    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -605,7 +701,7 @@ namespace industrial_extrinsic_cal
       /** compute project point into image plane and compute residual */
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,  resid);
+      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,  residual);
 
       return true;
     } /** end of operator() */
@@ -635,7 +731,7 @@ namespace industrial_extrinsic_cal
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters */
                     const T* c_p2, /** intrinsic parameters */
-                    T* resid) const
+                    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -649,7 +745,7 @@ namespace industrial_extrinsic_cal
       /** compute project point into image plane and compute residual */
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,  resid);
+      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,  residual);
       
       return true;
     } /** end of operator() */
@@ -678,7 +774,7 @@ namespace industrial_extrinsic_cal
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters */
                     const T* point, /** point being projected, yes this is has 3 parameters */
-                    T* resid) const
+                    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -694,7 +790,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
 
       return true;
     } /** end of operator() */
@@ -727,7 +823,7 @@ namespace industrial_extrinsic_cal
 
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters */
-                    T* resid) const
+                    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -743,7 +839,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
 
       return true;
     } /** end of operator() */
@@ -782,7 +878,7 @@ namespace industrial_extrinsic_cal
     bool operator()(const T* const c_p1, /** extrinsic parameters */
                     const T* const c_p2, /** 6Dof transform of target points into world frame */
                     const T* const point, /** point described in target frame */
-                    T* resid) const
+                    T* residual) const
     {
 
       const T *camera_aa(&c_p1[0]);
@@ -804,7 +900,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
 
       return true;
     } /** end of operator() */
@@ -840,7 +936,7 @@ namespace industrial_extrinsic_cal
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters */
                     const T* const c_p2, /** 6Dof transform of target points into world frame */
-                    T* resid) const
+                    T* residual) const
     {
 
       const T *camera_aa(&c_p1[0]);
@@ -861,7 +957,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
 
       return true;
     } /** end of operator() */
@@ -900,7 +996,7 @@ namespace industrial_extrinsic_cal
     bool operator()(const T* const c_p1, /** extrinsic parameters */
                     const T* const c_p2, /** 6Dof transform of target points into world frame */
                     const T* const point, /** point described in target frame that is being seen */
-                    T* resid) const
+                    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -922,7 +1018,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
 
       return true;
     } /** end of operator() */
@@ -960,7 +1056,7 @@ namespace industrial_extrinsic_cal
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters */
                     const T* const c_p2, /** 6Dof transform of target points into world frame */
-                    T* resid) const
+                    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -982,7 +1078,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
 
       return true;
     } /** end of operator() */
@@ -1023,7 +1119,7 @@ namespace industrial_extrinsic_cal
     bool operator()(const T* const c_p1, /** extrinsic parameters */
                     const T* const c_p2, /** 6Dof transform of target points into world frame */
                     const T* const point, /** point described in target frame that is being seen */
-                    T* resid) const
+                    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1045,7 +1141,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
 
       return true;
     } /** end of operator() */
@@ -1085,7 +1181,7 @@ namespace industrial_extrinsic_cal
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters */
                     const T* const c_p2, /** 6Dof transform of target points into world frame */
-                    T* resid) const
+                    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1107,7 +1203,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  resid);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
 
       return true;
     } /** end of operator() */
@@ -1146,7 +1242,7 @@ namespace industrial_extrinsic_cal
     bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
 		    const T* const c_p2, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
 		    const T* const point, /** point described in target frame that is being seen [3]*/
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1165,7 +1261,7 @@ namespace industrial_extrinsic_cal
       T circle_diameter = T(circle_diameter_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1,p2, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1,p2, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1193,7 +1289,7 @@ namespace industrial_extrinsic_cal
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
 		    const T* const c_p2, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9] */
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1212,7 +1308,7 @@ namespace industrial_extrinsic_cal
       T circle_diameter = T(circle_diameter_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1240,7 +1336,7 @@ namespace industrial_extrinsic_cal
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
 		    const T* const point, /** point described in target frame that is being seen [3]*/
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1261,7 +1357,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1292,7 +1388,7 @@ namespace industrial_extrinsic_cal
 
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1313,7 +1409,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1349,7 +1445,7 @@ namespace industrial_extrinsic_cal
 		    const T* const c_p2, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
 		    const T* const c_p3, /** 6Dof transform of target into world frame [6]*/
 		    const T* const point, /** point described in target frame that is being seen [3]*/
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1378,7 +1474,7 @@ namespace industrial_extrinsic_cal
       T circle_diameter = T(circle_diameter_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1406,7 +1502,7 @@ namespace industrial_extrinsic_cal
     bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
 		    const T* const c_p2,  /** 6Dof transform of target into world frame [6] */
 		    const T* const c_p3, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9] */
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1435,7 +1531,7 @@ namespace industrial_extrinsic_cal
       T circle_diameter = T(circle_diameter_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1464,7 +1560,7 @@ namespace industrial_extrinsic_cal
     bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
 		    const T* const c_p2, /** 6Dof transform of target into world frame [6]*/
 		    const T* const point, /** point described in target frame that is being seen [3]*/
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1495,7 +1591,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1527,7 +1623,7 @@ namespace industrial_extrinsic_cal
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
 		    const T* const c_p2,  /** 6Dof transform of target into world frame [6] */
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1558,7 +1654,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1593,7 +1689,7 @@ namespace industrial_extrinsic_cal
     bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
 		    const T* const c_p2, /** 6Dof transform of target into world frame [6]*/
 		    const T* const point, /** point described in target frame that is being seen [3]*/
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1630,7 +1726,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1666,7 +1762,7 @@ namespace industrial_extrinsic_cal
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
 		    const T* const c_p2,  /** 6Dof transform of target into world frame [6] */
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1703,7 +1799,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1747,7 +1843,7 @@ namespace industrial_extrinsic_cal
     bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
 		    const T* const c_p2, /** 6Dof transform of target into world frame [6]*/
 		    const T* const point, /** point described in target frame that is being seen [3]*/
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1784,7 +1880,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
@@ -1820,7 +1916,7 @@ namespace industrial_extrinsic_cal
       link_posei_ = link_pose_.getInverse();
     }
 
-    void test_residual(const double *c_p1, const double  *c_p2, double *resid)
+    void test_residual(const double *c_p1, const double  *c_p2, double *residual)
     {
       const double *camera_aa(&c_p1[0]);
       const double *camera_tx(&c_p1[3]);
@@ -1884,14 +1980,14 @@ namespace industrial_extrinsic_cal
       double cy = cy_;
       double ox = ox_;
       double oy = oy_;
-      //      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
-      cameraPntResidual(camera_point, fx, fy,cx,cy, ox, oy, resid);
+      //      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
+      cameraPntResidual(camera_point, fx, fy,cx,cy, ox, oy, residual);
       
     }
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
 		    const T* const c_p2,  /** 6Dof transform of target into world frame [6] */
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1929,8 +2025,8 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, resid);
-      // cameraPntResidual(camera_point, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
+
       return true;
     } /** end of operator() */
 
@@ -2068,8 +2164,6 @@ namespace industrial_extrinsic_cal
     double cy_; /** focal center of camera in y (pixels) */
     Point3d point_; /** point expressed in target coordinates */
   };
-
-
 
 } // end of namespace
 #endif
