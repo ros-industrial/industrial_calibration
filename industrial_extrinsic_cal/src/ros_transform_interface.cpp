@@ -21,6 +21,11 @@
 #include <fstream>
 namespace industrial_extrinsic_cal
 {
+  /*! @brief uses tf listener to get a Pose6d. The pose returned transform points in the to_frame into the from_frame.
+   *   @param from_frame the starting frame
+   *   @param to_frame  the ending frame
+   *   @param tf_listener  the listener object, so we don't have to keep creating it
+   */
   Pose6d getPoseFromTF(const std::string &from_frame, const std::string &to_frame, const tf::TransformListener &tf_listener)
   {
     // get all the information from tf and from the mutable joint state publisher
@@ -53,7 +58,7 @@ namespace industrial_extrinsic_cal
       return(pose);
     }
     else{
-      pose_ = getPoseFromTF(transform_frame_, ref_frame_, tf_listener_);
+      pose_ = getPoseFromTF(ref_frame_, transform_frame_, tf_listener_);
       return(pose_);
     }
   }
@@ -384,6 +389,7 @@ namespace industrial_extrinsic_cal
     set_request_.joint_values.push_back(ex);
     set_client_.call(set_request_,set_response_);
 
+    sleep(2);// need to wait some time for tranforms take place through service
     Pose6d resulting_pose = getPoseFromTF(mounting_frame_, transform_frame_, tf_listener_);
     resulting_pose.show("resulting_pose");
     return(true);
