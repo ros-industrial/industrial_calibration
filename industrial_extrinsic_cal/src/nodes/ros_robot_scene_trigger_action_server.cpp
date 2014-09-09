@@ -21,7 +21,7 @@
 #include <ros/console.h>
 #include <moveit/move_group_interface/move_group.h>
 #include <actionlib/server/simple_action_server.h>
-#include <industrial_extrinsic_cal/robot_jv_triggerAction.h> // one of the ros action messages
+#include <industrial_extrinsic_cal/robot_joint_values_triggerAction.h> // one of the ros action messages
 #include <industrial_extrinsic_cal/robot_pose_triggerAction.h> // the other ros action message
 
 class ServersNode {
@@ -30,15 +30,15 @@ protected:
 
 public:
   
-  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_jv_triggerAction> JV_Server;
-  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_pose_triggerAction> Pose_Server;
+  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_joint_values_triggerAction> JointValuesServer;
+  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_pose_triggerAction> PoseServer;
 
   ServersNode(std::string name) :
-    jv_server_(nh_,name + "_joint_values",boost::bind(&ServersNode::jv_cb, this, _1), false),
-    pose_server_(nh_,name +"_pose",boost::bind(&ServersNode::pose_cb, this, _1), false),
+    joint_value_server_(nh_,name + "_joint_values",boost::bind(&ServersNode::jointValueCallBack, this, _1), false),
+    pose_server_(nh_,name +"_pose",boost::bind(&ServersNode::poseCallBack, this, _1), false),
     action_name_(name)
   {
-    jv_server_.start();
+    joint_value_server_.start();
     pose_server_.start();
     move_group_ = new moveit::planning_interface::MoveGroup("Manipulator");
     move_group_->setPlanningTime(10.0); // give it 10 seconds to plan
@@ -52,12 +52,12 @@ public:
     delete(move_group_);
   };
 
-  void jv_cb(const industrial_extrinsic_cal::robot_jv_triggerGoalConstPtr& goal)
+  void jointValueCallBack(const industrial_extrinsic_cal::robot_joint_values_triggerGoalConstPtr& goal)
   {
     // TODO send both values and names and make sure they match. This is critical or else robots will crash into stuff
     std::vector<double> group_variable_values;
     moveit::core::RobotStatePtr current_state = move_group_->getCurrentState();
-    double *jv = current_state->getVariablePositions();
+    double *joint_value = current_state->getVariablePositions();
     std::vector<std::string> var_names = current_state->getVariableNames();
     ROS_ERROR("%d variables %s %s %s %s %s %s %s", (int)var_names.size(),
 	      var_names[0].c_str(),
@@ -71,14 +71,14 @@ public:
     move_group_->setJointValueTarget(goal->joint_values);
     if(move_group_->move()){
       sleep(1);
-      jv_server_.setSucceeded();
+      joint_value_server_.setSucceeded();
     }
     else{
-      ROS_ERROR("move in jv_cb failed");
+      ROS_ERROR("move in jointValueCallBack failed");
     }
   };
   
-  void pose_cb(const industrial_extrinsic_cal::robot_pose_triggerGoalConstPtr& goal)
+  void poseCallBack(const industrial_extrinsic_cal::robot_pose_triggerGoalConstPtr& goal)
   {
     moveit::core::RobotStatePtr current_state = move_group_->getCurrentState();
     move_group_->setStartState(*current_state);
@@ -101,16 +101,16 @@ public:
     target_pose.orientation.w = goal->pose.orientation.w;
     move_group_->setPoseTarget(target_pose);
     if(move_group_->move()){
-      jv_server_.setSucceeded();
+      joint_value_server_.setSucceeded();
     }
     else {
-      ROS_ERROR("move in pose_cb failed");
+      ROS_ERROR("move in poseCallBack failed");
     }
   };
 
 private:
-  JV_Server jv_server_;
-  Pose_Server pose_server_;
+  JointValuesServer joint_value_server_;
+  PoseServer pose_server_;
   std::string action_name_;
   moveit::planning_interface::MoveGroup *move_group_;
 };

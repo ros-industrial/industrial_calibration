@@ -50,7 +50,7 @@ public:
    moving cameras get multiple pose parameters
    static cameras get but one set of pose parameters
    */
-  bool isMoving();
+  bool is_moving();
   boost::shared_ptr<DummyCameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
   CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
   //    ::std::ostream& operator<<(::std::ostream& os, const Camera& C){ return os<< "TODO";};
@@ -87,8 +87,8 @@ public:
   /*! \brief Constructor, 
    *   \param Trigger Trig the type of trigger to initiate this observation
    */
-  ObservationScene(Trigger trig, int scene_id) :
-      trig_(trig), scene_id_(scene_id)
+  ObservationScene(Trigger trigger, int scene_id) :
+      trigger_(trigger), scene_id_(scene_id)
   {
   }
   ;
@@ -120,7 +120,7 @@ public:
   /*! \brief gets the trigger of this scene */
   Trigger get_trigger()
   {
-    return (trig_);
+    return (trigger_);
   }
   ;
 
@@ -128,7 +128,7 @@ public:
   std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scened */
 
 private:
-  Trigger trig_; /*!< event to trigger the observations in this command */
+  Trigger trigger_; /*!< event to trigger the observations in this command */
   int scene_id_; /*!< unique identifier of this scene */
 };
 // end of class ObservationScene
@@ -420,10 +420,10 @@ public:
   bool clearCurrentScene();
 
   /** @brief adds a new scene to end of scene list. New scene becomes current scene.
-   *  @param trig the trigger type to use for this scene
+   *  @param trigger the trigger type to use for this scene
    *  @return true if successful
    */
-  bool appendNewScene(Trigger trig);
+  bool appendNewScene(Trigger trigger);
 
   ObservationDataPointList observation_data_point_list_;
 

@@ -133,15 +133,15 @@ namespace industrial_extrinsic_cal
       R[2][0] = 0.0;  R[2][1] = 0.0;  R[2][2] = 1.0;
       return(R);
     }
-    double ct = cos(angle);
-    double st = sin(angle);
-    double ux = ax/angle;
-    double uy = ay/angle;
-    double uz = az/angle;
-    double omct = 1.0 - ct;
-    R[0][0] = ct + ux*ux*omct;      R[0][1] = ux*uy*omct - uz*st;   R[0][2] = ux*uz*omct + uy*st; 
-    R[1][0] = uy*ux*omct + uz*st; R[1][1] =  ct+uy*uy*omct;        R[1][2] = uy*uz*omct - ux*st;  
-    R[2][0] = uz*ux*omct - uy*st;  R[2][1] =  uz*uy*omct + ux*st;  R[2][2] = ct + uz*uz*omct;     
+    double cos_theta = cos(angle);
+    double sin_theta = sin(angle);
+    double wx = ax/angle;
+    double wy = ay/angle;
+    double wz = az/angle;
+    double omct = 1.0 - cos_theta;
+    R[0][0] = cos_theta + wx*wx*omct;        R[0][1] = wx*wy*omct - wz*sin_theta;      R[0][2] = wx*wz*omct + wy*sin_theta; 
+    R[1][0] = wy*wx*omct + wz*sin_theta;   R[1][1] =  cos_theta+wy*wy*omct;          R[1][2] = wy*wz*omct - wx*sin_theta;  
+    R[2][0] = wz*wx*omct - wy*sin_theta;     R[2][1] =  wz*wy*omct + wx*sin_theta;   R[2][2] = cos_theta + wz*wz*omct;     
     return(R);
   }
 
@@ -161,9 +161,9 @@ namespace industrial_extrinsic_cal
      
      if( fabs(R[2][0]) != 1.0 ){ // cos(theta) = 0.0
        theta = -asin(R[2][0]);
-       double ct = cos(theta);
-       psi = atan2(R[2][1]/ct, R[2][2]/ct);
-       phi = atan2(R[1][0]/ct,R[0][0]/ct);
+       double cos_theta = cos(theta);
+       psi = atan2(R[2][1]/cos_theta, R[2][2]/cos_theta);
+       phi = atan2(R[1][0]/cos_theta,R[0][0]/cos_theta);
      }
      else{
        phi = 0.0; // could be anything
@@ -211,7 +211,7 @@ namespace industrial_extrinsic_cal
     newx =-( R[0][0] * x + R[1][0] * y + R[2][0] * z);
     newy = -(R[0][1] * x + R[1][1] * y + R[2][1] * z);
     newz = -(R[0][2] * x + R[1][2] * y + R[2][2] * z);
-    Pose6d new_pose(newx, newy, newz, -ax,- ay, -az);
+    Pose6d new_pose(newx, newy, newz, -ax, -ay, -az);
     return(new_pose);
   }
 

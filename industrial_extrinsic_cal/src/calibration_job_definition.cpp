@@ -35,45 +35,7 @@ using ceres::CostFunction;
 
 namespace industrial_extrinsic_cal
 {
-void  show_intrinsics(P_BLOCK intrinsics, int num_param){
-    double fx,fy,cx,cy,k1,k2,k3,p1,p2;
-    fx  = intrinsics[0]; /** focal length x */
-    fy  = intrinsics[1]; /** focal length y */
-    cx  = intrinsics[2]; /** central point x */
-    cy  = intrinsics[3]; /** central point y */
-    ROS_ERROR("fx = %lf fy=%lf cx=%lf cy=%lf", fx, fy, cx, cy);
-    if(num_param>4){
-      k1  = intrinsics[4]; /** distortion k1  */
-      k2  = intrinsics[5]; /** distortion k2  */
-      k3  = intrinsics[6]; /** distortion k3  */
-      p1  = intrinsics[7]; /** distortion p1  */
-      p2  = intrinsics[8]; /** distortion p2  */
-      ROS_ERROR("k1 = %lf k2 = %lf k3 = %lf p1 = %lf p2 = %lf", k1, k2, k3, p1, p2);
-    }
-  }
-void  showPose(P_BLOCK extrinsics, std::string message){
-    double ax,ay,az,px,py,pz;
-    ax  = extrinsics[0]; 
-    ay  = extrinsics[1]; 
-    az  = extrinsics[2]; 
-    px  = extrinsics[3]; 
-    py  = extrinsics[4]; 
-    pz  = extrinsics[5];
-    Pose6d pose(px,py,pz,ax,ay,az);
-    tf::Matrix3x3 basis = pose.getBasis();
-    double ez_yaw, ey_pitch, ex_roll;
-    double qx, qy, qz, qw;
-    pose.getEulerZYX(ez_yaw,ey_pitch,ex_roll);
-    pose.getQuaternion(qx, qy, qz, qw);
-    ROS_ERROR("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf ",
-	      message.c_str(),
-	      basis[0][0],basis[0][1], basis[0][2],px,
-	      basis[1][0],basis[1][1], basis[1][2],py,
-	      basis[2][0],basis[2][1], basis[2][2],pz,
-	      0.0, 0.0, 0.0, 1.0,
-	      ez_yaw, ey_pitch, ex_roll,
-	      qx, qy, qz, qw);
-  }
+
 
   bool CalibrationJob::load()
   {
@@ -123,6 +85,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     CameraParameters temp_parameters;
     P_BLOCK extrinsics;
 
+    unsigned int scene_id;
     std::string trigger_name;
     std::string trig_param;
     std::string trig_action_server;
@@ -179,14 +142,14 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  (*camera_parameters)[i]["trig_action_msg"] >> trig_action_msg;
 		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
-		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
 		  std::vector<double>joint_values;
 		  (*camera_parameters)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<0){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
-		  temp_camera->trigger_ = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
 		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
@@ -199,6 +162,9 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  (*camera_parameters)[i]["pose"][5] >> pose.orientation.z;
 		  (*camera_parameters)[i]["pose"][6] >> pose.orientation.w;
 		  temp_camera->trigger_ = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
+		}
+		else{
+		  ROS_ERROR("NO SCENE TRIGGER OF TYPE %s", trigger_name.c_str());
 		}
 		if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
 		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
@@ -241,6 +207,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
 		ceres_blocks_.addStaticCamera(temp_camera);
+		
 	      }
 	  }
 
@@ -270,6 +237,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		(*camera_parameters)[i]["distortion_k3"] >> temp_parameters.distortion_k3;
 		(*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
 		(*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
+		
 		Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
 			    temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
 		// create a shared camera and a shared transform interface
@@ -289,14 +257,14 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  (*camera_parameters)[i]["trig_action_message"] >> trig_action_msg;
 		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
-		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
 		  std::vector<double>joint_values;
 		  (*camera_parameters)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<0){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
-		  temp_camera->trigger_ = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
 		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
 		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
@@ -352,7 +320,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		}
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
-		ceres_blocks_.addMovingCamera(temp_camera, 0); // moving cameras added with observations
+		ceres_blocks_.addMovingCamera(temp_camera, scene_id);
+
 	      }
 	  }
       } // end try
@@ -461,7 +430,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		    temp_target->pts_.push_back(temp_pnt3d);
 		  }
 		if(temp_target->is_moving_ == true){
-		  ROS_ERROR("WHAT THE HELL");
+		  ROS_ERROR("Static Target set to moving????");
 		}
 		ceres_blocks_.addStaticTarget(temp_target);
 		target_frames_.push_back(temp_frame);
@@ -590,7 +559,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
     std::string trig_action_msg;
     std::string camera_name;
     std::string target_name;
-    std::string cost_type;
+    std::string cost_type_string;
+    Cost_function cost_type;
     std::string reference_frame;
     shared_ptr<Camera> temp_cam = make_shared<Camera>();
     shared_ptr<Target> temp_targ = make_shared<Target>();
@@ -633,14 +603,14 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  (*caljob_scenes)[i]["trig_action_msg"] >> trig_action_msg;
 		  temp_trigger = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
 		}
-		else if(trigger_name == std::string("ROS_ROBOT_JV_ACTION_TRIGGER")){
+		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
 		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
 		  std::vector<double>joint_values;
 		  (*caljob_scenes)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<1){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JV_ACTION_TRIGGER");
+		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
-		  temp_trigger = make_shared<ROSRobotJVActionServerTrigger>(trig_action_server, joint_values);
+		  temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
 		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
 		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
@@ -655,7 +625,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		  temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
 		}
 
-		scene_list_.at(i).setTrig(temp_trigger);
+		scene_list_.at(i).setTrigger(temp_trigger);
 
 		scene_list_.at(i).setSceneId(scene_id_num);
 		const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
@@ -668,7 +638,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		    (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
 		    (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
 		    (*obs_node)[j]["target"] >> target_name;
-		    (*obs_node)[j]["cost_type"] >> cost_type;
+		    (*obs_node)[j]["cost_type"] >> cost_type_string;
+		    cost_type = string2CostType(cost_type_string);
 		    if((temp_cam = ceres_blocks_.getCameraByName(camera_name)) == NULL){
 		      ROS_ERROR("Couldn't find camea %s",camera_name.c_str());
 		    }
@@ -676,6 +647,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		      ROS_ERROR("Couldn't find target %s",target_name.c_str());
 		    }
 		    scene_list_.at(i).addCameraToScene(temp_cam);
+		    cost_type = string2CostType(cost_type_string);
 		    scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi, cost_type);
 		  }
 	      }
@@ -729,13 +701,13 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
 	    if(current_camera->isMoving()){
-	      ROS_INFO("CAMERA %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
+	      ROS_ERROR("CAMERA %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
 	    }
 	  }
 
 	BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
 	  {	// add each target and roi each camera's list of observations
-	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi, o_command.cost_type_str);
+	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi, o_command.cost_type);
 	  }
 	
 	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
@@ -756,7 +728,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	std::string camera_name;
 	std::string target_name;
 	int target_type;
-	std::string cost_type_str;
+	Cost_function cost_type;
 
 	// for each camera in scene get a list of observations, and add camera parameters to ceres_blocks
 	ObservationDataPointList listpercamera;
@@ -793,7 +765,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	      {
 		target_name = observation.target->target_name_;
 		target_type = observation.target->target_type_;
-		cost_type_str = observation.cost_type_str;
+		cost_type = observation.cost_type;
 		double circle_dia=0.0;
 		if(target_type == pattern_options::CircleGrid){
 		  circle_dia = observation.target->circle_grid_parameters_.circle_diameter;
@@ -816,7 +788,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		ObservationDataPoint temp_ODP(camera_name, target_name, target_type,
 					      scene_id, intrinsics, extrinsics, pnt_id, target_pose,
 					      pnt_pos, observation_x, observation_y, 
-					      cost_type_str, observation.intermediate_frame,
+					      cost_type, observation.intermediate_frame,
 					      circle_dia);
 		listpercamera.addObservationPoint(temp_ODP);
 	      }//end for each observed point
@@ -852,7 +824,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	    // take all the data collected and create a Ceres optimization problem and run it
 	    P_BLOCK extrinsics;
 	    P_BLOCK intrinsics;
-	    P_BLOCK target_pose;
+	    P_BLOCK target_pose_params;
 	    P_BLOCK point_position;
 	    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items_)
 	      {
@@ -880,7 +852,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		double image_x        = ODP.image_x_;
 		double image_y        = ODP.image_y_;
 		Point3d point;
-		Pose6d link_pose = ODP.intermediate_frame_; // identity except when camera mounted on robot
+		Pose6d camera_mounting_pose = ODP.intermediate_frame_; // identity except when camera mounted on robot
 		point.x = ODP.point_position_[0];// location of point within target frame
 		point.y = ODP.point_position_[1];
 		point.z = ODP.point_position_[2];
@@ -889,19 +861,23 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	      
 		// pull out pointers to the parameter blocks in the observation point data
 		extrinsics        = ODP.camera_extrinsics_;
-		target_pose     = ODP.target_pose_;
+		target_pose_params     = ODP.target_pose_;
+		Pose6d target_pose;
+		target_pose.setAngleAxis(target_pose_params[0],target_pose_params[1], target_pose_params[2]);
+		target_pose.setOrigin(target_pose_params[3],target_pose_params[4], target_pose_params[5]);
 		point_position = ODP.point_position_;
 		bool point_zero=false;
 		/*
 		if(point.x == 0.0 && point.y == 0.0 && point.z == 0.0){
 		  point_zero=true;
 		  ROS_ERROR("Observing Target Origin");
-		  showPose(target_pose, "target");
+		  showPose(target_pose_params, "target");
 		  showPose(extrinsics,"extrinsics");
-		  showPose((P_BLOCK) &link_pose.pb_pose[0], "link_pose");
+		  showPose((P_BLOCK) &camera_mounting_pose.pb_pose[0], "camera_mounting_pose");
 		}
-		*/
-		switch(  string2CostType(ODP.cost_type_str_) ){
+        */
+		
+		switch( ODP.cost_type_ ){
 		case cost_functions::CameraReprjErrorWithDistortion:
 		  {
 		    CostFunction* cost_function =
@@ -943,7 +919,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 						     focal_length_x, focal_length_y,
 						     center_x, center_y);
 
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::TargetCameraReprjErrorPK:
@@ -956,7 +932,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 						       center_y,
 						       point);
 		    // add it as a residual using parameter blocks
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkTargetCameraReprjError:
@@ -967,8 +943,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 							 focal_length_y,
 							 center_x,
 							 center_y,
-							 link_pose);
-		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+							 camera_mounting_pose);
+		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkTargetCameraReprjErrorPK:
@@ -979,9 +955,9 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 							   focal_length_y,
 							   center_x,
 							   center_y,
-							   link_pose,
+							   camera_mounting_pose,
 							   point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkCameraTargetReprjError:
@@ -992,8 +968,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 							 focal_length_y,
 							 center_x,
 							 center_y,
-							 link_pose);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+							 camera_mounting_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkCameraTargetReprjErrorPK:
@@ -1004,10 +980,10 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 							     focal_length_y,
 							     center_x,
 							     center_y,
-							     link_pose,
+							     camera_mounting_pose,
 							     point);
 		      
-		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		    }
 		    break;
 		case cost_functions::CircleCameraReprjErrorWithDistortion:
@@ -1023,7 +999,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		      CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y,
 								     circle_dia,
 								     point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
 		  }
 		  break;
 		case cost_functions::CircleCameraReprjError:
@@ -1056,7 +1032,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		    CostFunction* cost_function =
 		      CircleTargetCameraReprjErrorWithDistortion::Create(image_x, image_y,
 									 circle_dia);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose, point.pb);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjErrorWithDistortionPK:
@@ -1065,7 +1041,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 		      CircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
 									   circle_dia,
 									   point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjError:
@@ -1077,7 +1053,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 							   focal_length_y,
 							   center_x,
 							   center_y);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjErrorPK:
@@ -1090,7 +1066,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 							     center_x,
 							     center_y,
 							     point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkCircleTargetCameraReprjError:
@@ -1102,8 +1078,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 							       focal_length_y,
 							       center_x,
 							       center_y,
-							       link_pose);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+							       camera_mounting_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkCircleTargetCameraReprjErrorPK:
@@ -1115,9 +1091,9 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 								 focal_length_y,
 								 center_x,
 								 center_y,
-								 link_pose,
+								 camera_mounting_pose,
 								 point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkCameraCircleTargetReprjError:
@@ -1129,8 +1105,8 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 							       focal_length_y,
 							       center_x,
 							       center_y,
-							       link_pose);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+							       camera_mounting_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkCameraCircleTargetReprjErrorPK:
@@ -1142,16 +1118,16 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 								 focal_length_y,
 								 center_x,
 								 center_y,
-								 link_pose,
+								 camera_mounting_pose,
 								 point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		    if(point_zero){
 		      double residual[2];
 		      double *params[2];
 		      params[0] = &extrinsics[0];
-		      params[1] = &target_pose[0];
+		      params[1] = &target_pose_params[0];
 		      cost_function->Evaluate(params, residual, NULL);
-		      ROS_ERROR("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
+		      ROS_INFO("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
 		      point_zero=false;
 		      LinkCameraCircleTargetReprjErrorPK testIt(image_x, image_y, 
 								circle_dia,
@@ -1159,16 +1135,51 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 								focal_length_y,
 								center_x,
 								center_y,
-								link_pose,
+								camera_mounting_pose,
 								point);
-		      testIt.test_residual(extrinsics, target_pose, residual);
+		      testIt.test_residual(extrinsics, target_pose_params, residual);
+
+		    }
+		  }
+		  break;
+		case cost_functions::FixedCircleTargetCameraReprjErrorPK:
+		  {
+		    CostFunction* cost_function =
+		      FixedCircleTargetCameraReprjErrorPK::Create(image_x, image_y, 
+								  circle_dia,
+								  focal_length_x,
+								  focal_length_y,
+								  center_x,
+								  center_y,
+								  target_pose,
+								  camera_mounting_pose,
+								  point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics);
+		    if(point_zero){
+		      double residual[2];
+		      double *params[2];
+		      params[0] = &extrinsics[0];
+		      cost_function->Evaluate(params, residual, NULL);
+		      ROS_ERROR("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
+		      point_zero=false;
+		      FixedCircleTargetCameraReprjErrorPK testIt(image_x, image_y, 
+								 circle_dia,
+								 focal_length_x,
+								 focal_length_y,
+								 center_x,
+								 center_y,
+								 target_pose,
+								 camera_mounting_pose,
+								 point);
+		      testIt.test_residual(extrinsics, residual);
 
 		    }
 		  }
 		  break;
 		default:
 		  {
-		    ROS_ERROR("NO COST FUNTION WITH TYPE %s",ODP.cost_type_str_.c_str());
+		    std::string cost_type_string = costType2String(ODP.cost_type_);
+		    ROS_ERROR("NO COST FUNTION WITH TYPE %s", cost_type_string.c_str());
 		  }
 		  break;
 		}// end of switch
@@ -1186,7 +1197,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
   options.minimizer_progress_to_stdout = true;
   options.max_num_iterations = 1000;
   ceres::Solve(options, &problem_, &summary);
-  ROS_ERROR("PROBLEM SOLVED");
+  ROS_INFO("PROBLEM SOLVED");
   return true;
 }//end runOptimization
 
@@ -1203,6 +1214,7 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 
   void CalibrationJob::show()
   {
+    ceres_blocks_.pullTransforms(-1); // since we don't know which scene for any moving objects, only pull static transforms
     ceres_blocks_.displayAllCamerasAndTargets();
   }
   void CalibrationJob::pullTransforms(int scene_id)

@@ -5,8 +5,8 @@ static_targets:
     target_name: CircleGrid7x5
     target_type: 1
     target_frame: zcirclegrid7x5
-    target_rows: 7
-    target_cols: 5
+    target_rows: 5
+    target_cols: 7
     circle_dia: 0.0254
     angle_axis_ax: 0.0
     angle_axis_ay: 0.0
