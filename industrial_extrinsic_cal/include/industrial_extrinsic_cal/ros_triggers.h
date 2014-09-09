@@ -24,7 +24,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <industrial_extrinsic_cal/trigger.h>
 #include <industrial_extrinsic_cal/manual_triggerAction.h>
-#include <industrial_extrinsic_cal/robot_jv_triggerAction.h>
+#include <industrial_extrinsic_cal/robot_joint_values_triggerAction.h>
 #include <industrial_extrinsic_cal/robot_pose_triggerAction.h>
 
 namespace industrial_extrinsic_cal
@@ -59,7 +59,7 @@ namespace industrial_extrinsic_cal
     std::string parameter_name_;
   };
 
-  typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::manual_triggerAction> Manual_Client;
+  typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::manual_triggerAction> ManualClient;
 
   class ROSActionServerTrigger : public Trigger
   {
@@ -70,7 +70,7 @@ namespace industrial_extrinsic_cal
       {
 	server_name_ = server_name;  
 	action_message_ = action_message;  
-	client_ = new Manual_Client(server_name_.c_str(),true);
+	client_ = new ManualClient(server_name_.c_str(),true);
       };
 
     /*! \brief Destructor
@@ -94,33 +94,33 @@ namespace industrial_extrinsic_cal
       return(true);  /**< TODO implement a timeout, cancels action and with returns false*/
     };
   private: 
-    Manual_Client *client_;
+    ManualClient *client_;
     ros::NodeHandle nh_;	/**< node handle */
     std::string server_name_;	/**< name of server */
     std::string action_message_; /**< message sent to action server, often displayed by that server */
   };
 
 
-    typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_jv_triggerAction> Robot_JV_Client;
+    typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_joint_values_triggerAction> RobotJointValuesClient;
 
-  class ROSRobotJVActionServerTrigger : public Trigger
+  class ROSRobotJointValuesActionServerTrigger : public Trigger
   {
   public:
     /*! \brief Constructor,
      */
-    ROSRobotJVActionServerTrigger(const std::string & server_name, const  std::vector<double> &jv) 
+    ROSRobotJointValuesActionServerTrigger(const std::string & server_name, const  std::vector<double> &joint_values) 
       {
 	server_name_ = server_name;  
-	jv_.clear();
-	for(int i=0; i< (int)jv.size(); i++){
-	  jv_.push_back(jv[i]);
+	joint_values_.clear();
+	for(int i=0; i< (int)joint_values.size(); i++){
+	  joint_values_.push_back(joint_values[i]);
 	}
-	client_ = new Robot_JV_Client(server_name_.c_str(),true);
+	client_ = new RobotJointValuesClient(server_name_.c_str(),true);
       };
 
     /*! \brief Destructor
      */
-    ~ROSRobotJVActionServerTrigger(){
+    ~ROSRobotJointValuesActionServerTrigger(){
       delete(client_);
     };
 
@@ -128,12 +128,12 @@ namespace industrial_extrinsic_cal
      */
     bool waitForTrigger()
     {
-      ROS_INFO("ROSRobotJVActionServerTrigger: waiting for trigger server %s to complete ",server_name_.c_str());
+      ROS_INFO("ROSRobotJointValuesActionServerTrigger: waiting for trigger server %s to complete ",server_name_.c_str());
       client_->waitForServer();
-      industrial_extrinsic_cal::robot_jv_triggerGoal goal;
+      industrial_extrinsic_cal::robot_joint_values_triggerGoal goal;
       goal.joint_values.clear();
-      for(int i=0; i<(int)jv_.size();i++){
-	goal.joint_values.push_back(jv_[i]);
+      for(int i=0; i<(int)joint_values_.size();i++){
+	goal.joint_values.push_back(joint_values_[i]);
       }
       ROS_INFO("SENDING GOAL");
       client_->sendGoal(goal);
@@ -145,10 +145,10 @@ namespace industrial_extrinsic_cal
       return(true);  /**< TODO implement a timeout, cancels action and with returns false*/
     };
   private: 
-    Robot_JV_Client *client_;
+    RobotJointValuesClient *client_;
     ros::NodeHandle nh_;	/**< node handle */
     std::string server_name_;	/**< name of server */
-    std::vector<double> jv_; /**< joint values */
+    std::vector<double> joint_values_; /**< joint values */
   };
 
     typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_pose_triggerAction> Robot_Pose_Client;
@@ -162,7 +162,7 @@ namespace industrial_extrinsic_cal
     ROSRobotPoseActionServerTrigger(const std::string & server_name, const  geometry_msgs::Pose pose) 
       {
 	server_name_ = server_name;  
-	jv_.clear();
+	joint_values_.clear();
 	pose_ = pose;
 	client_ = new Robot_Pose_Client(server_name_.c_str(),true);
       };
@@ -192,7 +192,7 @@ namespace industrial_extrinsic_cal
     ros::NodeHandle nh_;	/**< node handle */
     std::string server_name_;	/**< name of server */
     geometry_msgs::Pose pose_; /**< pose of robot */
-    std::vector<double> jv_; /**< joint values */
+    std::vector<double> joint_values_; /**< joint values */
   };
 
 }// end of namespace

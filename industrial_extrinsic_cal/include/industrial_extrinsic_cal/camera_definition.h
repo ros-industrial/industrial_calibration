@@ -110,7 +110,7 @@ typedef struct
   boost::shared_ptr<Camera> camera;
   boost::shared_ptr<Target> target;
   Roi roi;
-  std::string cost_type_str;
+  Cost_function cost_type;
 } ObservationCmd;
 
 /*! \brief moving cameras need a new pose with each scene in which they are used */

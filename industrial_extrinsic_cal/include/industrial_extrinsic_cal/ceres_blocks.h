@@ -184,8 +184,10 @@ public:
   /*! @brief sends transform to the interface*/
   void pushTransforms();
 
-  /*! @brief gets transform from interface */
-  void pullTransforms();
+  /*! @brief gets transform from interface 
+   *    @param scene_id the current scene's id. Pulls from all static cameras, static targets, and those from this scene
+   */
+  void pullTransforms(int scene_id);
 
   /*! @brief sets reference transform from interface, and may start a timer for broadcasting*/
   void setReferenceFrame(std::string ref_frame);
@@ -200,6 +202,23 @@ public:
   std::string reference_frame_; /*! name of reference frame, typically a ROS tf frame */
 
 };//end class
+
+ // dangling debugging functions
+/*! @brief displays a pose from the extrinsic parameters 
+ *   @param extrinsics an array of parameters representing the 6D pose
+ *   @param message a string that describes the pose to be shown 
+ */
+ void  showPose(P_BLOCK extrinsics, std::string message);
+/*! @brief displays a pose 
+ *   @param pose the 6D pose to be shown
+ *   @param message a string that describes the pose to be shown 
+ */
+ void  showPose(Pose6d pose, std::string message);
+/*! @brief displays the intrinsic parameters
+ *   @param intrinsics an array of parameters representing the focal length, optical center, and distortion parameters
+ *   @param num_param, sometimes there is no distortion, so this is either 4 or 9 depending
+ */
+ void  showIntrinsics(P_BLOCK intrinsics, int num_param);
 
 }// end namespace industrial_extrinsic_cal
 

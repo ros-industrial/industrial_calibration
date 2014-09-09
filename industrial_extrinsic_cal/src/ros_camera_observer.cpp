@@ -28,12 +28,12 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
   results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
 }
 
-bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, std::string &cost_type_str)
+bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost_function cost_type)
 {
   // TODO make a list of targets so that the camera may make more than one set of observations at a time
   // This was what was inteneded by the interface definition, I'm not sure why the first implementation didn't do it.
 
-  cost_type_str_ = cost_type_str; // This too should be a vector, each target may have a different cost function associated with it
+  cost_type_ = cost_type; 
 
   //set pattern based on target
   ROS_INFO_STREAM("Target type: "<<targ->target_type_);
@@ -107,16 +107,16 @@ void ROSCameraObserver::clearObservations()
 int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 {
   bool successful_find = false;
-  
+
   ROS_INFO_STREAM("image ROI region created: "<<input_roi_.x<<" "<<input_roi_.y<<" "<<input_roi_.width<<" "<<input_roi_.height);
   if (input_bridge_->image.cols < input_roi_.width || input_bridge_->image.rows < input_roi_.height)
-    {
-      ROS_ERROR_STREAM("ROI too big for image size");
-      return 0;
-    }
-  
+  {
+    ROS_ERROR_STREAM("ROI too big for image size");
+    return 0;
+  }
+
   image_roi_ = input_bridge_->image(input_roi_);
-  
+
   observation_pts_.clear();
   std::vector<cv::KeyPoint> key_points;
   ROS_INFO("Pattern type %d, rows %d, cols %d",pattern_,pattern_rows_,pattern_cols_);
@@ -168,20 +168,26 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   
   if(!successful_find){
     ROS_WARN_STREAM("Pattern not found for pattern: "<<pattern_ <<" with symmetry: "<< sym_circle_);
+      cv::Point p;
+      p.x = image_roi_.cols/2;
+      p.y = image_roi_.rows/2;
+      circle(image_roi_,p,10.0,255,10);
+      out_bridge_->image = image_roi_;
+      results_pub_.publish(out_bridge_->toImageMsg());
     return 0;
   }
 
   // copy the points found into a camera observation structure indicating their corresponece with target points
   camera_obs_.resize(observation_pts_.size());
   for (int i = 0; i < observation_pts_.size(); i++)
-    {
-      camera_obs_.at(i).target = instance_target_;
-      camera_obs_.at(i).point_id = i;
-      camera_obs_.at(i).image_loc_x = observation_pts_.at(i).x;
-      camera_obs_.at(i).image_loc_y = observation_pts_.at(i).y;
-      camera_obs_.at(i).cost_type_str = cost_type_str_;
-    }
-  
+  {
+    camera_obs_.at(i).target = instance_target_;
+    camera_obs_.at(i).point_id = i;
+    camera_obs_.at(i).image_loc_x = observation_pts_.at(i).x;
+    camera_obs_.at(i).image_loc_y = observation_pts_.at(i).y;
+    camera_obs_.at(i).cost_type = cost_type_;
+  }
+
   cam_obs = camera_obs_;
   return 1;
 }

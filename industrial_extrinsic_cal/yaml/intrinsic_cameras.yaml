@@ -1,0 +1,24 @@
+---
+
+moving_cameras:
+ -
+    camera_name: WristAsus
+    camera_optical_frame: /asus_rgb_optical_frame
+    trigger: NO_WAIT_TRIGGER
+    image_topic: /WristAsus/rgb/image_rect_color
+    angle_axis_ax: 3.14
+    angle_axis_ay: 0.0
+    angle_axis_az: 0.0
+    position_x: 0.0
+    position_y: -0.08
+    position_z: 0.02
+    transform_interface: ros_camera_lti
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 320
+    center_y: 240
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01

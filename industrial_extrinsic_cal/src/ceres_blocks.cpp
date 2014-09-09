@@ -25,6 +25,7 @@ using boost::shared_ptr;
 
 namespace industrial_extrinsic_cal
 {
+
   void  showPose(Pose6d pose, std::string message){
     tf::Matrix3x3 basis = pose.getBasis();
     double ez_yaw, ey_pitch, ex_roll;
@@ -32,14 +33,39 @@ namespace industrial_extrinsic_cal
     pose.getEulerZYX(ez_yaw,ey_pitch,ex_roll);
     pose.getQuaternion(qx, qy, qz, qw);
     ROS_INFO("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %lf %lf %lf\n quat= %6.3lf %6.3lf %6.3lf %6.3lf ",
-	      message.c_str(),
-	      basis[0][0],basis[0][1], basis[0][2], pose.x,
+	     message.c_str(),
+	     basis[0][0],basis[0][1], basis[0][2], pose.x,
 	     basis[1][0],basis[1][1], basis[1][2], pose.y,
-	      basis[2][0],basis[2][1], basis[2][2], pose.z,
+	     basis[2][0],basis[2][1], basis[2][2], pose.z,
 	     0.0, 0.0, 0.0, 1.0,
-	      ez_yaw, ey_pitch, ex_roll,
-	      qx,qy,qz,qw);
+	     ez_yaw, ey_pitch, ex_roll,
+	     qx,qy,qz,qw);
   }
+  
+void  showPose(P_BLOCK extrinsics, std::string message){
+    double ax,ay,az,px,py,pz;
+    ax  = extrinsics[0]; 
+    ay  = extrinsics[1]; 
+    az  = extrinsics[2]; 
+    px  = extrinsics[3]; 
+    py  = extrinsics[4]; 
+    pz  = extrinsics[5];
+    Pose6d pose(px,py,pz,ax,ay,az);
+    tf::Matrix3x3 basis = pose.getBasis();
+    double ez_yaw, ey_pitch, ex_roll;
+    double qx, qy, qz, qw;
+    pose.getEulerZYX(ez_yaw,ey_pitch,ex_roll);
+    pose.getQuaternion(qx, qy, qz, qw);
+    ROS_ERROR("%s =[\n %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf  %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf\n  %6.3lf  %6.3lf %6.3lf  %6.3lf];\n rpy= %6.3lf %6.3lf %6.3lf\n quat= %6.3lf  %6.3lf  %6.3lf %6.3lf ",
+	      message.c_str(),
+	      basis[0][0],basis[0][1], basis[0][2],px,
+	      basis[1][0],basis[1][1], basis[1][2],py,
+	      basis[2][0],basis[2][1], basis[2][2],pz,
+	      0.0, 0.0, 0.0, 1.0,
+	      ez_yaw, ey_pitch, ex_roll,
+	      qx, qy, qz, qw);
+  }
+
   void  showIntrinsics(P_BLOCK intrinsics, int num_param){
     double fx,fy,cx,cy,k1,k2,k3,p1,p2;
     fx  = intrinsics[0]; /** focal length x */
@@ -222,14 +248,23 @@ bool CeresBlocks::addMovingCamera(shared_ptr<Camera> camera_to_add, int scene_id
     if (cam->cam->camera_name_ == camera_to_add->camera_name_ && cam->scene_id == scene_id)
       return (false); // camera already exists
   }
+
   // this next line allocates the memory for a moving camera
   shared_ptr<MovingCamera> temp_moving_camera = boost::make_shared<MovingCamera>();
+
   // this next line allocates the memory for the actual camera
   shared_ptr<Camera> temp_camera = boost::make_shared<Camera>(camera_to_add->camera_name_, camera_to_add->camera_parameters_,
                                                        true);
+
+  // set things not done by constructor using values from camera_to_add
+  temp_camera->setTransformInterface(camera_to_add->getTransformInterface());
+  temp_camera->setTIReferenceFrame(reference_frame_);
+  temp_camera->camera_observer_ = camera_to_add->camera_observer_;
+  temp_camera->intermediate_frame_ = camera_to_add->intermediate_frame_;
+
   temp_moving_camera->cam = temp_camera;
   temp_moving_camera->scene_id = scene_id;
-  temp_moving_camera->cam->setTIReferenceFrame(reference_frame_);
+
   moving_cameras_.push_back(temp_moving_camera);
   return (true);
 }
@@ -345,8 +380,10 @@ void CeresBlocks::displayMovingCameras()
 		  mcam->cam->camera_parameters_.angle_axis[1],
 		  mcam->cam->camera_parameters_.angle_axis[2]);
       Pose6d ipose = pose.getInverse();
+      ROS_INFO("scene_id = %d", mcam->scene_id);
       showPose(ipose, mcam->cam->camera_name_);
-      showIntrinsics(mcam->cam->camera_parameters_.pb_intrinsics, 9);
+      P_BLOCK intrinsics = getMovingCameraParameterBlockIntrinsics(mcam->cam->camera_name_);
+      showIntrinsics(intrinsics, 9);
     }
 }
 void CeresBlocks::displayStaticTargets()
@@ -432,6 +469,14 @@ void CeresBlocks::pushTransforms()
   BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
     {
       ROS_ERROR("pushing moving camera %s",mcam->cam->camera_name_.c_str());
+      Pose6d pose;
+      pose.setAngleAxis(mcam->cam->camera_parameters_.angle_axis[0], 
+			mcam->cam->camera_parameters_.angle_axis[1], 
+			mcam->cam->camera_parameters_.angle_axis[2]);
+      pose.setOrigin(mcam->cam->camera_parameters_.position[0],
+		     mcam->cam->camera_parameters_.position[1],
+		     mcam->cam->camera_parameters_.position[2]);
+      pose.show("moving camera");
       mcam->cam->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
@@ -446,7 +491,7 @@ void CeresBlocks::pushTransforms()
     }
 
 }
-void CeresBlocks::pullTransforms()
+void CeresBlocks::pullTransforms(int scene_id)
 {
   BOOST_FOREACH(shared_ptr<Camera> cam, static_cameras_)
     {
@@ -454,7 +499,9 @@ void CeresBlocks::pullTransforms()
     }
   BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
     {
-      mcam->cam->pullTransform();
+      if(mcam->scene_id == scene_id){ // only pull transforms for cameras in current scene
+	mcam->cam->pullTransform();
+      }
     }
   BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
     {
@@ -462,7 +509,9 @@ void CeresBlocks::pullTransforms()
     }
   BOOST_FOREACH(shared_ptr<MovingTarget> mtarg, moving_targets_)
     {
-      mtarg->targ_->pullTransform();
+      if(mtarg->scene_id_ == scene_id){ // only pull transforms for targets in current scene
+	mtarg->targ_->pullTransform();
+      }
     }
 }
 void CeresBlocks::setReferenceFrame(std::string ref_frame)

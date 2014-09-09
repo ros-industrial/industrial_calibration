@@ -35,7 +35,7 @@ public:
     std::string caljob_file;
     std::string ros_package_name;
     std::string launch_file_name;
-    std::string yaml_file_path = ros::package::getPath("industrial_extrinsic_cal");
+    std::string yaml_file_path = ros::package::getPath("industrial_extrinsic_cal") + "/yaml/";
     priv_nh.getParam("yaml_file_path", yaml_file_path);
     priv_nh.getParam("camera_file", camera_file);
     priv_nh.getParam("target_file", target_file);
@@ -50,9 +50,9 @@ public:
     ROS_INFO("store results: %s",ros_package_name.c_str());
     ROS_INFO("launch_file_name: %s",launch_file_name.c_str());
     
-    cal_job_ = new industrial_extrinsic_cal::CalibrationJob(yaml_file_path+camera_file,
-							    yaml_file_path+target_file,
-							    yaml_file_path+caljob_file);
+    cal_job_ = new industrial_extrinsic_cal::CalibrationJob(yaml_file_path + camera_file,
+							    yaml_file_path +  target_file,
+							    yaml_file_path + caljob_file);
   
     if (cal_job_->load())
       {

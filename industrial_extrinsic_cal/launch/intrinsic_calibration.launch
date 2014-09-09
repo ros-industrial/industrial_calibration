@@ -24,11 +24,11 @@
     <remap from="set_mutable_joint_states" to="calibrated/set_mutable_joint_states" />
     <remap from="get_mutable_joint_states" to="calibrated/store_mutable_joint_states" /-->
     <rosparam>
-      camera_file: "godel_camera_def.yaml"
+      camera_file: "intrinsic_cameras.yaml"
       target_file: "circlegrid7x5.yaml"
-      cal_job_file: "godel_caljob.yaml"
+      cal_job_file: "intrinsic_caljob.yaml"
       store_results_package_name: "industrial_extrinsic_cal"
-      store_results_file_name: "world_to_basler_tf_broadcaster.launch"
+      store_results_file_name: "junk_tf_broadcaster.launch"
     </rosparam>
   </node>
 

@@ -21,6 +21,7 @@
 
 #include <industrial_extrinsic_cal/camera_observer.hpp>
 #include <industrial_extrinsic_cal/basic_types.h>
+#include <industrial_extrinsic_cal/ceres_costs_utils.h> 
 
 #include <iostream>
 #include <sstream>
@@ -74,9 +75,10 @@ namespace industrial_extrinsic_cal
      * @brief add a target to look for and region to look in
      * @param targ a target to look for
      * @param roi Region of interest for target
+     * @param cost_type type of cost function for observations of this target
      * @return true if successful, false if error in setting target or roi
      */
-    bool addTarget(boost::shared_ptr<Target> targ, Roi &roi, std::string &cost_type_str);
+    bool addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost_function cost_type);
 
     /**
      * @brief remove all targets
@@ -141,7 +143,7 @@ namespace industrial_extrinsic_cal
     /**
      * @brief cost type string
      */
-    std::string cost_type_str_;
+    Cost_function cost_type_;
 
     /**
      *  @brief 2D values of corner/circle locations returned from cv methods
