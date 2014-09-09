@@ -324,15 +324,13 @@ namespace industrial_extrinsic_cal
     set_request_.joint_names.push_back(housing_frame+"_pitch_joint");
     set_request_.joint_names.push_back(housing_frame+"_roll_joint");
 
-    if(get_client_.call(get_request_,get_response_)){
-      for(int i=0;i<(int) get_response_.joint_values.size();i++){
-	joint_values_.push_back(get_response_.joint_values[i]);
-      }
+    while(!get_client_.call(get_request_,get_response_)){
+      sleep(1);
+      ROS_INFO("Waiting for mutable joint state publisher to come up");
     }
-    else{
-      ROS_ERROR("get_client_ returned false");
+    for(int i=0;i<(int) get_response_.joint_values.size();i++){
+      joint_values_.push_back(get_response_.joint_values[i]);
     }
-
   }				
 
   Pose6d  ROSCameraHousingCalTInterface::pullTransform()
