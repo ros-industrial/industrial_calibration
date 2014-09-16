@@ -389,9 +389,6 @@ namespace industrial_extrinsic_cal
     set_request_.joint_values.push_back(ey);
     set_request_.joint_values.push_back(ex);
     set_client_.call(set_request_,set_response_);
-    sleep(1); // need to wait until pose takes hold before comparing results
-    Pose6d resulting_pose = getPoseFromTF(mounting_frame_, transform_frame_, tf_listener_);
-    resulting_pose.show("resulting_pose");
     return(true);
   }
 

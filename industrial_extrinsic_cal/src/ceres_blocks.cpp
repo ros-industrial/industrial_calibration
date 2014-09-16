@@ -66,14 +66,14 @@ void  showPose(P_BLOCK extrinsics, std::string message){
 	      qx, qy, qz, qw);
   }
 
-  void  showIntrinsics(P_BLOCK intrinsics, int num_param){
+  void  showIntrinsics(P_BLOCK intrinsics, bool with_distortion){
     double fx,fy,cx,cy,k1,k2,k3,p1,p2;
     fx  = intrinsics[0]; /** focal length x */
     fy  = intrinsics[1]; /** focal length y */
     cx  = intrinsics[2]; /** central point x */
     cy  = intrinsics[3]; /** central point y */
     ROS_INFO("fx = %lf fy=%lf cx=%lf cy=%lf", fx, fy, cx, cy);
-    if(num_param>4){
+    if(with_distortion){
       k1  = intrinsics[4]; /** distortion k1  */
       k2  = intrinsics[5]; /** distortion k2  */
       k3  = intrinsics[6]; /** distortion k3  */
@@ -359,7 +359,7 @@ const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string &
 		  cam->camera_parameters_.angle_axis[2]);
       Pose6d ipose = pose.getInverse();
       showPose(ipose, cam->camera_name_);
-      showIntrinsics(cam->camera_parameters_.pb_intrinsics, 9);
+      showIntrinsics(cam->camera_parameters_.pb_intrinsics, true);
     }
 }
 void CeresBlocks::displayMovingCameras()
@@ -383,7 +383,7 @@ void CeresBlocks::displayMovingCameras()
       ROS_INFO("scene_id = %d", mcam->scene_id);
       showPose(ipose, mcam->cam->camera_name_);
       P_BLOCK intrinsics = getMovingCameraParameterBlockIntrinsics(mcam->cam->camera_name_);
-      showIntrinsics(intrinsics, 9);
+      showIntrinsics(intrinsics, true);
     }
 }
 void CeresBlocks::displayStaticTargets()

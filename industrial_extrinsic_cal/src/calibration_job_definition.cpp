@@ -76,7 +76,7 @@ namespace industrial_extrinsic_cal
     if (camera_input_file.fail())
       {
 	ROS_ERROR_STREAM(
-			 "ERROR CalibrationJob::load(), couldn't open camera_input_file:    "
+			 "CalibrationJob::load(), couldn't open camera_input_file:    "
 			 << camera_def_file_name_.c_str());
 	return (false);
       }
@@ -147,7 +147,7 @@ namespace industrial_extrinsic_cal
 		  std::vector<double>joint_values;
 		  (*camera_parameters)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<0){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
+		    ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
 		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
@@ -164,7 +164,7 @@ namespace industrial_extrinsic_cal
 		  temp_camera->trigger_ = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
 		}
 		else{
-		  ROS_ERROR("NO SCENE TRIGGER OF TYPE %s", trigger_name.c_str());
+		  ROS_ERROR("No scene trigger of type %s", trigger_name.c_str());
 		}
 		if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
 		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
@@ -262,7 +262,7 @@ namespace industrial_extrinsic_cal
 		  std::vector<double>joint_values;
 		  (*camera_parameters)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<0){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
+		    ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
 		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
@@ -340,7 +340,7 @@ namespace industrial_extrinsic_cal
     if (target_input_file.fail())
       {
 	ROS_ERROR_STREAM(
-			 "ERROR CalibrationJob::load(), couldn't open target_input_file: "
+			 "CalibrationJob::load(), couldn't open target_input_file: "
 			 << target_def_file_name_.c_str());
 	return (false);
       }
@@ -608,7 +608,7 @@ namespace industrial_extrinsic_cal
 		  std::vector<double>joint_values;
 		  (*caljob_scenes)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<1){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
+		    ROS_ERROR("Couldn't read  joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
 		  temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
@@ -664,23 +664,21 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::run()
   {
-    ROS_INFO("RUNNING_OBSERVATION");
+    ROS_INFO("Running observations");
     runObservations();
-    ROS_INFO("RUNNING_OPTIMIZATIONS");
+    ROS_INFO("Running optimization");
     bool optimization_ran_ok = runOptimization();
     if(optimization_ran_ok){
       pushTransforms(); // sends updated transforms to their intefaces
     }
     else{
-      ROS_ERROR("OPTIMIZATION FAILED");
+      ROS_ERROR("Optimization failed");
     }
     return(optimization_ran_ok);
   }
 
   bool CalibrationJob::runObservations()
   {
-    ROS_DEBUG_STREAM("Running observations...");
-
     // the result of this function are twofold
     // First, it fills up observation_data_point_list_ with lists of observationspercamera
     // Second it adds parameter blocks to the ceres_blocks
@@ -701,7 +699,7 @@ namespace industrial_extrinsic_cal
 	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
 	    if(current_camera->isMoving()){
-	      ROS_ERROR("CAMERA %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
+	      ROS_ERROR("Camera %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
 	    }
 	  }
 
@@ -805,7 +803,7 @@ namespace industrial_extrinsic_cal
       total_observations += observation_data_point_list_[i].items_.size();
     }
     if(total_observations == 0){ // TODO really need more than number of parameters being computed
-      ROS_ERROR("TOO FEW OBSERVATIONS: %d",total_observations);
+      ROS_ERROR("Too few observations: %d",total_observations);
       return(false);
     }
     
@@ -1179,7 +1177,7 @@ namespace industrial_extrinsic_cal
 		default:
 		  {
 		    std::string cost_type_string = costType2String(ODP.cost_type_);
-		    ROS_ERROR("NO COST FUNTION WITH TYPE %s", cost_type_string.c_str());
+		    ROS_ERROR("No cost function of type %s", cost_type_string.c_str());
 		  }
 		  break;
 		}// end of switch
