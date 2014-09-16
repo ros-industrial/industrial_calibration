@@ -1078,7 +1078,7 @@ namespace industrial_extrinsic_cal
       T circle_diameter = T(circle_diameter_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
