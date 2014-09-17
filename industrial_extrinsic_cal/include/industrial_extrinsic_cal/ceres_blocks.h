@@ -184,8 +184,10 @@ public:
   /*! @brief sends transform to the interface*/
   void pushTransforms();
 
-  /*! @brief gets transform from interface */
-  void pullTransforms();
+  /*! @brief gets transform from interface 
+   *    @param scene_id the current scene's id. Pulls from all static cameras, static targets, and those from this scene
+   */
+  void pullTransforms(int scene_id);
 
   /*! @brief sets reference transform from interface, and may start a timer for broadcasting*/
   void setReferenceFrame(std::string ref_frame);

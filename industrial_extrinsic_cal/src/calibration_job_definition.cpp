@@ -36,6 +36,7 @@ using ceres::CostFunction;
 namespace industrial_extrinsic_cal
 {
 
+
   bool CalibrationJob::load()
   {
     if(CalibrationJob::loadCamera())
@@ -75,7 +76,7 @@ namespace industrial_extrinsic_cal
     if (camera_input_file.fail())
       {
 	ROS_ERROR_STREAM(
-			 "ERROR CalibrationJob::load(), couldn't open camera_input_file:    "
+			 "CalibrationJob::load(), couldn't open camera_input_file:    "
 			 << camera_def_file_name_.c_str());
 	return (false);
       }
@@ -146,7 +147,7 @@ namespace industrial_extrinsic_cal
 		  std::vector<double>joint_values;
 		  (*camera_parameters)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<0){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
+		    ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
 		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
@@ -161,6 +162,9 @@ namespace industrial_extrinsic_cal
 		  (*camera_parameters)[i]["pose"][5] >> pose.orientation.z;
 		  (*camera_parameters)[i]["pose"][6] >> pose.orientation.w;
 		  temp_camera->trigger_ = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
+		}
+		else{
+		  ROS_ERROR("No scene trigger of type %s", trigger_name.c_str());
 		}
 		if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
 		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
@@ -203,10 +207,7 @@ namespace industrial_extrinsic_cal
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
 		ceres_blocks_.addStaticCamera(temp_camera);
-		camera_optical_frames_.push_back(camera_optical_frame);
-		camera_housing_frames_.push_back(camera_housing_frame);
-		extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(temp_name);
-		original_extrinsics_.push_back(extrinsics);
+		
 	      }
 	  }
 
@@ -236,7 +237,7 @@ namespace industrial_extrinsic_cal
 		(*camera_parameters)[i]["distortion_k3"] >> temp_parameters.distortion_k3;
 		(*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
 		(*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
-		(*camera_parameters)[i]["scene_id"] >> scene_id;
+		
 		Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
 			    temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
 		// create a shared camera and a shared transform interface
@@ -261,7 +262,7 @@ namespace industrial_extrinsic_cal
 		  std::vector<double>joint_values;
 		  (*camera_parameters)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<0){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
+		    ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
 		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
@@ -320,10 +321,7 @@ namespace industrial_extrinsic_cal
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
 		ceres_blocks_.addMovingCamera(temp_camera, scene_id);
-		camera_optical_frames_.push_back(camera_optical_frame);
-		camera_housing_frames_.push_back(camera_housing_frame);
-		extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(temp_name, 0);
-		original_extrinsics_.push_back(extrinsics);
+
 	      }
 	  }
       } // end try
@@ -342,7 +340,7 @@ namespace industrial_extrinsic_cal
     if (target_input_file.fail())
       {
 	ROS_ERROR_STREAM(
-			 "ERROR CalibrationJob::load(), couldn't open target_input_file: "
+			 "CalibrationJob::load(), couldn't open target_input_file: "
 			 << target_def_file_name_.c_str());
 	return (false);
       }
@@ -610,7 +608,7 @@ namespace industrial_extrinsic_cal
 		  std::vector<double>joint_values;
 		  (*caljob_scenes)[i]["joint_values"] >> joint_values;
 		  if(joint_values.size()<1){
-		    ROS_ERROR("COULDN'T READ joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
+		    ROS_ERROR("Couldn't read  joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 		  }
 		  temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
 		}
@@ -641,6 +639,7 @@ namespace industrial_extrinsic_cal
 		    (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
 		    (*obs_node)[j]["target"] >> target_name;
 		    (*obs_node)[j]["cost_type"] >> cost_type_string;
+		    cost_type = string2CostType(cost_type_string);
 		    if((temp_cam = ceres_blocks_.getCameraByName(camera_name)) == NULL){
 		      ROS_ERROR("Couldn't find camea %s",camera_name.c_str());
 		    }
@@ -665,23 +664,21 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::run()
   {
-    ROS_INFO("RUNNING_OBSERVATION");
+    ROS_INFO("Running observations");
     runObservations();
-    ROS_INFO("RUNNING_OPTIMIZATIONS");
+    ROS_INFO("Running optimization");
     bool optimization_ran_ok = runOptimization();
     if(optimization_ran_ok){
       pushTransforms(); // sends updated transforms to their intefaces
     }
     else{
-      ROS_ERROR("OPTIMIZATION FAILED");
+      ROS_ERROR("Optimization failed");
     }
     return(optimization_ran_ok);
   }
 
   bool CalibrationJob::runObservations()
   {
-    ROS_DEBUG_STREAM("Running observations...");
-
     // the result of this function are twofold
     // First, it fills up observation_data_point_list_ with lists of observationspercamera
     // Second it adds parameter blocks to the ceres_blocks
@@ -699,10 +696,10 @@ namespace industrial_extrinsic_cal
 
 	BOOST_FOREACH(shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {			// clear camera of existing observations
-       	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
+	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
-	    if(current_camera->is_moving()){
-	      ROS_ERROR("CAMERA %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
+	    if(current_camera->isMoving()){
+	      ROS_ERROR("Camera %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
 	    }
 	  }
 
@@ -713,7 +710,7 @@ namespace industrial_extrinsic_cal
 	
 	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
 
-	pullTransforms(); // gets transforms of targets and cameras from their interfaces
+	pullTransforms(scene_id); // gets transforms of targets and cameras from their interfaces
 	
 	BOOST_FOREACH( shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {// trigger the cameras
@@ -739,10 +736,11 @@ namespace industrial_extrinsic_cal
 	    while (!camera->camera_observer_->observationsDone()) ;
 
 	    camera_name = camera->camera_name_;
-	    if (camera->is_moving())
+	    if (camera->isMoving())
 	      {
 		// next line does nothing if camera already exist in blocks
 		ceres_blocks_.addMovingCamera(camera, scene_id);
+		pullTransforms(scene_id); // gets transforms of targets and cameras from their interfaces
 		intrinsics = ceres_blocks_.getMovingCameraParameterBlockIntrinsics(camera_name);
 		extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(camera_name, scene_id);
 	      }
@@ -805,9 +803,11 @@ namespace industrial_extrinsic_cal
       total_observations += observation_data_point_list_[i].items_.size();
     }
     if(total_observations == 0){ // TODO really need more than number of parameters being computed
-      ROS_ERROR("TOO FEW OBSERVATIONS: %d",total_observations);
+      ROS_ERROR("Too few observations: %d",total_observations);
       return(false);
     }
+    
+    ceres_blocks_.displayMovingCameras();
 
     // take all the data collected and create a Ceres optimization problem and run it
     ROS_INFO("Running Optimization with %d scenes",(int)scene_list_.size());
@@ -822,7 +822,7 @@ namespace industrial_extrinsic_cal
 	    // take all the data collected and create a Ceres optimization problem and run it
 	    P_BLOCK extrinsics;
 	    P_BLOCK intrinsics;
-	    P_BLOCK target_pose;
+	    P_BLOCK target_pose_params;
 	    P_BLOCK point_position;
 	    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items_)
 	      {
@@ -850,7 +850,7 @@ namespace industrial_extrinsic_cal
 		double image_x        = ODP.image_x_;
 		double image_y        = ODP.image_y_;
 		Point3d point;
-		Pose6d link_pose = ODP.intermediate_frame_; // identity except when camera mounted on robot
+		Pose6d camera_mounting_pose = ODP.intermediate_frame_; // identity except when camera mounted on robot
 		point.x = ODP.point_position_[0];// location of point within target frame
 		point.y = ODP.point_position_[1];
 		point.z = ODP.point_position_[2];
@@ -859,16 +859,21 @@ namespace industrial_extrinsic_cal
 	      
 		// pull out pointers to the parameter blocks in the observation point data
 		extrinsics        = ODP.camera_extrinsics_;
-		target_pose     = ODP.target_pose_;
+		target_pose_params     = ODP.target_pose_;
+		Pose6d target_pose;
+		target_pose.setAngleAxis(target_pose_params[0],target_pose_params[1], target_pose_params[2]);
+		target_pose.setOrigin(target_pose_params[3],target_pose_params[4], target_pose_params[5]);
 		point_position = ODP.point_position_;
 		bool point_zero=false;
+		/*
 		if(point.x == 0.0 && point.y == 0.0 && point.z == 0.0){
 		  point_zero=true;
-		  ROS_INFO("Observing Target Origin");
-		  showPose(target_pose, "target");
+		  ROS_ERROR("Observing Target Origin");
+		  showPose(target_pose_params, "target");
 		  showPose(extrinsics,"extrinsics");
-		  showPose((P_BLOCK) &link_pose.pb_pose[0], "link_pose");
+		  showPose((P_BLOCK) &camera_mounting_pose.pb_pose[0], "camera_mounting_pose");
 		}
+        */
 		
 		switch( ODP.cost_type_ ){
 		case cost_functions::CameraReprjErrorWithDistortion:
@@ -912,7 +917,7 @@ namespace industrial_extrinsic_cal
 						     focal_length_x, focal_length_y,
 						     center_x, center_y);
 
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::TargetCameraReprjErrorPK:
@@ -925,7 +930,7 @@ namespace industrial_extrinsic_cal
 						       center_y,
 						       point);
 		    // add it as a residual using parameter blocks
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkTargetCameraReprjError:
@@ -936,8 +941,8 @@ namespace industrial_extrinsic_cal
 							 focal_length_y,
 							 center_x,
 							 center_y,
-							 link_pose);
-		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+							 camera_mounting_pose);
+		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkTargetCameraReprjErrorPK:
@@ -948,9 +953,9 @@ namespace industrial_extrinsic_cal
 							   focal_length_y,
 							   center_x,
 							   center_y,
-							   link_pose,
+							   camera_mounting_pose,
 							   point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkCameraTargetReprjError:
@@ -961,8 +966,8 @@ namespace industrial_extrinsic_cal
 							 focal_length_y,
 							 center_x,
 							 center_y,
-							 link_pose);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+							 camera_mounting_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkCameraTargetReprjErrorPK:
@@ -973,10 +978,10 @@ namespace industrial_extrinsic_cal
 							     focal_length_y,
 							     center_x,
 							     center_y,
-							     link_pose,
+							     camera_mounting_pose,
 							     point);
 		      
-		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		    }
 		    break;
 		case cost_functions::CircleCameraReprjErrorWithDistortion:
@@ -1025,7 +1030,7 @@ namespace industrial_extrinsic_cal
 		    CostFunction* cost_function =
 		      CircleTargetCameraReprjErrorWithDistortion::Create(image_x, image_y,
 									 circle_dia);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose, point.pb);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjErrorWithDistortionPK:
@@ -1034,7 +1039,7 @@ namespace industrial_extrinsic_cal
 		      CircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
 									   circle_dia,
 									   point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjError:
@@ -1046,7 +1051,7 @@ namespace industrial_extrinsic_cal
 							   focal_length_y,
 							   center_x,
 							   center_y);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjErrorPK:
@@ -1059,7 +1064,7 @@ namespace industrial_extrinsic_cal
 							     center_x,
 							     center_y,
 							     point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkCircleTargetCameraReprjError:
@@ -1071,8 +1076,8 @@ namespace industrial_extrinsic_cal
 							       focal_length_y,
 							       center_x,
 							       center_y,
-							       link_pose);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+							       camera_mounting_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkCircleTargetCameraReprjErrorPK:
@@ -1084,9 +1089,9 @@ namespace industrial_extrinsic_cal
 								 focal_length_y,
 								 center_x,
 								 center_y,
-								 link_pose,
+								 camera_mounting_pose,
 								 point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkCameraCircleTargetReprjError:
@@ -1098,8 +1103,8 @@ namespace industrial_extrinsic_cal
 							       focal_length_y,
 							       center_x,
 							       center_y,
-							       link_pose);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose, point.pb);
+							       camera_mounting_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkCameraCircleTargetReprjErrorPK:
@@ -1111,14 +1116,14 @@ namespace industrial_extrinsic_cal
 								 focal_length_y,
 								 center_x,
 								 center_y,
-								 link_pose,
+								 camera_mounting_pose,
 								 point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		    if(point_zero){
 		      double residual[2];
 		      double *params[2];
 		      params[0] = &extrinsics[0];
-		      params[1] = &target_pose[0];
+		      params[1] = &target_pose_params[0];
 		      cost_function->Evaluate(params, residual, NULL);
 		      ROS_INFO("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
 		      point_zero=false;
@@ -1128,9 +1133,43 @@ namespace industrial_extrinsic_cal
 								focal_length_y,
 								center_x,
 								center_y,
-								link_pose,
+								camera_mounting_pose,
 								point);
-		      testIt.test_residual(extrinsics, target_pose, residual);
+		      testIt.test_residual(extrinsics, target_pose_params, residual);
+
+		    }
+		  }
+		  break;
+		case cost_functions::FixedCircleTargetCameraReprjErrorPK:
+		  {
+		    CostFunction* cost_function =
+		      FixedCircleTargetCameraReprjErrorPK::Create(image_x, image_y, 
+								  circle_dia,
+								  focal_length_x,
+								  focal_length_y,
+								  center_x,
+								  center_y,
+								  target_pose,
+								  camera_mounting_pose,
+								  point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics);
+		    if(point_zero){
+		      double residual[2];
+		      double *params[2];
+		      params[0] = &extrinsics[0];
+		      cost_function->Evaluate(params, residual, NULL);
+		      ROS_ERROR("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
+		      point_zero=false;
+		      FixedCircleTargetCameraReprjErrorPK testIt(image_x, image_y, 
+								 circle_dia,
+								 focal_length_x,
+								 focal_length_y,
+								 center_x,
+								 center_y,
+								 target_pose,
+								 camera_mounting_pose,
+								 point);
+		      testIt.test_residual(extrinsics, residual);
 
 		    }
 		  }
@@ -1138,7 +1177,7 @@ namespace industrial_extrinsic_cal
 		default:
 		  {
 		    std::string cost_type_string = costType2String(ODP.cost_type_);
-		    ROS_ERROR("NO COST FUNTION WITH TYPE %s", cost_type_string.c_str());
+		    ROS_ERROR("No cost function of type %s", cost_type_string.c_str());
 		  }
 		  break;
 		}// end of switch
@@ -1173,11 +1212,12 @@ namespace industrial_extrinsic_cal
 
   void CalibrationJob::show()
   {
+    ceres_blocks_.pullTransforms(-1); // since we don't know which scene for any moving objects, only pull static transforms
     ceres_blocks_.displayAllCamerasAndTargets();
   }
-  void CalibrationJob::pullTransforms()
+  void CalibrationJob::pullTransforms(int scene_id)
   {
-    ceres_blocks_.pullTransforms();
+    ceres_blocks_.pullTransforms( scene_id);
   }
   void CalibrationJob::pushTransforms()
   {

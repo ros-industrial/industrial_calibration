@@ -40,7 +40,7 @@ Camera::~Camera()
 {
 }
 
-bool Camera::is_moving()
+bool Camera::isMoving()
 {
   return (is_moving_);
 }
@@ -81,7 +81,9 @@ int Camera::getObservations(CameraObservations &camera_observations)
   camera_observer_->getObservations(camera_observations);
   for(int i=0; i<(int) camera_observations.size(); i++){// Add last pulled frame to observation's intermediate frame
     camera_observations[i].intermediate_frame = intermediate_frame_;
-    if(i==0) ROS_ERROR("intermediate frame pos = %lf %lf %lf",intermediate_frame_.x, intermediate_frame_.y, intermediate_frame_.z);
+    if(i==0) ROS_ERROR("intermediate frame pose = %lf %lf %lf  %lf %lf %lf",
+		       intermediate_frame_.x, intermediate_frame_.y, intermediate_frame_.z,
+		       intermediate_frame_.ax, intermediate_frame_.ay, intermediate_frame_.az);
   }
 }
 }//end namespace industrial_extrinsic_cal

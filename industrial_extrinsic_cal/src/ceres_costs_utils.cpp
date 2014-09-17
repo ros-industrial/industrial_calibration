@@ -48,6 +48,7 @@ namespace industrial_extrinsic_cal
     if(cost_type_str == "LinkCircleTargetCameraReprjErrorPK") return(cost_functions::LinkCircleTargetCameraReprjErrorPK);
     if(cost_type_str == "LinkCameraCircleTargetReprjError") return(cost_functions::LinkCameraCircleTargetReprjError);
     if(cost_type_str == "LinkCameraCircleTargetReprjErrorPK") return(cost_functions::LinkCameraCircleTargetReprjErrorPK);
+    if(cost_type_str == "FixedCircleTargetCameraReprjErrorPK") return(cost_functions::FixedCircleTargetCameraReprjErrorPK);
     return(cost_functions::NullCostType);
   }
 
@@ -79,6 +80,7 @@ namespace industrial_extrinsic_cal
     if(cost_type == cost_functions::LinkCircleTargetCameraReprjErrorPK) return("LinkCircleTargetCameraReprjErrorPK");
     if(cost_type == cost_functions::LinkCameraCircleTargetReprjError) return("LinkCameraCircleTargetReprjError");
     if(cost_type == cost_functions::LinkCameraCircleTargetReprjErrorPK) return("LinkCameraCircleTargetReprjErrorPK");
+    if(cost_type == cost_functions::FixedCircleTargetCameraReprjErrorPK) return("FixedCircleTargetCameraReprjErrorPK");
     return("NullCostType");
   }
 }// end of namespace

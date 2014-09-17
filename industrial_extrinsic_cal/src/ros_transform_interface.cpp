@@ -21,11 +21,16 @@
 #include <fstream>
 namespace industrial_extrinsic_cal
 {
+  /*! @brief uses tf listener to get a Pose6d. The pose returned transform points in the to_frame into the from_frame.
+   *   @param from_frame the starting frame
+   *   @param to_frame  the ending frame
+   *   @param tf_listener  the listener object, so we don't have to keep creating it
+   */
   Pose6d getPoseFromTF(const std::string &from_frame, const std::string &to_frame, const tf::TransformListener &tf_listener)
   {
     // get all the information from tf and from the mutable joint state publisher
     tf::StampedTransform tf_transform; 
-    ros::Time now = ros::Time::now()-ros::Duration(.5);
+    ros::Time now = ros::Time::now();
     while(! tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0))){
       ROS_INFO("waiting for tranform from  %s to  %s",from_frame.c_str(),to_frame.c_str());
     }
@@ -53,7 +58,7 @@ namespace industrial_extrinsic_cal
       return(pose);
     }
     else{
-      pose_ = getPoseFromTF(transform_frame_, ref_frame_, tf_listener_);
+      pose_ = getPoseFromTF(ref_frame_, transform_frame_, tf_listener_);
       return(pose_);
     }
   }
@@ -324,15 +329,13 @@ namespace industrial_extrinsic_cal
     set_request_.joint_names.push_back(housing_frame+"_pitch_joint");
     set_request_.joint_names.push_back(housing_frame+"_roll_joint");
 
-    if(get_client_.call(get_request_,get_response_)){
-      for(int i=0;i<(int) get_response_.joint_values.size();i++){
-	joint_values_.push_back(get_response_.joint_values[i]);
-      }
+    while(!get_client_.call(get_request_,get_response_)){
+      sleep(1);
+      ROS_INFO("Waiting for mutable joint state publisher to come up");
     }
-    else{
-      ROS_ERROR("get_client_ returned false");
+    for(int i=0;i<(int) get_response_.joint_values.size();i++){
+      joint_values_.push_back(get_response_.joint_values[i]);
     }
-
   }				
 
   Pose6d  ROSCameraHousingCalTInterface::pullTransform()
@@ -365,16 +368,19 @@ namespace industrial_extrinsic_cal
 
   bool  ROSCameraHousingCalTInterface::pushTransform(Pose6d &pose)
   {
-    pose.getInverse().show("results being pushed");
+    Pose6d pose_inverse = pose.getInverse();
+    pose_inverse.show("results being pushed");
+
     // get transform from optical frame to housing frame from tf
     Pose6d optical2housing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
     
     // compute the desired transform
-    Pose6d mount2housing =  pose.getInverse() * optical2housing;
+    Pose6d mount2housing =  pose_inverse * optical2housing;
 
     // convert to xyz, roll, pitch and yaw for client
     double ez,ey,ex;
     mount2housing.getEulerZYX(ez,ey,ex);
+
     set_request_.joint_values.clear();
     set_request_.joint_values.push_back(mount2housing.x);
     set_request_.joint_values.push_back(mount2housing.y);
@@ -383,9 +389,6 @@ namespace industrial_extrinsic_cal
     set_request_.joint_values.push_back(ey);
     set_request_.joint_values.push_back(ex);
     set_client_.call(set_request_,set_response_);
-
-    Pose6d resulting_pose = getPoseFromTF(mounting_frame_, transform_frame_, tf_listener_);
-    resulting_pose.show("resulting_pose");
     return(true);
   }
 

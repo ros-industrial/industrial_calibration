@@ -1,9 +1,9 @@
 ---
-reference_frame: world_frame
+reference_frame: zcirclegrid7x5
 scenes: 
 -
      scene_id: 0
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.8748633861541748
@@ -21,10 +21,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 1
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.8280428647994995
@@ -42,10 +42,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 2
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.6489591598510742
@@ -63,10 +63,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 3
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.5770665407180786
@@ -84,10 +84,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 4
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.4881468117237091
@@ -105,10 +105,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 5
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
         - 0.06187056005001068
@@ -126,10 +126,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 6
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.06187056005001068
@@ -147,10 +147,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 7
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - -0.21687079966068268
@@ -168,10 +168,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 8
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - -0.44730880856513977
@@ -189,10 +189,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 9
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.8830616474151611
@@ -210,10 +210,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 10
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.9225360751152039
@@ -231,10 +231,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 11
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.9762254357337952
@@ -252,10 +252,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 12
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.0012633800506592
@@ -273,10 +273,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 13
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.0533676147460938
@@ -294,10 +294,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 14
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.6176509857177734
@@ -315,10 +315,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 15
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.5094372034072876
@@ -336,10 +336,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 15
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.5006763935089111
@@ -357,10 +357,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 16
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.3609819412231445
@@ -378,10 +378,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 17
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.1910849809646606
@@ -399,10 +399,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 18
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.228463053703308
@@ -420,10 +420,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 19
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.1492244005203247
@@ -441,10 +441,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 20
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.9860599637031555
@@ -462,10 +462,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 21
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 0.8963902592658997
@@ -483,10 +483,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 22
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.0634067058563232
@@ -504,10 +504,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 23
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.0629123449325562
@@ -525,10 +525,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 24
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.0502485036849976
@@ -546,10 +546,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 25
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.26106858253479
@@ -567,10 +567,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 26
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.072849154472351
@@ -588,10 +588,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 27
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
        - 1.1337652206420898
@@ -609,10 +609,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 28
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
         - 0.8391386866569519
@@ -630,10 +630,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 29
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
         - 0.8541035056114197
@@ -651,10 +651,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 30
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
         - 0.8911747336387634
@@ -672,10 +672,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 31
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
         - 0.8755451440811157
@@ -693,10 +693,10 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 -
      scene_id: 31
-     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+     trigger: ROS_ROBOT_JV_ACTION_TRIGGER
      trig_action_server: rosRobotSceneTrigger_joint_values
      joint_values: 
         - 1.1969141960144043
@@ -714,6 +714,6 @@ scenes:
           roi_x_max: 640
           roi_y_min: 0
           roi_y_max: 480
-          cost_type: LinkCameraCircleTargetReprjErrorPK
+          cost_type: CircleCameraReprjErrorWithDistortionPK
 
 optimization_parameters: xx

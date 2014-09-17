@@ -120,50 +120,53 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   observation_pts_.clear();
   std::vector<cv::KeyPoint> key_points;
   ROS_INFO("Pattern type %d, rows %d, cols %d",pattern_,pattern_rows_,pattern_cols_);
+  
+  cv::Size pattern_size(pattern_cols_, pattern_rows_); // note they use cols then rows for some unknown reason
   switch (pattern_)
-  {
+    {
     case pattern_options::Chessboard:
       ROS_INFO_STREAM("Finding Chessboard Corners...");
-      successful_find = cv::findChessboardCorners(image_roi_, cv::Size(pattern_rows_, pattern_cols_), observation_pts_,
-                                                  cv::CALIB_CB_ADAPTIVE_THRESH);
+      successful_find = cv::findChessboardCorners(image_roi_, pattern_size, observation_pts_, cv::CALIB_CB_ADAPTIVE_THRESH);
       break;
     case pattern_options::CircleGrid:
-      if (sym_circle_)
-      {
-        ROS_INFO_STREAM("Finding Circles in grid, symmetric...");
-        successful_find = cv::findCirclesGrid(image_roi_, cv::Size(pattern_rows_, pattern_cols_), observation_pts_,
-                                              cv::CALIB_CB_SYMMETRIC_GRID);
-        if(successful_find) ROS_INFO_STREAM("FOUND");
-      }
-      else
-      {
-        ROS_INFO_STREAM("Finding Circles in grid, asymmetric...");
-        successful_find = cv::findCirclesGrid(image_roi_, cv::Size(pattern_rows_, pattern_cols_), observation_pts_,
-                                              cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING);
-      }
+      if (sym_circle_) // symetric circle grid
+	{
+	  ROS_INFO_STREAM("Finding Circles in grid, symmetric...");
+	  successful_find = cv::findCirclesGrid(image_roi_, pattern_size, observation_pts_, cv::CALIB_CB_SYMMETRIC_GRID);
+	}
+      else         // asymetric circle grid
+	{
+	  ROS_INFO_STREAM("Finding Circles in grid, asymmetric...");
+	  successful_find = cv::findCirclesGrid(image_roi_, pattern_size , observation_pts_, 
+						cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING);
+	}
       break;
-
-  }
+    }
+  
+  if(successful_find)  ROS_INFO_STREAM("FOUND");
+  ROS_INFO_STREAM("Number of keypoints found: "<<observation_pts_.size());
+  
   // next block of code for publishing the roi as an image, when target is found, circles are placed on image, with a line between pt1 and pt2
-  if(successful_find){
-    for(int i=0;i<(int)observation_pts_.size();i++){
-      cv::Point p;
-      p.x = observation_pts_[i].x;
-      p.y = observation_pts_[i].y;
-      circle(image_roi_,p,10.0,255,5);
-    }
-    if(observation_pts_.size()>1){
-      cv::Point p1,p2;
-      p1.x = observation_pts_[0].x; 
-      p1.y = observation_pts_[0].y; 
-      p2.x = observation_pts_[6].x; 
-      p2.y = observation_pts_[6].y; 
-      line(image_roi_,p1,p2,255,3);
-    }
-    out_bridge_->image = image_roi_;
-    results_pub_.publish(out_bridge_->toImageMsg());
+  for(int i=0;i<(int)observation_pts_.size();i++){
+    cv::Point p;
+    p.x = observation_pts_[i].x;
+    p.y = observation_pts_[i].y;
+    circle(image_roi_,p,10.0,255,5);
   }
-  else  {
+  
+  // Draw line through first column of observe points. These correspond to the first set of point in the target
+  if(observation_pts_.size()>pattern_cols_){
+    cv::Point p1,p2;
+    p1.x = observation_pts_[0].x; 
+    p1.y = observation_pts_[0].y; 
+    p2.x = observation_pts_[pattern_cols_-1].x; 
+    p2.y = observation_pts_[pattern_cols_-1].y; 
+    line(image_roi_,p1,p2,255,3);
+  }
+  out_bridge_->image = image_roi_;
+  results_pub_.publish(out_bridge_->toImageMsg());
+  
+  if(!successful_find){
     ROS_WARN_STREAM("Pattern not found for pattern: "<<pattern_ <<" with symmetry: "<< sym_circle_);
       cv::Point p;
       p.x = image_roi_.cols/2;
@@ -174,7 +177,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     return 0;
   }
 
-  ROS_INFO_STREAM("Number of points found on board: "<<observation_pts_.size());
+  // copy the points found into a camera observation structure indicating their corresponece with target points
   camera_obs_.resize(observation_pts_.size());
   for (int i = 0; i < observation_pts_.size(); i++)
   {
