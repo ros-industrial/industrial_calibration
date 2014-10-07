@@ -72,15 +72,6 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::loadCamera()
   {
-    //    std::ifstream camera_input_file(camera_def_file_name_.c_str());
-    //    if (camera_input_file.fail())
-    //      {
-    //	ROS_ERROR_STREAM(
-    //			 "CalibrationJob::load(), couldn't open camera_input_file:    "
-    //			 << camera_def_file_name_.c_str());
-    //	return (false);
-    //      }
-
     string temp_name, temp_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame, parent_frame;
     CameraParameters temp_parameters;
     P_BLOCK extrinsics;
@@ -98,8 +89,6 @@ namespace industrial_extrinsic_cal
 	//	camera_parser.GetNextDocument(camera_doc);
 
 	YAML::Node camera_doc = YAML::LoadFile(camera_def_file_name_.c_str());
-
-
 	YAML::Node camera_parameters = camera_doc["static_cameras"];
 
 	ROS_DEBUG_STREAM("Found " << camera_parameters.size() << " static cameras ");
@@ -527,14 +516,6 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::loadCalJob()
   {
-    std::ifstream caljob_input_file(caljob_def_file_name_.c_str());
-    if (caljob_input_file.fail())
-      {
-	ROS_ERROR_STREAM(
-			 "ERROR CalibrationJob::load(), couldn't open caljob_input_file: "
-			 << caljob_def_file_name_.c_str());
-	return (false);
-      }
 
     std::string opt_params;
     int scene_id_num;
