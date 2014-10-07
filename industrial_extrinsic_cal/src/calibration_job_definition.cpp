@@ -72,15 +72,6 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::loadCamera()
   {
-    std::ifstream camera_input_file(camera_def_file_name_.c_str());
-    if (camera_input_file.fail())
-      {
-	ROS_ERROR_STREAM(
-			 "CalibrationJob::load(), couldn't open camera_input_file:    "
-			 << camera_def_file_name_.c_str());
-	return (false);
-      }
-
     string temp_name, temp_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame, parent_frame;
     CameraParameters temp_parameters;
     P_BLOCK extrinsics;
@@ -93,237 +84,237 @@ namespace industrial_extrinsic_cal
     std::string transform_interface;
     try
       {
-	YAML::Parser camera_parser(camera_input_file);
-	YAML::Node camera_doc;
-	camera_parser.GetNextDocument(camera_doc);
+	//	YAML::Parser camera_parser(camera_input_file);
+	//	YAML::Node camera_doc;
+	//	camera_parser.GetNextDocument(camera_doc);
 
-	// read in all static cameras
-	if (const YAML::Node *camera_parameters = camera_doc.FindValue("static_cameras"))
+	YAML::Node camera_doc = YAML::LoadFile(camera_def_file_name_.c_str());
+	YAML::Node camera_parameters = camera_doc["static_cameras"];
+
+	ROS_DEBUG_STREAM("Found " << camera_parameters.size() << " static cameras ");
+	for (unsigned int i = 0; i < camera_parameters.size(); i++)// for each static camera
 	  {
-	    ROS_DEBUG_STREAM("Found "<<camera_parameters->size()<<" static cameras ");
-	    for (unsigned int i = 0; i < camera_parameters->size(); i++)
-	      {
-		(*camera_parameters)[i]["camera_name"] >> temp_name;
-		(*camera_parameters)[i]["trigger"] >> trigger_name;
-		(*camera_parameters)[i]["image_topic"] >> temp_topic;
-		(*camera_parameters)[i]["camera_optical_frame"] >> camera_optical_frame;
-		(*camera_parameters)[i]["transform_interface"] >> transform_interface;
-		(*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
-		(*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
-		(*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
-		(*camera_parameters)[i]["position_x"] >> temp_parameters.position[0];
-		(*camera_parameters)[i]["position_y"] >> temp_parameters.position[1];
-		(*camera_parameters)[i]["position_z"] >> temp_parameters.position[2];
-		(*camera_parameters)[i]["focal_length_x"] >> temp_parameters.focal_length_x;
-		(*camera_parameters)[i]["focal_length_y"] >> temp_parameters.focal_length_y;
-		(*camera_parameters)[i]["center_x"] >> temp_parameters.center_x;
-		(*camera_parameters)[i]["center_y"] >> temp_parameters.center_y;
-		(*camera_parameters)[i]["distortion_k1"] >> temp_parameters.distortion_k1;
-		(*camera_parameters)[i]["distortion_k2"] >> temp_parameters.distortion_k2;
-		(*camera_parameters)[i]["distortion_k3"] >> temp_parameters.distortion_k3;
-		(*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
-		(*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
-		Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
-			    temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
-		// create a shared camera and a shared transform interface
-		shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
-		shared_ptr<TransformInterface> temp_ti;
+	    YAML::Node this_camera = camera_parameters[i];
+	    temp_name                      = this_camera["camera_name"].as<std::string>();
+	    trigger_name                   = this_camera["trigger"].as<std::string>();
+	    temp_topic                     = this_camera["image_topic"].as<std::string>();
+	    camera_optical_frame           = this_camera["camera_optical_frame"].as<std::string>();
+	    transform_interface            = this_camera["transform_interface"].as<std::string>();
+	    temp_parameters.angle_axis[0]  = this_camera["angle_axis_ax"].as<double>();
+	    temp_parameters.angle_axis[1]  = this_camera["angle_axis_ay"].as<double>();
+	    temp_parameters.angle_axis[2]  = this_camera["angle_axis_az"].as<double>();
+	    temp_parameters.position[0]    = this_camera["position_x"].as<double>();
+	    temp_parameters.position[1]    = this_camera["position_y"].as<double>();
+	    temp_parameters.position[2]    = this_camera["position_z"].as<double>();
+	    temp_parameters.focal_length_x = this_camera["focal_length_x"].as<double>();
+	    temp_parameters.focal_length_y = this_camera["focal_length_y"].as<double>();
+	    temp_parameters.center_x       = this_camera["center_x"].as<double>();
+	    temp_parameters.center_y       = this_camera["center_y"].as<double>();
+	    temp_parameters.distortion_k1  = this_camera["distortion_k1"].as<double>();
+	    temp_parameters.distortion_k2  = this_camera["distortion_k2"].as<double>();
+	    temp_parameters.distortion_k3  = this_camera["distortion_k3"].as<double>();
+	    temp_parameters.distortion_p1  = this_camera["distortion_p1"].as<double>();
+	    temp_parameters.distortion_p2  = this_camera["distortion_p2"].as<double>();
+	    Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
+			temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
+	    // create a shared camera and a shared transform interface
+	    shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
+	    shared_ptr<TransformInterface> temp_ti;
     
-		// handle all the different trigger cases
-		if(trigger_name == std::string("NO_WAIT_TRIGGER")){
-		  temp_camera->trigger_ = make_shared<NoWaitTrigger>();
-		}
-		else if(trigger_name == std::string("ROS_PARAM_TRIGGER")){
-		  (*camera_parameters)[i]["trig_param"] >> trig_param;
-		  temp_camera->trigger_ = make_shared<ROSParamTrigger>(trig_param);
-		}
-		else if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
-		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
-		  (*camera_parameters)[i]["trig_action_msg"] >> trig_action_msg;
-		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
-		}
-		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
-		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
-		  std::vector<double>joint_values;
-		  (*camera_parameters)[i]["joint_values"] >> joint_values;
-		  if(joint_values.size()<0){
-		    ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
-		  }
-		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
-		}
-		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
-		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
-		  geometry_msgs::Pose pose;
-		  (*camera_parameters)[i]["pose"][0] >> pose.position.x;
-		  (*camera_parameters)[i]["pose"][1] >> pose.position.y;
-		  (*camera_parameters)[i]["pose"][2] >> pose.position.z;
-		  (*camera_parameters)[i]["pose"][3] >> pose.orientation.x;
-		  (*camera_parameters)[i]["pose"][4] >> pose.orientation.y;
-		  (*camera_parameters)[i]["pose"][5] >> pose.orientation.z;
-		  (*camera_parameters)[i]["pose"][6] >> pose.orientation.w;
-		  temp_camera->trigger_ = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
-		}
-		else{
-		  ROS_ERROR("No scene trigger of type %s", trigger_name.c_str());
-		}
-		if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
-		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
-		}
-		else if(transform_interface == std::string("ros_bti")){ // this option makes no sense for a camera
-		  temp_ti = make_shared<ROSBroadcastTransInterface>(camera_optical_frame, pose);
-		}
-		else if(transform_interface == std::string("ros_camera_lti")){ 
-		  temp_ti = make_shared<ROSCameraListenerTransInterface>(camera_optical_frame);
-		}
-		else if(transform_interface == std::string("ros_camera_bti")){ 
-		  temp_ti = make_shared<ROSCameraBroadcastTransInterface>(camera_optical_frame, pose);
-		}
-		else if(transform_interface == std::string("ros_camera_housing_lti")){ 
-		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame;
-		  temp_ti = make_shared<ROSCameraHousingListenerTInterface>(camera_optical_frame,camera_housing_frame);
-		}
-		else if(transform_interface == std::string("ros_camera_housing_bti")){ 
-		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; // note, this is unused
-		  temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame,  pose);
-		}
-		else if(transform_interface == std::string("ros_camera_housing_cti")){ 
-		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; 
-		  (*camera_parameters)[i]["camera_mounting_frame"] >> camera_mounting_frame; 
-		  temp_ti = make_shared<ROSCameraHousingCalTInterface>(camera_optical_frame, 
-								       camera_housing_frame,
-								       camera_mounting_frame);
-		}
-		else if(transform_interface == std::string("ros_scti")){ 
-		  (*camera_parameters)[i]["parent_frame"] >> camera_mounting_frame; 
-		  temp_ti = make_shared<ROSSimpleCalTInterface>(camera_optical_frame,  camera_mounting_frame);
-		}
-		else if(transform_interface == std::string("default_ti")){
-		  temp_ti = make_shared<DefaultTransformInterface>(pose);
-		}
-		else{
-		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
-		  temp_ti = make_shared<DefaultTransformInterface>(pose);
-		}
-		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
-		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
-		ceres_blocks_.addStaticCamera(temp_camera);
-		
+	    // handle all the different trigger cases
+	    if(trigger_name == std::string("NO_WAIT_TRIGGER")){
+	      temp_camera->trigger_ = make_shared<NoWaitTrigger>();
+	    }
+	    else if(trigger_name == std::string("ROS_PARAM_TRIGGER")){
+	      trig_param = this_camera["trig_param"].as<std::string>();
+	      temp_camera->trigger_ = make_shared<ROSParamTrigger>(trig_param);
+	    }
+	    else if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
+	      trig_action_server = this_camera["trig_action_server"].as<std::string>();
+	      trig_action_msg = this_camera["trig_action_msg"].as<std::string>();
+	      temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
+	    }
+	    else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
+	      trig_action_server = this_camera["trig_action_server"].as<std::string>();
+	      std::vector<double>joint_values;
+	      joint_values = this_camera["joint_values"].as< std::vector<double> >();
+	      if(joint_values.size()<0){
+		ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 	      }
-	  }
+	      temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
+	    }
+	    else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
+	      trig_action_server = this_camera["trig_action_server"].as<std::string>();
+	      geometry_msgs::Pose pose;
+	      pose.position.x = this_camera["pose"][0].as<double>();
+	      pose.position.y = this_camera["pose"][1].as<double>();
+	      pose.position.z = this_camera["pose"][2].as<double>();
+	      pose.orientation.x = this_camera["pose"][3].as<double>();
+	      pose.orientation.y = this_camera["pose"][4].as<double>();
+	      pose.orientation.z = this_camera["pose"][5].as<double>();
+	      pose.orientation.w = this_camera["pose"][6].as<double>();
+	      temp_camera->trigger_ = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
+	    }
+	    else{
+	      ROS_ERROR("No scene trigger of type %s", trigger_name.c_str());
+	    }
+	    if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
+	      temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
+	    }
+	    else if(transform_interface == std::string("ros_bti")){ // this option makes no sense for a camera
+	      temp_ti = make_shared<ROSBroadcastTransInterface>(camera_optical_frame, pose);
+	    }
+	    else if(transform_interface == std::string("ros_camera_lti")){ 
+	      temp_ti = make_shared<ROSCameraListenerTransInterface>(camera_optical_frame);
+	    }
+	    else if(transform_interface == std::string("ros_camera_bti")){ 
+	      temp_ti = make_shared<ROSCameraBroadcastTransInterface>(camera_optical_frame, pose);
+	    }
+	    else if(transform_interface == std::string("ros_camera_housing_lti")){ 
+	      camera_housing_frame = this_camera["camera_housing_frame"].as<std::string>();
+	      temp_ti = make_shared<ROSCameraHousingListenerTInterface>(camera_optical_frame,camera_housing_frame);
+	    }
+	    else if(transform_interface == std::string("ros_camera_housing_bti")){ 
+	      camera_housing_frame = this_camera["camera_housing_frame"].as<std::string>();
+	      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame,  pose);
+	    }
+	    else if(transform_interface == std::string("ros_camera_housing_cti")){ 
+	      camera_housing_frame  = this_camera["camera_housing_frame"].as<std::string>();
+	      camera_mounting_frame = this_camera["camera_mounting_frame"].as<std::string>(); 
+	      temp_ti = make_shared<ROSCameraHousingCalTInterface>(camera_optical_frame, 
+								   camera_housing_frame,
+								   camera_mounting_frame);
+	    }
+	    else if(transform_interface == std::string("ros_scti")){ 
+	      camera_mounting_frame = this_camera["parent_frame"].as<std::string>(); 
+	      temp_ti = make_shared<ROSSimpleCalTInterface>(camera_optical_frame,  camera_mounting_frame);
+	    }
+	    else if(transform_interface == std::string("default_ti")){
+	      temp_ti = make_shared<DefaultTransformInterface>(pose);
+	    }
+	    else{
+	      ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
+	      temp_ti = make_shared<DefaultTransformInterface>(pose);
+	    }
+	    temp_camera->setTransformInterface(temp_ti);// install the transform interface 
+	    temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
+	    ceres_blocks_.addStaticCamera(temp_camera);
+	  }// end for each static camera
+
 
 	// read in all moving cameras
-	if (const YAML::Node *camera_parameters = camera_doc.FindValue("moving_cameras"))
+	camera_parameters = camera_doc["moving_cameras"];
+
+	ROS_DEBUG_STREAM("Found " << camera_parameters.size() << " moving cameras ");
+	for (unsigned int i = 0; i < camera_parameters.size(); i++)// for each moving camera
 	  {
-	    ROS_DEBUG_STREAM("Found "<<camera_parameters->size() << " moving cameras ");
-	    for (unsigned int i = 0; i < camera_parameters->size(); i++)
-	      {
-		(*camera_parameters)[i]["camera_name"] >> temp_name;
-		(*camera_parameters)[i]["trigger"] >> trigger_name;
-		(*camera_parameters)[i]["image_topic"] >> temp_topic;
-		(*camera_parameters)[i]["camera_optical_frame"] >> camera_optical_frame;
-		(*camera_parameters)[i]["transform_interface"] >> transform_interface;
-		(*camera_parameters)[i]["angle_axis_ax"] >> temp_parameters.angle_axis[0];
-		(*camera_parameters)[i]["angle_axis_ay"] >> temp_parameters.angle_axis[1];
-		(*camera_parameters)[i]["angle_axis_az"] >> temp_parameters.angle_axis[2];
-		(*camera_parameters)[i]["position_x"] >> temp_parameters.position[0];
-		(*camera_parameters)[i]["position_y"] >> temp_parameters.position[1];
-		(*camera_parameters)[i]["position_z"] >> temp_parameters.position[2];
-		(*camera_parameters)[i]["focal_length_x"] >> temp_parameters.focal_length_x;
-		(*camera_parameters)[i]["focal_length_y"] >> temp_parameters.focal_length_y;
-		(*camera_parameters)[i]["center_x"] >> temp_parameters.center_x;
-		(*camera_parameters)[i]["center_y"] >> temp_parameters.center_y;
-		(*camera_parameters)[i]["distortion_k1"] >> temp_parameters.distortion_k1;
-		(*camera_parameters)[i]["distortion_k2"] >> temp_parameters.distortion_k2;
-		(*camera_parameters)[i]["distortion_k3"] >> temp_parameters.distortion_k3;
-		(*camera_parameters)[i]["distortion_p1"] >> temp_parameters.distortion_p1;
-		(*camera_parameters)[i]["distortion_p2"] >> temp_parameters.distortion_p2;
+	    YAML::Node this_camera = camera_parameters[i];
+	    
+	    temp_name = this_camera["camera_name"].as<std::string>();
+	    trigger_name = this_camera["trigger"].as<std::string>();
+	    temp_topic = this_camera["image_topic"].as<std::string>();
+	    camera_optical_frame = this_camera["camera_optical_frame"].as<std::string>();
+	    transform_interface = this_camera["transform_interface"].as<std::string>();
+	    temp_parameters.angle_axis[0]  = this_camera["angle_axis_ax"].as<double>();
+	    temp_parameters.angle_axis[1]  = this_camera["angle_axis_ay"].as<double>();
+	    temp_parameters.angle_axis[2]  = this_camera["angle_axis_az"].as<double>();
+	    temp_parameters.position[0]    = this_camera["position_x"].as<double>();
+	    temp_parameters.position[1]    = this_camera["position_y"].as<double>();
+	    temp_parameters.position[2]    = this_camera["position_z"].as<double>();
+	    temp_parameters.focal_length_x = this_camera["focal_length_x"].as<double>();
+	    temp_parameters.focal_length_y = this_camera["focal_length_y"].as<double>();
+	    temp_parameters.center_x       = this_camera["center_x"].as<double>();
+	    temp_parameters.center_y       = this_camera["center_y"].as<double>();
+	    temp_parameters.distortion_k1  = this_camera["distortion_k1"].as<double>();
+	    temp_parameters.distortion_k2  = this_camera["distortion_k2"].as<double>();
+	    temp_parameters.distortion_k3  = this_camera["distortion_k3"].as<double>();
+	    temp_parameters.distortion_p1  = this_camera["distortion_p1"].as<double>();
+	    temp_parameters.distortion_p2  = this_camera["distortion_p2"].as<double>();
 		
-		Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
-			    temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
-		// create a shared camera and a shared transform interface
-		shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, true);
-		shared_ptr<TransformInterface> temp_ti;
+	    Pose6d pose(temp_parameters.position[0],temp_parameters.position[1],temp_parameters.position[2],
+			temp_parameters.angle_axis[0],temp_parameters.angle_axis[1],temp_parameters.angle_axis[2]);
+	    // create a shared camera and a shared transform interface
+	    shared_ptr<Camera> temp_camera = make_shared<Camera>(temp_name, temp_parameters, true);
+	    shared_ptr<TransformInterface> temp_ti;
 
-		// handle all the different trigger cases
-		if(trigger_name == std::string("NO_WAIT_TRIGGER")){
-		  temp_camera->trigger_ = make_shared<NoWaitTrigger>();
-		}
-		else if(trigger_name == std::string("ROS_PARAM_TRIGGER")){
-		  (*camera_parameters)[i]["trig_param"] >> trig_param;
-		  temp_camera->trigger_ = make_shared<ROSParamTrigger>(trig_param);
-		}
-		else  if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
-		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
-		  (*camera_parameters)[i]["trig_action_message"] >> trig_action_msg;
-		  temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
-		}
-		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
-		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
-		  std::vector<double>joint_values;
-		  (*camera_parameters)[i]["joint_values"] >> joint_values;
-		  if(joint_values.size()<0){
-		    ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
-		  }
-		  temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
-		}
-		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
-		  (*camera_parameters)[i]["trig_action_server"] >> trig_action_server;
-		  geometry_msgs::Pose pose;
-		  (*camera_parameters)[i]["pose"][0] >> pose.position.x;
-		  (*camera_parameters)[i]["pose"][1] >> pose.position.y;
-		  (*camera_parameters)[i]["pose"][2] >> pose.position.z;
-		  (*camera_parameters)[i]["pose"][3] >> pose.orientation.x;
-		  (*camera_parameters)[i]["pose"][4] >> pose.orientation.y;
-		  (*camera_parameters)[i]["pose"][5] >> pose.orientation.z;
-		  (*camera_parameters)[i]["pose"][6] >> pose.orientation.w;
-		  temp_camera->trigger_ = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
-		}
-
-		// install camera's transform interface
-		if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
-		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
-		}
-		else if(transform_interface == std::string("ros_bti")){ // this option makes no sense for a camera
-		  temp_ti = make_shared<ROSBroadcastTransInterface>(camera_optical_frame, pose);
-		}
-		else if(transform_interface == std::string("ros_camera_lti")){ 
-		  temp_ti = make_shared<ROSCameraListenerTransInterface>(camera_optical_frame);
-		}
-		else if(transform_interface == std::string("ros_camera_bti")){ 
-		  temp_ti = make_shared<ROSCameraBroadcastTransInterface>(camera_optical_frame, pose);
-		}
-		else if(transform_interface == std::string("ros_camera_housing_lti")){ 
-		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; 
-		  temp_ti = make_shared<ROSCameraHousingListenerTInterface>(camera_optical_frame, camera_housing_frame);
-		}
-		else if(transform_interface == std::string("ros_camera_housing_bti")){ 
-		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; // note, this is unused
-		  temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, pose);
-		}
-		else if(transform_interface == std::string("ros_camera_housing_cti")){ 
-		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; 
-		  (*camera_parameters)[i]["camera_mounting_frame"] >> camera_mounting_frame; 
-		  temp_ti = make_shared<ROSCameraHousingCalTInterface>(camera_optical_frame, 
-								       camera_housing_frame,
-								       camera_mounting_frame);
-		}
-		else if(transform_interface == std::string("ros_scti")){ 
-		  (*camera_parameters)[i]["parent_frame"] >> camera_mounting_frame; 
-		  temp_ti = make_shared<ROSSimpleCalTInterface>(camera_optical_frame,  camera_mounting_frame);
-		}
-		else if(transform_interface == std::string("default_ti")){
-		  temp_ti = make_shared<DefaultTransformInterface>(pose);
-		}
-		else{
-		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
-		  temp_ti = make_shared<DefaultTransformInterface>(pose);
-		}
-		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
-		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
-		ceres_blocks_.addMovingCamera(temp_camera, scene_id);
-
+	    // handle all the different trigger cases
+	    if(trigger_name == std::string("NO_WAIT_TRIGGER")){
+	      temp_camera->trigger_ = make_shared<NoWaitTrigger>();
+	    }
+	    else if(trigger_name == std::string("ROS_PARAM_TRIGGER")){
+	      trig_param = this_camera["trig_param"].as<std::string>();
+	      temp_camera->trigger_ = make_shared<ROSParamTrigger>(trig_param);
+	    }
+	    else  if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
+	      trig_action_server = this_camera["trig_action_server"].as<std::string>();
+	      trig_action_msg = this_camera["trig_action_message"].as<std::string>();
+	      temp_camera->trigger_ = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
+	    }
+	    else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
+	      trig_action_server = this_camera["trig_action_server"].as<std::string>();
+	      std::vector<double>joint_values;
+	      joint_values = this_camera["joint_values"].as< std::vector<double> >();
+	      if(joint_values.size()<0){
+		ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
 	      }
-	  }
+	      temp_camera->trigger_ = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
+	    }
+	    else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
+	      trig_action_server = this_camera["trig_action_server"].as<std::string>();
+	      geometry_msgs::Pose pose;
+	      pose.position.x = this_camera["pose"][0].as<double>();
+	      pose.position.y = this_camera["pose"][1].as<double>();
+	      pose.position.z = this_camera["pose"][2].as<double>();
+	      pose.orientation.x = this_camera["pose"][3].as<double>();
+	      pose.orientation.y = this_camera["pose"][4].as<double>();
+	      pose.orientation.z = this_camera["pose"][5].as<double>();
+	      pose.orientation.w = this_camera["pose"][6].as<double>();
+	      temp_camera->trigger_ = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
+	    }
+
+	    // install camera's transform interface
+	    if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
+	      temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
+	    }
+	    else if(transform_interface == std::string("ros_bti")){ // this option makes no sense for a camera
+	      temp_ti = make_shared<ROSBroadcastTransInterface>(camera_optical_frame, pose);
+	    }
+	    else if(transform_interface == std::string("ros_camera_lti")){ 
+	      temp_ti = make_shared<ROSCameraListenerTransInterface>(camera_optical_frame);
+	    }
+	    else if(transform_interface == std::string("ros_camera_bti")){ 
+	      temp_ti = make_shared<ROSCameraBroadcastTransInterface>(camera_optical_frame, pose);
+	    }
+	    else if(transform_interface == std::string("ros_camera_housing_lti")){ 
+	      camera_housing_frame = this_camera["camera_housing_frame"].as<std::string>();
+	      temp_ti = make_shared<ROSCameraHousingListenerTInterface>(camera_optical_frame, camera_housing_frame);
+	    }
+	    else if(transform_interface == std::string("ros_camera_housing_bti")){ 
+	      camera_housing_frame = this_camera["camera_housing_frame"].as<std::string>();
+	      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, pose);
+	    }
+	    else if(transform_interface == std::string("ros_camera_housing_cti")){ 
+	      camera_housing_frame  = this_camera["camera_housing_frame"].as<std::string>();
+	      camera_mounting_frame = this_camera["camera_mounting_frame"].as<std::string>(); 
+	      temp_ti = make_shared<ROSCameraHousingCalTInterface>(camera_optical_frame, 
+								   camera_housing_frame,
+								   camera_mounting_frame);
+	    }
+	    else if(transform_interface == std::string("ros_scti")){ 
+	      camera_mounting_frame = this_camera["parent_frame"].as<std::string>(); 
+	      temp_ti = make_shared<ROSSimpleCalTInterface>(camera_optical_frame,  camera_mounting_frame);
+	    }
+	    else if(transform_interface == std::string("default_ti")){
+	      temp_ti = make_shared<DefaultTransformInterface>(pose);
+	    }
+	    else{
+	      ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
+	      temp_ti = make_shared<DefaultTransformInterface>(pose);
+	    }
+	    temp_camera->setTransformInterface(temp_ti);// install the transform interface 
+	    temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
+	    ceres_blocks_.addMovingCamera(temp_camera, scene_id);
+	  }// end for each moving camera
       } // end try
     catch (YAML::ParserException& e)
       {
@@ -333,202 +324,185 @@ namespace industrial_extrinsic_cal
       }
     return true;
   }
-
+  
   bool CalibrationJob::loadTarget()
   {
-    std::ifstream target_input_file(target_def_file_name_.c_str());
-    if (target_input_file.fail())
-      {
-	ROS_ERROR_STREAM(
-			 "CalibrationJob::load(), couldn't open target_input_file: "
-			 << target_def_file_name_.c_str());
-	return (false);
-      }
     Target temp_target;
-    std::string temp_frame;
     std::string transform_interface;
     try
       {
-	YAML::Parser target_parser(target_input_file);
-	YAML::Node target_doc;
-	target_parser.GetNextDocument(target_doc);
-	// read in all static targets
-	if (const YAML::Node *target_parameters = target_doc.FindValue("static_targets"))
+	YAML::Node target_doc = YAML::LoadFile(target_def_file_name_.c_str());
+	YAML::Node target_parameters = target_doc["static_targets"];
+	ROS_DEBUG_STREAM("Found " << target_parameters.size() << " static targets ");
+	for (unsigned int i = 0; i < target_parameters.size(); i++)// for each static target
 	  {
-	    ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<" targets ");
-	    for (unsigned int i = 0; i < target_parameters->size(); i++)
+	    YAML::Node this_target = target_parameters[i];
+	    // create shared target and transform interface
+	    shared_ptr<Target> temp_target = make_shared<Target>();
+	    shared_ptr<TransformInterface> temp_ti;
+
+	    temp_target->is_moving_ = false;
+	    temp_target->target_name_ = this_target["target_name"].as<std::string>();
+	    temp_target->target_frame_ = this_target["target_frame"].as<std::string>();
+	    temp_target->target_type_ = this_target["target_type"].as<unsigned int>();
+	    switch (temp_target->target_type_)
 	      {
-		// create shared target and transform interface
-		shared_ptr<Target> temp_target = make_shared<Target>();
-		shared_ptr<TransformInterface> temp_ti;
-
-		temp_target->is_moving_ = false;
-		(*target_parameters)[i]["target_name"] >> temp_target->target_name_;
-		(*target_parameters)[i]["target_frame"] >> temp_target->target_frame_;
-		(*target_parameters)[i]["target_type"] >> temp_target->target_type_;
-		switch (temp_target->target_type_)
-		  {
-		  case pattern_options::Chessboard:
-		    (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters_.pattern_rows;
-		    (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters_.pattern_cols;
-		    ROS_DEBUG_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
-		    break;
-		  case pattern_options::CircleGrid:
-		    (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
-		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
-		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
-		    temp_target->circle_grid_parameters_.is_symmetric=true;
-		    ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
-		    break;
-		  default:
-		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
-		    return false;
-		    break;
-		  } // end of target type
-		(*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose_.ax;
-		(*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose_.ay;
-		(*target_parameters)[i]["angle_axis_az"] >> temp_target->pose_.az;
-		(*target_parameters)[i]["position_x"] >> temp_target->pose_.x;
-		(*target_parameters)[i]["position_y"] >> temp_target->pose_.y;
-		(*target_parameters)[i]["position_z"] >> temp_target->pose_.z;
-		(*target_parameters)[i]["transform_interface"] >> transform_interface;
-
-		// install target's transform interface
-		if(transform_interface == std::string("ros_lti")){ 
-		  temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
-		}
-		else if(transform_interface == std::string("ros_bti")){ 
-		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_, temp_target->pose_);
-		}
-		else if(transform_interface == std::string("ros_scti")){ 
-		  std::string parent_frame;
-		  (*target_parameters)[i]["parent_frame"] >> parent_frame; 
-		  temp_ti = make_shared<ROSSimpleCalTInterface>(temp_target->target_frame_,  parent_frame);
-		}
-
-		else if(transform_interface == std::string("default_ti")){
-		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
-		}
-		else{
-		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
-		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
-		}
-		temp_target->setTransformInterface(temp_ti);// install the transform interface 
-		(*target_parameters)[i]["num_points"] >> temp_target->num_points_;
-		const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
-		ROS_DEBUG_STREAM("FoundPoints: "<<points_node->size());
-		for (int j = 0; j < points_node->size(); j++)
-		  {
-		    const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
-		    std::vector<float> temp_pnt;
-		    (*pnt_node) >> temp_pnt;
-		    Point3d temp_pnt3d;
-		    //ROS_DEBUG_STREAM("pntx: "<<temp_pnt3d.x);
-		    temp_pnt3d.x = temp_pnt[0];
-		    temp_pnt3d.y = temp_pnt[1];
-		    temp_pnt3d.z = temp_pnt[2];
-		    temp_target->pts_.push_back(temp_pnt3d);
-		  }
-		if(temp_target->is_moving_ == true){
-		  ROS_ERROR("Static Target set to moving????");
-		}
-		ceres_blocks_.addStaticTarget(temp_target);
-		target_frames_.push_back(temp_frame);
+	      case pattern_options::Chessboard:
+		temp_target->checker_board_parameters_.pattern_rows = this_target["target_rows"].as<int>();
+		temp_target->checker_board_parameters_.pattern_cols = this_target["target_cols"].as<int>();
+		ROS_DEBUG_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
+		break;
+	      case pattern_options::CircleGrid:
+		temp_target->circle_grid_parameters_.pattern_rows = this_target["target_rows"].as<int>();
+		temp_target->circle_grid_parameters_.pattern_cols = this_target["target_cols"].as<int>();
+		temp_target->circle_grid_parameters_.circle_diameter = this_target["circle_dia"].as<double>();
+		temp_target->circle_grid_parameters_.is_symmetric=true;
+		ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
+		break;
+	      default:
+		ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
+		return false;
+		break;
+	      } // end of target type
+	    temp_target->pose_.ax = this_target["angle_axis_ax"].as<double>();
+	    temp_target->pose_.ay = this_target["angle_axis_ay"].as<double>();
+	    temp_target->pose_.az = this_target["angle_axis_az"].as<double>();
+	    temp_target->pose_.x = this_target["position_x"].as<double>();
+	    temp_target->pose_.y = this_target["position_y"].as<double>();
+	    temp_target->pose_.z = this_target["position_z"].as<double>();
+	    transform_interface = this_target["transform_interface"].as<std::string>();
+	    
+	    // install target's transform interface
+	    if(transform_interface == std::string("ros_lti")){ 
+	      temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
+	    }
+	    else if(transform_interface == std::string("ros_bti")){ 
+	      temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_, temp_target->pose_);
+	    }
+	    else if(transform_interface == std::string("ros_scti")){ 
+	      std::string parent_frame;
+	      parent_frame = this_target["parent_frame"].as<std::string>();
+	      temp_ti = make_shared<ROSSimpleCalTInterface>(temp_target->target_frame_,  parent_frame);
+	    }
+	    
+	    else if(transform_interface == std::string("default_ti")){
+	      temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+	    }
+	    else{
+	      ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
+	      temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+	    }
+	    temp_target->setTransformInterface(temp_ti);// install the transform interface 
+	    temp_target->num_points_ = this_target["num_points"].as<int>();
+	    const YAML::Node points_node = this_target["points"];
+	    ROS_DEBUG_STREAM("FoundPoints: " << points_node.size());
+	    for (int j = 0; j < points_node.size(); j++)
+	      {
+		const YAML::Node this_point = points_node[j]["pnt"];
+		Point3d temp_pnt3d;
+		temp_pnt3d.x = this_point[0].as<double>();
+		temp_pnt3d.y = this_point[1].as<double>();
+		temp_pnt3d.z = this_point[2].as<double>();
+		temp_target->pts_.push_back(temp_pnt3d);
 	      }
-	  }
-
+	    if(temp_target->is_moving_ == true){
+	      ROS_ERROR("Static Target set to moving????");
+	    }
+	    ceres_blocks_.addStaticTarget(temp_target);
+	  } // end for each static target
+    
+    
 	// read in all moving targets
-	if (const YAML::Node *target_parameters = target_doc.FindValue("moving_targets"))
+	unsigned int scene_id;
+	target_parameters = target_doc["moving_targets"];
+	ROS_DEBUG_STREAM("Found " << target_parameters.size() << " moving targets ");
+	for (unsigned int i = 0; i < target_parameters.size(); i++)// for each static target
 	  {
-	    ROS_ERROR("Found %d moving targets", (int) target_parameters->size());
-	    ROS_DEBUG_STREAM("Found "<<target_parameters->size() <<"  moving targets ");
-	    unsigned int scene_id;
-	    for (unsigned int i = 0; i < target_parameters->size(); i++)
+	    YAML::Node this_target = target_parameters[i];
+	    // create shared target and transform interface
+	    shared_ptr<Target> temp_target = make_shared<Target>();
+	    shared_ptr<TransformInterface> temp_ti;
+
+	    temp_target->is_moving_ = true;
+	    temp_target->target_name_ = this_target["target_name"].as<std::string>();
+	    temp_target->target_frame_ = this_target["target_frame"].as<std::string>();
+	    temp_target->target_type_ = this_target["target_type"].as<unsigned int>();
+	    transform_interface = this_target["transform_interface"].as<std::string>();
+
+	    // install target's transform interface
+	    if(transform_interface == std::string("ros_lti")){ 
+	      temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
+	    }
+	    else if(transform_interface == std::string("ros_bti")){ 
+	      temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_, temp_target->pose_);
+	    }
+	    else if(transform_interface == std::string("default_ti")){
+	      temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+	    }
+	    else{
+	      ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
+	      temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+	    }
+	    temp_target->setTransformInterface(temp_ti);// install the transform interface 
+	    
+	    // set parameters by the target's type
+	    temp_target->target_type_ = this_target["target_type"].as<unsigned int>();
+
+	    switch (temp_target->target_type_)
 	      {
-		// create shared target and transform interface
-		shared_ptr<Target> temp_target = make_shared<Target>();
-		shared_ptr<TransformInterface> temp_ti;
-
-		temp_target->is_moving_ = true;
-		(*target_parameters)[i]["target_name"] >> temp_target->target_name_;
-		(*target_parameters)[i]["target_frame"] >> temp_frame;
-		(*target_parameters)[i]["transform_interface"] >> transform_interface;
-		// install target's transform interface
-		if(transform_interface == std::string("ros_lti")){ 
-		  temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
-		}
-		else if(transform_interface == std::string("ros_bti")){ 
-		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_, temp_target->pose_);
-		}
-		else if(transform_interface == std::string("default_ti")){
-		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
-		}
-		else{
-		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
-		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
-		}
-		temp_target->setTransformInterface(temp_ti);// install the transform interface 
-
-		// set parameters by the target's type
-		(*target_parameters)[i]["target_type"] >> temp_target->target_type_;
-		//ROS_DEBUG_STREAM("TargetFrame: "<<temp_frame);
-		switch (temp_target->target_type_)
-		  {
-		  case pattern_options::Chessboard:
-		    (*target_parameters)[i]["target_rows"] >> temp_target->checker_board_parameters_.pattern_rows;
-		    (*target_parameters)[i]["target_cols"] >> temp_target->checker_board_parameters_.pattern_cols;
-		    ROS_INFO_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
-		    break;
-		  case pattern_options::CircleGrid:
-		    (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
-		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
-		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
-		    temp_target->circle_grid_parameters_.is_symmetric=true;
-		    break;
-		  default:
-		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
-		    return false;
-		    break;
-		  }
-		(*target_parameters)[i]["angle_axis_ax"] >> temp_target->pose_.ax;
-		(*target_parameters)[i]["angle_axis_ay"] >> temp_target->pose_.ay;
-		(*target_parameters)[i]["angle_axis_az"] >> temp_target->pose_.az;
-		(*target_parameters)[i]["position_x"] >> temp_target->pose_.x;
-		(*target_parameters)[i]["position_y"] >> temp_target->pose_.y;
-		(*target_parameters)[i]["position_z"] >> temp_target->pose_.z;
-		(*target_parameters)[i]["transform_interface"] >> transform_interface;
-		if(transform_interface == std::string("ros_lti")){
-		  temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
-		}
-		if(transform_interface == std::string("ros_bti")){
-		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_,temp_target->pose_);
-		}
-		else if(transform_interface == std::string("default_ti")){
-		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
-		}
-		else{
-		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
-		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
-		}
-		temp_target->setTransformInterface(temp_ti);// install the transform interface 
-		(*target_parameters)[i]["scene_id"] >> scene_id;
-		(*target_parameters)[i]["num_points"] >> temp_target->num_points_;
-		const YAML::Node *points_node = (*target_parameters)[i].FindValue("points");
-		for (int j = 0; j < points_node->size(); j++)
-		  {
-		    const YAML::Node *pnt_node = (*points_node)[j].FindValue("pnt");
-		    std::vector<float> temp_pnt;
-		    (*pnt_node) >> temp_pnt;
-		    Point3d temp_pnt3d;
-		    temp_pnt3d.x = temp_pnt[0];
-		    temp_pnt3d.y = temp_pnt[1];
-		    temp_pnt3d.z = temp_pnt[2];
-		    temp_target->pts_.push_back(temp_pnt3d);
-		  }
-		ceres_blocks_.addMovingTarget(temp_target, scene_id);
-		target_frames_.push_back(temp_frame);
+	      case pattern_options::Chessboard:
+		temp_target->checker_board_parameters_.pattern_rows = this_target["target_rows"].as<int>();
+		temp_target->checker_board_parameters_.pattern_cols = this_target["target_cols"].as<int>();
+		ROS_INFO_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
+		break;
+	      case pattern_options::CircleGrid:
+		temp_target->circle_grid_parameters_.pattern_rows    = this_target["target_rows"].as<int>();
+		temp_target->circle_grid_parameters_.pattern_cols    = this_target["target_cols"].as<int>();
+		temp_target->circle_grid_parameters_.circle_diameter = this_target["circle_dia"].as<int>();
+		temp_target->circle_grid_parameters_.is_symmetric=true;
+		break;
+	      default:
+		ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
+		return false;
+		break;
 	      }
-	  }
+	    temp_target->pose_.ax = this_target["angle_axis_ax"].as<double>();
+	    temp_target->pose_.ay = this_target["angle_axis_ay"].as<double>();
+	    temp_target->pose_.az = this_target["angle_axis_az"].as<double>();
+	    temp_target->pose_.x = this_target["position_x"].as<double>();
+	    temp_target->pose_.y = this_target["position_y"].as<double>();
+	    temp_target->pose_.z = this_target["position_z"].as<double>();
+	    transform_interface  = this_target["transform_interface"].as<std::string>();
+	    if(transform_interface == std::string("ros_lti")){
+	      temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
+	    }
+	    if(transform_interface == std::string("ros_bti")){
+	      temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_,temp_target->pose_);
+	    }
+	    else if(transform_interface == std::string("default_ti")){
+	      temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+	    }
+	    else{
+	      ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
+	      temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+	    }
+	    temp_target->setTransformInterface(temp_ti);// install the transform interface 
+
+	    scene_id = this_target["scene_id"].as<unsigned int>();
+	    temp_target->num_points_ = this_target["num_points"].as<int>();
+	    const YAML::Node points_node = this_target["points"];
+	    ROS_DEBUG_STREAM("FoundPoints: " << points_node.size());
+	    for (int j = 0; j < points_node.size(); j++)
+	      {
+		const YAML::Node this_point = points_node[j]["pnt"];
+		Point3d temp_pnt3d;
+		temp_pnt3d.x = this_point[0].as<double>();
+		temp_pnt3d.y = this_point[1].as<double>();
+		temp_pnt3d.z = this_point[2].as<double>();
+		temp_target->pts_.push_back(temp_pnt3d);
+	      }
+	    ceres_blocks_.addMovingTarget(temp_target, scene_id);
+	  }// end for each moving target
       } // end try
     catch (YAML::ParserException& e)
       {
@@ -542,14 +516,6 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::loadCalJob()
   {
-    std::ifstream caljob_input_file(caljob_def_file_name_.c_str());
-    if (caljob_input_file.fail())
-      {
-	ROS_ERROR_STREAM(
-			 "ERROR CalibrationJob::load(), couldn't open caljob_input_file: "
-			 << caljob_def_file_name_.c_str());
-	return (false);
-      }
 
     std::string opt_params;
     int scene_id_num;
@@ -568,99 +534,96 @@ namespace industrial_extrinsic_cal
 
     try
       {
-	YAML::Parser caljob_parser(caljob_input_file);
-	YAML::Node caljob_doc;
-	caljob_parser.GetNextDocument(caljob_doc);
-
-	caljob_doc["reference_frame"] >> reference_frame;
+	YAML::Node caljob_doc = YAML::LoadFile(caljob_def_file_name_.c_str());
+	reference_frame = caljob_doc["reference_frame"].as<std::string>();
 	ceres_blocks_.setReferenceFrame(reference_frame);
-	caljob_doc["optimization_parameters"] >> opt_params;
+	opt_params = caljob_doc["optimization_parameters"].as<std::string>();
+
 	// read in all scenes
-	if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
-	  {
-	    ROS_DEBUG_STREAM("Found "<<caljob_scenes->size() <<" scenes");
-	    scene_list_.resize(caljob_scenes->size() );
-	    for (unsigned int i = 0; i < caljob_scenes->size(); i++)
-	      {
-		(*caljob_scenes)[i]["scene_id"] >> scene_id_num;
-
-		(*caljob_scenes)[i]["trigger"] >> trigger_name;
-		string ros_bool_param;
-		string message;
-		string server_name;
-		boost::shared_ptr<Trigger> temp_trigger;
-
-		// handle all the different trigger cases
-		if(trigger_name == std::string("NO_WAIT_TRIGGER")){
-		  temp_trigger = make_shared<NoWaitTrigger>();
-		}
-		else if(trigger_name == std::string("ROS_PARAM_TRIGGER")){
-		  (*caljob_scenes)[i]["trig_param"] >> trig_param;
-		  temp_trigger = make_shared<ROSParamTrigger>(trig_param);
-		}
-		else if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
-		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
-		  (*caljob_scenes)[i]["trig_action_msg"] >> trig_action_msg;
-		  temp_trigger = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
-		}
-		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
-		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
-		  std::vector<double>joint_values;
-		  (*caljob_scenes)[i]["joint_values"] >> joint_values;
-		  if(joint_values.size()<1){
-		    ROS_ERROR("Couldn't read  joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
-		  }
-		  temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
-		}
-		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
-		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
-		  geometry_msgs::Pose pose;
-		  (*caljob_scenes)[i]["pose"][0] >> pose.position.x;
-		  (*caljob_scenes)[i]["pose"][1] >> pose.position.y;
-		  (*caljob_scenes)[i]["pose"][2] >> pose.position.z;
-		  (*caljob_scenes)[i]["pose"][3] >> pose.orientation.x;
-		  (*caljob_scenes)[i]["pose"][4] >> pose.orientation.y;
-		  (*caljob_scenes)[i]["pose"][5] >> pose.orientation.z;
-		  (*caljob_scenes)[i]["pose"][6] >> pose.orientation.w;
-		  temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
-		}
-
-		scene_list_.at(i).setTrigger(temp_trigger);
-
-		scene_list_.at(i).setSceneId(scene_id_num);
-		const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
-		ROS_DEBUG_STREAM("Found "<<obs_node->size() <<" observations within scene "<<i);
-		for (unsigned int j = 0; j < obs_node->size(); j++)
-		  {
-		    (*obs_node)[j]["camera"] >> camera_name;
-		    (*obs_node)[j]["roi_x_min"] >> temp_roi.x_min;
-		    (*obs_node)[j]["roi_x_max"] >> temp_roi.x_max;
-		    (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
-		    (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
-		    (*obs_node)[j]["target"] >> target_name;
-		    (*obs_node)[j]["cost_type"] >> cost_type_string;
-		    cost_type = string2CostType(cost_type_string);
-		    if((temp_cam = ceres_blocks_.getCameraByName(camera_name)) == NULL){
-		      ROS_ERROR("Couldn't find camea %s",camera_name.c_str());
-		    }
-		    if((temp_targ = ceres_blocks_.getTargetByName(target_name)) == NULL){;
-		      ROS_ERROR("Couldn't find target %s",target_name.c_str());
-		    }
-		    scene_list_.at(i).addCameraToScene(temp_cam);
-		    cost_type = string2CostType(cost_type_string);
-		    scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi, cost_type);
-		  }
-	      }
+	YAML::Node caljob_scenes = caljob_doc["scenes"];
+	int num_scenes = caljob_scenes.size();
+	ROS_DEBUG_STREAM("Found " << num_scenes << " scenes");
+	scene_list_.resize(num_scenes );
+	for(int i=0; i<num_scenes; i++){// for each scene
+	  YAML::Node this_scene = caljob_scenes[i];
+	  scene_id_num = this_scene["scene_id"].as<int>();
+	  trigger_name = this_scene["trigger"].as<std::string>();
+	  string ros_bool_param;
+	  string message;
+	  string server_name;
+	  boost::shared_ptr<Trigger> temp_trigger;
+	  
+	  // handle all the different trigger cases
+	  if(trigger_name == std::string("NO_WAIT_TRIGGER")){
+	    temp_trigger = make_shared<NoWaitTrigger>();
 	  }
-      } // end try
-    catch (YAML::ParserException& e)
-      {
-	ROS_ERROR("load() Failed to read in caljob yaml file");
-	ROS_ERROR_STREAM("Failed with exception "<< e.what());
-	return (false);
+	  else if(trigger_name == std::string("ROS_PARAM_TRIGGER")){
+	    trig_param = this_scene["trig_param"].as<std::string>();
+	    temp_trigger = make_shared<ROSParamTrigger>(trig_param);
+	  }
+	  else if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
+	    trig_action_server = this_scene["trig_action_server"].as<std::string>();
+	    trig_action_msg = this_scene["trig_action_msg"].as<std::string>();
+	    temp_trigger = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
+	  }
+	  else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
+	    trig_action_server = this_scene["trig_action_server"].as<std::string>();
+	    std::vector<double>joint_values;
+	    joint_values = this_scene["joint_values"].as<std::vector<double> >();
+	    if(joint_values.size()<1){
+	      ROS_ERROR("Couldn't read  joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
+	    }
+	    temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
+	  }
+	  else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
+	    trig_action_server = this_scene["trig_action_server"].as<std::string>();
+	    geometry_msgs::Pose pose;
+	    pose.position.x = this_scene["pose"][0].as<double>();
+	    pose.position.y = this_scene["pose"][1].as<double>();
+	    pose.position.z = this_scene["pose"][2].as<double>();
+	    pose.orientation.x = this_scene["pose"][3].as<double>();
+	    pose.orientation.y = this_scene["pose"][4].as<double>();
+	    pose.orientation.z = this_scene["pose"][5].as<double>();
+	    pose.orientation.w = this_scene["pose"][6].as<double>();
+	    temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
+	  }
+	  
+	  scene_list_.at(i).setTrigger(temp_trigger);
+	  scene_list_.at(i).setSceneId(scene_id_num);
+	  
+	  YAML::Node observations = this_scene["observations"];
+	  ROS_DEBUG_STREAM("Found "<<observations.size() <<" observations within scene "<<i);
+	  for (unsigned int j = 0; j < observations.size(); j++)// for each observation
+	    {
+	      YAML::Node this_observation = observations[j];
+	      camera_name = this_observation["camera"].as<std::string>();
+	      temp_roi.x_min = this_observation["roi_x_min"].as<int>();
+	      temp_roi.x_max = this_observation["roi_x_max"].as<int>();
+	      temp_roi.y_min = this_observation["roi_y_min"].as<int>();
+	      temp_roi.y_max = this_observation["roi_y_max"].as<int>();
+	      target_name = this_observation["target"].as<std::string>();
+	      cost_type_string = this_observation["cost_type"].as<std::string>();
+	      cost_type = string2CostType(cost_type_string);
+	      if((temp_cam = ceres_blocks_.getCameraByName(camera_name)) == NULL){
+		ROS_ERROR("Couldn't find camea %s",camera_name.c_str());
+	      }
+	      if((temp_targ = ceres_blocks_.getTargetByName(target_name)) == NULL){;
+		ROS_ERROR("Couldn't find target %s",target_name.c_str());
+	      }
+	      scene_list_.at(i).addCameraToScene(temp_cam);
+	      cost_type = string2CostType(cost_type_string);
+	      scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi, cost_type);
+	    }// end for each observation
+	} // end for each scene
+  } // end try
+  catch (YAML::ParserException& e)
+    {
+      ROS_ERROR("load() Failed to read in caljob yaml file");
+      ROS_ERROR_STREAM("Failed with exception "<< e.what());
+      return (false);
       }
-    return true;
-  }
+  return true;
+}
 
   bool CalibrationJob::run()
   {
