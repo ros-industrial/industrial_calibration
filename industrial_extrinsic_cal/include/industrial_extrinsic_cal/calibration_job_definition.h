@@ -103,11 +103,6 @@ public:
     return ceres_blocks_.reference_frame_;
   }
 
-  const std::vector<std::string>& getTargetFrames() const
-  {
-    return target_frames_;
-  }
-
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 protected:
   /*!
@@ -188,7 +183,6 @@ private:
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
-  std::vector<std::string> target_frames_; /*!< this the frame of the target points */
   int current_scene_; /*!< id of current scene under review or construction */
   std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
