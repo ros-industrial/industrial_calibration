@@ -19,10 +19,10 @@ IF (CERES_FOUND)
 ENDIF (CERES_FOUND)
 
 # Eigen
-FIND_PACKAGE(Eigen REQUIRED)
-IF (EIGEN_FOUND)
-  MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
-ENDIF (EIGEN_FOUND)
+#FIND_PACKAGE(Eigen REQUIRED)
+#IF (EIGEN_FOUND)
+#  MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
+#ENDIF (EIGEN_FOUND)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
