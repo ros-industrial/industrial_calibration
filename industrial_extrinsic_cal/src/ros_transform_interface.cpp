@@ -227,9 +227,12 @@ namespace industrial_extrinsic_cal
     tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), transform_frame_, ref_frame_));
   }
 
-  ROSCameraHousingBroadcastTInterface::ROSCameraHousingBroadcastTInterface(const string & transform_frame, const Pose6d & pose)
+  ROSCameraHousingBroadcastTInterface::ROSCameraHousingBroadcastTInterface(const string & transform_frame,
+	  const string &housing_frame,
+    const Pose6d & pose)
   {
     transform_frame_                = transform_frame;
+    housing_frame_                  = housing_frame; 
     transform_.child_frame_id_ = transform_frame_;
     ref_frame_initialized_         = false;    // still need to initialize ref_frame_
     pose_                                 = pose;
