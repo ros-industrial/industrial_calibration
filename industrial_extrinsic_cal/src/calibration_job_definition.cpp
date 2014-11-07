@@ -176,7 +176,7 @@ namespace industrial_extrinsic_cal
 	    }
 	    else if(transform_interface == std::string("ros_camera_housing_bti")){ 
 	      camera_housing_frame = this_camera["camera_housing_frame"].as<std::string>();
-	      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame,  pose);
+	      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, camera_housing_frame, pose);
 	    }
 	    else if(transform_interface == std::string("ros_camera_housing_cti")){ 
 	      camera_housing_frame  = this_camera["camera_housing_frame"].as<std::string>();
@@ -291,7 +291,7 @@ namespace industrial_extrinsic_cal
 	    }
 	    else if(transform_interface == std::string("ros_camera_housing_bti")){ 
 	      camera_housing_frame = this_camera["camera_housing_frame"].as<std::string>();
-	      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, pose);
+	      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, camera_housing_frame, pose);
 	    }
 	    else if(transform_interface == std::string("ros_camera_housing_cti")){ 
 	      camera_housing_frame  = this_camera["camera_housing_frame"].as<std::string>();

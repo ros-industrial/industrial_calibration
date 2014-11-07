@@ -264,7 +264,7 @@ namespace industrial_extrinsic_cal
      * @brief constructor
      * @param image_topic name of published image topic
      */
-    ROSCameraHousingBroadcastTInterface(const std::string & transform_frame, const Pose6d & pose);
+    ROSCameraHousingBroadcastTInterface(const std::string & transform_frame, const std::string &housing_frame, const Pose6d & pose);
 
     /**
      * @brief Default destructor
