@@ -176,7 +176,8 @@ namespace industrial_extrinsic_cal
 	    }
 	    else if(transform_interface == std::string("ros_camera_housing_bti")){ 
 	      camera_housing_frame = this_camera["camera_housing_frame"].as<std::string>();
-	      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame,  pose);
+	      camera_mounting_frame = this_camera["camera_mounting_frame"].as<std::string>(); 
+	      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, camera_housing_frame, camera_mounting_frame, pose);
 	    }
 	    else if(transform_interface == std::string("ros_camera_housing_cti")){ 
 	      camera_housing_frame  = this_camera["camera_housing_frame"].as<std::string>();
@@ -291,7 +292,8 @@ namespace industrial_extrinsic_cal
 	    }
 	    else if(transform_interface == std::string("ros_camera_housing_bti")){ 
 	      camera_housing_frame = this_camera["camera_housing_frame"].as<std::string>();
-	      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, pose);
+	      camera_mounting_frame = this_camera["camera_mounting_frame"].as<std::string>(); 
+	      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, camera_housing_frame, camera_mounting_frame, pose);
 	    }
 	    else if(transform_interface == std::string("ros_camera_housing_cti")){ 
 	      camera_housing_frame  = this_camera["camera_housing_frame"].as<std::string>();
@@ -764,6 +766,16 @@ namespace industrial_extrinsic_cal
     int total_observations =0;
     for(int i=0;i<observation_data_point_list_.size();i++){
       total_observations += observation_data_point_list_[i].items_.size();
+      std::stringstream observations_ss;
+      for (int pntIdx = 0; pntIdx < observation_data_point_list_[i].items_.size(); pntIdx++) {
+        const ObservationDataPoint& odp = observation_data_point_list_[i].items_[pntIdx];
+        ROS_INFO("%d: id=%d pos=[%f, %f, %f] img=[%f, %f]", pntIdx,
+            odp.point_id_,
+            odp.point_position_[0], odp.point_position_[1], odp.point_position_[2],
+            odp.image_x_, odp.image_y_);
+        observations_ss << "[" << odp.image_x_ << ", " << odp.image_y_ << "],";
+      }
+      ROS_INFO("project_points2d: %s", observations_ss.str().c_str());
     }
     if(total_observations == 0){ // TODO really need more than number of parameters being computed
       ROS_ERROR("Too few observations: %d",total_observations);
