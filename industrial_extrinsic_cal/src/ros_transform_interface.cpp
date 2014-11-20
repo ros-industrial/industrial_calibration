@@ -165,7 +165,7 @@ namespace industrial_extrinsic_cal
     transform_.child_frame_id_ = transform_frame_;
     transform_.frame_id_ = ref_frame_;
     //    ROS_INFO("broadcasting %s in %s",transform_frame_.c_str(),ref_frame_.c_str());
-    tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), transform_frame_, ref_frame_));
+    tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), ref_frame_, transform_frame_));
   }
 
   ROSCameraBroadcastTransInterface::ROSCameraBroadcastTransInterface(const string & transform_frame, const Pose6d & pose)
