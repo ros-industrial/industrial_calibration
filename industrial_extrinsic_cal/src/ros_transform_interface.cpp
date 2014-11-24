@@ -242,16 +242,10 @@ namespace industrial_extrinsic_cal
 
   bool   ROSCameraHousingBroadcastTInterface::pushTransform(Pose6d & pose)
   {
-    //std::cout << ">>>>>>>>>>>>>>>>>" << std::endl;
-    //std::cout << "ROSCameraHousingBroadcastTInterface::pushTransform()" << std::endl;
     Pose6d mountingMVoptical = pose.getInverse();
     Pose6d opticalMVhousing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
     Pose6d mountingMVhousing = mountingMVoptical * opticalMVhousing;
-    //mountingMVoptical.show("mountingMVoptical = pose");
-    //opticalMVhousing.show("opticalMVhousing");
-    //mountingMVhousing.show("stored: mountingMVhousing");
     pose_ = mountingMVhousing;
-    //std::cout << "<<<<<<<<<<<<<<<<<" << std::endl;
     if(!ref_frame_initialized_){ 
       return(false);		// timer won't start publishing until ref_frame_ is defined
     }
@@ -298,25 +292,11 @@ namespace industrial_extrinsic_cal
   void  ROSCameraHousingBroadcastTInterface::timerCallback(const ros::TimerEvent & timer_event)
   { // broadcast current value of pose.inverse() as a transform each time called
 
-    // Camer optical frame to ref is estimated by bundle adjustment  pose_ = optical2ref
-    // Camer housing to camera optical frame is specified by urdf   optical2housing
-    // Desired ref2housing = optical2ref^-1 * optical2housing
-    //std::cout << ">>>>>>>>>>>>>>>>>" << std::endl;
-    //std::cout << "ROSCameraHousingBroadcastTInterface::timerCallback()" << std::endl;
-    //std::cout << "ref_frame_: " << ref_frame_ << std::endl;
-    //std::cout << "transform_frame_: " << transform_frame_ << std::endl;
-    //std::cout << "housing_frame_: " << housing_frame_ << std::endl;
-    //std::cout << "mounting_frame_: " << mounting_frame_ << std::endl;
-    //pose_.show("pose_");
-
     Pose6d ref2housing = pose_;
-    
-    //ref2housing.show("ref2housing");
     
     transform_.setBasis(ref2housing.getBasis());
     transform_.setOrigin(ref2housing.getOrigin());
     tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), ref_frame_, housing_frame_));
-    //std::cout << "<<<<<<<<<<<<<<<<<" << std::endl;
   }
 
   Pose6d ROSCameraHousingBroadcastTInterface::pullTransform()
@@ -327,18 +307,10 @@ namespace industrial_extrinsic_cal
       return(pose);
     }
 
-    //std::cout << ">>>>>>>>>>>>>>>>>" << std::endl;
-    //std::cout << "ROSCameraHousingBroadcastTInterface::pullTransform()" << std::endl;
-
     Pose6d opticalMVhousing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
     Pose6d mountingMVhousing = pose_;
     Pose6d housingMVmounting = mountingMVhousing.getInverse();
     Pose6d opticalMVmounting = opticalMVhousing * housingMVmounting;
-    //opticalMVhousing.show("opticalMVhousing");
-    //mountingMVhousing.show("mountingMVhousing");
-    //housingMVmounting.show("housingMVmounting");
-    //opticalMVmounting.show("res: opticalMVmounting");
-    //std::cout << "<<<<<<<<<<<<<<<<<" << std::endl;
     return(opticalMVmounting);
   }
 
