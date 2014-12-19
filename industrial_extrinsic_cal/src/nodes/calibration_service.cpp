@@ -16,16 +16,20 @@
  * limitations under the License.
  */
 
-
-#include <std_srvs/Empty.h>
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <industrial_extrinsic_cal/calibration_job_definition.h>
+#include <actionlib/server/simple_action_server.h>
+#include <industrial_extrinsic_cal/calibrationAction.h>
+#include <industrial_extrinsic_cal/calibrate.h>
 class CalibrationServiceNode
 {
 public:
+
+  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::calibrationAction> CalibrationActionServer;
+
   explicit CalibrationServiceNode(const ros::NodeHandle& nh):
-    nh_(nh)
+    nh_(nh),  action_server_(nh_,"run_calibration",boost::bind(&CalibrationServiceNode::actionCallback, this, _1), false)
   {
     calibrated_ = false;
     std::string nn = ros::this_node::getName();
@@ -58,22 +62,24 @@ public:
       {
 	ROS_INFO_STREAM("Calibration job (cal_job, target and camera) yaml parameters loaded.");
       }
-    
+    action_server_.start();
   };
 
   ~CalibrationServiceNode()
   {
     delete( cal_job_);
   }
-  bool callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  bool callback(industrial_extrinsic_cal::calibrate::Request& req, industrial_extrinsic_cal::calibrate::Response& resp);
+  bool actionCallback(const industrial_extrinsic_cal::calibrationGoalConstPtr& goal);
   bool is_calibrated(){return(calibrated_);};
 private:
   ros::NodeHandle nh_;
   bool calibrated_;
   industrial_extrinsic_cal::CalibrationJob * cal_job_;
+  CalibrationActionServer action_server_;
 };
 
-bool CalibrationServiceNode::callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+bool CalibrationServiceNode::callback(industrial_extrinsic_cal::calibrate::Request& req, industrial_extrinsic_cal::calibrate::Response& res)
 {
   
 // Display initial state
@@ -84,8 +90,21 @@ bool CalibrationServiceNode::callback(std_srvs::Empty::Request& request, std_srv
   ROS_INFO("RUNNING");
   if (cal_job_->run())
     {
-      ROS_INFO_STREAM("Calibration job observations and optimization complete");
-      calibrated_=true;
+      res.cost_per_observation = cal_job_->finalCostPerObservation();
+      ROS_INFO("Calibration Sucessful. Initial cost per observation = %lf final cost per observation %lf", 
+		      cal_job_->initialCostPerObservation(), 
+		      cal_job_->finalCostPerObservation());
+      if(cal_job_->finalCostPerObservation() <= req.allowable_cost_per_observation){
+	calibrated_ = true;
+	if (!cal_job_->store())
+	  {
+	    ROS_ERROR_STREAM(" Trouble storing calibration job optimization results ");
+	  }
+      }
+      else{
+	ROS_ERROR("Calibration ran successfully, but error was larger than allowed by caller");
+	calibrated_ = false;
+      }
     }
   else
     {
@@ -96,14 +115,23 @@ bool CalibrationServiceNode::callback(std_srvs::Empty::Request& request, std_srv
   // Show Results
   cal_job_->show();
   
-  // Store Results
-  if (!cal_job_->store())
-    {
-      ROS_INFO_STREAM(" Trouble storing calibration job optimization results ");
-    }
-  
-  return true;
+  return(calibrated_);
+
 }
+
+bool CalibrationServiceNode::actionCallback(const industrial_extrinsic_cal::calibrationGoalConstPtr& goal)
+{
+  industrial_extrinsic_cal::calibrate::Request request;
+  industrial_extrinsic_cal::calibrate::Response response;
+  request.allowable_cost_per_observation = goal->allowable_cost_per_observation;
+  if(callback(request, response)){
+    action_server_.setSucceeded();
+    return(true);
+  }
+  action_server_.setAborted();
+  return(false);
+}
+
 
 int main(int argc, char **argv)
 {

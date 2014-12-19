@@ -49,9 +49,12 @@ ENDIF (EIGEN_FOUND)
    get_mutable_joint_states.srv
    set_mutable_joint_states.srv
    store_mutable_joint_states.srv
+   camera_observer_trigger.srv
+   user_accept.srv
+   calibrate.srv
  )
 
-add_action_files(DIRECTORY action FILES manual_trigger.action robot_joint_values_trigger.action robot_pose_trigger.action)
+add_action_files(DIRECTORY  action  FILES  manual_trigger.action robot_joint_values_trigger.action  robot_pose_trigger.action manual_target_location.action calibration.action)
 
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
@@ -106,36 +109,40 @@ add_library(industrial_extrinsic_cal
    src/ros_transform_interface.cpp
    src/calibration_job_definition.cpp
    src/ceres_costs_utils.cpp
+   src/circle_detector.cpp
 )
 
 ## This insures the creation of headers for all ros messages, services and actions 
-add_dependencies(industrial_extrinsic_cal industrial_extrinsic_cal_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 ## Declare a cpp executable
 add_executable(mono_ex_cal src/nodes/mono_ex_cal.cpp)
-#add_executable(test_obs src/old/test_ros_cam_obs.cpp)
 add_executable(service_node src/nodes/calibration_service.cpp)
 add_executable(trigger_service src/nodes/ros_scene_trigger_server.cpp)
 add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
 add_executable(mutable_joint_state_publisher src/nodes/mutable_joint_state_publisher.cpp)
+add_executable(camera_observer_scene_trigger src/nodes/camera_observer_scene_trigger.cpp)
 
 ## These insure the message, action and service headers are created first
-add_dependencies(trigger_service industrial_extrinsic_cal_generate_messages_cpp )
-add_dependencies(ros_robot_trigger_action_service  industrial_extrinsic_cal_generate_messages_cpp)
-add_dependencies(mutable_joint_state_publisher  industrial_extrinsic_cal_generate_messages_cpp)
+add_dependencies(service_node ${PROJECT_NAME}_generate_messages_cpp )
+add_dependencies(trigger_service ${PROJECT_NAME}_generate_messages_cpp )
+add_dependencies(ros_robot_trigger_action_service  ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(mutable_joint_state_publisher  ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(camera_observer_scene_trigger ${PROJECT_NAME}_generate_messages_cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(industrial_extrinsic_cal_node industrial_extrinsic_cal_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(mono_ex_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 #target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(trigger_service ${catkin_LIBRARIES} )
 target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES} )
 target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} yaml-cpp )
+target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} yaml-cpp )
 #catkin_add_gtest(utest_inds_cal test/utest.cpp)
 #target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 

@@ -41,6 +41,8 @@ namespace industrial_extrinsic_cal
       CircleCameraReprjErrorPK,
       CircleTargetCameraReprjErrorWithDistortion,
       CircleTargetCameraReprjErrorWithDistortionPK,
+      FixedCircleTargetCameraReprjErrorWithDistortionPK,
+      SimpleCircleTargetCameraReprjErrorWithDistortionPK,
       CircleTargetCameraReprjError,
       CircleTargetCameraReprjErrorPK,
       LinkCircleTargetCameraReprjError,

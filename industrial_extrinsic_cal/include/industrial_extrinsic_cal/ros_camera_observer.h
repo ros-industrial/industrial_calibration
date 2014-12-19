@@ -48,7 +48,7 @@ namespace pattern_options
 {
   enum pattern_options_
     {
-      Chessboard = 0, CircleGrid = 1, ARtag = 2
+      Chessboard = 0, CircleGrid = 1, ARtag = 2, ModifiedCircleGrid=3,
     };
 }
 typedef pattern_options::pattern_options_ PatternOption;
@@ -175,6 +175,7 @@ namespace industrial_extrinsic_cal
      *  @brief ROS publisher of out_bridge_ or output_bridge_
      */
     ros::Publisher results_pub_;
+    ros::Publisher junk_pub_;
 
     // Structures for interacting with ROS/CV messages
     /**
@@ -192,6 +193,51 @@ namespace industrial_extrinsic_cal
      */
     cv_bridge::CvImagePtr out_bridge_;
 
+
+    /**
+     *  @brief circle_detector_ptr_ is a custom blob detector which localizes circles better than simple blob detection
+     */
+    cv::Ptr<cv::FeatureDetector> circle_detector_ptr_;
+
+    /**
+     *  @brief new_image_collected, set after the trigger is done
+     */
+    bool new_image_collected_;
+
+    /**
+     *  @brief store_observation_images_ flag to save images for later use
+     */
+    bool store_observation_images_;
+
+    /**
+     *  @brief load_observation_images_ flag to load images from image_directory rather than from subscribed topic
+     */
+    bool load_observation_images_;
+
+    /**
+     *  @brief image_directory_ place to save images
+     */
+    std::string image_directory_;
+
+    /**
+     *  @brief getImageNumber 
+     */
+    int getImageNumber(){ return(image_number_);};
+    /**
+     *  @brief setImageNumber allows users of the load feature to switch to a different image for the next observation
+     */
+    void setImageNumber(int image_number){ image_number_ = image_number;};
+
+    /**
+     *  @brief get last image
+     *  @return the most recent image
+     */
+    cv::Mat getLastImage();
+
+  private:
+    int image_number_;
+    cv::Mat last_raw_image_;
+    
   };
 
 } //end industrial_extrinsic_cal namespace

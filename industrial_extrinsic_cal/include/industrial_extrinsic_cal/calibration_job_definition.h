@@ -33,6 +33,7 @@
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
+#include "ceres/types.h"
 #include <ros/console.h>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
@@ -47,7 +48,7 @@ class CalibrationJob
 public:
   /** @brief constructor */
   CalibrationJob(std::string camera_fn, std::string target_fn, std::string caljob_fn) :
-      camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn)
+    camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn), solved_(false)
   {  } ;
 
   /** @brief default destructor */
@@ -107,6 +108,17 @@ public:
   {
     return target_frames_;
   }
+
+  /** @brief get cost per observation
+   *   @returns average cost per observation after optimization
+   **/
+  double finalCostPerObservation();
+
+  /** @brief get initial cost per observation
+   *   @returns cost per observation before optimization
+   **/
+  double initialCostPerObservation();
+
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 protected:
@@ -182,6 +194,7 @@ protected:
 */
   void pullTransforms(int scene_id);
 
+  
 private:
   std::vector<ObservationDataPointList> observation_data_point_list_; /*!< a list of observation data points */
   std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
@@ -195,7 +208,9 @@ private:
   CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
   ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
   std::vector<P_BLOCK> original_extrinsics_; /*!< This is the parameter block which holds the original camera extrinsics */
-
+  ceres::Solver::Summary ceres_summary_;
+  int total_observations_;
+  bool solved_;
 };//end class
 
 }//end namespace industrial_extrinsic_cal

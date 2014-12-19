@@ -1,0 +1,10 @@
+# Define request
+string image_topic
+string instructions
+uint32 roi_min_x
+uint32 roi_min_y
+uint32 roi_max_x
+uint32 roi_max_y
+---
+# Define the response
+uint32 result  # just a placeholder

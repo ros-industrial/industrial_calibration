@@ -166,6 +166,7 @@ namespace industrial_extrinsic_cal
 		else{
 		  ROS_ERROR("No scene trigger of type %s", trigger_name.c_str());
 		}
+		// parse the transform interface
 		if(transform_interface == std::string("ros_lti")){ // this option makes no sense for a camera
 		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
 		}
@@ -320,6 +321,7 @@ namespace industrial_extrinsic_cal
 		}
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
+		scene_id = 0;
 		ceres_blocks_.addMovingCamera(temp_camera, scene_id);
 
 	      }
@@ -374,6 +376,13 @@ namespace industrial_extrinsic_cal
 		    ROS_DEBUG_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
 		    break;
 		  case pattern_options::CircleGrid:
+		    (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
+		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
+		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
+		    temp_target->circle_grid_parameters_.is_symmetric=true;
+		    ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
+		    break;
+		  case pattern_options::ModifiedCircleGrid:
 		    (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
 		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
 		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
@@ -453,6 +462,7 @@ namespace industrial_extrinsic_cal
 		(*target_parameters)[i]["target_name"] >> temp_target->target_name_;
 		(*target_parameters)[i]["target_frame"] >> temp_frame;
 		(*target_parameters)[i]["transform_interface"] >> transform_interface;
+
 		// install target's transform interface
 		if(transform_interface == std::string("ros_lti")){ 
 		  temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
@@ -480,6 +490,12 @@ namespace industrial_extrinsic_cal
 		    ROS_INFO_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
 		    break;
 		  case pattern_options::CircleGrid:
+		    (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
+		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
+		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
+		    temp_target->circle_grid_parameters_.is_symmetric=true;
+		    break;
+		  case pattern_options::ModifiedCircleGrid:
 		    (*target_parameters)[i]["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
 		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
 		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
@@ -624,7 +640,24 @@ namespace industrial_extrinsic_cal
 		  (*caljob_scenes)[i]["pose"][6] >> pose.orientation.w;
 		  temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
 		}
-
+		else if(trigger_name == std::string("ROS_CAMERA_OBSERVER_TRIGGER")){
+		  const YAML::Node *trigger_parameters = (*caljob_scenes)[i].FindValue("trigger_parameters");
+		  Roi roi;
+		  std::string service_name;
+		  std::string instructions;
+		  std::string image_topic;
+		  (*trigger_parameters)[0]["service_name"] >> service_name;
+		  (*trigger_parameters)[0]["instructions"] >> instructions;
+		  (*trigger_parameters)[0]["image_topic"] >> image_topic;
+		  (*trigger_parameters)[0]["roi_min_x"] >> roi.x_min;
+		  (*trigger_parameters)[0]["roi_max_x"] >> roi.x_max;
+		  (*trigger_parameters)[0]["roi_min_y"] >> roi.y_min;
+		  (*trigger_parameters)[0]["roi_max_y"] >> roi.y_max;
+		  temp_trigger = make_shared<ROSCameraObserverTrigger>(service_name, instructions, image_topic, roi);
+		}
+		else{
+		  ROS_ERROR("Unknown scene trigger type %s", trigger_name.c_str());
+		}
 		scene_list_.at(i).setTrigger(temp_trigger);
 
 		scene_list_.at(i).setSceneId(scene_id_num);
@@ -639,6 +672,7 @@ namespace industrial_extrinsic_cal
 		    (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
 		    (*obs_node)[j]["target"] >> target_name;
 		    (*obs_node)[j]["cost_type"] >> cost_type_string;
+		    ROS_ERROR("ROI x[ %d %d], y[ %d %d]", temp_roi.x_min, temp_roi.x_max, temp_roi.y_min, temp_roi.y_max);
 		    cost_type = string2CostType(cost_type_string);
 		    if((temp_cam = ceres_blocks_.getCameraByName(camera_name)) == NULL){
 		      ROS_ERROR("Couldn't find camea %s",camera_name.c_str());
@@ -667,14 +701,14 @@ namespace industrial_extrinsic_cal
     ROS_INFO("Running observations");
     runObservations();
     ROS_INFO("Running optimization");
-    bool optimization_ran_ok = runOptimization();
-    if(optimization_ran_ok){
+    solved_ = runOptimization();
+    if(solved_){
       pushTransforms(); // sends updated transforms to their intefaces
     }
     else{
       ROS_ERROR("Optimization failed");
     }
-    return(optimization_ran_ok);
+    return(solved_);
   }
 
   bool CalibrationJob::runObservations()
@@ -694,29 +728,28 @@ namespace industrial_extrinsic_cal
 	ROS_DEBUG_STREAM("Processing Scene " << scene_id+1<<" of "<< scene_list_.size());
 	ROS_INFO("Processing Scene  %d of %d",scene_id, (int) scene_list_.size());
 
+	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
+
+	pullTransforms(scene_id); // gets transforms of targets and cameras from their interfaces
+
 	BOOST_FOREACH(shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {			// clear camera of existing observations
 	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
-	    if(current_camera->isMoving()){
-	      ROS_ERROR("Camera %s is moving in scene %d",current_camera->camera_name_.c_str(), scene_id);
-	    }
 	  }
 
 	BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
 	  {	// add each target and roi each camera's list of observations
+	    ROS_ERROR("roi = %d %d %d %d",o_command.roi.x_min, o_command.roi.x_max, o_command.roi.y_min, o_command.roi.y_max);
 	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi, o_command.cost_type);
 	  }
-	
-	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
 
-	pullTransforms(scene_id); // gets transforms of targets and cameras from their interfaces
-	
 	BOOST_FOREACH( shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {// trigger the cameras
 	    P_BLOCK tmp;
 	    current_camera->camera_observer_->triggerCamera();
 	  }
+	ROS_ERROR("cameras triggered");
 
 	// collect results
 	P_BLOCK intrinsics;
@@ -725,7 +758,7 @@ namespace industrial_extrinsic_cal
 	P_BLOCK pnt_pos;
 	std::string camera_name;
 	std::string target_name;
-	int target_type;
+	unsigned int  target_type;
 	Cost_function cost_type;
 
 	// for each camera in scene get a list of observations, and add camera parameters to ceres_blocks
@@ -733,8 +766,9 @@ namespace industrial_extrinsic_cal
 	BOOST_FOREACH( shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
 	  {
 	    // wait until observation is done
+	    ROS_ERROR("waiting for camera observations to finish");
 	    while (!camera->camera_observer_->observationsDone()) ;
-
+	    ROS_ERROR("observations done");
 	    camera_name = camera->camera_name_;
 	    if (camera->isMoving())
 	      {
@@ -755,6 +789,7 @@ namespace industrial_extrinsic_cal
 	    // Get the observations from this camera whose P_BLOCKs are intrinsics and extrinsics
 	    CameraObservations camera_observations;
 	    int number_returned;
+	    ROS_ERROR("extracting observations");
 	    number_returned = camera->getObservations(camera_observations);
 
 	    ROS_DEBUG_STREAM("Processing " << camera_observations.size() << " Observations");
@@ -765,7 +800,7 @@ namespace industrial_extrinsic_cal
 		target_type = observation.target->target_type_;
 		cost_type = observation.cost_type;
 		double circle_dia=0.0;
-		if(target_type == pattern_options::CircleGrid){
+		if(target_type == pattern_options::CircleGrid || target_type == pattern_options::ModifiedCircleGrid){
 		  circle_dia = observation.target->circle_grid_parameters_.circle_diameter;
 		}
 		int pnt_id = observation.point_id;
@@ -798,12 +833,12 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::runOptimization()
   {
-    int total_observations =0;
+    total_observations_ =0;
     for(int i=0;i<observation_data_point_list_.size();i++){
-      total_observations += observation_data_point_list_[i].items_.size();
+      total_observations_ += observation_data_point_list_[i].items_.size();
     }
-    if(total_observations == 0){ // TODO really need more than number of parameters being computed
-      ROS_ERROR("Too few observations: %d",total_observations);
+    if(total_observations_ == 0){ // TODO really need more than number of parameters being computed
+      ROS_ERROR("Too few observations: %d",total_observations_);
       return(false);
     }
     
@@ -864,7 +899,7 @@ namespace industrial_extrinsic_cal
 		target_pose.setAngleAxis(target_pose_params[0],target_pose_params[1], target_pose_params[2]);
 		target_pose.setOrigin(target_pose_params[3],target_pose_params[4], target_pose_params[5]);
 		point_position = ODP.point_position_;
-		bool point_zero=false;
+		bool point_zero=false; // Set true to enable some debugging
 		/*
 		if(point.x == 0.0 && point.y == 0.0 && point.z == 0.0){
 		  point_zero=true;
@@ -1030,7 +1065,7 @@ namespace industrial_extrinsic_cal
 		    CostFunction* cost_function =
 		      CircleTargetCameraReprjErrorWithDistortion::Create(image_x, image_y,
 									 circle_dia);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params, point.pb);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjErrorWithDistortionPK:
@@ -1042,16 +1077,22 @@ namespace industrial_extrinsic_cal
 		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
 		  }
 		  break;
-		case cost_functions::CircleTargetCameraReprjError:
+		case cost_functions::FixedCircleTargetCameraReprjErrorWithDistortionPK:
 		  {
 		    CostFunction* cost_function =
-		      CircleTargetCameraReprjError::Create(image_x, image_y, 
-							   circle_dia,
-							   focal_length_x,
-							   focal_length_y,
-							   center_x,
-							   center_y);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+		      FixedCircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
+									   circle_dia,
+									   point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
+		  }
+		  break;
+		case cost_functions::SimpleCircleTargetCameraReprjErrorWithDistortionPK:
+		  {
+		    CostFunction* cost_function =
+		      SimpleCircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
+									   circle_dia,
+									   point);
+		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjErrorPK:
@@ -1155,7 +1196,8 @@ namespace industrial_extrinsic_cal
 		    problem_.AddResidualBlock(cost_function, NULL , extrinsics);
 		    if(point_zero){
 		      double residual[2];
-		      double *params[2];
+		      double *params[1];
+		      showPose(extrinsics,"extrinsics");
 		      params[0] = &extrinsics[0];
 		      cost_function->Evaluate(params, residual, NULL);
 		      ROS_ERROR("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
@@ -1184,19 +1226,64 @@ namespace industrial_extrinsic_cal
 	      }//for each observation
 	  }//for each camera
       }//for each scene
-  ROS_INFO("total observations: %d ",total_observations);
+  ROS_INFO("total observations: %d ",total_observations_);
   
   // Make Ceres automatically detect the bundle structure. Note that the
   // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
   // for standard bundle adjustment problems.
   ceres::Solver::Options options;
-  ceres::Solver::Summary summary;
   options.linear_solver_type = ceres::DENSE_SCHUR;
   options.minimizer_progress_to_stdout = true;
   options.max_num_iterations = 1000;
-  ceres::Solve(options, &problem_, &summary);
-  ROS_INFO("PROBLEM SOLVED");
-  return true;
+  ceres::Solve(options, &problem_, &ceres_summary_);
+
+  if(ceres_summary_.termination_type == ceres::USER_SUCCESS
+     || ceres_summary_.termination_type == ceres::FUNCTION_TOLERANCE
+     || ceres_summary_.termination_type == ceres::GRADIENT_TOLERANCE
+     || ceres_summary_.termination_type == ceres::PARAMETER_TOLERANCE
+     ){
+      ROS_INFO("Problem Solved");
+      double error_per_observation = ceres_summary_.initial_cost/total_observations_;
+
+      if(1){
+	FILE *fp;
+	if((fp= fopen("covariance.txt", "w") ) != NULL){
+	  ceres::Covariance::Options covariance_options;
+	  covariance_options.algorithm_type = ceres::DENSE_SVD;
+	  ceres::Covariance covariance(covariance_options);
+	  std::vector< std::pair< const double*, const double*> > covariance_blocks;
+	  P_BLOCK intrinsics = ceres_blocks_.getMovingCameraParameterBlockIntrinsics("asus1");
+	  
+	  covariance_blocks.push_back(std::make_pair(intrinsics, intrinsics) );
+	  covariance.Compute(covariance_blocks, &problem_);
+	  int num_intrinsics = 7;
+	  double intrinsic_covariance[num_intrinsics*num_intrinsics];
+	  covariance.GetCovarianceBlock(intrinsics, intrinsics, intrinsic_covariance);
+	  fprintf(fp,"intrinsic covariance:\n");
+	  for(int i=0; i<num_intrinsics; i++){
+	    for(int j=0; j<num_intrinsics; j++){
+	      double sigma_i = sqrt(intrinsic_covariance[i*num_intrinsics+i]);
+	      double sigma_j = sqrt(intrinsic_covariance[j*num_intrinsics+j]);
+	      if(i==j){
+		fprintf(fp,"%6.3lf ", sigma_i);
+	      }
+	      else{
+		fprintf(fp,"%6.3lf ", intrinsic_covariance[i*num_intrinsics + j]/(sigma_i * sigma_j));
+	      }
+	    }// end for j
+	    fprintf(fp,"\n");
+	  } // end for i
+	  fclose(fp);
+	}
+      }
+      return true;
+    }
+    else{
+      ROS_ERROR("Problem Not Solved termination type = %d success = %d", ceres_summary_.termination_type, ceres::USER_SUCCESS);
+    }
+
+
+    
 }//end runOptimization
 
   bool CalibrationJob::store()
@@ -1222,5 +1309,22 @@ namespace industrial_extrinsic_cal
   void CalibrationJob::pushTransforms()
   {
     ceres_blocks_.pushTransforms();
+  }
+  double CalibrationJob::finalCostPerObservation()
+  {
+    if(!solved_){
+      ROS_ERROR("Can't call costPerObservation prior to solving");
+      return(-1.0);
+    }
+    return(ceres_summary_.final_cost/total_observations_);
+  }
+
+  double CalibrationJob::initialCostPerObservation()
+  {
+    if(!solved_){
+      ROS_ERROR("Can't call costPerObservation prior to solving");
+      return(-1.0);
+    }
+    return(ceres_summary_.initial_cost/total_observations_);
   }
 }//end namespace industrial_extrinsic_cal

@@ -77,8 +77,11 @@ namespace industrial_extrinsic_cal
     k1  = intrinsics[4]; /** distortion k1  */
     k2  = intrinsics[5]; /** distortion k2  */
     k3  = intrinsics[6]; /** distortion k3  */
-    p1  = intrinsics[7]; /** distortion p1  */
-    p2  = intrinsics[8]; /** distortion p2  */
+   
+    //    p1  = intrinsics[7]; /** distortion p1  */
+    //    p2  = intrinsics[8]; /** distortion p2  */
+    p1  = T(0.0);
+    p2  = T(0.0);
   }
 
   /*! \brief ceres compliant to compute inverse of a rotation matrix
@@ -271,7 +274,13 @@ namespace industrial_extrinsic_cal
     Vperp[2] = -D_targety*R_TtoC[2] + D_targetx*R_TtoC[5] ;
     
     // Vector direction of Vperp is arbitrary, but need to specify direction closer to camera
-    T mysign = -abs(Vperp[2])/Vperp[2]; // Warning, division by zero could happen
+    T mysign;
+    if(Vperp[2]*Vperp[2] > T(0.0)){
+      mysign = -abs(Vperp[2])/Vperp[2]; 
+    }
+    else{
+      mysign = T(1);
+    }
     Vperp[0] = mysign*Vperp[0];
     Vperp[1] = mysign*Vperp[1];
     Vperp[2] = mysign*Vperp[2];
@@ -377,7 +386,13 @@ namespace industrial_extrinsic_cal
     Vperp[2] = -D_targety*R_TtoC[2] + D_targetx*R_TtoC[5] ;
     
     // Vector direction of Vperp is arbitrary, but need to specify direction closer to camera
-    T mysign = -abs(Vperp[2])/Vperp[2]; // Warning, division by zero could happen
+    T mysign;
+    if(Vperp[2]*Vperp[2] > T(0.0)){
+      mysign = -abs(Vperp[2])/Vperp[2]; 
+    }
+    else{
+      mysign = T(1);
+    }
     Vperp[0] = mysign*Vperp[0];
     Vperp[1] = mysign*Vperp[1];
     Vperp[2] = mysign*Vperp[2];
@@ -520,7 +535,7 @@ namespace industrial_extrinsic_cal
     /** the client code. */
     static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point)
     {
-      return (new ceres::AutoDiffCostFunction<CameraReprjErrorWithDistortionPK, 2, 6, 9>(new CameraReprjErrorWithDistortionPK(o_x, o_y, point)));
+      return (new ceres::AutoDiffCostFunction<CameraReprjErrorWithDistortionPK, 2, 6, 7>(new CameraReprjErrorWithDistortionPK(o_x, o_y, point)));
     }
     double ox_; /** observed x location of object in image */
     double oy_; /** observed y location of object in image */
@@ -1202,10 +1217,10 @@ namespace industrial_extrinsic_cal
     Point3d point_; /** location of point in target coordinates */
   };
 
-  class  CircleTargetCameraReprjErrorWithDistortion
+  class  FixedCircleTargetCameraReprjErrorWithDistortion
   {
   public:
-    CircleTargetCameraReprjErrorWithDistortion(double ob_x, double ob_y, double c_dia) :
+    FixedCircleTargetCameraReprjErrorWithDistortion(double ob_x, double ob_y, double c_dia) :
       ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia)
     {
     }
@@ -1253,17 +1268,180 @@ namespace industrial_extrinsic_cal
     /** the client code. */
     static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia)
     {
-      return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorWithDistortion, 2, 6, 6, 9, 3>(new CircleTargetCameraReprjErrorWithDistortion(o_x, o_y, c_dia)));
+      return (new ceres::AutoDiffCostFunction<FixedCircleTargetCameraReprjErrorWithDistortion, 2, 6, 6, 9, 3>(new FixedCircleTargetCameraReprjErrorWithDistortion(o_x, o_y, c_dia)));
     }
     double ox_; /** observed x location of object in image */
     double oy_; /** observed y location of object in image */
     double circle_diameter_; //** diameter of circle being observed */
   };
 
+  class  FixedCircleTargetCameraReprjErrorWithDistortionPK
+  {
+  public:
+    FixedCircleTargetCameraReprjErrorWithDistortionPK(double ob_x, double ob_y, double c_dia, Point3d point) :
+      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
+		    const T* const c_p2, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
+		    const T* const c_p3, /** 6Dof transform of target into world frame [6]*/
+		    T* residual) const
+    {
+      const T *camera_aa(&c_p1[0]);
+      const T *camera_tx(&c_p1[3]);
+      const T *target_aa(& c_p3[0]);
+      const T *target_tx(& c_p3[3]);
+      T fx, fy, cx, cy, k1, k2, k3, p1, p2;      
+      extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
+      T world_point[3]; /** point in world coordinates */
+      T camera_point[3];  /** point in camera coordinates*/ 
+      T R_WtoC[9]; // rotation from world to camera coordinates
+      T R_TtoW[9]; // rotation from target to world coordinates
+      T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
+
+      /** compute necessary rotation matrices */
+      ceres::AngleAxisToRotationMatrix(camera_aa, R_WtoC);  
+      ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
+
+      /** transform point into camera coordinates */
+      transformPoint3d(target_aa, target_tx, point_, world_point);
+      transformPoint(camera_aa, camera_tx, world_point, camera_point);
+
+      // find rotation from target to camera coordinates
+      rotationProduct(R_WtoC, R_TtoW, R_TtoC); // R_WtoC*R_TtoW = R_TtoC
+
+      /** compute project point into image plane and compute residual */
+      T circle_diameter = T(circle_diameter_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, residual);
+
+      return true;
+    } /** end of operator() */
+    
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, Point3d point)
+    {
+      return (new ceres::AutoDiffCostFunction<FixedCircleTargetCameraReprjErrorWithDistortionPK, 2, 6, 9, 3>(new FixedCircleTargetCameraReprjErrorWithDistortionPK(o_x, o_y, c_dia, point)));
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double circle_diameter_; /** diameter of circle being observed */
+    Point3d point_; /** location of point in target coordinates */
+  };
+
+
+  class CircleTargetCameraReprjErrorWithDistortion
+  {
+  public:
+    CircleTargetCameraReprjErrorWithDistortion(double ob_x, double ob_y, double c_dia) :
+      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia)
+    {
+    }
+
+    template<typename T>
+    bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
+		    const T* const c_p2, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
+		    const T* const point, /** point described in target frame that is being seen [3]*/
+		    T* residual) const
+    {
+      const T *camera_aa(&c_p1[0]);
+      const T *camera_tx(&c_p1[3]);
+      T fx, fy, cx, cy, k1, k2, k3, p1, p2;      
+      extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
+      T world_point[3]; /** point in world coordinates */
+      T camera_point[3];  /** point in camera coordinates*/ 
+      T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
+
+      /** compute necessary rotation matrices */
+      ceres::AngleAxisToRotationMatrix(camera_aa, R_TtoC);  
+
+      /** transform point into camera coordinates */
+      transformPoint(camera_aa, camera_tx, point, camera_point);
+
+      /** compute project point into image plane and compute residual */
+      T circle_diameter = T(circle_diameter_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, residual);
+
+      return true;
+    } /** end of operator() */
+    
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia)
+    {
+      return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorWithDistortion, 2, 6, 9, 3>(new CircleTargetCameraReprjErrorWithDistortion(o_x, o_y, c_dia)));
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double circle_diameter_; //** diameter of circle being observed */
+  };
+
+  /******************I'm working on this one now *************************************************************/
+  // circle target is the origin, camera's location not known, distortion also unknown
+  class  SimpleCircleTargetCameraReprjErrorWithDistortionPK
+  {
+  public:
+    SimpleCircleTargetCameraReprjErrorWithDistortionPK(const double &ob_x, const double &ob_y, const double &c_dia,
+				   const Point3d &point) :
+      ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
+		    const T* const c_p2, /** intrinsic parameters[9] */
+		    T* residual) const
+    {
+      const T *camera_aa(&c_p1[0]);
+      const T *camera_tx(&c_p1[3]);
+      T fx, fy, cx, cy, k1, k2, k3, p1, p2;      
+      extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
+      T camera_point[3];  /** point in camera coordinates */ 
+      T R_optical_to_target[9]; /** rotation from optical frame to target frame */
+      T circle_diameter = T(circle_diameter_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      T point[3];
+      point[0] = T(point_.x);
+      point[1] = T(point_.y);
+      point[2] = T(point_.z);
+      
+      /** get necessary rotation matrices */
+      ceres::AngleAxisToRotationMatrix(camera_aa, R_optical_to_target);  
+
+      /** transform point into camera coordinates */
+      transformPoint(camera_aa, camera_tx, point, camera_point);
+
+      /** compute project point into image plane and compute residual */
+      cameraCircResidualDist(camera_point, circle_diameter, R_optical_to_target, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double &o_x, const double &o_y, const double &c_dia,
+				       Point3d &point)
+    {
+      return (new ceres::AutoDiffCostFunction< SimpleCircleTargetCameraReprjErrorWithDistortionPK, 2, 6, 9>
+	      (new SimpleCircleTargetCameraReprjErrorWithDistortionPK(o_x, o_y, c_dia, point)));
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double circle_diameter_; //** diameter of circle being observed */
+    Point3d point_; /** point expressed in target coordinates */
+  };
+
   class  CircleTargetCameraReprjErrorWithDistortionPK
   {
   public:
-    CircleTargetCameraReprjErrorWithDistortionPK(double ob_x, double ob_y, double c_dia, Point3d point) :
+    CircleTargetCameraReprjErrorWithDistortionPK(const double ob_x, const double ob_y, const double c_dia, const Point3d point) :
       ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), point_(point)
     {
     }
@@ -1869,11 +2047,11 @@ namespace industrial_extrinsic_cal
       double cy = cy_;
       double ox = ox_;
       double oy = oy_;
-      cameraCircResidual(camera_point, circle_diameter, R_mount_to_target, fx, fy,cx,cy, ox, oy, resid);
+      cameraCircResidual(camera_point, circle_diameter, R_mount_to_target, fx, fy, cx, cy, ox, oy, resid);
     }
     template<typename T>
     bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
-		    T* resid) const
+		    T* residual) const
     {
       const T *camera_aa(&c_p1[0]);
       const T *camera_tx(&c_p1[3]);
@@ -1906,7 +2084,10 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      cameraCircResidual(camera_point, circle_diameter, R_optical_to_target, fx, fy,cx,cy, ox, oy, resid);
+      // cameraPntResidual(camera_point, fx, fy,cx,cy, ox, oy, residual);
+      cameraCircResidual(camera_point, circle_diameter, R_optical_to_target, fx, fy, cx, cy, ox, oy, residual);
+      //      cameraCircResidualDist(camera_point, circle_diameter, R_optical_to_target, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, residual);
+
       return true;
     } /** end of operator() */
 
@@ -1934,6 +2115,8 @@ namespace industrial_extrinsic_cal
     double cy_; /** focal center of camera in y (pixels) */
     Point3d point_; /** point expressed in target coordinates */
   };
+
+
 
 } // end of namespace
 #endif

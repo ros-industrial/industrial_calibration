@@ -42,6 +42,8 @@ namespace industrial_extrinsic_cal
     if(cost_type_str == "CircleCameraReprjErrorPK") return(cost_functions::CircleCameraReprjErrorPK);
     if(cost_type_str == "CircleTargetCameraReprjErrorWithDistortion") return(cost_functions::CircleTargetCameraReprjErrorWithDistortion);
     if(cost_type_str == "CircleTargetCameraReprjErrorWithDistortionPK") return(cost_functions::CircleTargetCameraReprjErrorWithDistortionPK);
+    if(cost_type_str == "FixedCircleTargetCameraReprjErrorWithDistortionPK") return(cost_functions::FixedCircleTargetCameraReprjErrorWithDistortionPK);
+    if(cost_type_str == "SimpleCircleTargetCameraReprjErrorWithDistortionPK") return(cost_functions::SimpleCircleTargetCameraReprjErrorWithDistortionPK);
     if(cost_type_str == "CircleTargetCameraReprjError") return(cost_functions::CircleTargetCameraReprjError);
     if(cost_type_str == "CircleTargetCameraReprjErrorPK") return(cost_functions::CircleTargetCameraReprjErrorPK);
     if(cost_type_str == "LinkCircleTargetCameraReprjError") return(cost_functions::LinkCircleTargetCameraReprjError);

@@ -264,6 +264,7 @@ bool CeresBlocks::addMovingCamera(shared_ptr<Camera> camera_to_add, int scene_id
 
   temp_moving_camera->cam = temp_camera;
   temp_moving_camera->scene_id = scene_id;
+  ROS_ERROR("adding moving camera with scene_id = %d", scene_id);
 
   moving_cameras_.push_back(temp_moving_camera);
   return (true);
