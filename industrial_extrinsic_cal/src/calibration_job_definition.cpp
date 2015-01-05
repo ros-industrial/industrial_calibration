@@ -390,7 +390,7 @@ namespace industrial_extrinsic_cal
 		    ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
 		    break;
 		  default:
-		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
+		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid, or ModifiedCircleGrid)");
 		    return false;
 		    break;
 		  } // end of target type

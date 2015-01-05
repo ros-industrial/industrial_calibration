@@ -64,8 +64,8 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
   params.maxConvexity = std::numeric_limits<float>::max();
 
   // set up and create the detector using the parameters
-  circle_detector_ptr_ = new cv::CircleDetector(params);
-
+  //  circle_detector_ptr_ = new cv::CircleDetector(params);
+  circle_detector_ptr_ = new cv::SimpleBlobDetector();
 }
 
 bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost_function cost_type)
@@ -76,7 +76,7 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost
   cost_type_ = cost_type; 
 
   //set pattern based on target
-  ROS_INFO_STREAM("Target type: "<<targ->target_type_);
+  ROS_DEBUG_STREAM("Target type: "<<targ->target_type_);
   instance_target_ = targ;
   switch (targ->target_type_)
   {
@@ -112,7 +112,7 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost
   input_roi_.width= roi.x_max - roi.x_min;
   input_roi_.height= roi.y_max - roi.y_min;
 
-  ROS_INFO_STREAM("ROSCameraObserver added target and roi");
+  ROS_DEBUG("ROSCameraObserver added target and roi");
 
   return true;
 }
@@ -120,14 +120,12 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost
 void ROSCameraObserver::clearTargets()
 {
   instance_target_.reset();
-  //ROS_INFO_STREAM("Targets cleared from observer");
 }
 
 void ROSCameraObserver::clearObservations()
 {
   camera_obs_.clear();
   new_image_collected_ = false;
-  //ROS_INFO_STREAM("Observations cleared from observer");
 }
 int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 {
@@ -140,91 +138,111 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	      input_bridge_->image.cols, input_bridge_->image.rows, input_roi_.width, input_roi_.height );
     return 0;
   }
-  ROS_INFO("roi size = %d %d", input_roi_.height, input_roi_.width);
-  ROS_INFO("image size = %d %d", input_bridge_->image.rows, input_bridge_->image.cols);
+  ROS_DEBUG("roi size = %d %d", input_roi_.height, input_roi_.width);
+  ROS_DEBUG("image size = %d %d", input_bridge_->image.rows, input_bridge_->image.cols);
   image_roi_ = input_bridge_->image(input_roi_);
-  ROS_INFO("image_roi_ size = %d %d", image_roi_.rows, image_roi_.cols);
+  ROS_DEBUG("image_roi_ size = %d %d", image_roi_.rows, image_roi_.cols);
 
   observation_pts_.clear();
   std::vector<cv::KeyPoint> key_points;
-  ROS_INFO("Pattern type %d, rows %d, cols %d",pattern_,pattern_rows_,pattern_cols_);
+  ROS_DEBUG("Pattern type %d, rows %d, cols %d",pattern_,pattern_rows_,pattern_cols_);
   
   cv::Size pattern_size(pattern_cols_, pattern_rows_); // note they use cols then rows for some unknown reason
   switch (pattern_)
     {
     case pattern_options::Chessboard:
-      ROS_INFO_STREAM("Finding Chessboard Corners...");
+      ROS_DEBUG_STREAM("Finding Chessboard Corners...");
       successful_find = cv::findChessboardCorners(image_roi_, pattern_size, observation_pts_, cv::CALIB_CB_ADAPTIVE_THRESH);
       break;
     case pattern_options::CircleGrid:
       if (sym_circle_) // symetric circle grid
 	{
-	  ROS_INFO_STREAM("Finding Circles in grid, symmetric...");
+	  ROS_DEBUG_STREAM("Finding Circles in grid, symmetric...");
 	  successful_find = cv::findCirclesGrid(image_roi_, pattern_size, observation_pts_, cv::CALIB_CB_SYMMETRIC_GRID);
 	}
       else         // asymetric circle grid
 	{
-	  ROS_INFO_STREAM("Finding Circles in grid, asymmetric...");
+	  ROS_DEBUG_STREAM("Finding Circles in grid, asymmetric...");
 	  successful_find = cv::findCirclesGrid(image_roi_, pattern_size , observation_pts_, 
 						cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING);
 	}
       break;
     case pattern_options::ModifiedCircleGrid:
       // modified circle grids have one circle at the origin which is 1.5 times larger in diameter than the rest
-      ROS_INFO_STREAM("Finding Circles in modified symetric grid");
+      ROS_DEBUG_STREAM("Finding Circles in modified symetric grid");
       std::vector<cv::Point2f> centers;
       successful_find = cv::findCirclesGrid(image_roi_, pattern_size, centers, 
-					    cv::CALIB_CB_SYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING,
+					    cv::CALIB_CB_SYMMETRIC_GRID,
 					    circle_detector_ptr_);
+      if(!successful_find){
+	ROS_ERROR("couldn't find");
+	out_bridge_->image = image_roi_;
+	junk_pub_.publish(out_bridge_->toImageMsg());
+	return 0;
+      }
       // Note, this is the same method called in the beginning of findCirclesGrid, unfortunately, they don't return their keypoints
       // Should OpenCV change their method, the keypoint locations may not match, this has a risk of failing with
       // updates to OpenCV
       std::vector<cv::KeyPoint> keypoints;
       circle_detector_ptr_->detect(image_roi_, keypoints);
-
+      ROS_DEBUG("found %d keypoints", keypoints.size());
       if(successful_find){ // determine orientation, and sort points to correct correspondence
-	int lw_lt_index = pattern_rows_*pattern_cols_ -1; // lower left point's index
+	int lw_lt_index = pattern_rows_*pattern_cols_ - pattern_cols_; // lower right point's index
+	int lw_rt_index = pattern_rows_*pattern_cols_ -1; // lower left point's index
 	int up_lt_index = 0;	// upper left point's index
 	int up_rt_index = pattern_cols_-1; // upper right point's index
-	int lw_rt_index = pattern_rows_*pattern_cols_-1; // lower right point's index
+
 	double lw_lt_size = -1.0; // lower left point's size in pixels
 	double up_lt_size = -1.0;// upper left point's size in pixels
 	double up_rt_size = -1.0;// upper right point's size in pixels
 	double lw_rt_size = -1.0;// lower right point's size in pixels
 	for(int i=0; i<(int)keypoints.size(); i++){
+
 	  double x = keypoints[i].pt.x;
 	  double y = keypoints[i].pt.y;
 	  double ksize = keypoints[i].size;
-	  if(x == observation_pts_[lw_lt_index].x && y == observation_pts_[lw_lt_index].y) lw_lt_size = ksize;
-	  if(x == observation_pts_[up_lt_index].x && y == observation_pts_[up_rt_index].y) up_lt_size = ksize;
-	  if(x == observation_pts_[up_rt_index].x && y == observation_pts_[up_lt_index].y) up_rt_size = ksize;
-	  if(x == observation_pts_[lw_rt_index].x && y == observation_pts_[lw_rt_index].y) lw_lt_size = ksize;
+	  if(x == centers[lw_lt_index].x && y == centers[lw_lt_index].y) lw_lt_size = ksize;
+	  if(x == centers[lw_rt_index].x && y == centers[lw_rt_index].y) lw_rt_size = ksize;
+	  if(x == centers[up_lt_index].x && y == centers[up_lt_index].y) up_lt_size = ksize;
+	  if(x == centers[up_rt_index].x && y == centers[up_rt_index].y) up_rt_size = ksize;
 	}
-	if(lw_lt_size <0.0 || up_lt_size < 0.0 || up_rt_size <0.0 || lw_lt_size < 0.0){
+	ROS_DEBUG("lower_left  %f %f %f", centers[lw_lt_index].x, centers[lw_lt_index].y, lw_lt_size);
+	ROS_DEBUG("lower_right %f %f %f", centers[lw_rt_index].x, centers[lw_rt_index].y, lw_rt_size);
+	ROS_DEBUG("upper_left  %f %f %f", centers[up_lt_index].x, centers[up_lt_index].y, lw_lt_size);
+	ROS_DEBUG("uper_right %f %f %f", centers[up_lt_index].x, centers[up_lt_index].y, lw_lt_size);
+	if(lw_lt_size <0.0 || up_lt_size < 0.0 || up_rt_size <0.0 || lw_rt_size < 0.0){
 	  ROS_ERROR("No keypoint match for one or more corners");
 	  return(false);
 	}
 	
 	observation_pts_.clear();
+	// lower left
 	if(lw_lt_size >up_lt_size && lw_lt_size > up_rt_size && lw_lt_size > lw_rt_size){
+	  ROS_DEBUG("large lower left");
 	  // right side up, no rotation, order is natural, starting from upper left, read like book
 	  for(int i=0; i<(int) centers.size(); i++) observation_pts_.push_back(centers[i]);
 	}
-	else if( up_rt_size > lw_rt_size && up_rt_size > lw_rt_size && up_rt_size > up_lt_size){
-	  // -90 degree rotation 
+	// upper right
+	else if( up_rt_size > lw_rt_size && up_rt_size > lw_lt_size && up_rt_size > up_lt_size){
+	  ROS_DEBUG("large upper right");
+	  // 180 degree rotation reverse order
+	  for(int i=(int) centers.size()-1; i>= 0; i--){
+	    observation_pts_.push_back(centers[i]);
+	  }
+	}
+	// lower right
+	else if( lw_rt_size > lw_lt_size && lw_rt_size > up_rt_size && lw_rt_size > up_lt_size){
+	  ROS_DEBUG("large lower right");
+	  // -90 degree rotation
 	  for(int c=0; c<pattern_cols_; c++){
 	    for(int r=pattern_rows_-1; r>=0; r--){
 	      observation_pts_.push_back(centers[r*pattern_cols_ +c]);
 	    }
 	  }
 	}
-	else if( lw_rt_size > lw_lt_size && lw_rt_size > up_rt_size && lw_rt_size > up_lt_size){
-	  // 180 degree rotation, found in reverse order
-	  for(int i=(int) centers.size()-1; i>= 0; i--){
-	    observation_pts_.push_back(centers[i]);
-	  }
-	}
-	else if(lw_lt_size > lw_rt_size && lw_lt_size > up_rt_size && lw_lt_size > up_lt_size){
+	// upper left
+	else if(up_lt_size > lw_rt_size && up_lt_size > up_rt_size && up_lt_size > lw_lt_size){
+	  ROS_DEBUG("large upper left");
 	  // 90 degree rotation
 	  for(int c = pattern_cols_ -1; c>=0; c--){
 	    for(int r=0; r<pattern_rows_; r++){
@@ -241,8 +259,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
       break;// end modified circle grid case
     }// end of main switch
   
-  if(successful_find)  ROS_INFO_STREAM("FOUND");
-  ROS_INFO_STREAM("Number of keypoints found: "<<observation_pts_.size());
+  ROS_DEBUG("Number of keypoints found: %d ", (int)observation_pts_.size());
 
   // account for shift due to input_roi_
   for(int i=0; i<(int)observation_pts_.size(); i++){
@@ -317,29 +334,43 @@ void ROSCameraObserver::triggerCamera()
     output_bridge_->image = loaded_color_image;
     out_bridge_->image = loaded_mono_image;
     if(loaded_color_image.data && loaded_mono_image.data){
-      ROS_INFO("Loaded it");
+      ROS_DEBUG("Loaded it");
     }
   }
   else{
-    ROS_INFO("rosCameraObserver, waiting for image from topic %s",image_topic_.c_str());
-    sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
+    ROS_DEBUG("rosCameraObserver, waiting for image from topic %s",image_topic_.c_str());
+    bool done=false;
+    while(!done){
+      sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
+      
+      ROS_DEBUG("captured image in trigger");
+      try
+	{
+	  input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
+	  output_bridge_ = cv_bridge::toCvCopy(recent_image, "bgr8");
+	  last_raw_image_ = output_bridge_->image.clone();
+	  out_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
+	  new_image_collected_ = true;
+	  ROS_DEBUG("cv image created based on ros image");
+	  done = true;
+	  ROS_DEBUG("height = %d width=%d step=%d encoding=%s", 
+		    recent_image->height, 
+		    recent_image->width, 
+		    recent_image->step,  
+		    recent_image->encoding.c_str());
 
-    ROS_INFO("captured image in trigger");
-    try
-      {
-	input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
-	output_bridge_ = cv_bridge::toCvCopy(recent_image, "bgr8");
-	last_raw_image_ = output_bridge_->image.clone();
-	out_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
-	new_image_collected_ = true;
-	ROS_INFO_STREAM("cv image created based on ros image");
-      }
-    catch (cv_bridge::Exception& ex)
-      {
-	ROS_ERROR("Failed to convert image");
-	ROS_WARN_STREAM("cv_bridge exception: "<<ex.what());
-	return;
-      }
+	}
+      catch (cv_bridge::Exception& ex)
+	{
+	  ROS_ERROR("Failed to convert image");
+	  ROS_ERROR("height = %d width=%d step=%d encoding=%s", 
+		    recent_image->height, 
+		    recent_image->width, 
+		    recent_image->step,  
+		    recent_image->encoding.c_str());
+	  ROS_WARN_STREAM("cv_bridge exception: "<<ex.what());
+	}
+    }
   }
   image_number_++;
 }

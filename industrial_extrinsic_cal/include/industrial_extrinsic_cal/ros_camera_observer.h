@@ -48,7 +48,7 @@ namespace pattern_options
 {
   enum pattern_options_
     {
-      Chessboard = 0, CircleGrid = 1, ARtag = 2, ModifiedCircleGrid=3,
+      Chessboard = 0, CircleGrid = 1,  ModifiedCircleGrid=2, ARtag = 3,
     };
 }
 typedef pattern_options::pattern_options_ PatternOption;
