@@ -52,7 +52,6 @@ ENDIF (EIGEN_FOUND)
    camera_observer_trigger.srv
    user_accept.srv
    calibrate.srv
-   target_locator.srv
  )
 
 add_action_files(DIRECTORY  action  FILES  manual_trigger.action robot_joint_values_trigger.action  robot_pose_trigger.action manual_target_location.action calibration.action)
@@ -118,8 +117,6 @@ add_library(industrial_extrinsic_cal
 add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 ## Declare a cpp executable
-add_executable(call_service src/nodes/call_service.cpp)
-add_executable(target_locator_srv src/nodes/target_locator.cpp)
 add_executable(mono_ex_cal src/nodes/mono_ex_cal.cpp)
 add_executable(service_node src/nodes/calibration_service.cpp)
 add_executable(trigger_service src/nodes/ros_scene_trigger_server.cpp)
@@ -128,8 +125,6 @@ add_executable(mutable_joint_state_publisher src/nodes/mutable_joint_state_publi
 add_executable(camera_observer_scene_trigger src/nodes/camera_observer_scene_trigger.cpp)
 
 ## These insure the message, action and service headers are created first
-add_dependencies(call_service ${PROJECT_NAME}_generate_messages_cpp )
-add_dependencies(target_locator_srv ${PROJECT_NAME}_generate_messages_cpp )
 add_dependencies(service_node ${PROJECT_NAME}_generate_messages_cpp )
 add_dependencies(trigger_service ${PROJECT_NAME}_generate_messages_cpp )
 add_dependencies(ros_robot_trigger_action_service  ${PROJECT_NAME}_generate_messages_cpp)
@@ -142,8 +137,6 @@ add_dependencies(camera_observer_scene_trigger ${PROJECT_NAME}_generate_messages
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${CERES_LIBRARIES})
-target_link_libraries(call_service industrial_extrinsic_cal ${catkin_LIBRARIES}  )
-target_link_libraries(target_locator_srv industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 target_link_libraries(mono_ex_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 #target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
