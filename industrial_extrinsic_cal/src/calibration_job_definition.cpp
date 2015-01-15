@@ -32,11 +32,10 @@ using std::string;
 using boost::shared_ptr;
 using boost::make_shared;
 using ceres::CostFunction;
+using industrial_extrinsic_cal::CovarianceRequestType;
 
 namespace industrial_extrinsic_cal
 {
-
-
   bool CalibrationJob::load()
   {
     if(CalibrationJob::loadCamera())
@@ -833,6 +832,10 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::runOptimization()
   {
+    // problem is declared here because we can't clear it as far as I can tell from the ceres documentation
+    if(problem_ != NULL) delete(problem_); 
+    problem_ = new ceres::Problem; /*!< This is the object which solves non-linear optimization problems */
+
     total_observations_ =0;
     for(int i=0;i<observation_data_point_list_.size();i++){
       total_observations_ += observation_data_point_list_[i].items_.size();
@@ -915,7 +918,7 @@ namespace industrial_extrinsic_cal
 		  {
 		    CostFunction* cost_function =
 		      CameraReprjErrorWithDistortion::Create(image_x, image_y);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
 		  }
 		  break;
 		case cost_functions::CameraReprjErrorWithDistortionPK:
@@ -923,7 +926,7 @@ namespace industrial_extrinsic_cal
 		    CostFunction* cost_function =
 		      CameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
 							       point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
 		  }
 		  break;
 		case cost_functions::CameraReprjError:
@@ -932,7 +935,7 @@ namespace industrial_extrinsic_cal
 		      CameraReprjError::Create(image_x, image_y, 
 					       focal_length_x, focal_length_y,
 					       center_x, center_y);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, point.pb);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, point.pb);
 		  }
 		  break;
 		case cost_functions::CameraReprjErrorPK:
@@ -942,7 +945,7 @@ namespace industrial_extrinsic_cal
 						 focal_length_x, focal_length_y,
 						 center_x, center_y,
 						 point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics);
 		  }
 		  break;
 		case cost_functions::TargetCameraReprjError:
@@ -952,7 +955,7 @@ namespace industrial_extrinsic_cal
 						     focal_length_x, focal_length_y,
 						     center_x, center_y);
 
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::TargetCameraReprjErrorPK:
@@ -965,7 +968,7 @@ namespace industrial_extrinsic_cal
 						       center_y,
 						       point);
 		    // add it as a residual using parameter blocks
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkTargetCameraReprjError:
@@ -977,7 +980,7 @@ namespace industrial_extrinsic_cal
 							 center_x,
 							 center_y,
 							 camera_mounting_pose);
-		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+		      problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkTargetCameraReprjErrorPK:
@@ -990,7 +993,7 @@ namespace industrial_extrinsic_cal
 							   center_y,
 							   camera_mounting_pose,
 							   point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkCameraTargetReprjError:
@@ -1002,7 +1005,7 @@ namespace industrial_extrinsic_cal
 							 center_x,
 							 center_y,
 							 camera_mounting_pose);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkCameraTargetReprjErrorPK:
@@ -1016,14 +1019,14 @@ namespace industrial_extrinsic_cal
 							     camera_mounting_pose,
 							     point);
 		      
-		      problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+		      problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		    }
 		    break;
 		case cost_functions::CircleCameraReprjErrorWithDistortion:
 		  {
 		    CostFunction* cost_function =
 		      CircleCameraReprjErrorWithDistortion::Create(image_x, image_y, circle_dia);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
 		  }
 		  break;
 		case cost_functions::CircleCameraReprjErrorWithDistortionPK:
@@ -1032,7 +1035,7 @@ namespace industrial_extrinsic_cal
 		      CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y,
 								     circle_dia,
 								     point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
 		  }
 		  break;
 		case cost_functions::CircleCameraReprjError:
@@ -1044,7 +1047,7 @@ namespace industrial_extrinsic_cal
 						     focal_length_y,
 						     center_x,
 						     center_y);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, point.pb);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, point.pb);
 		  }
 		  break;
 		case cost_functions::CircleCameraReprjErrorPK:
@@ -1057,7 +1060,7 @@ namespace industrial_extrinsic_cal
 						       center_x,
 						       center_y,
 						       point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjErrorWithDistortion:
@@ -1065,7 +1068,7 @@ namespace industrial_extrinsic_cal
 		    CostFunction* cost_function =
 		      CircleTargetCameraReprjErrorWithDistortion::Create(image_x, image_y,
 									 circle_dia);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjErrorWithDistortionPK:
@@ -1074,7 +1077,7 @@ namespace industrial_extrinsic_cal
 		      CircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
 									   circle_dia,
 									   point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::FixedCircleTargetCameraReprjErrorWithDistortionPK:
@@ -1083,7 +1086,7 @@ namespace industrial_extrinsic_cal
 		      FixedCircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
 									   circle_dia,
 									   point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::SimpleCircleTargetCameraReprjErrorWithDistortionPK:
@@ -1092,7 +1095,7 @@ namespace industrial_extrinsic_cal
 		      SimpleCircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
 									   circle_dia,
 									   point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
 		  }
 		  break;
 		case cost_functions::CircleTargetCameraReprjErrorPK:
@@ -1105,7 +1108,7 @@ namespace industrial_extrinsic_cal
 							     center_x,
 							     center_y,
 							     point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkCircleTargetCameraReprjError:
@@ -1118,7 +1121,7 @@ namespace industrial_extrinsic_cal
 							       center_x,
 							       center_y,
 							       camera_mounting_pose);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkCircleTargetCameraReprjErrorPK:
@@ -1132,7 +1135,7 @@ namespace industrial_extrinsic_cal
 								 center_y,
 								 camera_mounting_pose,
 								 point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		  }
 		  break;
 		case cost_functions::LinkCameraCircleTargetReprjError:
@@ -1145,7 +1148,7 @@ namespace industrial_extrinsic_cal
 							       center_x,
 							       center_y,
 							       camera_mounting_pose);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
 		  }
 		  break;
 		case cost_functions::LinkCameraCircleTargetReprjErrorPK:
@@ -1159,7 +1162,7 @@ namespace industrial_extrinsic_cal
 								 center_y,
 								 camera_mounting_pose,
 								 point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
 		    if(point_zero){
 		      double residual[2];
 		      double *params[2];
@@ -1193,7 +1196,7 @@ namespace industrial_extrinsic_cal
 								  target_pose,
 								  camera_mounting_pose,
 								  point);
-		    problem_.AddResidualBlock(cost_function, NULL , extrinsics);
+		    problem_->AddResidualBlock(cost_function, NULL , extrinsics);
 		    if(point_zero){
 		      double residual[2];
 		      double *params[1];
@@ -1231,11 +1234,12 @@ namespace industrial_extrinsic_cal
   // Make Ceres automatically detect the bundle structure. Note that the
   // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
   // for standard bundle adjustment problems.
+
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::DENSE_SCHUR;
   options.minimizer_progress_to_stdout = true;
   options.max_num_iterations = 1000;
-  ceres::Solve(options, &problem_, &ceres_summary_);
+  ceres::Solve(options, problem_, &ceres_summary_);
 
   if(ceres_summary_.termination_type == ceres::USER_SUCCESS
      || ceres_summary_.termination_type == ceres::FUNCTION_TOLERANCE
@@ -1245,37 +1249,6 @@ namespace industrial_extrinsic_cal
       ROS_INFO("Problem Solved");
       double error_per_observation = ceres_summary_.initial_cost/total_observations_;
 
-      if(1){
-	FILE *fp;
-	if((fp= fopen("covariance.txt", "w") ) != NULL){
-	  ceres::Covariance::Options covariance_options;
-	  covariance_options.algorithm_type = ceres::DENSE_SVD;
-	  ceres::Covariance covariance(covariance_options);
-	  std::vector< std::pair< const double*, const double*> > covariance_blocks;
-	  P_BLOCK intrinsics = ceres_blocks_.getMovingCameraParameterBlockIntrinsics("asus1");
-	  
-	  covariance_blocks.push_back(std::make_pair(intrinsics, intrinsics) );
-	  covariance.Compute(covariance_blocks, &problem_);
-	  int num_intrinsics = 7;
-	  double intrinsic_covariance[num_intrinsics*num_intrinsics];
-	  covariance.GetCovarianceBlock(intrinsics, intrinsics, intrinsic_covariance);
-	  fprintf(fp,"intrinsic covariance:\n");
-	  for(int i=0; i<num_intrinsics; i++){
-	    for(int j=0; j<num_intrinsics; j++){
-	      double sigma_i = sqrt(intrinsic_covariance[i*num_intrinsics+i]);
-	      double sigma_j = sqrt(intrinsic_covariance[j*num_intrinsics+j]);
-	      if(i==j){
-		fprintf(fp,"%6.3lf ", sigma_i);
-	      }
-	      else{
-		fprintf(fp,"%6.3lf ", intrinsic_covariance[i*num_intrinsics + j]/(sigma_i * sigma_j));
-	      }
-	    }// end for j
-	    fprintf(fp,"\n");
-	  } // end for i
-	  fclose(fp);
-	}
-      }
       return true;
     }
     else{
@@ -1284,7 +1257,105 @@ namespace industrial_extrinsic_cal
 
 
     
-}//end runOptimization
+  }//end runOptimization
+
+ bool CalibrationJob::computeCovariance(std::vector<CovarianceVariableRequest> &variables, std::string &covariance_file_name)
+  {
+    FILE *fp;
+    if((fp= fopen(covariance_file_name.c_str(), "w") ) != NULL){
+      ceres::Covariance::Options covariance_options;
+      covariance_options.algorithm_type = ceres::DENSE_SVD;
+      ceres::Covariance covariance(covariance_options);
+      std::vector<const double*> covariance_blocks;
+      std::vector<int> block_sizes;
+      std::vector<std::string> block_names;
+      std::vector< std::pair< const double*, const double*> > covariance_pairs;
+
+      BOOST_FOREACH(CovarianceVariableRequest req, variables){
+	P_BLOCK intrinsics, extrinsics, pose_params;
+	switch(req.request_type){
+	case StaticCameraIntrinsicParams:
+	    intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(req.object_name.c_str());
+	    covariance_blocks.push_back(intrinsics);
+	    block_sizes.push_back(9);
+	    block_names.push_back(req.object_name.c_str());
+	    break;
+	case StaticCameraExtrinsicParams:
+	  extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(req.object_name.c_str());
+	  covariance_blocks.push_back(extrinsics);
+	  block_sizes.push_back(6);
+	  block_names.push_back(req.object_name.c_str());
+	  break;
+	case MovingCameraIntrinsicParams:
+	  intrinsics = ceres_blocks_.getMovingCameraParameterBlockIntrinsics(req.object_name.c_str());
+	  covariance_blocks.push_back(intrinsics);
+	  block_sizes.push_back(9);
+	  block_names.push_back(req.object_name.c_str());
+	  break;
+	case MovingCameraExtrinsicParams:
+	  extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(req.object_name.c_str(), req.scene_id);
+	  covariance_blocks.push_back(extrinsics);
+	  block_sizes.push_back(6);
+	  block_names.push_back(req.object_name.c_str());
+	  break;
+	case StaticTargetPoseParams:
+	  pose_params = ceres_blocks_.getStaticTargetPoseParameterBlock(req.object_name.c_str());
+	  covariance_blocks.push_back(pose_params);
+	  block_sizes.push_back(6);
+	  block_names.push_back(req.object_name.c_str());
+	  break;
+	case MovingTargetPoseParams:
+	  pose_params = ceres_blocks_.getMovingTargetPoseParameterBlock(req.object_name.c_str(), req.scene_id);
+	  covariance_blocks.push_back(pose_params);
+	  block_sizes.push_back(6);
+	  block_names.push_back(req.object_name.c_str());
+	  break;
+	default:
+	  ROS_ERROR("unknown type of request");
+	  return(false);
+	  break;
+	}// end of switch for request type
+      }// end of for each request
+
+      // create pairs from every combination of blocks in request
+      for(int i=0; i<(int)covariance_blocks.size(); i++){
+	for(int j=i; j<(int)covariance_blocks.size(); j++){
+	  covariance_pairs.push_back(std::make_pair(covariance_blocks[i],covariance_blocks[j]) );
+	}
+      }
+      covariance.Compute(covariance_pairs, problem_);
+
+      fprintf(fp,"covariance blocks:\n");
+      for(int i=0; i<(int)covariance_blocks.size(); i++){
+	for(int j=i; j<(int)covariance_blocks.size(); j++){
+	  fprintf(fp,"Cov[%s, %s]\n", block_names[i].c_str(), block_names[j].c_str());
+	  int N = block_sizes[i];
+	  int M = block_sizes[j];
+	  double ij_cov_block[N*M];
+	  covariance.GetCovarianceBlock(covariance_blocks[i], covariance_blocks[j], ij_cov_block);
+	  for(int q=0; q<N;i++){
+	    for(int k=0;k<M;k++){
+	      double sigma_i = sqrt(ij_cov_block[q*N+q]);
+	      double sigma_j = sqrt(ij_cov_block[k*N+k]);
+	      if(q==k){
+		fprintf(fp,"%6.3f ", sigma_i);
+	      }
+	      else{
+		fprintf(fp,"%6.3lf ", ij_cov_block[q*N + k]/(sigma_i * sigma_j));
+	      }
+	    }// end of k loop
+	    fprintf(fp,"\n");
+	  }// end of q loop
+	}// end of j loop
+      }// end of i loop
+      fclose(fp);
+    }// end of if file opens
+    else{
+      ROS_ERROR("could not open covariance file %s", covariance_file_name.c_str());
+      return(false);
+    }
+    return(true);
+  } // end computeCovariance
 
   bool CalibrationJob::store()
   {

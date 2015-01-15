@@ -52,6 +52,7 @@ ENDIF (EIGEN_FOUND)
    camera_observer_trigger.srv
    user_accept.srv
    calibrate.srv
+   covariance.srv
  )
 
 add_action_files(DIRECTORY  action  FILES  manual_trigger.action robot_joint_values_trigger.action  robot_pose_trigger.action manual_target_location.action calibration.action)

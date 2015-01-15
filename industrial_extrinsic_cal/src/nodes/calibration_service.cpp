@@ -22,6 +22,10 @@
 #include <actionlib/server/simple_action_server.h>
 #include <industrial_extrinsic_cal/calibrationAction.h>
 #include <industrial_extrinsic_cal/calibrate.h>
+#include <industrial_extrinsic_cal/covariance.h>
+
+using industrial_extrinsic_cal::CovarianceVariableRequest;
+
 class CalibrationServiceNode
 {
 public:
@@ -72,12 +76,35 @@ public:
   bool callback(industrial_extrinsic_cal::calibrate::Request& req, industrial_extrinsic_cal::calibrate::Response& resp);
   bool actionCallback(const industrial_extrinsic_cal::calibrationGoalConstPtr& goal);
   bool is_calibrated(){return(calibrated_);};
+  bool covarianceCallback(industrial_extrinsic_cal::covariance::Request & req, industrial_extrinsic_cal::covariance::Response & res);
+
 private:
   ros::NodeHandle nh_;
   bool calibrated_;
   industrial_extrinsic_cal::CalibrationJob * cal_job_;
   CalibrationActionServer action_server_;
 };
+
+bool CalibrationServiceNode::covarianceCallback(industrial_extrinsic_cal::covariance::Request & req, industrial_extrinsic_cal::covariance::Response & res)
+{
+  std::vector<CovarianceVariableRequest> requests;
+  CovarianceVariableRequest request1,request2;
+
+  request1.request_type = industrial_extrinsic_cal::intToCovRequest(req.request_type1);
+  request1.object_name = req.block_name1;
+  request1.scene_id       = req.scene_id1;
+  requests.push_back(request1);
+
+  request2.request_type =  industrial_extrinsic_cal::intToCovRequest(req.request_type2); 
+  request2.object_name = req.block_name2;
+  request2.scene_id       = req.scene_id2;
+  requests.push_back(request2);
+  std::string file_name = req.file_name;
+  bool ret = cal_job_->computeCovariance(requests, file_name);
+  // set results and return
+  res.result = 1; // just a placeholder
+  return(ret);
+}
 
 bool CalibrationServiceNode::callback(industrial_extrinsic_cal::calibrate::Request& req, industrial_extrinsic_cal::calibrate::Response& res)
 {
@@ -139,7 +166,8 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   CalibrationServiceNode cal_service_node(nh);
 
-  ros::ServiceServer service=nh.advertiseService("calibration_service", &CalibrationServiceNode::callback, &cal_service_node);
+  ros::ServiceServer cal_service=nh.advertiseService("calibration_service", &CalibrationServiceNode::callback, &cal_service_node);
+  ros::ServiceServer cov_service=nh.advertiseService("covariance_service", &CalibrationServiceNode::covarianceCallback, &cal_service_node);
 
   ros::spin();
     
