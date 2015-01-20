@@ -40,13 +40,13 @@ namespace industrial_extrinsic_cal
       ROS_ERROR("MutableJointStatePublisher constructor can't read yaml file %s",yaml_file_name_.c_str());
     }
     // advertise the services for getting, setting, and storing the mutable joint values
-    set_server_ = nh_.advertiseService( "/set_mutable_joint_states", &MutableJointStatePublisher::setCallBack, this);
-    get_server_ = nh_.advertiseService("/get_mutable_joint_states", &MutableJointStatePublisher::getCallBack,this);
-    store_server_ = nh_.advertiseService("/store_mutable_joint_states", &MutableJointStatePublisher::storeCallBack, this);
+    set_server_ = nh_.advertiseService( "set_mutable_joint_states", &MutableJointStatePublisher::setCallBack, this);
+    get_server_ = nh_.advertiseService("get_mutable_joint_states", &MutableJointStatePublisher::getCallBack,this);
+    store_server_ = nh_.advertiseService("store_mutable_joint_states", &MutableJointStatePublisher::storeCallBack, this);
 
     // advertise the topic for continious publication of all the mutable joint states
     int queue_size = 10;
-    joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/mutable_joint_states", queue_size);
+    joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("mutable_joint_states", queue_size);
     if(!joint_state_pub_){
       ROS_ERROR("ADVERTISE DID NOT RETURN A VALID PUBLISHER");
     }

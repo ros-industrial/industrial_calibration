@@ -18,6 +18,8 @@ IF (CERES_FOUND)
   MESSAGE("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 ENDIF (CERES_FOUND)
 
+SET (CMAKE_CXX_FLAGS -fPIC)
+
 # Eigen
 FIND_PACKAGE(Eigen REQUIRED)
 IF (EIGEN_FOUND)
@@ -107,7 +109,6 @@ add_library(industrial_extrinsic_cal
    src/ceres_blocks.cpp
    src/basic_types.cpp
    src/ros_transform_interface.cpp
-   src/calibration_job_definition.cpp
    src/ceres_costs_utils.cpp
    src/circle_detector.cpp
 )
@@ -117,7 +118,7 @@ add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp 
 
 ## Declare a cpp executable
 add_executable(mono_ex_cal src/nodes/mono_ex_cal.cpp)
-add_executable(service_node src/nodes/calibration_service.cpp)
+add_executable(service_node src/nodes/calibration_service.cpp src/calibration_job_definition.cpp)
 add_executable(trigger_service src/nodes/ros_scene_trigger_server.cpp)
 add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
 add_executable(mutable_joint_state_publisher src/nodes/mutable_joint_state_publisher.cpp)
@@ -135,7 +136,7 @@ add_dependencies(camera_observer_scene_trigger ${PROJECT_NAME}_generate_messages
 # add_dependencies(industrial_extrinsic_cal_node industrial_extrinsic_cal_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} )
 target_link_libraries(mono_ex_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 #target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
