@@ -41,6 +41,45 @@
 
 namespace industrial_extrinsic_cal
 {
+  enum CovarianceRequestType { 
+    DefaultInvalid=0,
+    StaticCameraIntrinsicParams,
+    StaticCameraExtrinsicParams,
+    MovingCameraIntrinsicParams,
+    MovingCameraExtrinsicParams,
+    StaticTargetPoseParams,
+    MovingTargetPoseParams};
+  CovarianceRequestType intToCovRequest(int request)
+  {
+    switch (request){
+    case 0:
+      return StaticCameraIntrinsicParams;
+      break;
+    case 1:
+      return StaticCameraExtrinsicParams;
+      break;
+    case 2:
+      return MovingCameraIntrinsicParams;
+      break;
+    case 3:
+      return MovingCameraExtrinsicParams;
+      break;
+    case 4:
+      return StaticTargetPoseParams;
+      break;
+    case 5:
+      return MovingTargetPoseParams;
+      break;
+    default:
+      return DefaultInvalid;
+      break;
+    }
+  }
+    struct CovarianceVariableRequest{
+      CovarianceRequestType request_type;
+      std::string object_name;
+      int scene_id;
+    };
 
 /*! @brief defines and executes the calibration script */
 class CalibrationJob
@@ -119,6 +158,12 @@ public:
    **/
   double initialCostPerObservation();
 
+  /** @brief compute the covariance of the results for the requested variables
+   *    @param variables a list of cameras and targets
+   *    @param covariance_file_name name of file to store the resulting matrix in
+   */
+  bool computeCovariance(std::vector<CovarianceVariableRequest> &variables, std::string &covariance_file_name);
+
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 protected:
@@ -194,7 +239,7 @@ protected:
 */
   void pullTransforms(int scene_id);
 
-  
+
 private:
   std::vector<ObservationDataPointList> observation_data_point_list_; /*!< a list of observation data points */
   std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
@@ -206,8 +251,8 @@ private:
   std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
   CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
-  ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
   std::vector<P_BLOCK> original_extrinsics_; /*!< This is the parameter block which holds the original camera extrinsics */
+  ceres::Problem  *problem_; /*!< this is the object used to define the optimization problem for ceres */
   ceres::Solver::Summary ceres_summary_;
   int total_observations_;
   bool solved_;

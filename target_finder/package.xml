@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>industrial_extrinsic_cal</name>
+  <name>target_finder</name>
   <version>0.0.0</version>
-  <description>The industrial_extrinsic_cal package</description>
+  <description>The target_finder package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -19,14 +19,14 @@
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://ros.org/wiki/industrial_extrinsic_cal</url> -->
+  <!-- <url type="website">http://wiki.ros.org/target_finder</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
   <!-- Authors do not have to be maintianers, but could be -->
   <!-- Example: -->
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
-  <author email="clewis@swri.org">Chris Lewis</author>
+
 
   <!-- The *_depend tags are used to specify dependencies -->
   <!-- Dependencies can be catkin packages or system dependencies -->
@@ -40,27 +40,29 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>industrial_extrinsic_cal</build_depend>
   <build_depend>roscpp</build_depend>
-  <build_depend>std_msgs</build_depend>
+  <build_depend>rospy</build_depend>
   <build_depend>rosconsole</build_depend>
-  <build_depend> std_srvs </build_depend>
-  <build_depend> roslib </build_depend>
-  <build_depend>roslint</build_depend>
-  <build_depend>actionlib</build_depend>
-  <build_depend>actionlib_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>std_srvs</build_depend>
+  <build_depend>roslib</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
-  <build_depend>moveit_ros_planning_interface</build_depend>
+  <run_depend>industrial_extrinsic_cal</run_depend>
   <run_depend>roscpp</run_depend>
-  <run_depend>std_msgs</run_depend>
+  <run_depend>rospy</run_depend>
   <run_depend>rosconsole</run_depend>
-  <run_depend> std_srvs </run_depend>
-  <run_depend> roslib </run_depend>
-  <run_depend>actionlib</run_depend>
-  <run_depend>actionlib_msgs</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>cv_bridge</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>std_srvs</run_depend>
+  <run_depend>roslib</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
-  <run_depend>moveit_ros_planning_interface</run_depend>
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

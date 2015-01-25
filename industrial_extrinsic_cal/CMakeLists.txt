@@ -4,7 +4,7 @@ project(industrial_extrinsic_cal)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib genmsg actionlib_msgs actionlib moveit_ros_planning_interface geometry_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib genmsg actionlib_msgs actionlib moveit_ros_planning_interface geometry_msgs sensor_msgs)
 
 # Opencv
 FIND_PACKAGE(OpenCV REQUIRED)
@@ -54,6 +54,7 @@ ENDIF (EIGEN_FOUND)
    camera_observer_trigger.srv
    user_accept.srv
    calibrate.srv
+   covariance.srv
  )
 
 add_action_files(DIRECTORY  action  FILES  manual_trigger.action robot_joint_values_trigger.action  robot_pose_trigger.action manual_target_location.action calibration.action)
@@ -69,6 +70,7 @@ generate_messages(
     std_msgs
     geometry_msgs 
     actionlib_msgs 
+    sensor_msgs
 )
 
 ###################################

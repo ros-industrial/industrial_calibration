@@ -447,9 +447,15 @@ namespace industrial_extrinsic_cal
     T zp1 = point[2];
 
     /** scale into the image plane by distance away from camera */
-    T xp = xp1 / zp1;
-    T yp = yp1 / zp1;
-
+    T xp,yp;
+    if(zp1==T(0)){ // avoid divide by zero
+      xp =xp1;
+      yp =yp1;
+    }
+    else{
+      xp = xp1 / zp1;
+      yp = yp1 / zp1;
+    }
     /** perform projection using focal length and camera center into image plane */
     residual[0] = fx * xp + cx - ox;
     residual[1] = fy * yp + cy - oy;
