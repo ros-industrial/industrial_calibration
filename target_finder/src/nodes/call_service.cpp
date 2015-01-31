@@ -23,7 +23,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <ros/console.h>
-#include <target_locator/target_locater.h> 
+#include <target_finder/target_locater.h> 
 
 using std::string;
 using std::vector;
@@ -33,7 +33,7 @@ class callService
 public:
   callService(ros::NodeHandle nh): nh_(nh)
   {
-    client_ = nh_.serviceClient<target_locator::target_locater>("TargetLocateService");
+    client_ = nh_.serviceClient<target_finder::target_locater>("TargetLocateService");
     setRequest();
   }
   bool callTheService();
@@ -42,7 +42,7 @@ public:
 private:
   ros::NodeHandle nh_;
   ros::ServiceClient client_;
-  target_locator::target_locater srv_;
+  target_finder::target_locater srv_;
 };
 
 void callService::copyResponseToRequest()

@@ -32,7 +32,7 @@ namespace industrial_extrinsic_cal
     tf::StampedTransform tf_transform; 
     ros::Time now = ros::Time::now();
     while(! tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0))){
-      ROS_INFO("waiting for tranform from  %s to  %s",from_frame.c_str(),to_frame.c_str());
+      ROS_INFO("waiting for tranform from %s to  %s",from_frame.c_str(),to_frame.c_str());
     }
     tf_listener.lookupTransform(from_frame, to_frame, now, tf_transform);
     Pose6d pose;
@@ -494,6 +494,94 @@ namespace industrial_extrinsic_cal
   }
 
   void ROSSimpleCalTInterface::setReferenceFrame(std::string &ref_frame)
+  {
+    ref_frame_ = ref_frame;
+    ref_frame_initialized_ = true;
+  }
+
+  ROSSimpleCameraCalTInterface::ROSSimpleCameraCalTInterface(const string &transform_frame,  const string &parent_frame)
+  {
+    transform_frame_               = transform_frame;
+    parent_frame_                     = parent_frame; 
+    ref_frame_initialized_         = false;    // still need to initialize ref_frame_
+    nh_ = new ros::NodeHandle;
+
+    std::string bn("mutable_joint_state_publisher/");
+    get_client_    = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+    set_client_    = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
+    store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
+
+    get_request_.joint_names.push_back(transform_frame+"_x_joint");
+    get_request_.joint_names.push_back(transform_frame+"_y_joint");
+    get_request_.joint_names.push_back(transform_frame+"_z_joint");
+    get_request_.joint_names.push_back(transform_frame+"_yaw_joint");
+    get_request_.joint_names.push_back(transform_frame+"_pitch_joint");
+    get_request_.joint_names.push_back(transform_frame+"_roll_joint");
+
+    set_request_.joint_names.push_back(transform_frame+"_x_joint");
+    set_request_.joint_names.push_back(transform_frame+"_y_joint");
+    set_request_.joint_names.push_back(transform_frame+"_z_joint");
+    set_request_.joint_names.push_back(transform_frame+"_yaw_joint");
+    set_request_.joint_names.push_back(transform_frame+"_pitch_joint");
+    set_request_.joint_names.push_back(transform_frame+"_roll_joint");
+
+    if(get_client_.call(get_request_,get_response_)){
+      for(int i=0;i<(int) get_response_.joint_values.size();i++){
+	joint_values_.push_back(get_response_.joint_values[i]);
+      }
+    }
+    else{
+      ROS_ERROR("get_client_ returned false");
+    }
+
+  }				
+
+  Pose6d  ROSSimpleCameraCalTInterface::pullTransform()
+  {
+    // The computed transform from the reference frame to the optical frame is composed of 3 transforms
+    // one from reference frame to mounting frame
+    // one composed of the 6DOF unknowns we are trying to calibrate
+    // from the mounting frame to the housing. It's values are maintained by the mutable joint state publisher
+    // the third is from housing to optical frame
+
+    if(!ref_frame_initialized_){ // still need the reference frame in order to return the transform!!
+      Pose6d pose(0,0,0,0,0,0);
+      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
+      return(pose);
+    }
+
+    get_client_.call(get_request_,get_response_);
+    pose_.setOrigin(get_response_.joint_values[0],get_response_.joint_values[1],get_response_.joint_values[2]);
+    pose_.setEulerZYX(get_response_.joint_values[3],get_response_.joint_values[4],get_response_.joint_values[5]);
+    return(pose_.getInverse());
+  }
+
+  bool  ROSSimpleCameraCalTInterface::pushTransform(Pose6d &pose)
+  {
+    double ez,ey,ex;
+    Pose6d ipose = pose.getInverse();
+    ipose.getEulerZYX(ez,ey,ex);
+    
+    set_request_.joint_values.clear();
+    set_request_.joint_values.push_back(ipose.x);
+    set_request_.joint_values.push_back(ipose.y);
+    set_request_.joint_values.push_back(ipose.z);
+    set_request_.joint_values.push_back(ez);
+    set_request_.joint_values.push_back(ey);
+    set_request_.joint_values.push_back(ex);
+    set_client_.call(set_request_,set_response_);
+
+    return(true);
+  }
+
+  bool ROSSimpleCameraCalTInterface::store(std::string &filePath)
+  {
+    // NOTE, file_name is not used, but is kept here for consistency with store functions of other transform interfaces
+    store_client_.call(store_request_, store_response_);
+    return(true);
+  }
+
+  void ROSSimpleCameraCalTInterface::setReferenceFrame(std::string &ref_frame)
   {
     ref_frame_ = ref_frame;
     ref_frame_initialized_ = true;

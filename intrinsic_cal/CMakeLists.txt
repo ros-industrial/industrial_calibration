@@ -104,17 +104,17 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-add_executable(create_ical_scenes src/create_ical_scenes.cpp)
+#add_executable(create_ical_scenes src/create_ical_scenes.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(intrinsic_cal_node intrinsic_cal_generate_messages_cpp)
-add_dependencies(create_ical_scenes ${catkin_EXPORTED_TARGETS})
+#add_dependencies(create_ical_scenes ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(intrinsic_cal_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(create_ical_scenes ${catkin_LIBRARIES}  )
+#target_link_libraries(create_ical_scenes ${catkin_LIBRARIES}  )
 
 #############
 ## Install ##

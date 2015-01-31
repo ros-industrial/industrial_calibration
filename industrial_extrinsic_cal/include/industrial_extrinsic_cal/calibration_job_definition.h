@@ -39,47 +39,31 @@
 #include <fstream>
 #include <iostream>
 
+
 namespace industrial_extrinsic_cal
 {
-  enum CovarianceRequestType { 
-    DefaultInvalid=0,
-    StaticCameraIntrinsicParams,
-    StaticCameraExtrinsicParams,
-    MovingCameraIntrinsicParams,
-    MovingCameraExtrinsicParams,
-    StaticTargetPoseParams,
-    MovingTargetPoseParams};
-  CovarianceRequestType intToCovRequest(int request)
-  {
-    switch (request){
-    case 0:
-      return StaticCameraIntrinsicParams;
-      break;
-    case 1:
-      return StaticCameraExtrinsicParams;
-      break;
-    case 2:
-      return MovingCameraIntrinsicParams;
-      break;
-    case 3:
-      return MovingCameraExtrinsicParams;
-      break;
-    case 4:
-      return StaticTargetPoseParams;
-      break;
-    case 5:
-      return MovingTargetPoseParams;
-      break;
-    default:
-      return DefaultInvalid;
-      break;
-    }
-  }
-    struct CovarianceVariableRequest{
-      CovarianceRequestType request_type;
-      std::string object_name;
-      int scene_id;
+  namespace covariance_requests{
+    enum CovarianceRequestType { 
+      DefaultInvalid=0,
+      StaticCameraIntrinsicParams,
+      StaticCameraExtrinsicParams,
+      MovingCameraIntrinsicParams,
+      MovingCameraExtrinsicParams,
+      StaticTargetPoseParams,
+      MovingTargetPoseParams
     };
+  } // end of namespace covariance_requests
+  struct CovarianceVariableRequest{
+    covariance_requests::CovarianceRequestType request_type;
+    std::string object_name;
+    int scene_id;
+  };
+
+  /*! @brief converts an integer to a covariance request type
+   * @param request the integer request type
+   * @returns the covariance request type
+   */
+  covariance_requests::CovarianceRequestType intToCovRequest(int request);
 
 /*! @brief defines and executes the calibration script */
 class CalibrationJob
@@ -87,7 +71,7 @@ class CalibrationJob
 public:
   /** @brief constructor */
   CalibrationJob(std::string camera_fn, std::string target_fn, std::string caljob_fn) :
-    camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn), solved_(false)
+    camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn), solved_(false), problem_(NULL)
   {  } ;
 
   /** @brief default destructor */
@@ -141,11 +125,6 @@ public:
   const std::string& getReferenceFrame() const
   {
     return ceres_blocks_.reference_frame_;
-  }
-
-  const std::vector<std::string>& getTargetFrames() const
-  {
-    return target_frames_;
   }
 
   /** @brief get cost per observation
@@ -246,7 +225,6 @@ private:
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
-  std::vector<std::string> target_frames_; /*!< this the frame of the target points */
   int current_scene_; /*!< id of current scene under review or construction */
   std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */

@@ -175,7 +175,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 					    cv::CALIB_CB_SYMMETRIC_GRID,
 					    circle_detector_ptr_);
       if(!successful_find){
-	ROS_ERROR("couldn't find");
+	ROS_ERROR("couldn't find target in %s", image_topic_.c_str());
 	out_bridge_->image = image_roi_;
 	junk_pub_.publish(out_bridge_->toImageMsg());
 	return 0;
@@ -185,7 +185,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
       // updates to OpenCV
       std::vector<cv::KeyPoint> keypoints;
       circle_detector_ptr_->detect(image_roi_, keypoints);
-      ROS_DEBUG("found %d keypoints", keypoints.size());
+      ROS_DEBUG("found %d keypoints", (int) keypoints.size());
       if(successful_find){ // determine orientation, and sort points to correct correspondence
 	int lw_lt_index = pattern_rows_*pattern_cols_ - pattern_cols_; // lower right point's index
 	int lw_rt_index = pattern_rows_*pattern_cols_ -1; // lower left point's index

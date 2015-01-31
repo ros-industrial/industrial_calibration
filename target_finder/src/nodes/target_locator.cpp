@@ -25,7 +25,7 @@
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.h> 
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp> 
-#include <target_locator/target_locater.h> 
+#include <target_finder/target_locater.h> 
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
 #include "ceres/types.h"
@@ -42,7 +42,7 @@ using industrial_extrinsic_cal::ROSCameraObserver;
 using industrial_extrinsic_cal::Roi;
 using industrial_extrinsic_cal::Pose6d;
 using industrial_extrinsic_cal::Point3d;
-using target_locator::target_locater;
+using target_finder::target_locater;
 class TargetLocatorService 
 {
 public:

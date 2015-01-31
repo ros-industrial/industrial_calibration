@@ -34,6 +34,7 @@ namespace industrial_extrinsic_cal
     if(cost_type_str == "TargetCameraReprjErrorPK") return(cost_functions::TargetCameraReprjErrorPK);
     if(cost_type_str == "LinkTargetCameraReprjError") return(cost_functions::LinkTargetCameraReprjError);
     if(cost_type_str == "LinkTargetCameraReprjErrorPK") return(cost_functions::LinkTargetCameraReprjErrorPK);
+    if(cost_type_str == "PosedTargetCameraReprjErrorPK") return(cost_functions::PosedTargetCameraReprjErrorPK);
     if(cost_type_str == "LinkCameraTargetReprjError") return(cost_functions::LinkCameraTargetReprjError);
     if(cost_type_str == "LinkCameraTargetReprjErrorPK") return(cost_functions::LinkCameraTargetReprjErrorPK);
     if(cost_type_str == "CircleCameraReprjErrorWithDistortion") return(cost_functions::CircleCameraReprjErrorWithDistortion);
@@ -68,6 +69,7 @@ namespace industrial_extrinsic_cal
     if(cost_type == cost_functions::TargetCameraReprjErrorPK) return("TargetCameraReprjErrorPK");
     if(cost_type == cost_functions::LinkTargetCameraReprjError) return("LinkTargetCameraReprjError");
     if(cost_type == cost_functions::LinkTargetCameraReprjErrorPK) return("LinkTargetCameraReprjErrorPK");
+    if(cost_type == cost_functions::PosedTargetCameraReprjErrorPK) return("PosedTargetCameraReprjErrorPK");
     if(cost_type == cost_functions::LinkCameraTargetReprjError) return("LinkCameraTargetReprjError");
     if(cost_type == cost_functions::LinkCameraTargetReprjErrorPK) return("LinkCameraTargetReprjErrorPK");
     if(cost_type == cost_functions::CircleCameraReprjErrorWithDistortion) return("CircleCameraReprjErrorWithDistortion");

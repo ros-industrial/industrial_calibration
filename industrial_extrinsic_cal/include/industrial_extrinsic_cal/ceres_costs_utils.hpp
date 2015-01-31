@@ -893,6 +893,65 @@ namespace industrial_extrinsic_cal
   // reprojection error of a single point attatched to a target observed by a camera with NO lens distortion
   // should subscribe to a rectified image when using the error function
   //
+  class PosedTargetCameraReprjErrorPK
+  {
+  public:
+    PosedTargetCameraReprjErrorPK(double ob_x, double ob_y, double fx, double fy, double cx, double cy, Pose6d target_pose, Point3d point) :
+      ox_(ob_x), oy_(ob_y), fx_(fx), fy_(fy), cx_(cx), cy_(cy), target_pose_(target_pose), point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(const T* const c_p1, /** extrinsic parameters */
+                    T* residual) const
+    {
+      const T *camera_aa(&c_p1[0]);
+      const T *camera_tx(&c_p1[3]);
+      T world_point[3];/** point in worls coordinates */			   
+      T camera_point[3]; /** point in camera coordinates */
+      T point[3];
+      point[0] = T(point_.x);
+      point[1] = T(point_.y);
+      point[2] = T(point_.z);
+      /** transform point into camera coordinates */
+      poseTransformPoint(target_pose_, point, world_point);
+      transformPoint(camera_aa, camera_tx, world_point, camera_point);
+
+      /** compute project point into image plane and compute residual */
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y,
+				       const double fx, const double fy, 
+				       const double cx, const double cy,
+				       Pose6d target_pose, Point3d point)
+
+    {
+      return (new ceres::AutoDiffCostFunction<PosedTargetCameraReprjErrorPK, 2, 6>( new PosedTargetCameraReprjErrorPK(o_x, o_y, fx, fy, cx, cy, target_pose, point)));
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double fx_; /*!< known focal length of camera in x */
+    double fy_; /*!< known focal length of camera in y */
+    double cx_; /*!< known optical center of camera in x */
+    double cy_; /*!< known optical center of camera in y */
+    Pose6d target_pose_; /*!< transform from world to target coordinates */ 
+    Point3d point_; /*! location of point in target coordinates */
+  };
+
+  // reprojection error of a single point attatched to a target observed by a camera with NO lens distortion
+  // should subscribe to a rectified image when using the error function
+  //
   class LinkCameraTargetReprjError
   {
   public:
