@@ -748,7 +748,6 @@ namespace industrial_extrinsic_cal
 	    P_BLOCK tmp;
 	    current_camera->camera_observer_->triggerCamera();
 	  }
-	ROS_ERROR("cameras triggered");
 
 	// collect results
 	P_BLOCK intrinsics;
@@ -765,9 +764,7 @@ namespace industrial_extrinsic_cal
 	BOOST_FOREACH( shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
 	  {
 	    // wait until observation is done
-	    ROS_ERROR("waiting for camera observations to finish");
 	    while (!camera->camera_observer_->observationsDone()) ;
-	    ROS_ERROR("observations done");
 	    camera_name = camera->camera_name_;
 	    if (camera->isMoving())
 	      {
@@ -784,7 +781,6 @@ namespace industrial_extrinsic_cal
 		intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(camera_name);
 		extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(camera_name);
 	      }
-
 	    // Get the observations from this camera whose P_BLOCKs are intrinsics and extrinsics
 	    CameraObservations camera_observations;
 	    int number_returned;
@@ -854,382 +850,379 @@ namespace industrial_extrinsic_cal
       {
 
 	int scene_id = current_scene.get_id();
-	BOOST_FOREACH(shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
+	ROS_DEBUG_STREAM("Current observation data point list size: "<<observation_data_point_list_.at(scene_id).items_.size());
+	// take all the data collected and create a Ceres optimization problem and run it
+	P_BLOCK extrinsics;
+	P_BLOCK intrinsics;
+	P_BLOCK target_pose_params;
+	P_BLOCK point_position;
+	BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items_)
 	  {
-	    ROS_DEBUG_STREAM("Current observation data point list size: "<<observation_data_point_list_.at(scene_id).items_.size());
-	    // take all the data collected and create a Ceres optimization problem and run it
-	    P_BLOCK extrinsics;
-	    P_BLOCK intrinsics;
-	    P_BLOCK target_pose_params;
-	    P_BLOCK point_position;
-	    BOOST_FOREACH(ObservationDataPoint ODP, observation_data_point_list_.at(scene_id).items_)
+	    // create cost function
+	    // there are several options
+	    // 1. the complete reprojection error cost function "Create(obs_x,obs_y)"
+	    //    this cost function has the following parameters:
+	    //      a. camera intrinsics
+	    //      b. camera extrinsics
+	    //      c. target pose
+	    //      d. point location in target frame
+	    // 2. the same as 1, but without d  "Create(obs_x,obs_y,t_pnt_x, t_pnt_y, t_pnt_z)
+	    // 3. the same as 1, but without a  "Create(obs_x,obs_y,fx,fy,cx,cy,cz)"
+	    //    Note that this one assumes we are using rectified images to compute the observations
+	    // 4. the same as 3, point location fixed too "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z)"
+	    //        implemented in TargetCameraReprjErrorNoDistortion
+	    // 5. the same as 4, but with target in known location
+	    //    "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z,p_tx,p_ty,p_tz,p_ax,p_ay,p_az)"
+	    // pull out the constants from the observation point data
+	    intrinsics = ODP.camera_intrinsics_;
+	    double focal_length_x = ODP.camera_intrinsics_[0]; // TODO, make this not so ugly
+	    double focal_length_y = ODP.camera_intrinsics_[1];
+	    double center_x   = ODP.camera_intrinsics_[2];
+	    double center_y   = ODP.camera_intrinsics_[3];
+	    double image_x        = ODP.image_x_;
+	    double image_y        = ODP.image_y_;
+	    Point3d point;
+	    Pose6d camera_mounting_pose = ODP.intermediate_frame_; // identity except when camera mounted on robot
+	    point.x = ODP.point_position_[0];// location of point within target frame
+	    point.y = ODP.point_position_[1];
+	    point.z = ODP.point_position_[2];
+	    unsigned int target_type    = ODP.target_type_;
+	    double circle_dia = ODP.circle_dia_; // sometimes this is not needed
+	    
+	    // pull out pointers to the parameter blocks in the observation point data
+	    extrinsics        = ODP.camera_extrinsics_;
+	    target_pose_params     = ODP.target_pose_;
+	    Pose6d target_pose;
+	    target_pose.setAngleAxis(target_pose_params[0],target_pose_params[1], target_pose_params[2]);
+	    target_pose.setOrigin(target_pose_params[3],target_pose_params[4], target_pose_params[5]);
+	    point_position = ODP.point_position_;
+	    bool point_zero=false; // Set true to enable some debugging
+	    /*
+	      if(point.x == 0.0 && point.y == 0.0 && point.z == 0.0){
+	      point_zero=true;
+	      ROS_ERROR("Observing Target Origin");
+	      showPose(target_pose_params, "target");
+	      showPose(extrinsics,"extrinsics");
+	      showPose((P_BLOCK) &camera_mounting_pose.pb_pose[0], "camera_mounting_pose");
+	      }
+	    */
+	    
+	    switch( ODP.cost_type_ ){
+	    case cost_functions::CameraReprjErrorWithDistortion:
 	      {
-		// create cost function
-		// there are several options
-		// 1. the complete reprojection error cost function "Create(obs_x,obs_y)"
-		//    this cost function has the following parameters:
-		//      a. camera intrinsics
-		//      b. camera extrinsics
-		//      c. target pose
-		//      d. point location in target frame
-		// 2. the same as 1, but without d  "Create(obs_x,obs_y,t_pnt_x, t_pnt_y, t_pnt_z)
-		// 3. the same as 1, but without a  "Create(obs_x,obs_y,fx,fy,cx,cy,cz)"
-		//    Note that this one assumes we are using rectified images to compute the observations
-		// 4. the same as 3, point location fixed too "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z)"
-		//        implemented in TargetCameraReprjErrorNoDistortion
-		// 5. the same as 4, but with target in known location
-		//    "Create(obs_x,obs_y,fx,fy,cx,cy,cz,t_x,t_y,t_z,p_tx,p_ty,p_tz,p_ax,p_ay,p_az)"
-		// pull out the constants from the observation point data
-		intrinsics = ODP.camera_intrinsics_;
-		double focal_length_x = ODP.camera_intrinsics_[0]; // TODO, make this not so ugly
-		double focal_length_y = ODP.camera_intrinsics_[1];
-		double center_x   = ODP.camera_intrinsics_[2];
-		double center_y   = ODP.camera_intrinsics_[3];
-		double image_x        = ODP.image_x_;
-		double image_y        = ODP.image_y_;
-		Point3d point;
-		Pose6d camera_mounting_pose = ODP.intermediate_frame_; // identity except when camera mounted on robot
-		point.x = ODP.point_position_[0];// location of point within target frame
-		point.y = ODP.point_position_[1];
-		point.z = ODP.point_position_[2];
-		unsigned int target_type    = ODP.target_type_;
-		double circle_dia = ODP.circle_dia_; // sometimes this is not needed
-	      
-		// pull out pointers to the parameter blocks in the observation point data
-		extrinsics        = ODP.camera_extrinsics_;
-		target_pose_params     = ODP.target_pose_;
-		Pose6d target_pose;
-		target_pose.setAngleAxis(target_pose_params[0],target_pose_params[1], target_pose_params[2]);
-		target_pose.setOrigin(target_pose_params[3],target_pose_params[4], target_pose_params[5]);
-		point_position = ODP.point_position_;
-		bool point_zero=false; // Set true to enable some debugging
-		/*
-		if(point.x == 0.0 && point.y == 0.0 && point.z == 0.0){
-		  point_zero=true;
-		  ROS_ERROR("Observing Target Origin");
-		  showPose(target_pose_params, "target");
-		  showPose(extrinsics,"extrinsics");
-		  showPose((P_BLOCK) &camera_mounting_pose.pb_pose[0], "camera_mounting_pose");
-		}
-        */
-		
-		switch( ODP.cost_type_ ){
-		case cost_functions::CameraReprjErrorWithDistortion:
-		  {
-		    CostFunction* cost_function =
-		      CameraReprjErrorWithDistortion::Create(image_x, image_y);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
-		  }
-		  break;
-		case cost_functions::CameraReprjErrorWithDistortionPK:
-		  {
-		    CostFunction* cost_function =
-		      CameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
-							       point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
-		  }
-		  break;
-		case cost_functions::CameraReprjError:
-		  {
-		    CostFunction* cost_function =
-		      CameraReprjError::Create(image_x, image_y, 
-					       focal_length_x, focal_length_y,
-					       center_x, center_y);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, point.pb);
-		  }
-		  break;
-		case cost_functions::CameraReprjErrorPK:
-		  {
-		    CostFunction* cost_function =
-		      CameraReprjErrorPK::Create(image_x, image_y, 
+		CostFunction* cost_function =
+		  CameraReprjErrorWithDistortion::Create(image_x, image_y);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+	      }
+	      break;
+	    case cost_functions::CameraReprjErrorWithDistortionPK:
+	      {
+		CostFunction* cost_function =
+		  CameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
+							   point);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
+	      }
+	      break;
+	    case cost_functions::CameraReprjError:
+	      {
+		CostFunction* cost_function =
+		  CameraReprjError::Create(image_x, image_y, 
+					   focal_length_x, focal_length_y,
+					   center_x, center_y);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, point.pb);
+	      }
+	      break;
+	    case cost_functions::CameraReprjErrorPK:
+	      {
+		CostFunction* cost_function =
+		  CameraReprjErrorPK::Create(image_x, image_y, 
+					     focal_length_x, focal_length_y,
+					     center_x, center_y,
+					     point);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics);
+	      }
+	      break;
+	    case cost_functions::TargetCameraReprjError:
+	      {
+		CostFunction* cost_function =
+		  TargetCameraReprjError::Create(image_x, image_y, 
 						 focal_length_x, focal_length_y,
-						 center_x, center_y,
-						 point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics);
-		  }
-		  break;
-		case cost_functions::TargetCameraReprjError:
-		  {
-		    CostFunction* cost_function =
-		      TargetCameraReprjError::Create(image_x, image_y, 
-						     focal_length_x, focal_length_y,
-						     center_x, center_y);
+						 center_x, center_y);
 
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
-		  }
-		  break;
-		case cost_functions::TargetCameraReprjErrorPK:
-		  {
-		    CostFunction* cost_function = 
-		      TargetCameraReprjErrorPK::Create(image_x, image_y,
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+	      }
+	      break;
+	    case cost_functions::TargetCameraReprjErrorPK:
+	      {
+		CostFunction* cost_function = 
+		  TargetCameraReprjErrorPK::Create(image_x, image_y,
+						   focal_length_x,
+						   focal_length_y,
+						   center_x,
+						   center_y,
+						   point);
+		// add it as a residual using parameter blocks
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+	      }
+	      break;
+	    case cost_functions::LinkTargetCameraReprjError:
+	      {
+		CostFunction* cost_function =
+		  LinkTargetCameraReprjError::Create(image_x, image_y, 
+						     focal_length_x,
+						     focal_length_y,
+						     center_x,
+						     center_y,
+						     camera_mounting_pose);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+	      }
+	      break;
+	    case cost_functions::LinkTargetCameraReprjErrorPK:
+	      {
+		CostFunction* cost_function =
+		  LinkTargetCameraReprjErrorPK::Create(image_x, image_y, 
 						       focal_length_x,
 						       focal_length_y,
 						       center_x,
 						       center_y,
+						       camera_mounting_pose,
 						       point);
-		    // add it as a residual using parameter blocks
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
-		  }
-		  break;
-		case cost_functions::LinkTargetCameraReprjError:
-		  {
-		    CostFunction* cost_function =
-		      LinkTargetCameraReprjError::Create(image_x, image_y, 
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+	      }
+	      break;
+	    case cost_functions::LinkCameraTargetReprjError:
+	      {
+		CostFunction* cost_function =
+		  LinkCameraTargetReprjError::Create(image_x, image_y, 
+						     focal_length_x,
+						     focal_length_y,
+						     center_x,
+						     center_y,
+						     camera_mounting_pose);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+	      }
+	      break;
+	    case cost_functions::LinkCameraTargetReprjErrorPK:
+	      {
+		CostFunction* cost_function =
+		  LinkCameraTargetReprjErrorPK::Create(image_x, image_y, 
+						       focal_length_x,
+						       focal_length_y,
+						       center_x,
+						       center_y,
+						       camera_mounting_pose,
+						       point);
+		      
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+	      }
+	      break;
+	    case cost_functions::CircleCameraReprjErrorWithDistortion:
+	      {
+		CostFunction* cost_function =
+		  CircleCameraReprjErrorWithDistortion::Create(image_x, image_y, circle_dia);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+	      }
+	      break;
+	    case cost_functions::CircleCameraReprjErrorWithDistortionPK:
+	      {
+		CostFunction* cost_function =
+		  CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y,
+								 circle_dia,
+								 point);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+	      }
+	      break;
+	    case cost_functions::CircleCameraReprjError:
+	      {
+		CostFunction* cost_function =
+		  CircleCameraReprjError::Create(image_x, image_y, 
+						 circle_dia,
+						 focal_length_x,
+						 focal_length_y,
+						 center_x,
+						 center_y);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, point.pb);
+	      }
+	      break;
+	    case cost_functions::CircleCameraReprjErrorPK:
+	      {
+		CostFunction* cost_function =
+		  CircleCameraReprjErrorPK::Create(image_x, image_y, 
+						   circle_dia,
+						   focal_length_x,
+						   focal_length_y,
+						   center_x,
+						   center_y,
+						   point);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics);
+	      }
+	      break;
+	    case cost_functions::CircleTargetCameraReprjErrorWithDistortion:
+	      {
+		CostFunction* cost_function =
+		  CircleTargetCameraReprjErrorWithDistortion::Create(image_x, image_y,
+								     circle_dia);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
+	      }
+	      break;
+	    case cost_functions::CircleTargetCameraReprjErrorWithDistortionPK:
+	      {
+		CostFunction* cost_function =
+		  CircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
+								       circle_dia,
+								       point);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
+	      }
+	      break;
+	    case cost_functions::FixedCircleTargetCameraReprjErrorWithDistortionPK:
+	      {
+		CostFunction* cost_function =
+		  FixedCircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
+									    circle_dia,
+									    point);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
+	      }
+	      break;
+	    case cost_functions::SimpleCircleTargetCameraReprjErrorWithDistortionPK:
+	      {
+		CostFunction* cost_function =
+		  SimpleCircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
+									     circle_dia,
+									     point);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
+	      }
+	      break;
+	    case cost_functions::CircleTargetCameraReprjErrorPK:
+	      {
+		CostFunction* cost_function = 
+		  CircleTargetCameraReprjErrorPK::Create(image_x,  image_y,
+							 circle_dia,
 							 focal_length_x,
 							 focal_length_y,
 							 center_x,
 							 center_y,
-							 camera_mounting_pose);
-		      problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
-		  }
-		  break;
-		case cost_functions::LinkTargetCameraReprjErrorPK:
-		  {
-		    CostFunction* cost_function =
-		      LinkTargetCameraReprjErrorPK::Create(image_x, image_y, 
+							 point);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+	      }
+	      break;
+	    case cost_functions::LinkCircleTargetCameraReprjError:
+	      {
+		CostFunction* cost_function =
+		  LinkCircleTargetCameraReprjError::Create(image_x, image_y, 
+							   circle_dia,
 							   focal_length_x,
 							   focal_length_y,
 							   center_x,
 							   center_y,
-							   camera_mounting_pose,
-							   point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
-		  }
-		  break;
-		case cost_functions::LinkCameraTargetReprjError:
-		  {
-		    CostFunction* cost_function =
-		      LinkCameraTargetReprjError::Create(image_x, image_y, 
-							 focal_length_x,
-							 focal_length_y,
-							 center_x,
-							 center_y,
-							 camera_mounting_pose);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
-		  }
-		  break;
-		case cost_functions::LinkCameraTargetReprjErrorPK:
-		    {
-		      CostFunction* cost_function =
-			LinkCameraTargetReprjErrorPK::Create(image_x, image_y, 
+							   camera_mounting_pose);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+	      }
+	      break;
+	    case cost_functions::LinkCircleTargetCameraReprjErrorPK:
+	      {
+		CostFunction* cost_function =
+		  LinkCircleTargetCameraReprjErrorPK::Create(image_x, image_y, 
+							     circle_dia,
 							     focal_length_x,
 							     focal_length_y,
 							     center_x,
 							     center_y,
 							     camera_mounting_pose,
 							     point);
-		      
-		      problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
-		    }
-		    break;
-		case cost_functions::CircleCameraReprjErrorWithDistortion:
-		  {
-		    CostFunction* cost_function =
-		      CircleCameraReprjErrorWithDistortion::Create(image_x, image_y, circle_dia);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
-		  }
-		  break;
-		case cost_functions::CircleCameraReprjErrorWithDistortionPK:
-		  {
-		    CostFunction* cost_function =
-		      CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y,
-								     circle_dia,
-								     point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
-		  }
-		  break;
-		case cost_functions::CircleCameraReprjError:
-		  {
-		    CostFunction* cost_function =
-		      CircleCameraReprjError::Create(image_x, image_y, 
-						     circle_dia,
-						     focal_length_x,
-						     focal_length_y,
-						     center_x,
-						     center_y);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, point.pb);
-		  }
-		  break;
-		case cost_functions::CircleCameraReprjErrorPK:
-		  {
-		    CostFunction* cost_function =
-		      CircleCameraReprjErrorPK::Create(image_x, image_y, 
-						       circle_dia,
-						       focal_length_x,
-						       focal_length_y,
-						       center_x,
-						       center_y,
-						       point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics);
-		  }
-		  break;
-		case cost_functions::CircleTargetCameraReprjErrorWithDistortion:
-		  {
-		    CostFunction* cost_function =
-		      CircleTargetCameraReprjErrorWithDistortion::Create(image_x, image_y,
-									 circle_dia);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, point.pb);
-		  }
-		  break;
-		case cost_functions::CircleTargetCameraReprjErrorWithDistortionPK:
-		  {
-		    CostFunction* cost_function =
-		      CircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
-									   circle_dia,
-									   point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
-		  }
-		  break;
-		case cost_functions::FixedCircleTargetCameraReprjErrorWithDistortionPK:
-		  {
-		    CostFunction* cost_function =
-		      FixedCircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
-									   circle_dia,
-									   point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics, target_pose_params);
-		  }
-		  break;
-		case cost_functions::SimpleCircleTargetCameraReprjErrorWithDistortionPK:
-		  {
-		    CostFunction* cost_function =
-		      SimpleCircleTargetCameraReprjErrorWithDistortionPK::Create(image_x, image_y, 
-									   circle_dia,
-									   point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, intrinsics);
-		  }
-		  break;
-		case cost_functions::CircleTargetCameraReprjErrorPK:
-		  {
-		    CostFunction* cost_function = 
-		      CircleTargetCameraReprjErrorPK::Create(image_x,  image_y,
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+	      }
+	      break;
+	    case cost_functions::LinkCameraCircleTargetReprjError:
+	      {
+		CostFunction* cost_function =
+		  LinkCameraCircleTargetReprjError::Create(image_x, image_y, 
+							   circle_dia,
+							   focal_length_x,
+							   focal_length_y,
+							   center_x,
+							   center_y,
+							   camera_mounting_pose);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
+	      }
+	      break;
+	    case cost_functions::LinkCameraCircleTargetReprjErrorPK:
+	      {
+		CostFunction* cost_function =
+		  LinkCameraCircleTargetReprjErrorPK::Create(image_x, image_y, 
 							     circle_dia,
 							     focal_length_x,
 							     focal_length_y,
 							     center_x,
 							     center_y,
+							     camera_mounting_pose,
 							     point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
-		  }
-		  break;
-		case cost_functions::LinkCircleTargetCameraReprjError:
-		  {
-		    CostFunction* cost_function =
-		      LinkCircleTargetCameraReprjError::Create(image_x, image_y, 
-							       circle_dia,
-							       focal_length_x,
-							       focal_length_y,
-							       center_x,
-							       center_y,
-							       camera_mounting_pose);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
-		  }
-		  break;
-		case cost_functions::LinkCircleTargetCameraReprjErrorPK:
-		  {
-		    CostFunction* cost_function =
-		      LinkCircleTargetCameraReprjErrorPK::Create(image_x, image_y, 
-								 circle_dia,
-								 focal_length_x,
-								 focal_length_y,
-								 center_x,
-								 center_y,
-								 camera_mounting_pose,
-								 point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
-		  }
-		  break;
-		case cost_functions::LinkCameraCircleTargetReprjError:
-		  {
-		    CostFunction* cost_function =
-		      LinkCameraCircleTargetReprjError::Create(image_x, image_y, 
-							       circle_dia,
-							       focal_length_x,
-							       focal_length_y,
-							       center_x,
-							       center_y,
-							       camera_mounting_pose);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params, point.pb);
-		  }
-		  break;
-		case cost_functions::LinkCameraCircleTargetReprjErrorPK:
-		  {
-		    CostFunction* cost_function =
-		      LinkCameraCircleTargetReprjErrorPK::Create(image_x, image_y, 
-								 circle_dia,
-								 focal_length_x,
-								 focal_length_y,
-								 center_x,
-								 center_y,
-								 camera_mounting_pose,
-								 point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
-		    if(point_zero){
-		      double residual[2];
-		      double *params[2];
-		      params[0] = &extrinsics[0];
-		      params[1] = &target_pose_params[0];
-		      cost_function->Evaluate(params, residual, NULL);
-		      ROS_INFO("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
-		      point_zero=false;
-		      LinkCameraCircleTargetReprjErrorPK testIt(image_x, image_y, 
-								circle_dia,
-								focal_length_x,
-								focal_length_y,
-								center_x,
-								center_y,
-								camera_mounting_pose,
-								point);
-		      testIt.test_residual(extrinsics, target_pose_params, residual);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics, target_pose_params);
+		if(point_zero){
+		  double residual[2];
+		  double *params[2];
+		  params[0] = &extrinsics[0];
+		  params[1] = &target_pose_params[0];
+		  cost_function->Evaluate(params, residual, NULL);
+		  ROS_INFO("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
+		  point_zero=false;
+		  LinkCameraCircleTargetReprjErrorPK testIt(image_x, image_y, 
+							    circle_dia,
+							    focal_length_x,
+							    focal_length_y,
+							    center_x,
+							    center_y,
+							    camera_mounting_pose,
+							    point);
+		  testIt.test_residual(extrinsics, target_pose_params, residual);
 
-		    }
-		  }
-		  break;
-		case cost_functions::FixedCircleTargetCameraReprjErrorPK:
-		  {
-		    CostFunction* cost_function =
-		      FixedCircleTargetCameraReprjErrorPK::Create(image_x, image_y, 
-								  circle_dia,
-								  focal_length_x,
-								  focal_length_y,
-								  center_x,
-								  center_y,
-								  target_pose,
-								  camera_mounting_pose,
-								  point);
-		    problem_->AddResidualBlock(cost_function, NULL , extrinsics);
-		    if(point_zero){
-		      double residual[2];
-		      double *params[1];
-		      showPose(extrinsics,"extrinsics");
-		      params[0] = &extrinsics[0];
-		      cost_function->Evaluate(params, residual, NULL);
-		      ROS_ERROR("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
-		      point_zero=false;
-		      FixedCircleTargetCameraReprjErrorPK testIt(image_x, image_y, 
-								 circle_dia,
-								 focal_length_x,
-								 focal_length_y,
-								 center_x,
-								 center_y,
-								 target_pose,
-								 camera_mounting_pose,
-								 point);
-		      testIt.test_residual(extrinsics, residual);
+		}
+	      }
+	      break;
+	    case cost_functions::FixedCircleTargetCameraReprjErrorPK:
+	      {
+		CostFunction* cost_function =
+		  FixedCircleTargetCameraReprjErrorPK::Create(image_x, image_y, 
+							      circle_dia,
+							      focal_length_x,
+							      focal_length_y,
+							      center_x,
+							      center_y,
+							      target_pose,
+							      camera_mounting_pose,
+							      point);
+		problem_->AddResidualBlock(cost_function, NULL , extrinsics);
+		if(point_zero){
+		  double residual[2];
+		  double *params[1];
+		  showPose(extrinsics,"extrinsics");
+		  params[0] = &extrinsics[0];
+		  cost_function->Evaluate(params, residual, NULL);
+		  ROS_ERROR("Initial residual %6.3lf %6.3lf ix,iy = %6.3lf %6.3lf px,py = %6.3lf %6.3lf", residual[0], residual[1],image_x, image_y, residual[0]+image_x, residual[0]+image_y);
+		  point_zero=false;
+		  FixedCircleTargetCameraReprjErrorPK testIt(image_x, image_y, 
+							     circle_dia,
+							     focal_length_x,
+							     focal_length_y,
+							     center_x,
+							     center_y,
+							     target_pose,
+							     camera_mounting_pose,
+							     point);
+		  testIt.test_residual(extrinsics, residual);
 
-		    }
-		  }
-		  break;
-		default:
-		  {
-		    std::string cost_type_string = costType2String(ODP.cost_type_);
-		    ROS_ERROR("No cost function of type %s", cost_type_string.c_str());
-		  }
-		  break;
-		}// end of switch
-	      }//for each observation
-	  }//for each camera
+		}
+	      }
+	      break;
+	    default:
+	      {
+		std::string cost_type_string = costType2String(ODP.cost_type_);
+		ROS_ERROR("No cost function of type %s", cost_type_string.c_str());
+	      }
+	      break;
+	    }// end of switch
+	  }//for each observation
       }//for each scene
-  ROS_INFO("total observations: %d ",total_observations_);
+    ROS_INFO("total observations: %d ",total_observations_);
   
   // Make Ceres automatically detect the bundle structure. Note that the
   // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower

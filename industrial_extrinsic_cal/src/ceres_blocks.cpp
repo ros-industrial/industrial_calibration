@@ -374,17 +374,18 @@ void CeresBlocks::displayMovingCameras()
   if(moving_cameras_.size() !=0) ROS_INFO("Moving Cameras");
   BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
     {
-      Pose6d pose(mcam->cam->camera_parameters_.position[0],
-		  mcam->cam->camera_parameters_.position[1],
-		  mcam->cam->camera_parameters_.position[2],
-		  mcam->cam->camera_parameters_.angle_axis[0],
-		  mcam->cam->camera_parameters_.angle_axis[1],
-		  mcam->cam->camera_parameters_.angle_axis[2]);
-      Pose6d ipose = pose.getInverse();
-      ROS_INFO("scene_id = %d", mcam->scene_id);
-      showPose(ipose, mcam->cam->camera_name_);
-      P_BLOCK intrinsics = getMovingCameraParameterBlockIntrinsics(mcam->cam->camera_name_);
-      showIntrinsics(intrinsics, true);
+      if(mcam->scene_id == 0){
+	Pose6d pose(mcam->cam->camera_parameters_.position[0],
+		    mcam->cam->camera_parameters_.position[1],
+		    mcam->cam->camera_parameters_.position[2],
+		    mcam->cam->camera_parameters_.angle_axis[0],
+		    mcam->cam->camera_parameters_.angle_axis[1],
+		    mcam->cam->camera_parameters_.angle_axis[2]);
+	Pose6d ipose = pose.getInverse();
+	showPose(ipose, mcam->cam->camera_name_);
+	P_BLOCK intrinsics = getMovingCameraParameterBlockIntrinsics(mcam->cam->camera_name_);
+	showIntrinsics(intrinsics, true);
+      }
     }
 }
 void CeresBlocks::displayStaticTargets()
@@ -404,7 +405,9 @@ void CeresBlocks::displayMovingTargets()
   if(moving_targets_.size() !=0)   ROS_INFO("Moving Targets:");
   BOOST_FOREACH(shared_ptr<MovingTarget> mtarg, moving_targets_)
     {
-      showPose(mtarg->targ_->pose_, mtarg->targ_->target_name_);
+      if(mtarg->scene_id_ == 0){	// only show first pose, not all 
+	showPose(mtarg->targ_->pose_, mtarg->targ_->target_name_);
+      }
     }
 }
 using std::string;
@@ -464,12 +467,10 @@ void CeresBlocks::pushTransforms()
 {
   BOOST_FOREACH(shared_ptr<Camera> cam, static_cameras_)
     {
-      ROS_ERROR("pushing static camera %s",cam->camera_name_.c_str());
       cam->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
     {
-      ROS_ERROR("pushing moving camera %s",mcam->cam->camera_name_.c_str());
       Pose6d pose;
       pose.setAngleAxis(mcam->cam->camera_parameters_.angle_axis[0], 
 			mcam->cam->camera_parameters_.angle_axis[1], 
@@ -477,17 +478,14 @@ void CeresBlocks::pushTransforms()
       pose.setOrigin(mcam->cam->camera_parameters_.position[0],
 		     mcam->cam->camera_parameters_.position[1],
 		     mcam->cam->camera_parameters_.position[2]);
-      pose.show("moving camera");
       mcam->cam->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<Target> targ, static_targets_)
     {
-      ROS_ERROR("pushing static target %s",targ->target_name_.c_str());
       targ->pushTransform();
     }
   BOOST_FOREACH(shared_ptr<MovingTarget> mtarg, moving_targets_)
     {
-      ROS_ERROR("pushing moving target %s from scene %d",mtarg->targ_->target_name_.c_str(), mtarg->scene_id_);
       mtarg->targ_->pushTransform();
     }
 
