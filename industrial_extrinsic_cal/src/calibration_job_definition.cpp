@@ -818,7 +818,6 @@ namespace industrial_extrinsic_cal
 		intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(camera_name);
 		extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(camera_name);
 	      }
-
 	    // Get the observations from this camera whose P_BLOCKs are intrinsics and extrinsics
 	    CameraObservations camera_observations;
 	    int number_returned;
@@ -927,6 +926,7 @@ namespace industrial_extrinsic_cal
 	    point.z = ODP.point_position_[2];
 	    unsigned int target_type    = ODP.target_type_;
 	    double circle_dia = ODP.circle_dia_; // sometimes this is not needed
+
 	    // pull out pointers to the parameter blocks in the observation point data
 	    extrinsics        = ODP.camera_extrinsics_;
 	    target_pose_params     = ODP.target_pose_;
@@ -975,8 +975,6 @@ namespace industrial_extrinsic_cal
 	      break;
 	    case cost_functions::CameraReprjErrorPK:
 	      {
-		ROS_ERROR("u,v = %7.3f %7.3f point = %7.3f %7.3f %7.3f",
-			  image_x,  image_y, point.x, point.y, point.z);
 		CostFunction* cost_function =
 		  CameraReprjErrorPK::Create(image_x, image_y, 
 					     focal_length_x, focal_length_y,
@@ -1281,7 +1279,7 @@ namespace industrial_extrinsic_cal
 	    }// end of switch
 	  }//for each observation
       }//for each scene
-  ROS_INFO("total observations: %d ",total_observations_);
+    ROS_INFO("total observations: %d ",total_observations_);
   
   // Make Ceres automatically detect the bundle structure. Note that the
   // standard solver, SPARSE_NORMAL_CHOLESKY, also works fine but it is slower
