@@ -14,7 +14,7 @@ fprintf(fp,"     position_y: 0.0\n");
 fprintf(fp,"     position_z: 0.0\n");
 fprintf(fp,"     target_rows: %d\n", rows);
 fprintf(fp,"     target_cols: %d\n", cols);
-fprintf(fp,"     target_points: %d\n", cols*rows);
+fprintf(fp,"     num_points: %d\n", cols*rows);
 fprintf(fp,"     points:\n");
 for i=1:rows,
 	y= (rows-i)*spacing;

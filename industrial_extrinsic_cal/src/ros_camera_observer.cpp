@@ -147,6 +147,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   std::vector<cv::KeyPoint> key_points;
   ROS_DEBUG("Pattern type %d, rows %d, cols %d",pattern_,pattern_rows_,pattern_cols_);
   
+  cv::Point large_point;
   cv::Size pattern_size(pattern_cols_, pattern_rows_); // note they use cols then rows for some unknown reason
   switch (pattern_)
     {
@@ -209,7 +210,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	ROS_DEBUG("lower_left  %f %f %f", centers[lw_lt_index].x, centers[lw_lt_index].y, lw_lt_size);
 	ROS_DEBUG("lower_right %f %f %f", centers[lw_rt_index].x, centers[lw_rt_index].y, lw_rt_size);
 	ROS_DEBUG("upper_left  %f %f %f", centers[up_lt_index].x, centers[up_lt_index].y, lw_lt_size);
-	ROS_DEBUG("uper_right %f %f %f", centers[up_lt_index].x, centers[up_lt_index].y, lw_lt_size);
+	ROS_DEBUG("upper_right %f %f %f", centers[up_rt_index].x, centers[up_rt_index].y, lw_lt_size);
 	if(lw_lt_size <0.0 || up_lt_size < 0.0 || up_rt_size <0.0 || lw_rt_size < 0.0){
 	  ROS_ERROR("No keypoint match for one or more corners");
 	  return(false);
@@ -219,12 +220,16 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	// lower left
 	if(lw_lt_size >up_lt_size && lw_lt_size > up_rt_size && lw_lt_size > lw_rt_size){
 	  ROS_DEBUG("large lower left");
+	  large_point.x = centers[lw_lt_index].x;
+	  large_point.y = centers[lw_lt_index].y;
 	  // right side up, no rotation, order is natural, starting from upper left, read like book
 	  for(int i=0; i<(int) centers.size(); i++) observation_pts_.push_back(centers[i]);
 	}
 	// upper right
 	else if( up_rt_size > lw_rt_size && up_rt_size > lw_lt_size && up_rt_size > up_lt_size){
 	  ROS_DEBUG("large upper right");
+	  large_point.x = centers[up_rt_index].x;
+	  large_point.y = centers[up_rt_index].y;
 	  // 180 degree rotation reverse order
 	  for(int i=(int) centers.size()-1; i>= 0; i--){
 	    observation_pts_.push_back(centers[i]);
@@ -232,17 +237,48 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	}
 	// lower right
 	else if( lw_rt_size > lw_lt_size && lw_rt_size > up_rt_size && lw_rt_size > up_lt_size){
+	  ROS_ERROR("large lower right");
 	  ROS_DEBUG("large lower right");
+	  large_point.x = centers[lw_rt_index].x;
+	  large_point.y = centers[lw_rt_index].y;
+	  bool left_to_right=false;
+	  bool down_to_up=false;
+	  if(centers[0].x < centers[1].x)   left_to_right=true;
+	  if(centers[0].y < centers[1].y)   down_to_up=true;
+
 	  // -90 degree rotation
-	  for(int c=0; c<pattern_cols_; c++){
-	    for(int r=pattern_rows_-1; r>=0; r--){
-	      observation_pts_.push_back(centers[r*pattern_cols_ +c]);
+	  if( left_to_right && !down_to_up){
+	    ROS_ERROR("case1");
+	    for(int c=0; c<pattern_cols_; c++){
+	      for(int r=pattern_rows_-1; r>=0; r--){
+		observation_pts_.push_back(centers[r*pattern_cols_ +c]);
+	      }
 	    }
 	  }
-	}
+	  else if(left_to_right && down_to_up){
+	    ROS_ERROR("case2");
+	    for(int r=0; r<pattern_rows_; r++){
+	      for(int c=pattern_cols_ -1; c>=0; c--){
+		observation_pts_.push_back(centers[r*pattern_cols_ +c]);
+	      }
+	    }
+	  }
+	  else{
+	    ROS_ERROR("case3");
+	    int q=0;
+	    for(int c=0; c<pattern_cols_; c++){
+	      for(int r=pattern_rows_-1; r>=0; r--){
+		observation_pts_.push_back(centers[q++]);
+	      }
+	    }
+	  }
+	}// end large was last, what a bitch this is
+
 	// upper left
 	else if(up_lt_size > lw_rt_size && up_lt_size > up_rt_size && up_lt_size > lw_lt_size){
 	  ROS_DEBUG("large upper left");
+	  large_point.x = centers[up_lt_index].x;
+	  large_point.y = centers[up_lt_index].y;
 	  // 90 degree rotation
 	  for(int c = pattern_cols_ -1; c>=0; c--){
 	    for(int r=0; r<pattern_rows_; r++){
@@ -267,13 +303,20 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     observation_pts_[i].y += input_roi_.y;
   }
 
-  
+  // draw larger circle at large point
+  circle(input_bridge_->image, large_point, 3.0, 255, 5);
+
   // next block of code for publishing the roi as an image, when target is found, circles are placed on image, with a line between pt1 and pt2
   for(int i=0;i<(int)observation_pts_.size();i++){
     cv::Point p;
     p.x = observation_pts_[i].x;
     p.y = observation_pts_[i].y;
-    circle(input_bridge_->image,p,1.0,255,5);
+    if(i==0){
+      circle(input_bridge_->image, p, 2.0, cv::Scalar(0,0,0), 5);
+    }
+    else{
+      circle(input_bridge_->image,p,1.0,255,5);
+    }
   }
   
   // Draw line through first column of observe points. These correspond to the first set of point in the target
@@ -301,7 +344,8 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     return 0;
   }
   else{
-    results_pub_.publish(out_bridge_->toImageMsg());
+    if(image_topic_ == "/Basler4/image_rect")
+      results_pub_.publish(out_bridge_->toImageMsg());
   }
 
 
