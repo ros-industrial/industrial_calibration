@@ -36,6 +36,43 @@ using industrial_extrinsic_cal::covariance_requests::CovarianceRequestType;
 
 namespace industrial_extrinsic_cal
 {
+  void writeObservationData(std::string file_name, std::vector<ObservationDataPointList> odl)
+{
+  FILE *fp=NULL;
+  fp = fopen(file_name.c_str(), "w");
+  if(fp == NULL){
+    ROS_ERROR("Could not open %s", file_name.c_str());
+    return;
+  }
+  
+  int scene_id=-1;  
+  ROS_ERROR("processing %d lists", (int) odl.size());
+  for(int i=0; (int) i<odl.size(); i++){
+    if(odl[i].items_.size()>0){
+      scene_id = odl[i].items_[0].scene_id_;
+      fprintf(fp, "scene_id = %d \n", scene_id);
+      Pose6d t_pose;
+      t_pose.ax = odl[i].items_[0].target_pose_[0];
+      t_pose.ay = odl[i].items_[0].target_pose_[1];
+      t_pose.az = odl[i].items_[0].target_pose_[2];
+      t_pose.x  = odl[i].items_[0].target_pose_[3];
+      t_pose.y  = odl[i].items_[0].target_pose_[4];
+      t_pose.z  = odl[i].items_[0].target_pose_[5];
+      tf::Matrix3x3 basis = t_pose.getBasis();
+      fprintf(fp, "target_pose = [ %f %f %f %f;\n %f %f %f %f;\n %f %f %f %f;\n %f %f %f %f];\n",
+	      basis[0][0],basis[0][1], basis[0][2],t_pose.x,
+	      basis[1][0],basis[1][1], basis[1][2],t_pose.y,
+	      basis[2][0],basis[2][1], basis[2][2],t_pose.z,
+	      0.0, 0.0, 0.0, 1.0);
+      fprintf(fp, "cameras = [ ");
+      for(int j=0; (int) j<odl[i].items_.size(); j++){
+	fprintf(fp,"%s ", odl[i].items_[j].camera_name_.c_str());
+      }
+      fprintf(fp, "]\n");
+    }
+  }
+  fclose(fp);
+}
   CovarianceRequestType intToCovRequest(int request)
   {
     switch (request){
@@ -423,8 +460,11 @@ namespace industrial_extrinsic_cal
 		    temp_target->circle_grid_parameters_.is_symmetric=true;
 		    ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
 		    break;
+		  case pattern_options::Balls:
+		    // no parameters yet
+		    break;
 		  default:
-		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid, or ModifiedCircleGrid)");
+		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid, or ModifiedCircleGrid, Balls)");
 		    return false;
 		    break;
 		  } // end of target type
@@ -517,6 +557,9 @@ namespace industrial_extrinsic_cal
 		    (*target_parameters)[i]["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
 		    (*target_parameters)[i]["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
 		    temp_target->circle_grid_parameters_.is_symmetric=true;
+		    break;
+		  case pattern_options::Balls:
+		    // no parameters yet
 		    break;
 		  default:
 		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
@@ -864,6 +907,9 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::runOptimization()
   {
+    // REMOVE ONCE DONE WITH NIST
+    if(1) writeObservationData("/home/nist/junk.txt", observation_data_point_list_);
+
     // problem is declared here because we can't clear it as far as I can tell from the ceres documentation
     if(problem_ != NULL) {
       ROS_INFO("Deleting old problem.");
@@ -1448,4 +1494,5 @@ namespace industrial_extrinsic_cal
     }
     return(ceres_summary_.initial_cost/total_observations_);
   }
+
 }//end namespace industrial_extrinsic_cal

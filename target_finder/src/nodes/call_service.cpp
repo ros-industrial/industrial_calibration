@@ -24,6 +24,7 @@
 #include <ros/package.h>
 #include <ros/console.h>
 #include <target_finder/target_locater.h> 
+#include <tf/transform_broadcaster.h>
 
 using std::string;
 using std::vector;
@@ -43,6 +44,7 @@ private:
   ros::NodeHandle nh_;
   ros::ServiceClient client_;
   target_finder::target_locater srv_;
+  tf::TransformBroadcaster tf_broadcaster_;
 };
 
 void callService::copyResponseToRequest()
@@ -59,6 +61,14 @@ void callService::copyResponseToRequest()
 bool callService::callTheService()
 {
   if(client_.call(srv_)){
+    double x,y,z,qx,qy,qz,qw;
+    x = srv_.response.final_pose.position.x;
+    y = srv_.response.final_pose.position.y;
+    z = srv_.response.final_pose.position.z;
+    qx = srv_.response.final_pose.orientation.x;
+    qy = srv_.response.final_pose.orientation.y;
+    qz = srv_.response.final_pose.orientation.z;
+    qw = srv_.response.final_pose.orientation.w;
     ROS_INFO("Pose: tx= %5.3lf  %5.3lf  %5.3lf quat= %5.3lf  %5.3lf  %5.3lf %5.3lf, cost= %5.3lf",
 	     srv_.response.final_pose.position.x,
 	     srv_.response.final_pose.position.y,
@@ -68,6 +78,12 @@ bool callService::callTheService()
 	     srv_.response.final_pose.orientation.z,
 	     srv_.response.final_pose.orientation.w,
 	     srv_.response.final_cost_per_observation);
+    tf::Transform camera_to_target;
+    tf::Quaternion quat(qx,qy,qz,qw);
+    camera_to_target.setOrigin(tf::Vector3(x,y,z));
+    camera_to_target.setRotation(quat);
+    tf::StampedTransform stf(camera_to_target, ros::Time::now(), "basler1_rgb_optical_frame", "target_frame");
+    tf_broadcaster_.sendTransform(stf);
     return(true);
   }
   ROS_ERROR("Target Location Failure");
@@ -76,19 +92,13 @@ bool callService::callTheService()
 }
 void callService::setRequest()
 {
-  /*
-    srv_.request.roi.x_offset =240;
-    srv_.request.roi.y_offset =30;
-    srv_.request.roi.width = 350;
-    srv_.request.roi.height = 330;
-  */
-    srv_.request.roi.x_offset =200;
-    srv_.request.roi.y_offset =150;
-    srv_.request.roi.width = 150;
-    srv_.request.roi.height = 150;
+    srv_.request.roi.x_offset =0;
+    srv_.request.roi.y_offset =0;
+    srv_.request.roi.width = 1280;
+    srv_.request.roi.height = 1024;
     srv_.request.initial_pose.position.x = 0.0;
-    srv_.request.initial_pose.position.y =.01;
-    srv_.request.initial_pose.position.z =0.1;
+    srv_.request.initial_pose.position.y = 0.1;
+    srv_.request.initial_pose.position.z = 1.0;
     srv_.request.initial_pose.orientation.x = 1.0;
     srv_.request.initial_pose.orientation.y = 0.0;
     srv_.request.initial_pose.orientation.z = 0.0;
@@ -103,8 +113,6 @@ int main(int argc, char **argv)
   callService call_service(nh);
   ros::Rate loop_rate(10);
   while(ros::ok()){
-    ros::Time time_now = ros::Time::now();
-    ROS_INFO_STREAM(time_now);
     if(call_service.callTheService()){
       call_service.copyResponseToRequest();
     }

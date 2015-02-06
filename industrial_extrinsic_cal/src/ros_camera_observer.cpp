@@ -65,6 +65,29 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
 
   // set up and create the detector using the parameters
   //  circle_detector_ptr_ = new cv::CircleDetector(params);
+  cv::SimpleBlobDetector::Params simple_blob_params;
+  // PLEASE LEAVE THIS COMMENTED CODE HERE, when blobs are black, use defaults
+  // must change, to extract white blobs
+  //  simple_blob_params.minThreshold = 40;
+  //  simple_blob_params.maxThreshold = 60;
+  //  simple_blob_params.thresholdStep = 5;
+  //  simple_blob_params.minArea = 100;
+  //  simple_blob_params.minConvexity = 0.3;
+  //  simple_blob_params.maxConvexity = 0.3;//circularity ($\frac4*\pi*Area* perimeter$) .
+  //  simple_blob_params.minInertiaRatio = 0.01;
+  //  simple_blob_params.maxInertiaRatio = 0.01;
+  //  simple_blob_params.minArea = 30.0; //float
+  //  simple_blob_params.maxArea = 8000.0;
+  //  simple_blob_params.maxConvexity = 10;
+  //  simple_blob_params.filterByColor = false;
+  //  simple_blob_params.blobColor = (uchar) 128; // 255=light 0=dark blobs
+  //  simple_blob_params.filterByCircularity = true;
+  //  simple_blob_parameters.minCircularity= 0.8; // float
+  //  simple_blob_parameters.maxCircularity= 1.0; //float
+  //  simple_blob_params.minDistanceBetweenBlobs = 10; // float
+  //  simple_blob_params.minRepeatability = (size_t) 128; // don't know what it means
+  
+  //  circle_detector_ptr_ = new cv::SimpleBlobDetector(simple_blob_params);
   circle_detector_ptr_ = new cv::SimpleBlobDetector();
 }
 
@@ -101,6 +124,12 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost
       pattern_ = pattern_options::ARtag;
       ROS_ERROR_STREAM("AR Tag recognized but pattern not supported yet");
       break;
+    case pattern_options::Balls:
+      pattern_ = pattern_options::Balls;
+      pattern_rows_ = 1;
+      pattern_cols_  = targ->num_points_;
+      ROS_ERROR_STREAM("FourBall recognized but pattern not supported yet");
+      break;
     default:
       ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid or ARTag)");
       return false;
@@ -111,7 +140,6 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost
   input_roi_.y= roi.y_min;
   input_roi_.width= roi.x_max - roi.x_min;
   input_roi_.height= roi.y_max - roi.y_min;
-
   ROS_DEBUG("ROSCameraObserver added target and roi");
 
   return true;
@@ -169,132 +197,169 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	}
       break;
     case pattern_options::ModifiedCircleGrid:
-      // modified circle grids have one circle at the origin which is 1.5 times larger in diameter than the rest
-      ROS_DEBUG_STREAM("Finding Circles in modified symetric grid");
-      std::vector<cv::Point2f> centers;
-      successful_find = cv::findCirclesGrid(image_roi_, pattern_size, centers, 
-					    cv::CALIB_CB_SYMMETRIC_GRID,
-					    circle_detector_ptr_);
-      if(!successful_find){
-	ROS_ERROR("couldn't find target in %s", image_topic_.c_str());
-	out_bridge_->image = image_roi_;
-	junk_pub_.publish(out_bridge_->toImageMsg());
-	return 0;
-      }
-      // Note, this is the same method called in the beginning of findCirclesGrid, unfortunately, they don't return their keypoints
-      // Should OpenCV change their method, the keypoint locations may not match, this has a risk of failing with
-      // updates to OpenCV
-      std::vector<cv::KeyPoint> keypoints;
-      circle_detector_ptr_->detect(image_roi_, keypoints);
-      ROS_DEBUG("found %d keypoints", (int) keypoints.size());
-      if(successful_find){ // determine orientation, and sort points to correct correspondence
-	int lw_lt_index = pattern_rows_*pattern_cols_ - pattern_cols_; // lower right point's index
-	int lw_rt_index = pattern_rows_*pattern_cols_ -1; // lower left point's index
-	int up_lt_index = 0;	// upper left point's index
-	int up_rt_index = pattern_cols_-1; // upper right point's index
-
-	double lw_lt_size = -1.0; // lower left point's size in pixels
-	double up_lt_size = -1.0;// upper left point's size in pixels
-	double up_rt_size = -1.0;// upper right point's size in pixels
-	double lw_rt_size = -1.0;// lower right point's size in pixels
-	for(int i=0; i<(int)keypoints.size(); i++){
-
-	  double x = keypoints[i].pt.x;
-	  double y = keypoints[i].pt.y;
-	  double ksize = keypoints[i].size;
-	  if(x == centers[lw_lt_index].x && y == centers[lw_lt_index].y) lw_lt_size = ksize;
-	  if(x == centers[lw_rt_index].x && y == centers[lw_rt_index].y) lw_rt_size = ksize;
+      { //contain the scope of automatic variables
+	// modified circle grids have one circle at the origin which is 1.5 times larger in diameter than the rest
+	ROS_DEBUG_STREAM("Finding Circles in modified symetric grid");
+	std::vector<cv::Point2f> centers;
+	successful_find = cv::findCirclesGrid(image_roi_, pattern_size, centers, 
+					      cv::CALIB_CB_SYMMETRIC_GRID);
+					      //	      circle_detector_ptr_);
+	if(!successful_find){
+	  ROS_ERROR("couldn't find %dx%d modified circle target in %s", pattern_rows_, pattern_cols_,  image_topic_.c_str());
+	  out_bridge_->image = image_roi_;
+	  junk_pub_.publish(out_bridge_->toImageMsg());
+	  return 0;
+	}
+	// Note, this is the same method called in the beginning of findCirclesGrid, unfortunately, they don't return their keypoints
+	// Should OpenCV change their method, the keypoint locations may not match, this has a risk of failing with
+	// updates to OpenCV
+	std::vector<cv::KeyPoint> keypoints;
+	circle_detector_ptr_->detect(image_roi_, keypoints);
+	ROS_DEBUG("found %d keypoints", (int) keypoints.size());
+	if(successful_find){ // determine orientation, and sort points to correct correspondence
+	  int lw_lt_index = pattern_rows_*pattern_cols_ - pattern_cols_; // lower right point's index
+	  int lw_rt_index = pattern_rows_*pattern_cols_ -1; // lower left point's index
+	  int up_lt_index = 0;	// upper left point's index
+	  int up_rt_index = pattern_cols_-1; // upper right point's index
+	  
+	  double lw_lt_size = -1.0; // lower left point's size in pixels
+	  double up_lt_size = -1.0;// upper left point's size in pixels
+	  double up_rt_size = -1.0;// upper right point's size in pixels
+	  double lw_rt_size = -1.0;// lower right point's size in pixels
+	  for(int i=0; i<(int)keypoints.size(); i++){
+	    
+	    double x = keypoints[i].pt.x;
+	    double y = keypoints[i].pt.y;
+	    double ksize = keypoints[i].size;
+	    if(x == centers[lw_lt_index].x && y == centers[lw_lt_index].y) lw_lt_size = ksize;
+	    if(x == centers[lw_rt_index].x && y == centers[lw_rt_index].y) lw_rt_size = ksize;
 	  if(x == centers[up_lt_index].x && y == centers[up_lt_index].y) up_lt_size = ksize;
 	  if(x == centers[up_rt_index].x && y == centers[up_rt_index].y) up_rt_size = ksize;
-	}
-	ROS_DEBUG("lower_left  %f %f %f", centers[lw_lt_index].x, centers[lw_lt_index].y, lw_lt_size);
-	ROS_DEBUG("lower_right %f %f %f", centers[lw_rt_index].x, centers[lw_rt_index].y, lw_rt_size);
-	ROS_DEBUG("upper_left  %f %f %f", centers[up_lt_index].x, centers[up_lt_index].y, lw_lt_size);
-	ROS_DEBUG("upper_right %f %f %f", centers[up_rt_index].x, centers[up_rt_index].y, lw_lt_size);
-	if(lw_lt_size <0.0 || up_lt_size < 0.0 || up_rt_size <0.0 || lw_rt_size < 0.0){
-	  ROS_ERROR("No keypoint match for one or more corners");
-	  return(false);
-	}
-	
-	observation_pts_.clear();
-	// lower left
-	if(lw_lt_size >up_lt_size && lw_lt_size > up_rt_size && lw_lt_size > lw_rt_size){
-	  ROS_DEBUG("large lower left");
-	  large_point.x = centers[lw_lt_index].x;
+	  }
+	  ROS_DEBUG("lower_left  %f %f %f", centers[lw_lt_index].x, centers[lw_lt_index].y, lw_lt_size);
+	  ROS_DEBUG("lower_right %f %f %f", centers[lw_rt_index].x, centers[lw_rt_index].y, lw_rt_size);
+	  ROS_DEBUG("upper_left  %f %f %f", centers[up_lt_index].x, centers[up_lt_index].y, lw_lt_size);
+	  ROS_DEBUG("upper_right %f %f %f", centers[up_rt_index].x, centers[up_rt_index].y, lw_lt_size);
+	  if(lw_lt_size <0.0 || up_lt_size < 0.0 || up_rt_size <0.0 || lw_rt_size < 0.0){
+	    ROS_ERROR("No keypoint match for one or more corners");
+	    return(false);
+	  }
+	  
+	  observation_pts_.clear();
+	  // lower left
+	  if(lw_lt_size >up_lt_size && lw_lt_size > up_rt_size && lw_lt_size > lw_rt_size){
+	    ROS_DEBUG("large lower left");
+	    large_point.x = centers[lw_lt_index].x;
 	  large_point.y = centers[lw_lt_index].y;
 	  // right side up, no rotation, order is natural, starting from upper left, read like book
 	  for(int i=0; i<(int) centers.size(); i++) observation_pts_.push_back(centers[i]);
-	}
-	// upper right
-	else if( up_rt_size > lw_rt_size && up_rt_size > lw_lt_size && up_rt_size > up_lt_size){
-	  ROS_DEBUG("large upper right");
-	  large_point.x = centers[up_rt_index].x;
-	  large_point.y = centers[up_rt_index].y;
-	  // 180 degree rotation reverse order
-	  for(int i=(int) centers.size()-1; i>= 0; i--){
-	    observation_pts_.push_back(centers[i]);
 	  }
-	}
-	// lower right
-	else if( lw_rt_size > lw_lt_size && lw_rt_size > up_rt_size && lw_rt_size > up_lt_size){
-	  ROS_ERROR("large lower right");
-	  ROS_DEBUG("large lower right");
-	  large_point.x = centers[lw_rt_index].x;
-	  large_point.y = centers[lw_rt_index].y;
-	  bool left_to_right=false;
-	  bool down_to_up=false;
-	  if(centers[0].x < centers[1].x)   left_to_right=true;
-	  if(centers[0].y < centers[1].y)   down_to_up=true;
-
-	  // -90 degree rotation
-	  if( left_to_right && !down_to_up){
-	    ROS_ERROR("case1");
-	    for(int c=0; c<pattern_cols_; c++){
-	      for(int r=pattern_rows_-1; r>=0; r--){
-		observation_pts_.push_back(centers[r*pattern_cols_ +c]);
+	  // upper right
+	  else if( up_rt_size > lw_rt_size && up_rt_size > lw_lt_size && up_rt_size > up_lt_size){
+	    ROS_DEBUG("large upper right");
+	    large_point.x = centers[up_rt_index].x;
+	    large_point.y = centers[up_rt_index].y;
+	    // 180 degree rotation reverse order
+	    for(int i=(int) centers.size()-1; i>= 0; i--){
+	      observation_pts_.push_back(centers[i]);
+	    }
+	  }
+	  // lower right
+	  else if( lw_rt_size > lw_lt_size && lw_rt_size > up_rt_size && lw_rt_size > up_lt_size){
+	    ROS_DEBUG("large lower right");
+	    large_point.x = centers[lw_rt_index].x;
+	    large_point.y = centers[lw_rt_index].y;
+	    bool left_to_right=false;
+	    bool down_to_up=false;
+	    if(centers[0].x < centers[1].x)   left_to_right=true;
+	    if(centers[0].y < centers[1].y)   down_to_up=true;
+	    
+	    // -90 degree rotation
+	    if( left_to_right && !down_to_up){
+	      for(int c=0; c<pattern_cols_; c++){
+		for(int r=pattern_rows_-1; r>=0; r--){
+		  observation_pts_.push_back(centers[r*pattern_cols_ +c]);
+		}
+	      }
+	    }
+	    else if(left_to_right && down_to_up){
+	      for(int r=0; r<pattern_rows_; r++){
+		for(int c=pattern_cols_ -1; c>=0; c--){
+		  observation_pts_.push_back(centers[r*pattern_cols_ +c]);
+		}
+	      }
+	    }
+	    else{
+	      int q=0;
+	      for(int c=0; c<pattern_cols_; c++){
+		for(int r=pattern_rows_-1; r>=0; r--){
+		  observation_pts_.push_back(centers[q++]);
+		}
+	      }
+	    }
+	  }// end large was last, what a bitch this is
+	  
+	  // upper left
+	  else if(up_lt_size > lw_rt_size && up_lt_size > up_rt_size && up_lt_size > lw_lt_size){
+	    ROS_DEBUG("large upper left");
+	    large_point.x = centers[up_lt_index].x;
+	    large_point.y = centers[up_lt_index].y;
+	    // 90 degree rotation
+	    for(int c = pattern_cols_ -1; c>=0; c--){
+	      for(int r=0; r<pattern_rows_; r++){
+		observation_pts_.push_back(centers[r*pattern_cols_ + c]);
 	      }
 	    }
 	  }
-	  else if(left_to_right && down_to_up){
-	    ROS_ERROR("case2");
-	    for(int r=0; r<pattern_rows_; r++){
-	      for(int c=pattern_cols_ -1; c>=0; c--){
-		observation_pts_.push_back(centers[r*pattern_cols_ +c]);
-	      }
+	  else
+	    {
+	      ROS_ERROR("None of the observed corner circles are bigger than all the others");
+	      successful_find = false;
 	    }
-	  }
-	  else{
-	    ROS_ERROR("case3");
-	    int q=0;
-	    for(int c=0; c<pattern_cols_; c++){
-	      for(int r=pattern_rows_-1; r>=0; r--){
-		observation_pts_.push_back(centers[q++]);
-	      }
-	    }
-	  }
-	}// end large was last, what a bitch this is
-
-	// upper left
-	else if(up_lt_size > lw_rt_size && up_lt_size > up_rt_size && up_lt_size > lw_lt_size){
-	  ROS_DEBUG("large upper left");
-	  large_point.x = centers[up_lt_index].x;
-	  large_point.y = centers[up_lt_index].y;
-	  // 90 degree rotation
-	  for(int c = pattern_cols_ -1; c>=0; c--){
-	    for(int r=0; r<pattern_rows_; r++){
-	      observation_pts_.push_back(centers[r*pattern_cols_ + c]);
-	    }
-	  }
-	}
-	else
-	  {
-	    ROS_ERROR("None of the observed corner circles are bigger than all the others");
-	    successful_find = false;
-	  }
-      }// end of successful find within this case
+	}// end of successful find within this case
+      }
       break;// end modified circle grid case
-    }// end of main switch
-  
+    case pattern_options::ARtag:
+      {
+	ROS_ERROR_STREAM("AR Tag recognized but pattern not supported yet");
+      }
+      break;
+    case pattern_options::Balls:
+      {// needed to contain scope of automatic variables to this case
+	ROS_ERROR_STREAM("FourBall target finder running");
+	std::vector<cv::Point2f> centers;
+	std::vector<cv::KeyPoint> keypoints;
+	circle_detector_ptr_->detect(image_roi_, keypoints);
+	observation_pts_.clear();
+	if(keypoints.size() == pattern_cols_){
+	  ROS_DEBUG("found %d keypoints", pattern_cols_);
+	  // sort by size using a dumb method
+	  for(int j=0; j<pattern_cols_; j++){
+	    float max_size = 0.0;
+	    int max_index = 0;
+	    for(int i=0;i<(int)keypoints.size();i++){ // for each remaining keypoint
+	      if(keypoints[i].size > max_size){ // see if its bigger
+		max_size = keypoints[i].size;// save the biggest size
+		max_index = i; // save the index
+	      }
+	    }
+	    observation_pts_.push_back(keypoints[max_index].pt);
+	    keypoints.erase(keypoints.begin() + max_index);
+	  }// end of outer loop
+	  large_point.x = observation_pts_[0].x;
+	  large_point.y = observation_pts_[0].y;
+	}
+	else{
+	  ROS_ERROR("found %d keypoints but expected only 4", (int) keypoints.size());
+	}
+      }
+      break;
+      default:
+	ROS_ERROR_STREAM("target_type does not correlate to a known pattern option ");
+	return false;
+	break;
+      }// end of main switch
+      
   ROS_DEBUG("Number of keypoints found: %d ", (int)observation_pts_.size());
 
   // account for shift due to input_roi_
@@ -304,6 +369,8 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   }
 
   // draw larger circle at large point
+  large_point.x += input_roi_.x;
+  large_point.y += input_roi_.y;
   circle(input_bridge_->image, large_point, 3.0, 255, 5);
 
   // next block of code for publishing the roi as an image, when target is found, circles are placed on image, with a line between pt1 and pt2
@@ -344,10 +411,9 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     return 0;
   }
   else{
-    if(image_topic_ == "/Basler4/image_rect")
+    if(image_topic_ == "/Basler5/image_rect")
       results_pub_.publish(out_bridge_->toImageMsg());
   }
-
 
   // copy the points found into a camera observation structure indicating their corresponece with target points
   camera_obs_.resize(observation_pts_.size());
