@@ -65,8 +65,12 @@ namespace industrial_extrinsic_cal
 	      basis[2][0],basis[2][1], basis[2][2],t_pose.z,
 	      0.0, 0.0, 0.0, 1.0);
       fprintf(fp, "cameras = [ ");
+      std::string camera_name("NULL");
       for(int j=0; (int) j<odl[i].items_.size(); j++){
-	fprintf(fp,"%s ", odl[i].items_[j].camera_name_.c_str());
+	if(camera_name !=  odl[i].items_[j].camera_name_){
+	  fprintf(fp,"%s ", odl[i].items_[j].camera_name_.c_str());
+	}
+	camera_name =  odl[i].items_[j].camera_name_;
       }
       fprintf(fp, "]\n");
     }
