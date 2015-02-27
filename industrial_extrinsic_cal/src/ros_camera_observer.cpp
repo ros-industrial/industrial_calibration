@@ -216,107 +216,146 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	std::vector<cv::KeyPoint> keypoints;
 	circle_detector_ptr_->detect(image_roi_, keypoints);
 	ROS_DEBUG("found %d keypoints", (int) keypoints.size());
+
+	// determine which circle is the largest, 
 	if(successful_find){ // determine orientation, and sort points to correct correspondence
-	  int lw_lt_index = pattern_rows_*pattern_cols_ - pattern_cols_; // lower right point's index
-	  int lw_rt_index = pattern_rows_*pattern_cols_ -1; // lower left point's index
-	  int up_lt_index = 0;	// upper left point's index
-	  int up_rt_index = pattern_cols_-1; // upper right point's index
+	  int start_last_row = pattern_rows_*pattern_cols_ - pattern_cols_; 
+	  int end_last_row = pattern_rows_*pattern_cols_ -1; 
+	  int start_1st_row = 0;	
+	  int end_1st_row = pattern_cols_-1; 
 	  
-	  double lw_lt_size = -1.0; // lower left point's size in pixels
-	  double up_lt_size = -1.0;// upper left point's size in pixels
-	  double up_rt_size = -1.0;// upper right point's size in pixels
-	  double lw_rt_size = -1.0;// lower right point's size in pixels
+	  double start_last_row_size = -1.0; 
+	  double start_1st_row_size = -1.0;
+	  double end_1st_row_size = -1.0;
+	  double end_last_row_size = -1.0;
 	  for(int i=0; i<(int)keypoints.size(); i++){
-	    
 	    double x = keypoints[i].pt.x;
 	    double y = keypoints[i].pt.y;
 	    double ksize = keypoints[i].size;
-	    if(x == centers[lw_lt_index].x && y == centers[lw_lt_index].y) lw_lt_size = ksize;
-	    if(x == centers[lw_rt_index].x && y == centers[lw_rt_index].y) lw_rt_size = ksize;
-	  if(x == centers[up_lt_index].x && y == centers[up_lt_index].y) up_lt_size = ksize;
-	  if(x == centers[up_rt_index].x && y == centers[up_rt_index].y) up_rt_size = ksize;
+	    if(x == centers[start_last_row].x && y == centers[start_last_row].y) start_last_row_size = ksize;
+	    if(x == centers[end_last_row].x && y == centers[end_last_row].y) end_last_row_size = ksize;
+	    if(x == centers[start_1st_row].x && y == centers[start_1st_row].y) start_1st_row_size = ksize;
+	    if(x == centers[end_1st_row].x && y == centers[end_1st_row].y) end_1st_row_size = ksize;
 	  }
-	  ROS_DEBUG("lower_left  %f %f %f", centers[lw_lt_index].x, centers[lw_lt_index].y, lw_lt_size);
-	  ROS_DEBUG("lower_right %f %f %f", centers[lw_rt_index].x, centers[lw_rt_index].y, lw_rt_size);
-	  ROS_DEBUG("upper_left  %f %f %f", centers[up_lt_index].x, centers[up_lt_index].y, lw_lt_size);
-	  ROS_DEBUG("upper_right %f %f %f", centers[up_rt_index].x, centers[up_rt_index].y, lw_lt_size);
-	  if(lw_lt_size <0.0 || up_lt_size < 0.0 || up_rt_size <0.0 || lw_rt_size < 0.0){
+	  ROS_DEBUG("start_last_row  %f %f %f", centers[start_last_row].x, centers[start_last_row].y, start_last_row_size);
+	  ROS_DEBUG("end_last_row %f %f %f", centers[end_last_row].x, centers[end_last_row].y, end_last_row_size);
+	  ROS_DEBUG("start_1st_row %f %f %f", centers[start_1st_row].x, centers[start_1st_row].y, start_1st_row_size);
+	  ROS_DEBUG("end_1st_row %f %f %f", centers[end_1st_row].x, centers[end_1st_row].y, end_1st_row_size);
+	  if(start_last_row_size <0.0 || start_1st_row_size < 0.0 || end_1st_row_size <0.0 || end_last_row_size < 0.0){
 	    ROS_ERROR("No keypoint match for one or more corners");
 	    return(false);
 	  }
 	  
+	  // determine if ordering is usual by computing cross product of two vectors normal ordering has z axis positive in cross
+	  bool usual_ordering = true; // the most common ordering is with points going from left to right then top to bottom
+	  double v1x, v1y, v2x, v2y;
+	  v1x = centers[end_last_row].x - centers[start_last_row].x;
+	  v1y = -centers[end_last_row].y + centers[start_last_row].y; // reverse because y is positive going down
+	  v2x = centers[end_1st_row].x - centers[end_last_row].x;
+	  v2y = -centers[end_1st_row].y + centers[end_last_row].y;
+	  double cross = v1x*v2y - v1y*v2x;
+	  if(cross <0.0){
+	    usual_ordering = false;
+	    ROS_ERROR("Unusual ordering v1 %f %f v2 %f %f cross = %f", v1x, v1y, v2x, v2y, cross);
+	  }
+	  ROS_ERROR("Unusual ordering v1 %f v2 %f", sqrt(v1x*v1x+v1y*v1y),sqrt(v2x*v2x+v2y*v2y));
 	  observation_pts_.clear();
-	  // lower left
-	  if(lw_lt_size >up_lt_size && lw_lt_size > up_rt_size && lw_lt_size > lw_rt_size){
-	    ROS_DEBUG("large lower left");
-	    large_point.x = centers[lw_lt_index].x;
-	  large_point.y = centers[lw_lt_index].y;
-	  // right side up, no rotation, order is natural, starting from upper left, read like book
-	  for(int i=0; i<(int) centers.size(); i++) observation_pts_.push_back(centers[i]);
-	  }
-	  // upper right
-	  else if( up_rt_size > lw_rt_size && up_rt_size > lw_lt_size && up_rt_size > up_lt_size){
-	    ROS_DEBUG("large upper right");
-	    large_point.x = centers[up_rt_index].x;
-	    large_point.y = centers[up_rt_index].y;
-	    // 180 degree rotation reverse order
-	    for(int i=(int) centers.size()-1; i>= 0; i--){
-	      observation_pts_.push_back(centers[i]);
+
+	  // largest circle at start of last row
+	  //       ......
+	  //       o....
+	  if(start_last_row_size >start_1st_row_size && start_last_row_size > end_1st_row_size && start_last_row_size > end_last_row_size){
+	    ROS_INFO("large circle in start of last row");
+	    ROS_DEBUG("large circle in start of last row");
+	    large_point.x = centers[start_last_row].x;
+	    large_point.y = centers[start_last_row].y;
+	    if(usual_ordering){ // right side up, no rotation, order is natural, starting from upper left, reads like book
+	      for(int i=0; i<(int) centers.size(); i++) observation_pts_.push_back(centers[i]);
 	    }
-	  }
-	  // lower right
-	  else if( lw_rt_size > lw_lt_size && lw_rt_size > up_rt_size && lw_rt_size > up_lt_size){
-	    ROS_DEBUG("large lower right");
-	    large_point.x = centers[lw_rt_index].x;
-	    large_point.y = centers[lw_rt_index].y;
-	    bool left_to_right=false;
-	    bool down_to_up=false;
-	    if(centers[0].x < centers[1].x)   left_to_right=true;
-	    if(centers[0].y < centers[1].y)   down_to_up=true;
+	    else{ // unusual ordering
+	      for(int r=0; r<pattern_rows_;r++){
+		for(int c=0; c<pattern_cols_; c++){
+		  observation_pts_.push_back(centers[r*pattern_cols_ +c]);
+		}
+	      }
+	    } // end unsual ordering
+	  }// end largest circle at start
+	  // largest circle at end of 1st row
+	  //       .....o
+	  //       ......
+	  else if( end_1st_row_size > end_last_row_size && end_1st_row_size > start_last_row_size && end_1st_row_size > start_1st_row_size){
+	    ROS_INFO("large at end of 1st row");
+	    ROS_DEBUG("large at end of 1st row");
+	    large_point.x = centers[end_1st_row].x;
+	    large_point.y = centers[end_1st_row].y;
+	    if(usual_ordering){ // reversed points
+	      for(int i=(int) centers.size()-1; i>= 0; i--){
+		observation_pts_.push_back(centers[i]);
+	      }
+	    }
+	    else{// unusual ordering
+	      for(int c=0; c<pattern_cols_; c++){
+		for(int r=0; r<pattern_rows_; r++){
+		  observation_pts_.push_back(centers[r*pattern_cols_ +c]);
+		}
+	      }
+	    }// end unusual ordering
+	  }// end largest circle at end of 1st row
+
+	  // largest_circle at end of last row
+	  //       ......
+	  //       ....o
+	  else if( end_last_row_size > start_last_row_size && end_last_row_size > end_1st_row_size && end_last_row_size > start_1st_row_size){
+	    ROS_DEBUG("large end of last row");
+	    large_point.x = centers[end_last_row].x;
+	    large_point.y = centers[end_last_row].y;
 	    
-	    // -90 degree rotation
-	    if( left_to_right && !down_to_up){
+	    if(usual_ordering){ // 90 80 ... 0, 91 81 ... 1
 	      for(int c=0; c<pattern_cols_; c++){
 		for(int r=pattern_rows_-1; r>=0; r--){
 		  observation_pts_.push_back(centers[r*pattern_cols_ +c]);
 		}
 	      }
-	    }
-	    else if(left_to_right && down_to_up){
-	      for(int r=0; r<pattern_rows_; r++){
+	    }// end normal ordering
+	    else{ // unusual ordering 9 8 7 .. 0, 19 18 17 10, 29 28
+	      for(int r=0; r<pattern_rows_; r++){ 
 		for(int c=pattern_cols_ -1; c>=0; c--){
 		  observation_pts_.push_back(centers[r*pattern_cols_ +c]);
 		}
 	      }
-	    }
-	    else{
-	      int q=0;
-	      for(int c=0; c<pattern_cols_; c++){
-		for(int r=pattern_rows_-1; r>=0; r--){
-		  observation_pts_.push_back(centers[q++]);
+	    }// end unusual ordering
+	  }// end large at end of last row
+	  
+	  // largest circle at start of first row
+	  // largest_circle at end of last row
+	  //       o.....
+	  //       .......
+	  else if(start_1st_row_size > end_last_row_size && start_1st_row_size > end_1st_row_size && start_1st_row_size > start_last_row_size){
+	    ROS_INFO("large at start of 1st row");
+	    ROS_DEBUG("large at start of 1st row");
+	    large_point.x = centers[start_1st_row].x;
+	    large_point.y = centers[start_1st_row].y;
+	    if(usual_ordering){ // 9 19 29 ... 99, 8 18 ... 98, 
+	      for(int c = pattern_cols_ -1; c>=0; c--){
+		for(int r=0; r<pattern_rows_; r++){
+		  observation_pts_.push_back(centers[r*pattern_cols_ + c]);
+		}
+	      }
+	    }// end normal ordering
+	    else{ // unusual ordering  90 91 92 ... 99, 80 81 ... 89
+	      for(int r=pattern_rows_-1; r>=0; r--){
+		for(int c =0; c<pattern_cols_; c++){
+		  observation_pts_.push_back(centers[r*pattern_cols_ + c]);
 		}
 	      }
 	    }
-	  }// end large was last, what a bitch this is
-	  
-	  // upper left
-	  else if(up_lt_size > lw_rt_size && up_lt_size > up_rt_size && up_lt_size > lw_lt_size){
-	    ROS_DEBUG("large upper left");
-	    large_point.x = centers[up_lt_index].x;
-	    large_point.y = centers[up_lt_index].y;
-	    // 90 degree rotation
-	    for(int c = pattern_cols_ -1; c>=0; c--){
-	      for(int r=0; r<pattern_rows_; r++){
-		observation_pts_.push_back(centers[r*pattern_cols_ + c]);
-	      }
-	    }
-	  }
+	  } // end large at start of 1st row
 	  else
 	    {
 	      ROS_ERROR("None of the observed corner circles are bigger than all the others");
 	      successful_find = false;
 	    }
-	}// end of successful find within this case
+	}// end of successful find
       }
       break;// end modified circle grid case
     case pattern_options::ARtag:

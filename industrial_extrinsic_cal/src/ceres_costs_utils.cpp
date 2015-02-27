@@ -30,6 +30,7 @@ namespace industrial_extrinsic_cal
     if(cost_type_str == "CameraReprjErrorWithDistortionPK") return(cost_functions::CameraReprjErrorWithDistortionPK);
     if(cost_type_str == "CameraReprjError") return(cost_functions::CameraReprjError);
     if(cost_type_str == "CameraReprjErrorPK") return(cost_functions::CameraReprjErrorPK);
+    if(cost_type_str == "TriangulationErrro") return(cost_functions::TriangulationError);
     if(cost_type_str == "TargetCameraReprjError") return(cost_functions::TargetCameraReprjError);
     if(cost_type_str == "TargetCameraReprjErrorPK") return(cost_functions::TargetCameraReprjErrorPK);
     if(cost_type_str == "LinkTargetCameraReprjError") return(cost_functions::LinkTargetCameraReprjError);

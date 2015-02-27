@@ -77,11 +77,29 @@ namespace industrial_extrinsic_cal
     k1  = intrinsics[4]; /** distortion k1  */
     k2  = intrinsics[5]; /** distortion k2  */
     k3  = intrinsics[6]; /** distortion k3  */
-   
-    //    p1  = intrinsics[7]; /** distortion p1  */
-    //    p2  = intrinsics[8]; /** distortion p2  */
-    p1  = T(0.0);
-    p2  = T(0.0);
+    p1  = intrinsics[7]; /** distortion p1  */
+    p2  = intrinsics[8]; /** distortion p2  */
+  }
+
+
+  /*! \brief ceres compliant template to extract the camera pose from an ambigious vector of parameters
+   *   @param extrinsics[9] vector of parameters
+   *   @param tx, position x
+   *   @param ty, position y
+   *   @param tz, position z
+   *   @param ax, angle axis x
+   *   @param ay, angle axis y
+   *   @param az, angle axis z
+   */
+  template<typename T>  void extractCameraExtrinsics(const T extrinsics[6], T &x, T &y, T &z, T &ax, T &ay, T &az);
+  template<typename T> inline void extractCameraExtrinsics(const T extrinsics[6], T &x, T &y, T &z, T &ax, T &ay, T &az)
+  {
+    ax  = extrinsics[0]; /** angle axis x */
+    ay  = extrinsics[1]; /** angle axis y */
+    az  = extrinsics[2]; /** angle axis z */
+    x  = extrinsics[3]; /** position x */
+    y  = extrinsics[4]; /** position y */
+    z  = extrinsics[5]; /** position z */
   }
 
   /*! \brief ceres compliant to compute inverse of a rotation matrix
@@ -225,6 +243,39 @@ namespace industrial_extrinsic_cal
     residual[0] = fx * xpp + cx - ox;
     residual[1] = fy * ypp + cy - oy;
 
+  }
+
+  /*! \brief ceres compliant function to compute projection of a point into the image plane of a pinhole camera without distortion
+   *  @param point[3] the input point
+   *  @param fx focal length in x
+   *  @param fy focal length in y
+   *  @param cx optical center in x
+   *  @param cy optical center in y
+   *  @param ox observation in x
+   *  @param oy observation in y
+   */
+  template<typename T> void projectPntNoDistortion(T point[3], T &fx, T &fy, T &cx, T &cy, T &ox, T &oy);
+  template<typename T> inline void projectPntNoDistortion(T point[3], T &fx, T &fy, T &cx, T &cy, T &ox, T &oy)
+  {
+    T xp1 = point[0];
+    T yp1 = point[1];
+    T zp1 = point[2];
+
+    /** scale into the image plane by distance away from camera */
+    T xp;
+    T yp;
+    if(zp1==T(0)){ // avoid divide by zero
+      xp =xp1;
+      yp =yp1;
+    }
+    else{
+      xp = xp1 / zp1;
+      yp = yp1 / zp1;
+    }
+
+    /** perform projection using focal length and camera center into image plane */
+    ox = fx * xp + cx;
+    oy = fy * yp + cy;
   }
 
   /*! \brief ceres compliant function to compute the residual from a distorted pinhole camera model, in this case,
@@ -604,6 +655,53 @@ namespace industrial_extrinsic_cal
     double fy_; /*!< known focal length of camera in y */
     double cx_; /*!< known optical center of camera in x */
     double cy_; /*!< known optical center of camera in y */
+  };
+
+  class TriangulationError
+  {
+  public:
+    TriangulationError(double ob_x, double ob_y, double fx, double fy, double cx, double cy, Pose6d camera_pose) :
+      ox_(ob_x), oy_(ob_y), fx_(fx), fy_(fy), cx_(cx), cy_(cy), camera_pose_(camera_pose)
+    {
+    }
+
+    template<typename T>
+    bool operator()( const T* point, /** point being projected, yes this is has 3 parameters */
+                    T* residual) const
+    {
+      T camera_point[3]; /** point in camera coordinates */
+
+      /** transform point into camera coordinates */
+      poseTransformPoint(camera_pose_, point, camera_point);
+
+      /** compute project point into image plane and compute residual */
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y, 
+				       const double fx, const double fy, 
+				       const double cx, const double cy,
+				       const Pose6d camera_pose)
+    {
+      return (new ceres::AutoDiffCostFunction<TriangulationError, 2, 3>(new TriangulationError(o_x, o_y, fx, fy, cx, cy, camera_pose)));
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double fx_; /*!< known focal length of camera in x */
+    double fy_; /*!< known focal length of camera in y */
+    double cx_; /*!< known optical center of camera in x */
+    double cy_; /*!< known optical center of camera in y */
+    Pose6d camera_pose_;/*!< known camera pose */
   };
 
   // reprojection error of a single simple point observed by a camera with NO lens distortion

@@ -160,11 +160,19 @@ namespace industrial_extrinsic_cal
   public:
     /*! \brief Constructor,
      */
-    ROSRobotPoseActionServerTrigger(const std::string & server_name, const  geometry_msgs::Pose pose) 
+    ROSRobotPoseActionServerTrigger(const std::string & server_name, const  Pose6d pose) 
       {
 	server_name_ = server_name;  
 	joint_values_.clear();
-	pose_ = pose;
+	pose_.position.x = pose.x;
+	pose_.position.y = pose.y;
+	pose_.position.z = pose.z;
+	double qx,qy,qz,qw;
+	pose.getQuaternion(qx, qy, qz, qw);
+	pose_.orientation.x = qx;
+	pose_.orientation.y = qy;
+	pose_.orientation.z = qz;
+	pose_.orientation.w = qw;
 	client_ = new Robot_Pose_Client(server_name_.c_str(),true);
       };
 

@@ -1,22 +1,23 @@
 <?xml version="1.0" ?>
 <launch>
      <node pkg="target_finder" type="target_locator_srv" name="target_locator" output="screen" >
-          <param name="image_topic" value="Basler1/image_rect" />
+          <param name="image_topic" value="Basler1/image_color" />
           <param name="target_type" value="2" />
           <param name="target_rows" value="10" />
           <param name="target_cols" value="10" />
           <param name="target_circle_dia" value="0.012" />
           <param name="target_spacing" value="0.02" />
-          <param name="focal_length_x" value="2949.2" />
-          <param name="focal_length_y" value="2961.6" />
+          <param name="focal_length_x" value="872" />
+          <param name="focal_length_y" value="872" />
           <param name="center_x" value="676.9" />
           <param name="center_y" value="355.0" />
      </node>
  
      <node pkg="target_finder" type="call_service" name="call_service" output="screen" />
 
-     <include file="$(find nist_cal)/launch/only_B1.launch" >
+     <include file="$(find target_finder)/launch/single_camera.launch" >
           <arg name="view_cameras" value="true"/>
+          <arg name="camera_id" value="21135424"/>
      </include>
 
      <node pkg="image_view" type="image_view" name="debug_view" >

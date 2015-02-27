@@ -29,6 +29,7 @@ namespace industrial_extrinsic_cal
       CameraReprjErrorWithDistortionPK,
       CameraReprjError,
       CameraReprjErrorPK,
+      TriangulationError,
       TargetCameraReprjError,
       TargetCameraReprjErrorPK,
       LinkTargetCameraReprjError,

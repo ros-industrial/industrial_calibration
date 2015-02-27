@@ -182,7 +182,7 @@ namespace industrial_extrinsic_cal
      ey = theta;
      ex = psi;
    }
-  void Pose6d::getQuaternion(double &qx,  double &qy, double &qz, double &qw)
+  void Pose6d::getQuaternion(double &qx,  double &qy, double &qz, double &qw) const
   {
     // the following was taken from ceres equivalent function
     double theta_squared = ax*ax + ay*ay + az*az;
