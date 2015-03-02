@@ -83,9 +83,9 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
     simple_blob_params.filterByColor = false;
     simple_blob_params.blobColor = (uchar) 128; // 255=light 0=dark blobs
     simple_blob_params.filterByCircularity = true;
-    simple_blob_parameters.minCircularity= 0.8; // float
-    simple_blob_parameters.maxCircularity= 1.0; //float
-    simple_blob_params.minDistanceBetweenBlobs = 10; // float
+    simple_blob_params.minCircularity= 0.8; // float
+    simple_blob_params.maxCircularity= 1.0; //float
+    simple_blob_params.minDistBetweenBlobs = 10; // float
     simple_blob_params.minRepeatability = (size_t) 128; // don't know what it means
   }
   

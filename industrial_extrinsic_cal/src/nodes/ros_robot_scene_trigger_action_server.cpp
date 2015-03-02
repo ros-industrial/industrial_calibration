@@ -60,7 +60,7 @@ public:
     double *joint_value = current_state->getVariablePositions();
     std::vector<std::string> var_names = current_state->getVariableNames();
     if(var_names.size() == 7){
-      ROS_ERROR("%d variables %s %s %s %s %s %s %s", (int)var_names.size(),
+      ROS_INFO("%d variables %s %s %s %s %s %s %s", (int)var_names.size(),
 		var_names[0].c_str(),
 		var_names[1].c_str(),
 		var_names[2].c_str(),
@@ -70,7 +70,7 @@ public:
 		var_names[6].c_str());
     }
     if(var_names.size() == 6){
-      ROS_ERROR("%d variables %s %s %s %s %s %s", (int)var_names.size(),
+      ROS_INFO("%d variables %s %s %s %s %s %s", (int)var_names.size(),
 		var_names[0].c_str(),
 		var_names[1].c_str(),
 		var_names[2].c_str(),
@@ -94,7 +94,7 @@ public:
     moveit::core::RobotStatePtr current_state = move_group_->getCurrentState();
     move_group_->setStartState(*current_state);
     geometry_msgs::PoseStamped current_pose = move_group_->getCurrentPose();
-    ROS_ERROR("starting pose = %lf  %lf  %lf  %lf  %lf  %lf  %lf",
+    ROS_INFO("starting pose = %lf  %lf  %lf  %lf  %lf  %lf  %lf",
 	      current_pose.pose.position.x,
 	      current_pose.pose.position.y,
 	      current_pose.pose.position.z,
