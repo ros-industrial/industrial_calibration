@@ -22,6 +22,8 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include <tf/LinearMath/Matrix3x3.h>
+#include <limits>
+#include <ceres/rotation.h>
 
 namespace industrial_extrinsic_cal
 {

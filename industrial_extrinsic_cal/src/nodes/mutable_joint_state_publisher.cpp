@@ -30,7 +30,7 @@ namespace industrial_extrinsic_cal
     node_name_ = ros::this_node::getName();
 
     // get the name of the yaml file containing the mutable joints 
-    if(!nh_.getParam(node_name_ + "/mutableJointStateYamlFile", yaml_file_name_)){
+    if(!nh_.getParam(node_name_ + "/mutable_joint_state_yaml_file", yaml_file_name_)){
       ROS_ERROR("MutableJointStatePublisher, must set mutableJointStateYamlFile parameter for this node");
       yaml_file_name_ = "default_mutable_joint_states.yaml";
     }
