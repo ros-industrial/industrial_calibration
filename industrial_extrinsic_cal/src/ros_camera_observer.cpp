@@ -453,10 +453,6 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     results_pub_.publish(out_bridge_->toImageMsg());
     return 0;
   }
-  else{
-    if(image_topic_ == "/Basler5/image_rect")
-      results_pub_.publish(out_bridge_->toImageMsg());
-  }
 
   // copy the points found into a camera observation structure indicating their corresponece with target points
   camera_obs_.resize(observation_pts_.size());
