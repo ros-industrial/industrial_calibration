@@ -356,7 +356,7 @@ namespace industrial_extrinsic_cal
     Pose6d getIntermediateFrame();
 
   private:
-    ros::NodeHandle *nh_;
+    ros::NodeHandle *nh_;/**< the standard node handle for ros*/
     std::string housing_frame_; /**< housing frame name */
     std::string mounting_frame_; /**< mounting frame name */
     Pose6d pose_; /**< pose associated with the transform from reference frame to housing frame */
@@ -366,12 +366,12 @@ namespace industrial_extrinsic_cal
     ros::ServiceClient store_client_; /**< a client for calling the service to store the joint values associated with the transform */
     std::vector<std::string> joint_names_; /**< names of joints  */
     std::vector<double> joint_values_; /**< values of joints  */
-    industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_;
-    industrial_extrinsic_cal::get_mutable_joint_states::Response get_response_;
-    industrial_extrinsic_cal::set_mutable_joint_states::Request set_request_;
-    industrial_extrinsic_cal::set_mutable_joint_states::Response set_response_;
-    industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_;
-    industrial_extrinsic_cal::store_mutable_joint_states::Response  store_response_;
+    industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_; /**< request when transform is part of a mutable set */
+    industrial_extrinsic_cal::get_mutable_joint_states::Response get_response_; /**< response when transform is part of a mutable set */
+    industrial_extrinsic_cal::set_mutable_joint_states::Request set_request_; /**< request when transform is part of a mutable set */
+    industrial_extrinsic_cal::set_mutable_joint_states::Response set_response_; /**< response when transform is part of a mutable set */
+    industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_; /**< request to store when  part of a mutable set */
+    industrial_extrinsic_cal::store_mutable_joint_states::Response  store_response_;/**< response to store when  part of a mutable set */
   };
 
   /** @brief this is expected to be used for calibrating a target

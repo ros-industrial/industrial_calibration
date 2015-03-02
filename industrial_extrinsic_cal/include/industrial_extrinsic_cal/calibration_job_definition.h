@@ -231,9 +231,9 @@ private:
   CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
   std::vector<P_BLOCK> original_extrinsics_; /*!< This is the parameter block which holds the original camera extrinsics */
   ceres::Problem  *problem_; /*!< this is the object used to define the optimization problem for ceres */
-  ceres::Solver::Summary ceres_summary_;
-  int total_observations_;
-  bool solved_;
+  ceres::Solver::Summary ceres_summary_; /*!< object for displaying solver results */
+  int total_observations_; /*< number of observations/cost elements in problem */
+  bool solved_; /*< set once the problem has been solved, allows covariance to be computed*/
 };//end class
 
 }//end namespace industrial_extrinsic_cal

@@ -40,6 +40,12 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
+
+/********************************************************************************************
+**   Slight Modification of OpenCV function to use ellipse fitting rather than center of mass of contour ****
+**  to provide the location of the circle                                                                                               ****
+********************************************************************************************/
+
 #include "opencv2/opencv.hpp"
 #include <industrial_extrinsic_cal/circle_detector.hpp>
 #include <iterator>

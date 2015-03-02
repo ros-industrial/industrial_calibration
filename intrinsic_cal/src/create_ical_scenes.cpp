@@ -2,7 +2,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <ros/console.h>
-
+/** This function creates a set of calibration scenes for intrinsic calibration **/
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "create_caljob");

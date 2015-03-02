@@ -175,7 +175,11 @@ namespace industrial_extrinsic_cal
      *  @brief ROS publisher of out_bridge_ or output_bridge_
      */
     ros::Publisher results_pub_;
-    ros::Publisher junk_pub_;
+
+    /**
+     *  @brief ROS publisher used for publishing images for debugging
+     */
+    ros::Publisher debug_pub_;
 
     // Structures for interacting with ROS/CV messages
     /**
@@ -235,8 +239,8 @@ namespace industrial_extrinsic_cal
     cv::Mat getLastImage();
 
   private:
-    int image_number_;
-    cv::Mat last_raw_image_;
+    int image_number_; /**< a counter of images recieved */
+    cv::Mat last_raw_image_; /**< the image last received */
     
   };
 

@@ -36,6 +36,10 @@ using industrial_extrinsic_cal::covariance_requests::CovarianceRequestType;
 
 namespace industrial_extrinsic_cal
 {
+  
+  /** @brief, a function used for debugging, and generating output for post processing */
+#define WRITE_DEBUG true
+#define OUTPUT_DEBUG_FILE "/home/nist/post_processing_data.txt"
   void writeObservationData(std::string file_name, std::vector<ObservationDataPointList> odl)
 {
   FILE *fp=NULL;
@@ -918,7 +922,7 @@ namespace industrial_extrinsic_cal
   bool CalibrationJob::runOptimization()
   {
     // REMOVE ONCE DONE WITH NIST
-    if(1) writeObservationData("/home/nist/junk.txt", observation_data_point_list_);
+    if(WRITE_DEBUG) writeObservationData(OUTPUT_DEBUG_FILE, observation_data_point_list_);
 
     // problem is declared here because we can't clear it as far as I can tell from the ceres documentation
     if(problem_ != NULL) {

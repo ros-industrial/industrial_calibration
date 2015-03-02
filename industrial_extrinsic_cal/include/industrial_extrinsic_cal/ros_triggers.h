@@ -34,6 +34,7 @@ namespace industrial_extrinsic_cal
   {
   public:
     /*! \brief Constructor,
+     * @param parameter_name, name of trigger
      */
     ROSParamTrigger(const std::string & parameter_name) 
       {
@@ -66,6 +67,8 @@ namespace industrial_extrinsic_cal
   {
   public:
     /*! \brief Constructor,
+     * @param server_name, name of tigger service
+     * @param action_message message to display
      */
     ROSActionServerTrigger(const std::string & server_name, const  std::string  & action_message) 
       {
@@ -108,6 +111,8 @@ namespace industrial_extrinsic_cal
   {
   public:
     /*! \brief Constructor,
+     *  @param server name , name of server
+     *  @param joint_values, vector of joint values describing the pose of the robot for the trigger
      */
     ROSRobotJointValuesActionServerTrigger(const std::string & server_name, const  std::vector<double> &joint_values) 
       {
@@ -159,6 +164,8 @@ namespace industrial_extrinsic_cal
   {
   public:
     /*! \brief Constructor,
+     *   @param server_name name of the service
+     *   @param pose the pose of the robot for the trigger
      */
     ROSRobotPoseActionServerTrigger(const std::string & server_name, const  Pose6d pose) 
       {
@@ -208,6 +215,10 @@ namespace industrial_extrinsic_cal
   {
   public:
     /*! \brief Constructor,
+     *   @param service_name name of service
+     *    @param instructions a message for the user
+     *    @param image_topic the image to use and display to user to accept the trigger
+     *    @param roi the region of interest in the image displayed to the user
      */
     ROSCameraObserverTrigger(const std::string & service_name, 
 			     const std::string &instructions, 

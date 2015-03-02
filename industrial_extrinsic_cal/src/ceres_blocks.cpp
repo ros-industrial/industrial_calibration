@@ -264,8 +264,6 @@ bool CeresBlocks::addMovingCamera(shared_ptr<Camera> camera_to_add, int scene_id
 
   temp_moving_camera->cam = temp_camera;
   temp_moving_camera->scene_id = scene_id;
-  ROS_ERROR("adding moving camera with scene_id = %d", scene_id);
-
   moving_cameras_.push_back(temp_moving_camera);
   return (true);
 }
@@ -500,7 +498,6 @@ void CeresBlocks::pushTransforms()
   BOOST_FOREACH(shared_ptr<MovingCamera> mcam, moving_cameras_)
     {
       if(mcam->scene_id == 0){ // only push a moving camera's transform once, which is always scene 0
-	ROS_INFO("pushing moving camera %s",mcam->cam->camera_name_.c_str());
 	Pose6d pose;
 	pose.setAngleAxis(mcam->cam->camera_parameters_.angle_axis[0], 
 			  mcam->cam->camera_parameters_.angle_axis[1], 
@@ -508,7 +505,6 @@ void CeresBlocks::pushTransforms()
 	pose.setOrigin(mcam->cam->camera_parameters_.position[0],
 		       mcam->cam->camera_parameters_.position[1],
 		       mcam->cam->camera_parameters_.position[2]);
-	pose.show("moving camera");
 	mcam->cam->pushTransform();
       }
     }

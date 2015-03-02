@@ -6,7 +6,11 @@
 
 namespace industrial_extrinsic_cal {
 
-  void parsePoints(std::ifstream &points_input_file, std::vector<industrial_extrinsic_cal::Point3d> &original_points);
+  /** @brief parse a list of points from a file
+   *  @param points_input_file, the stream from which to parse the points
+   *  @param points the returned vector of points
+   */
+  void parsePoints(std::ifstream &points_input_file, std::vector<industrial_extrinsic_cal::Point3d> &points);
   
 }// end industrial_extrinsic_cal namespace
 

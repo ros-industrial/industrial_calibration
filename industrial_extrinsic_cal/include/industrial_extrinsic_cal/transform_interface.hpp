@@ -77,7 +77,7 @@ namespace industrial_extrinsic_cal
   protected:
     std::string ref_frame_; /*!< name of reference frame for transform (parent frame_id in  Rviz) */
     std::string transform_frame_; /*!< name of frame being defined (frame_id in Rviz) */
-    bool ref_frame_initialized_;
+    bool ref_frame_initialized_;/*!< can't interact with a transform interface until the reference frame is set */
 
   };
 
