@@ -241,6 +241,8 @@ namespace industrial_extrinsic_cal
   private:
     int image_number_; /**< a counter of images recieved */
     cv::Mat last_raw_image_; /**< the image last received */
+    bool use_circle_detector_;
+    bool white_blobs_;
     
   };
 

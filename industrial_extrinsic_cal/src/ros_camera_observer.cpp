@@ -66,9 +66,10 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
   // set up and create the detector using the parameters
   //  circle_detector_ptr_ = new cv::CircleDetector(params);
   cv::SimpleBlobDetector::Params simple_blob_params;
-  bool white_blobs = false;
-  pnh.getParam("WhiteBlobs", white_blobs);
-  if(white_blobs){
+  if(!pnh.getParam("white_blobs", white_blobs_)){
+    white_blobs_ = false;
+  }
+  if(white_blobs_){
     simple_blob_params.minThreshold = 40;
     simple_blob_params.maxThreshold = 60;
     simple_blob_params.thresholdStep = 5;
@@ -89,9 +90,10 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
     simple_blob_params.minRepeatability = (size_t) 128; // don't know what it means
   }
   
-  int use_circle_detector=false;
-  pnh.getParam("use_circle_detector", use_circle_detector);
-  if(use_circle_detector){
+  if(!pnh.getParam("use_circle_detector", use_circle_detector_)){
+    use_circle_detector_ = false;
+  }
+  if(use_circle_detector_){
     circle_detector_ptr_ = new cv::SimpleBlobDetector();
   }
   else{
@@ -196,43 +198,64 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
       if (sym_circle_) // symetric circle grid
 	{
 	  ROS_DEBUG_STREAM("Finding Circles in grid, symmetric...");
-	  successful_find = cv::findCirclesGrid(image_roi_, pattern_size, observation_pts_, cv::CALIB_CB_SYMMETRIC_GRID);
+	  if(use_circle_detector_){
+	    successful_find = cv::findCirclesGrid(image_roi_, pattern_size, observation_pts_, 
+						  cv::CALIB_CB_SYMMETRIC_GRID,
+						  circle_detector_ptr_);
+	  }
+	  else{
+	    successful_find = cv::findCirclesGrid(image_roi_, pattern_size, observation_pts_, cv::CALIB_CB_SYMMETRIC_GRID);
+	  }
 	}
       else         // asymetric circle grid
 	{
 	  ROS_DEBUG_STREAM("Finding Circles in grid, asymmetric...");
-	  successful_find = cv::findCirclesGrid(image_roi_, pattern_size , observation_pts_, 
-						cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING);
+	  if(use_circle_detector_){
+	    successful_find = cv::findCirclesGrid(image_roi_, pattern_size, observation_pts_, 
+						  cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING,
+						  circle_detector_ptr_);
+	  }
+	  else{
+	    successful_find = cv::findCirclesGrid(image_roi_, pattern_size , observation_pts_, 
+						  cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING);
+	  }
+
 	}
       break;
     case pattern_options::ModifiedCircleGrid:
       { //contain the scope of automatic variables
 	// modified circle grids have one circle at the origin which is 1.5 times larger in diameter than the rest
-	ROS_DEBUG_STREAM("Finding Circles in modified symetric grid");
 	std::vector<cv::Point2f> centers;
-	successful_find = cv::findCirclesGrid(image_roi_, pattern_size, centers, 
-					      cv::CALIB_CB_SYMMETRIC_GRID);
-					      //	      circle_detector_ptr_);
-	if(!successful_find){
-	  ROS_ERROR("couldn't find %dx%d modified circle target in %s", pattern_rows_, pattern_cols_,  image_topic_.c_str());
-	  out_bridge_->image = image_roi_;
-	  debug_pub_.publish(out_bridge_->toImageMsg());
-	  return 0;
+	if(use_circle_detector_){
+	  ROS_DEBUG("using circle_detector, to find %dx%d modified circle grid", pattern_rows_, pattern_cols_);
+	  successful_find = cv::findCirclesGrid(image_roi_, pattern_size, centers,
+						cv::CALIB_CB_SYMMETRIC_GRID,
+						circle_detector_ptr_);
 	}
-	// Note, this is the same method called in the beginning of findCirclesGrid, unfortunately, they don't return their keypoints
-	// Should OpenCV change their method, the keypoint locations may not match, this has a risk of failing with
-	// updates to OpenCV
-	std::vector<cv::KeyPoint> keypoints;
-	circle_detector_ptr_->detect(image_roi_, keypoints);
-	ROS_DEBUG("found %d keypoints", (int) keypoints.size());
+	else{
+	  ROS_DEBUG("using simple_blob_detector, to find %dx%d modified grid", pattern_rows_, pattern_cols_);
+	  successful_find = cv::findCirclesGrid(image_roi_, pattern_size, centers, cv::CALIB_CB_SYMMETRIC_GRID);
+	}
+	if(!successful_find){
+	  ROS_ERROR("couldn't find %dx%d modified circle target in %s, found only %d pts", 
+		    pattern_rows_, pattern_cols_,
+		    image_topic_.c_str(),
+		    (int) observation_pts_.size());
+	}
+	else{
+	  // Note, this is the same method called in the beginning of findCirclesGrid, unfortunately, they don't return their keypoints
+	  // Should OpenCV change their method, the keypoint locations may not match, this has a risk of failing with
+	  // updates to OpenCV
+	  std::vector<cv::KeyPoint> keypoints;
+	  circle_detector_ptr_->detect(image_roi_, keypoints);
+	  ROS_DEBUG("found %d keypoints", (int) keypoints.size());
 
-	// determine which circle is the largest, 
-	if(successful_find){ // determine orientation, and sort points to correct correspondence
+	  // determine which circle is the largest, 
 	  int start_last_row = pattern_rows_*pattern_cols_ - pattern_cols_; 
 	  int end_last_row = pattern_rows_*pattern_cols_ -1; 
 	  int start_1st_row = 0;	
 	  int end_1st_row = pattern_cols_-1; 
-	  
+	
 	  double start_last_row_size = -1.0; 
 	  double start_1st_row_size = -1.0;
 	  double end_1st_row_size = -1.0;
@@ -267,9 +290,9 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	    usual_ordering = false;
 	  }
 	  observation_pts_.clear();
-
+	
 	  // largest circle at start of last row
-	  //       ......
+	  //       ......   This is a simple picture of the grid with the largest circle indicated by the letter o
 	  //       o....
 	  if(start_last_row_size >start_1st_row_size && start_last_row_size > end_1st_row_size && start_last_row_size > end_last_row_size){
 	    ROS_DEBUG("large circle in start of last row");
@@ -306,7 +329,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	      }
 	    }// end unusual ordering
 	  }// end largest circle at end of 1st row
-
+	
 	  // largest_circle at end of last row
 	  //       ......
 	  //       ....o
@@ -314,7 +337,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	    ROS_DEBUG("large end of last row");
 	    large_point.x = centers[end_last_row].x;
 	    large_point.y = centers[end_last_row].y;
-	    
+	  
 	    if(usual_ordering){ // 90 80 ... 0, 91 81 ... 1
 	      for(int c=0; c<pattern_cols_; c++){
 		for(int r=pattern_rows_-1; r>=0; r--){
@@ -330,7 +353,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	      }
 	    }// end unusual ordering
 	  }// end large at end of last row
-	  
+	
 	  // largest circle at start of first row
 	  // largest_circle at end of last row
 	  //       o.....
@@ -359,7 +382,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	      ROS_ERROR("None of the observed corner circles are bigger than all the others");
 	      successful_find = false;
 	    }
-	}// end of successful find
+	}
       }
       break;// end modified circle grid case
     case pattern_options::ARtag:
@@ -369,31 +392,53 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
       break;
     case pattern_options::Balls:
       {// needed to contain scope of automatic variables to this case
-	ROS_ERROR_STREAM("FourBall target finder running");
+	int rows = last_raw_image_.rows;
+	int cols = last_raw_image_.cols;
+	const cv::Mat sub_image = last_raw_image_(input_roi_);
+	cv::Mat hsv_image;
+	cv::cvtColor(sub_image, hsv_image, CV_BGR2HSV);
+	cv::Mat red_binary_image(rows, cols, CV_8UC1);
+	cv::Mat green_binary_image(rows, cols, CV_8UC1);
+	cv::Mat yellow_binary_image(rows, cols, CV_8UC1);
+	ros::NodeHandle pnh("~");
+	int red_max,red_min;
+	pnh.getParam("red_max", red_max);
+	pnh.getParam("red_min", red_min);
+	cv::inRange(sub_image, cv::Scalar(red_min, 0, 0),  cv::Scalar(red_max, 255, 255), red_binary_image);
+	cv::inRange(sub_image, cv::Scalar(104, 178, 70),  cv::Scalar(130, 240, 124), green_binary_image);
+	cv::inRange(sub_image, cv::Scalar(104, 178, 70),  cv::Scalar(130, 240, 124), yellow_binary_image);
 	std::vector<cv::Point2f> centers;
 	std::vector<cv::KeyPoint> keypoints;
-	circle_detector_ptr_->detect(image_roi_, keypoints);
-	observation_pts_.clear();
-	if(keypoints.size() == pattern_cols_){
-	  ROS_DEBUG("found %d keypoints", pattern_cols_);
-	  // sort by size using a dumb method
-	  for(int j=0; j<pattern_cols_; j++){
-	    float max_size = 0.0;
-	    int max_index = 0;
-	    for(int i=0;i<(int)keypoints.size();i++){ // for each remaining keypoint
-	      if(keypoints[i].size > max_size){ // see if its bigger
-		max_size = keypoints[i].size;// save the biggest size
-		max_index = i; // save the index
-	      }
-	    }
-	    observation_pts_.push_back(keypoints[max_index].pt);
-	    keypoints.erase(keypoints.begin() + max_index);
-	  }// end of outer loop
-	  large_point.x = observation_pts_[0].x;
-	  large_point.y = observation_pts_[0].y;
+	circle_detector_ptr_->detect(red_binary_image, keypoints);
+	ROS_ERROR("Red keypoints: %d",keypoints.size());
+	if(keypoints.size() == 1 ){
+	    observation_pts_.push_back(keypoints[0].pt);
+	    large_point.x = keypoints[0].pt.x;
+	    large_point.y = keypoints[0].pt.y;
 	}
 	else{
-	  ROS_ERROR("found %d keypoints but expected only 4", (int) keypoints.size());
+	  ROS_ERROR("found %d red blobs, expected one", (int) keypoints.size());
+	}
+	circle_detector_ptr_->detect(green_binary_image, keypoints);
+	ROS_ERROR("Green keypoints: %d",keypoints.size());
+	if(keypoints.size() == 1){
+	    observation_pts_.push_back(keypoints[0].pt);
+	}// end of outer loop
+	else{
+	  ROS_ERROR("found %d green blobs, expected one", (int) keypoints.size());
+	}
+	circle_detector_ptr_->detect(yellow_binary_image, keypoints);
+	ROS_ERROR("Blue keypoints: %d",keypoints.size());
+	if(keypoints.size() == 1){
+	    observation_pts_.push_back(keypoints[0].pt);
+	}// end of outer loop
+	else{
+	  ROS_ERROR("found %d yellow blobs, expected  one", (int) keypoints.size());
+	}
+	if(keypoints.size() == 0){
+	  out_bridge_->image = red_binary_image;
+	  debug_pub_.publish(out_bridge_->toImageMsg());
+	  return false;
 	}
       }
       break;
@@ -438,35 +483,34 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
     p2.y = observation_pts_[pattern_cols_-1].y; 
     line(input_bridge_->image,p1,p2,255,3);
   }
-  out_bridge_->image = image_roi_;
 
-  
-  debug_pub_.publish(input_bridge_->toImageMsg());
-  if(!successful_find){
+  if(successful_find){    // copy the points found into a camera observation structure indicating their corresponece with target points
+    camera_obs_.resize(observation_pts_.size());
+    for (int i = 0; i < observation_pts_.size(); i++)
+      {
+	camera_obs_.at(i).target = instance_target_;
+	camera_obs_.at(i).point_id = i;
+	camera_obs_.at(i).image_loc_x = observation_pts_.at(i).x;
+	camera_obs_.at(i).image_loc_y = observation_pts_.at(i).y;
+	camera_obs_.at(i).cost_type = cost_type_;
+      }
+    cam_obs = camera_obs_;
+
+  }
+  else{
     ROS_WARN_STREAM("Pattern not found for pattern: "<<pattern_);
     if(!sym_circle_) ROS_ERROR("not a symetric target????");
     cv::Point p;
     p.x = image_roi_.cols/2;
     p.y = image_roi_.rows/2;
     circle(input_bridge_->image,p,1.0,255,10);
-    out_bridge_->image = image_roi_;
-    results_pub_.publish(out_bridge_->toImageMsg());
-    return 0;
-  }
+  }  
 
-  // copy the points found into a camera observation structure indicating their corresponece with target points
-  camera_obs_.resize(observation_pts_.size());
-  for (int i = 0; i < observation_pts_.size(); i++)
-    {
-      camera_obs_.at(i).target = instance_target_;
-      camera_obs_.at(i).point_id = i;
-      camera_obs_.at(i).image_loc_x = observation_pts_.at(i).x;
-      camera_obs_.at(i).image_loc_y = observation_pts_.at(i).y;
-      camera_obs_.at(i).cost_type = cost_type_;
-    }
-  
-  cam_obs = camera_obs_;
-  return 1;
+  debug_pub_.publish(input_bridge_->toImageMsg());
+  out_bridge_->image = image_roi_;
+  results_pub_.publish(out_bridge_->toImageMsg());
+
+  return successful_find;
 }
 
 

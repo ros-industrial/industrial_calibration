@@ -656,7 +656,6 @@ namespace industrial_extrinsic_cal
 	return (false);
       }
 
-    std::string opt_params;
     int scene_id_num;
     std::string trigger_name;
     std::string trig_param;
@@ -679,7 +678,6 @@ namespace industrial_extrinsic_cal
 
 	caljob_doc["reference_frame"] >> reference_frame;
 	ceres_blocks_.setReferenceFrame(reference_frame);
-	caljob_doc["optimization_parameters"] >> opt_params;
 	// read in all scenes
 	if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
 	  {
@@ -688,7 +686,6 @@ namespace industrial_extrinsic_cal
 	    for (unsigned int i = 0; i < caljob_scenes->size(); i++)
 	      {
 		(*caljob_scenes)[i]["scene_id"] >> scene_id_num;
-
 		(*caljob_scenes)[i]["trigger"] >> trigger_name;
 		string ros_bool_param;
 		string message;
@@ -750,7 +747,6 @@ namespace industrial_extrinsic_cal
 		  ROS_ERROR("Unknown scene trigger type %s", trigger_name.c_str());
 		}
 		scene_list_.at(i).setTrigger(temp_trigger);
-
 		scene_list_.at(i).setSceneId(scene_id_num);
 		const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
 		ROS_DEBUG_STREAM("Found "<<obs_node->size() <<" observations within scene "<<i);
@@ -820,29 +816,23 @@ namespace industrial_extrinsic_cal
       {
 	int scene_id = current_scene.get_id();
 	ROS_DEBUG_STREAM("Processing Scene " << scene_id+1<<" of "<< scene_list_.size());
-	ROS_INFO("Processing Scene  %d of %d",scene_id, (int) scene_list_.size());
-
 	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
 
 	pullTransforms(scene_id); // gets transforms of targets and cameras from their interfaces
-
 	BOOST_FOREACH(shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {			// clear camera of existing observations
 	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
 	  }
-
 	BOOST_FOREACH(ObservationCmd o_command, current_scene.observation_command_list_)
 	  {	// add each target and roi each camera's list of observations
 	    
 	    o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi, o_command.cost_type);
 	  }
-
 	BOOST_FOREACH( shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {// trigger the cameras
 	    current_camera->camera_observer_->triggerCamera();
 	  }
-
 	// collect results
 	P_BLOCK intrinsics;
 	P_BLOCK extrinsics;
@@ -879,9 +869,7 @@ namespace industrial_extrinsic_cal
 	    CameraObservations camera_observations;
 	    int number_returned;
 	    number_returned = camera->getObservations(camera_observations);
-
 	    ROS_DEBUG_STREAM("Processing " << camera_observations.size() << " Observations");
-	    ROS_INFO("Processing %d Observations ", (int) camera_observations.size());
 	    BOOST_FOREACH(Observation observation, camera_observations)
 	      {
 		target_name = observation.target->target_name_;

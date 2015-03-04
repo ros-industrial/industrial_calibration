@@ -54,11 +54,20 @@ CameraObserverTrigger::CameraObserverTrigger(ros::NodeHandle nh)
   if(!pnh.getParam( "target_type", target_type_)){
     ROS_ERROR("Must set target_type");
   }
-  if(!pnh.getParam("pattern_rows", pattern_rows_)){
-    ROS_ERROR("Must set pattern_rows");
+  if(!pnh.getParam( "target_type", target_type_)){
+    ROS_ERROR("Must set target_type");
   }
-  if(!pnh.getParam("pattern_cols", pattern_cols_)){
-    ROS_ERROR("Must set pattern_rows");
+  
+  if(target_type_ == 3 || target_type_ == 4){
+    // neither AR_TAGs nor balls targets need rows or columns
+  }
+  else{
+    if(!pnh.getParam("pattern_rows", pattern_rows_)){
+      ROS_ERROR("Must set pattern_rows");
+    }
+    if(!pnh.getParam("pattern_cols", pattern_cols_)){
+      ROS_ERROR("Must set pattern_rows");
+    }
   }
   trigger_server_ = nh_.advertiseService( "ObserverTrigger", &CameraObserverTrigger::executeCallBack, this);
   accept_server_ = nh_.advertiseService( "UserAccept", &CameraObserverTrigger::userAcceptCallBack, this);
@@ -68,6 +77,7 @@ bool CameraObserverTrigger::executeCallBack( industrial_extrinsic_cal::camera_ob
 				             industrial_extrinsic_cal::camera_observer_trigger::Response &res)
 {
   ros::NodeHandle nh;
+  int number_of_required_observations;
   industrial_extrinsic_cal::CameraObservations camera_observations;
   
   ROS_ERROR("%s",req.instructions.c_str());
@@ -79,11 +89,19 @@ bool CameraObserverTrigger::executeCallBack( industrial_extrinsic_cal::camera_ob
   target->target_name_ = "junk";
   target->target_frame_ = "whocares";
   target->target_type_ =  target_type_;
-  target->circle_grid_parameters_.pattern_rows = pattern_rows_;
-  target->circle_grid_parameters_.pattern_cols = pattern_cols_;
-  target->circle_grid_parameters_.circle_diameter = 1.0; // don't care here
-  target->circle_grid_parameters_.is_symmetric = true; 
-
+  if(target_type_<3){ // neither ARTag nor Balls targets need these parameters
+    target->circle_grid_parameters_.pattern_rows = pattern_rows_;
+    target->circle_grid_parameters_.pattern_cols = pattern_cols_;
+    target->circle_grid_parameters_.circle_diameter = 1.0; // don't care here
+    target->circle_grid_parameters_.is_symmetric = true; 
+    number_of_required_observations = pattern_rows_*pattern_cols_;
+  }
+  if(target_type_ == 4){
+    number_of_required_observations = 3;
+  }
+  if(target_type_ == 3){
+    ROS_ERROR("AR_TAG does not work in this application");
+  }
   industrial_extrinsic_cal::Roi roi;
   roi.x_min = req.roi_min_x;
   roi.y_min = req.roi_min_y;
@@ -96,16 +114,15 @@ bool CameraObserverTrigger::executeCallBack( industrial_extrinsic_cal::camera_ob
   camera_observer.addTarget(target, roi, cost_type);
   user_accepted_ = false;
   int num_observations = 0;
-  while(num_observations != (pattern_rows_*pattern_cols_) || !user_accepted_)
+  while(num_observations != number_of_required_observations || !user_accepted_)
     {
       camera_observer.clearObservations();
       camera_observer.triggerCamera();
       while (!camera_observer.observationsDone()) ;
       camera_observer.getObservations(camera_observations);
       num_observations = (int) camera_observations.size();
-      ROS_ERROR("camera observer found %d observations", (int) camera_observations.size());
+      ROS_DEBUG("camera observer found %d observations", (int) camera_observations.size());
     }
-  ROS_INFO("trigger done");
   return(true);
 }
 bool CameraObserverTrigger::userAcceptCallBack( industrial_extrinsic_cal::user_accept::Request &req,
