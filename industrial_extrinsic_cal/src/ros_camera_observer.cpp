@@ -36,35 +36,34 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
   pnh.getParam("load_observation_images", load_observation_images_);
 
   // set up the circle detector
-  CircleDetector::Params params;
-  params.thresholdStep = 10;
-  params.minThreshold = 50;
-  params.maxThreshold = 220;
-  params.minRepeatability = 2;
-  params.minDistBetweenCircles = 2.0;
-  params.minRadiusDiff = 10;
+  CircleDetector::Params circle_params;
+  circle_params.thresholdStep = 10;
+  circle_params.minThreshold = 50;
+  circle_params.maxThreshold = 220;
+  circle_params.minRepeatability = 2;
+  circle_params.minDistBetweenCircles = 2.0;
+  circle_params.minRadiusDiff = 10;
 
-  params.filterByColor = false;
-  params.circleColor = 0;
+  circle_params.filterByColor = false;
+  circle_params.circleColor = 0;
   
-  params.filterByArea = false;
-  params.minArea = 25;
-  params.maxArea = 5000;
+  circle_params.filterByArea = false;
+  circle_params.minArea = 25;
+  circle_params.maxArea = 5000;
   
-  params.filterByCircularity = false;
-  params.minCircularity = 0.8f;
-  params.maxCircularity = std::numeric_limits<float>::max();
+  circle_params.filterByCircularity = false;
+  circle_params.minCircularity = 0.8f;
+  circle_params.maxCircularity = std::numeric_limits<float>::max();
   
-  params.filterByInertia = false;
-  params.minInertiaRatio = 0.1f;
-  params.maxInertiaRatio = std::numeric_limits<float>::max();
+  circle_params.filterByInertia = false;
+  circle_params.minInertiaRatio = 0.1f;
+  circle_params.maxInertiaRatio = std::numeric_limits<float>::max();
   
-  params.filterByConvexity = false;
-  params.minConvexity = 0.95f;
-  params.maxConvexity = std::numeric_limits<float>::max();
+  circle_params.filterByConvexity = false;
+  circle_params.minConvexity = 0.95f;
+  circle_params.maxConvexity = std::numeric_limits<float>::max();
 
   // set up and create the detector using the parameters
-  //  circle_detector_ptr_ = new cv::CircleDetector(params);
   cv::SimpleBlobDetector::Params simple_blob_params;
   if(!pnh.getParam("white_blobs", white_blobs_)){
     white_blobs_ = false;
@@ -82,7 +81,7 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
     simple_blob_params.maxArea = 8000.0;
     simple_blob_params.maxConvexity = 10;
     simple_blob_params.filterByColor = false;
-    simple_blob_params.blobColor = (uchar) 128; // 255=light 0=dark blobs
+    simple_blob_params.blobColor = (uchar) 200; // 255=light 0=dark blobs
     simple_blob_params.filterByCircularity = true;
     simple_blob_params.minCircularity= 0.8; // float
     simple_blob_params.maxCircularity= 1.0; //float
@@ -93,8 +92,9 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
   if(!pnh.getParam("use_circle_detector", use_circle_detector_)){
     use_circle_detector_ = false;
   }
+
   if(use_circle_detector_){
-    circle_detector_ptr_ = new cv::SimpleBlobDetector();
+    circle_detector_ptr_ = new cv::CircleDetector(circle_params);
   }
   else{
     circle_detector_ptr_ = new cv::SimpleBlobDetector(simple_blob_params);
@@ -401,16 +401,67 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	cv::Mat green_binary_image(rows, cols, CV_8UC1);
 	cv::Mat yellow_binary_image(rows, cols, CV_8UC1);
 	ros::NodeHandle pnh("~");
-	int red_max,red_min;
-	pnh.getParam("red_max", red_max);
-	pnh.getParam("red_min", red_min);
-	cv::inRange(sub_image, cv::Scalar(red_min, 0, 0),  cv::Scalar(red_max, 255, 255), red_binary_image);
-	cv::inRange(sub_image, cv::Scalar(104, 178, 70),  cv::Scalar(130, 240, 124), green_binary_image);
-	cv::inRange(sub_image, cv::Scalar(104, 178, 70),  cv::Scalar(130, 240, 124), yellow_binary_image);
+	int red_h_max, red_h_min;
+	int red_s_min, red_s_max;
+	int red_v_min, red_v_max;
+	int yellow_h_max, yellow_h_min;
+	int yellow_s_min, yellow_s_max;
+	int yellow_v_min, yellow_v_max;
+	int green_h_max, green_h_min;
+	int green_s_min, green_s_max;
+	int green_v_min, green_v_max;
+	pnh.getParam("red_h_max", red_h_max);
+	pnh.getParam("red_h_min", red_h_min);
+	pnh.getParam("red_s_min", red_s_min);
+	pnh.getParam("red_s_max", red_s_max);
+	pnh.getParam("red_v_min", red_v_min);
+	pnh.getParam("red_v_max", red_v_max);
+	pnh.getParam("yellow_h_max", yellow_h_max);
+	pnh.getParam("yellow_h_min", yellow_h_min);
+	pnh.getParam("yellow_s_min", yellow_s_min);
+	pnh.getParam("yellow_s_max", yellow_s_max);
+	pnh.getParam("yellow_v_min", yellow_v_min);
+	pnh.getParam("yellow_v_max", yellow_v_max);
+	pnh.getParam("green_h_max", green_h_max);
+	pnh.getParam("green_h_min", green_h_min);
+	pnh.getParam("green_s_min", green_s_min);
+	pnh.getParam("green_s_max", green_s_max);
+	pnh.getParam("green_v_min", green_v_min);
+	pnh.getParam("green_v_max", green_v_max);
+	cv::Scalar R_min(red_h_min, red_s_min, red_v_min);
+	cv::Scalar R_max(red_h_max, red_s_max, red_v_max);
+	cv::Scalar Y_min(yellow_h_min, yellow_s_min, yellow_v_min);
+	cv::Scalar Y_max(yellow_h_max, yellow_s_max, yellow_v_max);
+	cv::Scalar G_min(green_h_min, green_s_min, green_v_min);
+	cv::Scalar G_max(green_h_max, green_s_max, green_v_max);
+	cv::inRange(sub_image, R_min, R_max, red_binary_image);
+	cv::inRange(sub_image, Y_min, Y_max, yellow_binary_image);
+	cv::inRange(sub_image, G_min, G_max, green_binary_image);
+             
+	int erosion_type = cv::MORPH_RECT; // MORPH_RECT MORPH_CROSS MORPH_ELLIPSE
+	int dilation_type = cv::MORPH_RECT; // MORPH_RECT MORPH_CROSS MORPH_ELLIPSE
+	int morph_size;
+	pnh.getParam("morph_size", morph_size);
+	int erosion_size = morph_size;
+	int dilation_size = morph_size;
+	cv::Mat erosion_element = getStructuringElement( erosion_type, 
+							 cv::Size( 2*erosion_size + 1, 2*erosion_size+1 ),
+							 cv::Point( erosion_size, erosion_size ) );
+	cv::Mat dilation_element = getStructuringElement( erosion_type, 
+							  cv::Size( 2*erosion_size + 1, 2*erosion_size+1 ),
+							  cv::Point( erosion_size, erosion_size ) );
+						 
+	// Apply the erosion operation
+	erode( red_binary_image, red_binary_image, erosion_element);
+	erode( yellow_binary_image, yellow_binary_image, erosion_element);
+	erode( green_binary_image, green_binary_image, erosion_element);
+	dilate( red_binary_image, red_binary_image, dilation_element);
+	dilate( yellow_binary_image, yellow_binary_image, dilation_element);
+	dilate( green_binary_image, green_binary_image, dilation_element);
 	std::vector<cv::Point2f> centers;
 	std::vector<cv::KeyPoint> keypoints;
 	circle_detector_ptr_->detect(red_binary_image, keypoints);
-	ROS_ERROR("Red keypoints: %d",keypoints.size());
+	ROS_DEBUG("Red keypoints: %d",keypoints.size());
 	if(keypoints.size() == 1 ){
 	    observation_pts_.push_back(keypoints[0].pt);
 	    large_point.x = keypoints[0].pt.x;
@@ -420,7 +471,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  ROS_ERROR("found %d red blobs, expected one", (int) keypoints.size());
 	}
 	circle_detector_ptr_->detect(green_binary_image, keypoints);
-	ROS_ERROR("Green keypoints: %d",keypoints.size());
+	ROS_DEBUG("Green keypoints: %d",keypoints.size());
 	if(keypoints.size() == 1){
 	    observation_pts_.push_back(keypoints[0].pt);
 	}// end of outer loop
@@ -428,17 +479,38 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  ROS_ERROR("found %d green blobs, expected one", (int) keypoints.size());
 	}
 	circle_detector_ptr_->detect(yellow_binary_image, keypoints);
-	ROS_ERROR("Blue keypoints: %d",keypoints.size());
+	ROS_DEBUG("Yellow keypoints: %d",keypoints.size());
 	if(keypoints.size() == 1){
 	    observation_pts_.push_back(keypoints[0].pt);
 	}// end of outer loop
 	else{
 	  ROS_ERROR("found %d yellow blobs, expected  one", (int) keypoints.size());
 	}
-	if(keypoints.size() == 0){
-	  out_bridge_->image = red_binary_image;
-	  debug_pub_.publish(out_bridge_->toImageMsg());
+	if(observation_pts_.size() != 3){
+	  bool debug_green, debug_red, debug_yellow;
+	  pnh.getParam("debug_red", debug_red);
+	  pnh.getParam("debug_green", debug_green);
+	  pnh.getParam("debug_yellow", debug_yellow);
+	  if(debug_yellow && debug_red && debug_green){
+	    out_bridge_->image = yellow_binary_image | red_binary_image | green_binary_image;
+	  }
+	  else if(debug_yellow && debug_red){
+	    out_bridge_->image = yellow_binary_image | red_binary_image;
+	  }
+	  else if(debug_yellow && debug_green){
+	    out_bridge_->image = yellow_binary_image | green_binary_image;
+	  }
+	  else if(debug_red && debug_green){
+	    out_bridge_->image = red_binary_image | green_binary_image;
+	  }
+	  else if(debug_red )  out_bridge_->image = red_binary_image ;
+	  else if(debug_green )  out_bridge_->image = green_binary_image ;
+	  else if(debug_yellow)  out_bridge_->image = yellow_binary_image;
+	  if(debug_red | debug_green | debug_yellow) debug_pub_.publish(out_bridge_->toImageMsg());
 	  return false;
+	}
+	else{
+	  successful_find = true;
 	}
       }
       break;
@@ -475,7 +547,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   }
   
   // Draw line through first column of observe points. These correspond to the first set of point in the target
-  if(observation_pts_.size()>pattern_cols_){
+  if(observation_pts_.size()>=pattern_cols_){
     cv::Point p1,p2;
     p1.x = observation_pts_[0].x; 
     p1.y = observation_pts_[0].y; 

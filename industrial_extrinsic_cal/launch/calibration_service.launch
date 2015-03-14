@@ -5,8 +5,6 @@
       camera_file: "test1_camera_def.yaml"
       target_file: "circlegrid5x7_target_def.yaml"
       cal_job_file: "test1_caljob_def.yaml"
-      store_results_package_name: "industrial_extrinsic_cal"
-      store_results_file_name: "world_to_camera_tf_broadcaster.launch"
     </rosparam>
   </node>
 </launch>
