@@ -1,10 +1,35 @@
 <launch>
-        <arg name="camera_id" default="21135424"/>
-       <arg name="view_cameras" default="true"/>
-       <include file="$(find industrial_extrinsic_cal)/launch/test.launch" >
-          <arg name="camera_number" value="1"/>
-          <arg name="camera_id" value="$(arg camera_id)"/>
-          <arg name="view_cameras" value="$(arg view_cameras)"/>
-          <!--arg name="acquisition_rate" value="20"/-->
-        </include>
+  <arg name="camera_number"/>
+  <arg name="camera_id"/>
+  <arg name="view_cameras" default="true"/>
+  <arg name="acquisition_rate" default="2.0"/>
+  <arg name="exposure_time" default="20000.0"/>
+
+  <!-- Basler camera node   -->
+  <node pkg="camera_aravis" type="camnode" name="Basler$(arg camera_number)">
+    <param name="guid" value="Basler-$(arg camera_id)"/>
+    <param name="ExposureAuto" value="Off" /> 
+    <param name="GainAuto" value="auto_off" />
+    <param name="ExposureTimeAbs" value="$(arg exposure_time)" />
+    <param name="Gain" value="1.0" />
+    <param name="AcquisitionFrameRate" value="$(arg acquisition_rate)" />
+    <param name="frame_id" value="Basler$(arg camera_number)_optical_frame"/>
+    <param name="TriggerMode" value="Off" />
+    <param name="TriggerSource" value="Line1" />
+    <param name="PixelFormat" value="Mono8"/>
+    <param name="url" value="file://$(find nist_cal)/camera_info/Basler$(arg camera_number).yaml"/>
+  </node>
+
+
+  <node pkg="nodelet" type="nodelet" name="image_proc_nodelet$(arg camera_number)"  args="manager"/>
+  <node pkg="nodelet" type="nodelet" name="rectify$(arg camera_number)" args="load image_proc/rectify image_proc_nodelet$(arg camera_number)">
+    <remap from="camera_info" to="Basler$(arg camera_number)/camera_info"/>
+    <remap from="image_mono" to="Basler$(arg camera_number)/image_raw"/>
+    <remap from="image_rect" to="Basler$(arg camera_number)/image_rect"/>
+  </node>
+
+  <node if="$(arg view_cameras)" pkg="image_view" type="image_view" name="Basler$(arg camera_number)_view" >
+   <remap from="image" to="Basler$(arg camera_number)/image_rect"/>
+  </node>
+
 </launch>

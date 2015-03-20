@@ -30,7 +30,8 @@ namespace industrial_extrinsic_cal
     node_name_ = ros::this_node::getName();
 
     // get the name of the yaml file containing the mutable joints 
-    if(!nh_.getParam(node_name_ + "/mutable_joint_state_yaml_file", yaml_file_name_)){
+    ros::NodeHandle priv_nh("~");
+    if(!priv_nh.getParam("mutable_joint_state_yaml_file", yaml_file_name_)){
       ROS_ERROR("MutableJointStatePublisher, must set mutableJointStateYamlFile parameter for this node");
       yaml_file_name_ = "default_mutable_joint_states.yaml";
     }
@@ -95,9 +96,6 @@ namespace industrial_extrinsic_cal
     std::string new_file_name =  yaml_file_name_ + "new";
     std::ofstream fout(new_file_name.c_str());
     YAML::Emitter yaml_emitter;
-    yaml_emitter << YAML::Comment << "This is a simple list of mutable joint states";
-    yaml_emitter << YAML::Comment << "each line has the form";
-    yaml_emitter << YAML::Comment << "joint_name: <double_value>";
     yaml_emitter << YAML::BeginMap;
     for (std::map<std::string, double>::iterator it= joints_.begin(); it != joints_.end(); ++it){
       yaml_emitter << YAML::Key << it->first.c_str() << YAML::Value << it->second;

@@ -139,10 +139,14 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost
       pattern_ = pattern_options::Balls;
       pattern_rows_ = 1;
       pattern_cols_  = targ->num_points_;
-      ROS_ERROR_STREAM("FourBall recognized but pattern not supported yet");
+      break;
+    case pattern_options::SingleBall:
+      pattern_ = pattern_options::SingleBall;
+      pattern_rows_ = 1;
+      pattern_cols_  = 1;
       break;
     default:
-      ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid or ARTag)");
+      ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid, Balls, SingleBall or ARTag)");
       return false;
       break;
   }
@@ -461,7 +465,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	std::vector<cv::Point2f> centers;
 	std::vector<cv::KeyPoint> keypoints;
 	circle_detector_ptr_->detect(red_binary_image, keypoints);
-	ROS_DEBUG("Red keypoints: %d",keypoints.size());
+	ROS_DEBUG("Red keypoints: %lu",keypoints.size());
 	if(keypoints.size() == 1 ){
 	    observation_pts_.push_back(keypoints[0].pt);
 	    large_point.x = keypoints[0].pt.x;
@@ -471,7 +475,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  ROS_ERROR("found %d red blobs, expected one", (int) keypoints.size());
 	}
 	circle_detector_ptr_->detect(green_binary_image, keypoints);
-	ROS_DEBUG("Green keypoints: %d",keypoints.size());
+	ROS_DEBUG("Green keypoints: %lu",keypoints.size());
 	if(keypoints.size() == 1){
 	    observation_pts_.push_back(keypoints[0].pt);
 	}// end of outer loop
@@ -479,7 +483,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  ROS_ERROR("found %d green blobs, expected one", (int) keypoints.size());
 	}
 	circle_detector_ptr_->detect(yellow_binary_image, keypoints);
-	ROS_DEBUG("Yellow keypoints: %d",keypoints.size());
+	ROS_DEBUG("Yellow keypoints: %lu",keypoints.size());
 	if(keypoints.size() == 1){
 	    observation_pts_.push_back(keypoints[0].pt);
 	}// end of outer loop
@@ -513,7 +517,11 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  successful_find = true;
 	}
       }
+
       break;
+    case pattern_options::SingleBall:
+      {// needed to contain scope of automatic variables to this case
+      }
       default:
 	ROS_ERROR_STREAM("target_type does not correlate to a known pattern option ");
 	return false;
