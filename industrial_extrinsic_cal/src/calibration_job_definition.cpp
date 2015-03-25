@@ -475,8 +475,11 @@ namespace industrial_extrinsic_cal
 		  case pattern_options::Balls:
 		    // no parameters yet
 		    break;
+		  case pattern_options::SingleBall:
+		    // no parameters yet
+		    break;
 		  default:
-		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid, or ModifiedCircleGrid, Balls)");
+		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid, or ModifiedCircleGrid, Balls, SingleBall)");
 		    return false;
 		    break;
 		  } // end of target type
@@ -573,8 +576,11 @@ namespace industrial_extrinsic_cal
 		  case pattern_options::Balls:
 		    // no parameters yet
 		    break;
+		  case pattern_options::SingleBall:
+		    // no parameters yet
+		    break;
 		  default:
-		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard or CircleGrid)");
+		    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid, Balls, SingleBall)");
 		    return false;
 		    break;
 		  }
@@ -1316,6 +1322,21 @@ namespace industrial_extrinsic_cal
 		  testIt.test_residual(extrinsics, residual);
 
 		}
+	      }
+	      break;
+	    case cost_functions::TriangulationError:
+	      {
+		double x,y,z,ax,ay,az;
+		extractCameraExtrinsics(extrinsics, x, y, z, ax, ay, az);
+		Pose6d camera_pose(x, y, z, ax, ay, az);
+		CostFunction* cost_function =
+		  TriangulationError::Create(image_x, image_y, 
+					     focal_length_x,
+					     focal_length_y,
+					     center_x,
+					     center_y,
+					     camera_pose);
+		problem_->AddResidualBlock(cost_function, NULL , point.pb);
 	      }
 	      break;
 	    default:
