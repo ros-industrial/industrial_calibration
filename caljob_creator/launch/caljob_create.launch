@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <arg name="camera_number" default="1"/>
+
+  <include file="$(find nist_cal)/launch/only_B$(arg camera_number).launch">
+    <arg name="view_cameras" value="true" />
+  </include>
+
+
+
+  <node pkg="caljob_creator" type="caljob_creator_node" name="caljob_creator">
+         <param name="image_topic" value="basler$(arg camera_number)/image_rect"/>
+         <param name="output_file" value="$(find caljob_creator)/launch/caljob.yaml"/>
+         <param name="capture_scene" value="false"/>
+         <param name="quit" value="false"/>
+         <param name="joints_topic" value="ur10/joint_states"/>
+         <param name="motion_type" value="pose"/>
+         <param name="to_frame" value="cal_grid"/>
+         <param name="from_frame" value="world"/>
+         <param name="image_width" value="1086" />
+         <param name="image_height" value="1024" />
+    </node>
+
+</launch>
