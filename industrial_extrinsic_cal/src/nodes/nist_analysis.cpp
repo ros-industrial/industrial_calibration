@@ -167,7 +167,7 @@ int main(int argc, char** argv)
   double point_pos_noise      = 0.1; // 10cm perturbation prior to triangulation
   double target_pos_noise     = 0.003; // 3mm
   double target_or_noise     = 1.0; // degrees
-  double image_noise          = 0.25; // pixels
+  double image_noise          = 0.1; // pixels
   int num_test_cases          = 100; // each test case is a statistical sample
 
   google::InitGoogleLogging(argv[0]);
@@ -262,7 +262,7 @@ int main(int argc, char** argv)
   computeObservationsFromScenes(scenes, cameras, 0.0, 0.0, image_noise, observations, points);
 
   // compare noisy observations to noise free observations
-  ROS_INFO("Comparing %d noiseless observations to %d noisy observations", original_observations.size(), observations.size());
+  ROS_INFO("Comparing %d noiseless observations to %d noisy observations",(int) original_observations.size(),(int) observations.size());
   compareObservations(original_observations, observations);// shows noise is correct
 
   // regenerate noiseless observations with unperturbed cameras, note observations point to cameras parameters
@@ -280,7 +280,7 @@ int main(int argc, char** argv)
   ceres::Problem problem1;
   // each observation is noisy and points to cameras whose extrinsics are perturbed
   // each point is a fiducial in a known/surveyed location
-  ROS_INFO("solving with %d observations",observations.size());
+  ROS_INFO("solving with %d observations",(int)observations.size());
   int b1o=0, b2o=0, b3o=0, b4o=0, b5o=0, b6o=0, b7o=0;
   BOOST_FOREACH(ObservationDataPoint obs, observations){
     double *extrinsics = obs.camera_extrinsics_;
@@ -454,7 +454,7 @@ int main(int argc, char** argv)
   FILE *fp = fopen("field_results.m","w");
   fprintf(fp,"f = [\n");
   BOOST_FOREACH(Point3dWithHistory P, original_field_points){
-    printf("Mean Error= %7.3lf %7.3lf %7.3lf sigma= %7.3lf %7.3lf %7.3lf num_obs=%d\n",
+    printf("Mean Error= %9.5lf %9.5lf %9.5lf sigma= %9.5lf %9.5lf %9.5lf num_obs=%d\n",
 	   P.mean_x-P.point.x,
 	   P.mean_y-P.point.y,
 	   P.mean_z-P.point.z,
@@ -462,7 +462,7 @@ int main(int argc, char** argv)
 	   P.sigma_y,
 	   P.sigma_z,
 	   P.num_observations);
-    fprintf(fp,"%7.3lf %7.3lf %7.3lf %7.3lf %7.3lf %7.3lf %7.3lf %7.3lf %7.3lf;\n",
+    fprintf(fp,"%9.5lf %9.5lf %9.5lf %9.5lf %9.5lf %9.5lf %9.5lf %9.5lf %9.5lf;\n",
 	    P.point.x,
 	    P.point.y,
 	    P.point.z,
@@ -862,8 +862,8 @@ void compareCameras(vector<CameraWithHistory> &C1, vector<CameraWithHistory> &C2
   }
   sigma_dist = sqrt(sigma_dist/C1.size());
   sigma_angle = sqrt(sigma_angle/C1.size());
-  ROS_INFO("mean distance between camera poses = %7.3lf meters sigma= %7.3lf", mean_dist, sigma_dist);
-  ROS_INFO("mean angle between camera poses = %7.3lf degrees sigma= %7.3lf", mean_angle*180/3.1415, sigma_angle*180/3.1415);
+  ROS_INFO("mean distance between camera poses = %9.5lf meters sigma= %9.5lf", mean_dist, sigma_dist);
+  ROS_INFO("mean angle between camera poses = %9.5lf degrees sigma= %9.5lf", mean_angle*180/3.1415, sigma_angle*180/3.1415);
 }
 
 void compareObservations(vector<ObservationDataPoint> &O1, vector<ObservationDataPoint> &O2)
@@ -897,7 +897,7 @@ void compareObservations(vector<ObservationDataPoint> &O1, vector<ObservationDat
     }
   }
   sigma_dist = sqrt(sigma_dist/n_compared);
-  ROS_INFO("mean distance between observations = %7.3lf pixels sigma= %7.3lf ", mean_dist, sigma_dist);
+  ROS_INFO("mean distance between observations = %9.5lf pixels sigma= %9.5lf ", mean_dist, sigma_dist);
 }
 
 void addPointsToHistory(vector<Point3dWithHistory> &points, vector<Point3dWithHistory> &original_points)
@@ -951,7 +951,7 @@ bool  parseScenes(std::string &scene_file_name, std::vector<Scene> &scenes)
 	temp_scene.camera_names.push_back(std::string(temp_char_data));
       }
     }while(!done);
-    ROS_INFO("scene %d has %d cameras", scene_id, temp_scene.camera_names.size());
+    ROS_INFO("scene %d has %d cameras",(int) scene_id, (int) temp_scene.camera_names.size());
     scenes.push_back(temp_scene);
   }// end while there are more scenes
   fclose(fp);

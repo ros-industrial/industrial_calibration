@@ -41,7 +41,6 @@ public:
     std::string camera_file;
     std::string target_file;
     std::string caljob_file;
-    std::string ros_package_name;
     std::string yaml_file_path = ros::package::getPath("industrial_extrinsic_cal") + "/yaml/";
     bool post_proc_on=false;
     std::string observation_data_file;
