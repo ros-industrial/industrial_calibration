@@ -27,11 +27,11 @@ namespace industrial_extrinsic_cal
 
   MutableJointStatePublisher::MutableJointStatePublisher(ros::NodeHandle nh): nh_(nh)
   {
-    node_name_ = ros::this_node::getName();
+    ros::NodeHandle pnh("~");
 
     // get the name of the yaml file containing the mutable joints 
-    if(!nh_.getParam(node_name_ + "/mutable_joint_state_yaml_file", yaml_file_name_)){
-      ROS_ERROR("MutableJointStatePublisher, must set mutableJointStateYamlFile parameter for this node");
+    if(!pnh.getParam("mutable_joint_state_yaml_file", yaml_file_name_)){
+      ROS_ERROR("MutableJointStatePublisher, must set mutable_joint_state_yaml_file parameter for this node");
       yaml_file_name_ = "default_mutable_joint_states.yaml";
     }
 
@@ -92,12 +92,14 @@ namespace industrial_extrinsic_cal
   bool MutableJointStatePublisher::storeCallBack(industrial_extrinsic_cal::store_mutable_joint_states::Request &req,
 						 industrial_extrinsic_cal::store_mutable_joint_states::Response &res)
   {
-    std::string new_file_name =  yaml_file_name_ + "new";
+    std::string new_file_name =  yaml_file_name_;
+    ros::NodeHandle pnh("~");
+    bool overwrite = false;
+    pnh.getParam("overwrite_mutable_values", overwrite);
+    if(!overwrite) new_file_name = yaml_file_name_ + "new";
+
     std::ofstream fout(new_file_name.c_str());
     YAML::Emitter yaml_emitter;
-    yaml_emitter << YAML::Comment << "This is a simple list of mutable joint states";
-    yaml_emitter << YAML::Comment << "each line has the form";
-    yaml_emitter << YAML::Comment << "joint_name: <double_value>";
     yaml_emitter << YAML::BeginMap;
     for (std::map<std::string, double>::iterator it= joints_.begin(); it != joints_.end(); ++it){
       yaml_emitter << YAML::Key << it->first.c_str() << YAML::Value << it->second;

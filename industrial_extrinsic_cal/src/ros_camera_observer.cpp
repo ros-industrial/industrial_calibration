@@ -181,7 +181,6 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   ROS_DEBUG("image size = %d %d", input_bridge_->image.rows, input_bridge_->image.cols);
   image_roi_ = input_bridge_->image(input_roi_);
   ROS_DEBUG("image_roi_ size = %d %d", image_roi_.rows, image_roi_.cols);
-
   observation_pts_.clear();
   std::vector<cv::KeyPoint> key_points;
   ROS_DEBUG("Pattern type %d, rows %d, cols %d",pattern_,pattern_rows_,pattern_cols_);
@@ -302,8 +301,8 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	      for(int i=0; i<(int) centers.size(); i++) observation_pts_.push_back(centers[i]);
 	    }
 	    else{ // unusual ordering
-	      for(int r=0; r<pattern_rows_;r++){
-		for(int c=0; c<pattern_cols_; c++){
+	    for(int c=pattern_cols_-1; c>=0; c--){
+	      for(int r=pattern_rows_-1; r>=0; r--){
 		  observation_pts_.push_back(centers[r*pattern_cols_ +c]);
 		}
 	      }
@@ -410,7 +409,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	std::vector<cv::Point2f> centers;
 	std::vector<cv::KeyPoint> keypoints;
 	circle_detector_ptr_->detect(red_binary_image, keypoints);
-	ROS_ERROR("Red keypoints: %d",keypoints.size());
+	ROS_ERROR("Red keypoints: %lu",keypoints.size());
 	if(keypoints.size() == 1 ){
 	    observation_pts_.push_back(keypoints[0].pt);
 	    large_point.x = keypoints[0].pt.x;
@@ -420,7 +419,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  ROS_ERROR("found %d red blobs, expected one", (int) keypoints.size());
 	}
 	circle_detector_ptr_->detect(green_binary_image, keypoints);
-	ROS_ERROR("Green keypoints: %d",keypoints.size());
+	ROS_ERROR("Green keypoints: %lu",keypoints.size());
 	if(keypoints.size() == 1){
 	    observation_pts_.push_back(keypoints[0].pt);
 	}// end of outer loop
@@ -428,7 +427,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  ROS_ERROR("found %d green blobs, expected one", (int) keypoints.size());
 	}
 	circle_detector_ptr_->detect(yellow_binary_image, keypoints);
-	ROS_ERROR("Blue keypoints: %d",keypoints.size());
+	ROS_ERROR("Blue keypoints: %lu",keypoints.size());
 	if(keypoints.size() == 1){
 	    observation_pts_.push_back(keypoints[0].pt);
 	}// end of outer loop

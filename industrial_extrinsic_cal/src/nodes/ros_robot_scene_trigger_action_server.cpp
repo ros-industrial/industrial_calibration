@@ -78,6 +78,15 @@ public:
 		var_names[4].c_str(),
 		var_names[5].c_str());
     }
+    if(var_names.size()>7){
+      ROS_INFO("%d variables %s %s %s %s %s %s", (int)var_names.size(),
+		var_names[0].c_str(),
+		var_names[1].c_str(),
+		var_names[2].c_str(),
+		var_names[3].c_str(),
+		var_names[4].c_str(),
+		var_names[5].c_str());
+    }
     move_group_->setStartState(*current_state);
     move_group_->setJointValueTarget(goal->joint_values);
     if(move_group_->move()){

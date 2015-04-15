@@ -71,7 +71,7 @@ class CalibrationJob
 public:
   /** @brief constructor */
   CalibrationJob(std::string camera_fn, std::string target_fn, std::string caljob_fn) :
-    camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn), solved_(false), problem_(NULL)
+    camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn), solved_(false), problem_(NULL), post_proc_on_(false)
   {  } ;
 
   /** @brief default destructor */
@@ -142,6 +142,14 @@ public:
    *    @param covariance_file_name name of file to store the resulting matrix in
    */
   bool computeCovariance(std::vector<CovarianceVariableRequest> &variables, std::string &covariance_file_name);
+
+  /** @brief set the flag to save observation data to a file indicated for post processing
+   *    @param post_proc_file_name the name of the file to put the post processing data
+   */
+  void postProcessingOn(std::string post_proc_file_name);
+
+  /** @brief clears the flag that saves observation data to a file for post processing */
+  void postProcessingOff();
 
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
@@ -234,6 +242,8 @@ private:
   ceres::Solver::Summary ceres_summary_; /*!< object for displaying solver results */
   int total_observations_; /*< number of observations/cost elements in problem */
   bool solved_; /*< set once the problem has been solved, allows covariance to be computed*/
+  bool post_proc_on_; /*< flag indicating to save the observation data for post processing */
+  std::string post_proc_data_file_; /*< file name for observation data for post processing */ 
 };//end class
 
 }//end namespace industrial_extrinsic_cal

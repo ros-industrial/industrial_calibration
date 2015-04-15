@@ -38,8 +38,6 @@ namespace industrial_extrinsic_cal
 {
   
   /** @brief, a function used for debugging, and generating output for post processing */
-#define WRITE_DEBUG true
-#define OUTPUT_DEBUG_FILE "/home/nist/post_processing_data.txt"
   void writeObservationData(std::string file_name, std::vector<ObservationDataPointList> odl)
 {
   FILE *fp=NULL;
@@ -50,7 +48,6 @@ namespace industrial_extrinsic_cal
   }
   
   int scene_id=-1;  
-  ROS_ERROR("processing %d lists", (int) odl.size());
   for(int i=0; (int) i<odl.size(); i++){
     if(odl[i].items_.size()>0){
       scene_id = odl[i].items_[0].scene_id_;
@@ -140,6 +137,17 @@ namespace industrial_extrinsic_cal
 
     return (true);
   } // end load()
+
+  void CalibrationJob::postProcessingOn(std::string post_proc_file_name)
+  {
+    post_proc_on_ = true;
+    post_proc_data_file_ = post_proc_file_name;
+  }
+
+  void CalibrationJob::postProcessingOff()
+  {
+    post_proc_on_ = false;
+  }
 
   bool CalibrationJob::loadCamera()
   {
@@ -655,8 +663,7 @@ namespace industrial_extrinsic_cal
 			 << caljob_def_file_name_.c_str());
 	return (false);
       }
-
-    int scene_id_num;
+    int scene_id_num=0;
     std::string trigger_name;
     std::string trig_param;
     std::string trig_action_server;
@@ -675,17 +682,16 @@ namespace industrial_extrinsic_cal
 	YAML::Parser caljob_parser(caljob_input_file);
 	YAML::Node caljob_doc;
 	caljob_parser.GetNextDocument(caljob_doc);
-
 	caljob_doc["reference_frame"] >> reference_frame;
 	ceres_blocks_.setReferenceFrame(reference_frame);
 	// read in all scenes
 	if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
 	  {
 	    ROS_DEBUG_STREAM("Found "<<caljob_scenes->size() <<" scenes");
+	    scene_list_.clear();
 	    scene_list_.resize(caljob_scenes->size() );
 	    for (unsigned int i = 0; i < caljob_scenes->size(); i++)
 	      {
-		(*caljob_scenes)[i]["scene_id"] >> scene_id_num;
 		(*caljob_scenes)[i]["trigger"] >> trigger_name;
 		string ros_bool_param;
 		string message;
@@ -774,6 +780,7 @@ namespace industrial_extrinsic_cal
 		    cost_type = string2CostType(cost_type_string);
 		    scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi, cost_type);
 		  }
+		scene_id_num++;
 	      }
 	  }
       } // end try
@@ -817,10 +824,10 @@ namespace industrial_extrinsic_cal
 	int scene_id = current_scene.get_id();
 	ROS_DEBUG_STREAM("Processing Scene " << scene_id+1<<" of "<< scene_list_.size());
 	current_scene.get_trigger()->waitForTrigger(); // this indicates scene is ready to capture
-
 	pullTransforms(scene_id); // gets transforms of targets and cameras from their interfaces
 	BOOST_FOREACH(shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
 	  {			// clear camera of existing observations
+
 	    current_camera->camera_observer_->clearObservations(); // clear any recorded data
 	    current_camera->camera_observer_->clearTargets(); // clear all targets
 	  }
@@ -909,8 +916,7 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::runOptimization()
   {
-    // REMOVE ONCE DONE WITH NIST
-    if(WRITE_DEBUG) writeObservationData(OUTPUT_DEBUG_FILE, observation_data_point_list_);
+    if(post_proc_on_) writeObservationData(post_proc_data_file_, observation_data_point_list_);
 
     // problem is declared here because we can't clear it as far as I can tell from the ceres documentation
     if(problem_ != NULL) {
