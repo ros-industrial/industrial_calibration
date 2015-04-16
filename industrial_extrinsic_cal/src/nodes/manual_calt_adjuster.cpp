@@ -120,15 +120,15 @@ int main(int argc, char **argv)
 	set_request.joint_values.push_back(joint_values[2]);
 	set_client.call(set_request,set_response);
 	break;
-      case 'r':
+      case 'w':
 	joint_values[3] -= delta_t;
-	set_request.joint_names.push_back(base_name+"_roll_joint");
+	set_request.joint_names.push_back(base_name+"_yaw_joint");
 	set_request.joint_values.push_back(joint_values[3]);
 	set_client.call(set_request,set_response);
 	break;
-      case 'R':
+      case 'W':
 	joint_values[3] += delta_t;
-	set_request.joint_names.push_back(base_name+"_roll_joint");
+	set_request.joint_names.push_back(base_name+"_yaw_joint");
 	set_request.joint_values.push_back(joint_values[3]);
 	set_client.call(set_request,set_response);
 	break;
@@ -144,15 +144,15 @@ int main(int argc, char **argv)
 	set_request.joint_values.push_back(joint_values[4]);
 	set_client.call(set_request,set_response);
 	break;
-      case 'w':
+      case 'r':
 	joint_values[5] -= delta_t;
-	set_request.joint_names.push_back(base_name+"_yaw_joint");
+	set_request.joint_names.push_back(base_name+"_roll_joint");
 	set_request.joint_values.push_back(joint_values[5]);
 	set_client.call(set_request,set_response);
 	break;
-      case 'W':
+      case 'R':
 	joint_values[5] += delta_t;
-	set_request.joint_names.push_back(base_name+"_yaw_joint");
+	set_request.joint_names.push_back(base_name+"_roll_joint");
 	set_request.joint_values.push_back(joint_values[5]);
 	set_client.call(set_request,set_response);
 	break;
