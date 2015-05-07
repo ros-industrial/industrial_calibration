@@ -1553,7 +1553,6 @@ namespace industrial_extrinsic_cal
     double circle_diameter_; //** diameter of circle being observed */
   };
 
-  /******************I'm working on this one now *************************************************************/
   // circle target is the origin, camera's location not known, distortion also unknown
   class  SimpleCircleTargetCameraReprjErrorWithDistortionPK
   {
@@ -2255,9 +2254,7 @@ namespace industrial_extrinsic_cal
       T cy = T(cy_);
       T ox = T(ox_);
       T oy = T(oy_);
-      // cameraPntResidual(camera_point, fx, fy,cx,cy, ox, oy, residual);
       cameraCircResidual(camera_point, circle_diameter, R_optical_to_target, fx, fy, cx, cy, ox, oy, residual);
-      //      cameraCircResidualDist(camera_point, circle_diameter, R_optical_to_target, k1, k2, k3, p1, p2, fx, fy,cx,cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */

@@ -22,33 +22,39 @@ using YAML::Node;
 
 namespace industrial_extrinsic_cal {
 
-  void parseCameras(ifstream &cameras_input_file,vector<shared_ptr<Camera> >& cameras)
+  bool parseCameras(ifstream &cameras_input_file,vector<shared_ptr<Camera> >& cameras)
   {
     YAML::Parser camera_parser(cameras_input_file);
     Node camera_doc;
-    camera_parser.GetNextDocument(camera_doc);
-    
-    // read in all static cameras
-    cameras.clear();
-    if (const Node *camera_parameters = camera_doc.FindValue("static_cameras")){
-      ROS_INFO_STREAM("Found "<<camera_parameters->size()<<" static cameras ");
-      for (unsigned int i = 0; i < camera_parameters->size(); i++){
-      	shared_ptr<Camera> temp_camera = parseSingleCamera((*camera_parameters)[i]);
-	cameras.push_back(temp_camera);
-      }
-    } // end if there are any cameras in file
-    // read in all moving cameras
-    if (const Node *camera_parameters = camera_doc.FindValue("moving_cameras")){
-      ROS_INFO_STREAM("Found "<<camera_parameters->size()<<" moving cameras ");
-      for (unsigned int i = 0; i < camera_parameters->size(); i++){
-	shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
-	temp_camera->is_moving_ = true;
-	cameras.push_back(temp_camera);
-      }
-    } // end if there are any cameras in file
-    ROS_INFO_STREAM("Successfully read in " << (int) cameras.size() << " cameras");
+    try{
+      camera_parser.GetNextDocument(camera_doc);
+      
+      // read in all static cameras
+      cameras.clear();
+      if (const Node *camera_parameters = camera_doc.FindValue("static_cameras")){
+	ROS_INFO_STREAM("Found "<<camera_parameters->size()<<" static cameras ");
+	for (unsigned int i = 0; i < camera_parameters->size(); i++){
+	  shared_ptr<Camera> temp_camera = parseSingleCamera((*camera_parameters)[i]);
+	  cameras.push_back(temp_camera);
+	}
+      } // end if there are any cameras in file
+      // read in all moving cameras
+      if (const Node *camera_parameters = camera_doc.FindValue("moving_cameras")){
+	ROS_INFO_STREAM("Found "<<camera_parameters->size()<<" moving cameras ");
+	for (unsigned int i = 0; i < camera_parameters->size(); i++){
+	  shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
+	  temp_camera->is_moving_ = true;
+	  cameras.push_back(temp_camera);
+	}
+      } // end if there are any cameras in file
+      ROS_INFO_STREAM("Successfully read in " << (int) cameras.size() << " cameras");
+      return(true);
+    }
+    catch{
+      ROS_ERROR("Camera parsing failure");
+      return(false);
+    }
   }
-
   shared_ptr<Camera> parseSingleCamera(const Node &node)
   {
     shared_ptr<Camera> temp_camera;

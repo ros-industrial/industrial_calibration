@@ -137,7 +137,7 @@ public:
    **/
   double initialCostPerObservation();
 
-  /** @brief compute the covariance of the results for the requested variables
+  /** @brief This is a diagnostics routine to compute the covariance of the results for the requested variables
    *    @param variables a list of cameras and targets
    *    @param covariance_file_name name of file to store the resulting matrix in
    */

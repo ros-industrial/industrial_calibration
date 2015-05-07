@@ -12,12 +12,13 @@ namespace industrial_extrinsic_cal {
   /** @brief parse targets from a yaml file
    *    @param target_input_file the stream from which to parse the targets
    *    @param targets vector of shared pointers to targets parsed
+   *    @return true if successful
    */
-  void parse_targets(std::ifstream &targets_input_file, std::vector<boost::shared_ptr<Target> > & targets);
+  bool parseTargets(std::ifstream &targets_input_file, std::vector<boost::shared_ptr<Target> > & targets);
   /** @brief parse a single target
    *    @param node, the yaml node from which to parse the target
    */
-  boost::shared_ptr<Target> parse_single_target(const YAML::Node &node);
+  boost::shared_ptr<Target> parseSingleTarget(const YAML::Node &node);
 }// end industrial_extrinsic_cal namespace
 
 #endif

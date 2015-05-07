@@ -77,7 +77,7 @@ namespace industrial_extrinsic_cal
     }
   }
   fclose(fp);
-}
+} 
   CovarianceRequestType intToCovRequest(int request)
   {
     switch (request){
