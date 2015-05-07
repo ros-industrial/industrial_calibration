@@ -15,9 +15,10 @@ using YAML::Node;
 
 namespace industrial_extrinsic_cal {
 
-  void parsePoints(ifstream &points_input_file,vector<Point3d> &points)
+  bool parsePoints(ifstream &points_input_file,vector<Point3d> &points)
   {
     // parse points
+    bool return_value = true;
     try
       {
 	YAML::Parser points_parser(points_input_file);
@@ -40,8 +41,10 @@ namespace industrial_extrinsic_cal {
       }
     catch (YAML::ParserException& e){
       ROS_INFO_STREAM("Failed to read points file ");
+      return_value = false;
     }
     ROS_INFO_STREAM("Successfully read in " <<(int) points.size() << " points");
+    return(return_value);
   }// end of parse_points()
 
 }// end of namespace industrial_extrinsic_cal
