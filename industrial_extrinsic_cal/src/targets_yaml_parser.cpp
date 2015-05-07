@@ -24,9 +24,10 @@ namespace industrial_extrinsic_cal {
   int parseTargetPoints(const Node &node, std::vector<Point3d> points);
 
 
-bool parseTargets(ifstream &targets_input_file,vector< boost::shared_ptr<Target> > & targets)
+  bool parseTargets(ifstream &targets_input_file,vector< boost::shared_ptr<Target> > & targets)
   {
     YAML::Parser target_parser(targets_input_file);
+    bool rtn = true;
     Node target_doc;
     try{
       target_parser.GetNextDocument(target_doc);
@@ -36,25 +37,27 @@ bool parseTargets(ifstream &targets_input_file,vector< boost::shared_ptr<Target>
       if (const Node *target_parameters = target_doc.FindValue("static_targets")){
 	ROS_INFO_STREAM("Found "<<target_parameters->size()<<" static targets ");
 	for (unsigned int i = 0; i < target_parameters->size(); i++){
-	  shared_ptr<Target> temp_target = parse_single_target((*target_parameters)[i]);
+	  shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
 	  targets.push_back(temp_target);
 	}
       } // end if there are any targets in file
+
       // read in all moving targets
       if (const Node *target_parameters = target_doc.FindValue("moving_targets")){
-	ROS_INFO_STREAM("Found "<<target_parameters->size()<<" moving targets ");
+	ROS_INFO_STREAM("Found " << target_parameters->size() << " moving targets ");
 	for (unsigned int i = 0; i < target_parameters->size(); i++){
-	  shared_ptr<Target> temp_target = parse_single_target(target_parameters[i]);
+	  shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
 	  temp_target->is_moving_ = true;
 	  targets.push_back(temp_target);
 	}
-      } // end if there are any targets in file
+      } // end if there are any moving targets in file
       ROS_INFO_STREAM("Successfully read in " << (int) targets.size() << " targets");
-      return(true);
     }
-    catch{
-      return(false);
+    catch (YAML::ParserException& e){
+      ROS_ERROR_STREAM("Failed to parse targets with exception "<< e.what());
+      rtn = false;
     }
+    return(rtn);
   }
 
   shared_ptr<Target> parseSingleTarget(const Node &node)
@@ -100,12 +103,13 @@ bool parseTargets(ifstream &targets_input_file,vector< boost::shared_ptr<Target>
 
       node["num_points"] >> temp_target->num_points_;
       const Node *points_node = node.FindValue("points");
-      int num_points = parse_target_points((*points_node)[0], temp_target->pts_);
+      int num_points = parseTargetPoints((*points_node)[0], temp_target->pts_);
       if(num_points  != temp_target->num_points_ ){
 	ROS_ERROR("Expecting %d points found %d",temp_target->num_points_, num_points);
       }
     }// end try
     catch (YAML::ParserException& e){
+      ROS_ERROR_STREAM("Failed to parse single target with exception "<< e.what());
       ROS_INFO_STREAM("Failed to read target from yaml file ");
       ROS_INFO_STREAM("target name    = " << temp_target->target_name_.c_str());
       ROS_INFO_STREAM("target type    = " << temp_target->target_type_);

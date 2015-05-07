@@ -40,7 +40,7 @@ namespace industrial_extrinsic_cal {
    *   @param returned vector of shared pointers to cameras
    *   @return true if successful
    **/
-  bool parseCameras(std::ifstream &cameras_input_file,vector<shared_ptr<Camera> >& cameras);
+  bool parseCameras(std::ifstream &cameras_input_file, std::vector<boost::shared_ptr<Camera> >& cameras);
 }// end industrial_extrinsic_cal namespace
 
 #endif

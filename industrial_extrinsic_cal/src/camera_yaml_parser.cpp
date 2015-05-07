@@ -26,6 +26,7 @@ namespace industrial_extrinsic_cal {
   {
     YAML::Parser camera_parser(cameras_input_file);
     Node camera_doc;
+    bool rtn=true;
     try{
       camera_parser.GetNextDocument(camera_doc);
       
@@ -34,7 +35,7 @@ namespace industrial_extrinsic_cal {
       if (const Node *camera_parameters = camera_doc.FindValue("static_cameras")){
 	ROS_INFO_STREAM("Found "<<camera_parameters->size()<<" static cameras ");
 	for (unsigned int i = 0; i < camera_parameters->size(); i++){
-	  shared_ptr<Camera> temp_camera = parseSingleCamera((*camera_parameters)[i]);
+	  shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
 	  cameras.push_back(temp_camera);
 	}
       } // end if there are any cameras in file
@@ -46,14 +47,14 @@ namespace industrial_extrinsic_cal {
 	  temp_camera->is_moving_ = true;
 	  cameras.push_back(temp_camera);
 	}
-      } // end if there are any cameras in file
+      } // end if there are any movingcameras in file
       ROS_INFO_STREAM("Successfully read in " << (int) cameras.size() << " cameras");
-      return(true);
     }
-    catch{
+    catch (YAML::ParserException& e){
       ROS_ERROR("Camera parsing failure");
-      return(false);
+      rtn = false;
     }
+    return(rtn);
   }
   shared_ptr<Camera> parseSingleCamera(const Node &node)
   {
