@@ -203,7 +203,6 @@ namespace industrial_extrinsic_cal
     ros::Timer timer_; /**< need a timer to initiate broadcast of transform */
     tf::StampedTransform transform_; /**< the broadcaster needs this which we get values from pose_ */
     tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
-    bool ref_frame_defined_; /**< the broadcaster can't start until the reference frame is defined, this is set then */
   };
 
   /** @brief This transform interface is used when the camera pose  is determined through calibration
@@ -247,7 +246,6 @@ namespace industrial_extrinsic_cal
     ros::Timer timer_; /**< need a timer to initiate broadcast of transform */
     tf::StampedTransform transform_; /**< the broadcaster needs this which we get values from pose_ */
     tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
-    bool ref_frame_defined_; /**< the broadcaster can't start until the reference frame is defined, this is set then */
   };
 
 
@@ -264,7 +262,7 @@ namespace industrial_extrinsic_cal
      * @brief constructor
      * @param image_topic name of published image topic
      */
-    ROSCameraHousingBroadcastTInterface(const std::string & transform_frame, const Pose6d & pose);
+    ROSCameraHousingBroadcastTInterface(const std::string & transform_frame, const std::string &housing_frame, const std::string &mounting_frame, const Pose6d & pose);
 
     /**
      * @brief Default destructor
@@ -275,7 +273,7 @@ namespace industrial_extrinsic_cal
     bool pushTransform(Pose6d & Pose);
 
     /** @brief returns the pose used in construction, or the one most recently pushed */
-    Pose6d pullTransform(){ return(pose_);};
+    Pose6d pullTransform();
 
     /** @brief appends pose as a static transform publisher to the file */
     bool store(std::string &filePath);
@@ -292,8 +290,8 @@ namespace industrial_extrinsic_cal
     tf::StampedTransform transform_; /**< the broadcaster needs this which we get values from pose_ */
     tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
     tf::TransformListener tf_listener_; // need this to get the tranform from housing to optical frame from tf
-    bool ref_frame_defined_; /**< the broadcaster can't start until the reference frame is defined, this is set then */
     std::string housing_frame_; /**< frame name for the housing */
+    std::string mounting_frame_; /**< mounting frame name */
   };
 
   /** @brief this is expected to be used by a camera who's position is defined by the urdf using the calibration xacro macro

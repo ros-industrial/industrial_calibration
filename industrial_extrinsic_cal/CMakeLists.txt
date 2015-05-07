@@ -130,9 +130,9 @@ add_dependencies(mutable_joint_state_publisher  industrial_extrinsic_cal_generat
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-target_link_libraries(mono_ex_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
+target_link_libraries(mono_ex_cal ${CERES_LIBRARIES} ${catkin_LIBRARIES} )
 #target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES})
-target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
+target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES} )
 target_link_libraries(trigger_service ${catkin_LIBRARIES} )
 target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES} )
 target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} yaml-cpp )
