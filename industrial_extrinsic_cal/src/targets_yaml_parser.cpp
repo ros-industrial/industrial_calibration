@@ -21,37 +21,43 @@ using YAML::Node;
 namespace industrial_extrinsic_cal {
 
   // prototypes
-  int parse_target_points(const Node &node, std::vector<Point3d> points);
+  int parseTargetPoints(const Node &node, std::vector<Point3d> points);
 
 
-  void parse_targets(ifstream &targets_input_file,vector< boost::shared_ptr<Target> > & targets)
+bool parseTargets(ifstream &targets_input_file,vector< boost::shared_ptr<Target> > & targets)
   {
     YAML::Parser target_parser(targets_input_file);
     Node target_doc;
-    target_parser.GetNextDocument(target_doc);
-    
-    // read in all static cameras
-    targets.clear();
-    if (const Node *target_parameters = target_doc.FindValue("static_targets")){
-      ROS_INFO_STREAM("Found "<<target_parameters->size()<<" static targets ");
-      for (unsigned int i = 0; i < target_parameters->size(); i++){
-      	shared_ptr<Target> temp_target = parse_single_target((*target_parameters)[i]);
-	targets.push_back(temp_target);
-      }
-    } // end if there are any targets in file
-    // read in all moving targets
-    if (const Node *target_parameters = target_doc.FindValue("moving_targets")){
-      ROS_INFO_STREAM("Found "<<target_parameters->size()<<" moving targets ");
-      for (unsigned int i = 0; i < target_parameters->size(); i++){
-	shared_ptr<Target> temp_target = parse_single_target(target_parameters[i]);
-	temp_target->is_moving_ = true;
-	targets.push_back(temp_target);
-      }
-    } // end if there are any targets in file
-    ROS_INFO_STREAM("Successfully read in " << (int) targets.size() << " targets");
+    try{
+      target_parser.GetNextDocument(target_doc);
+      
+      // read in all static cameras
+      targets.clear();
+      if (const Node *target_parameters = target_doc.FindValue("static_targets")){
+	ROS_INFO_STREAM("Found "<<target_parameters->size()<<" static targets ");
+	for (unsigned int i = 0; i < target_parameters->size(); i++){
+	  shared_ptr<Target> temp_target = parse_single_target((*target_parameters)[i]);
+	  targets.push_back(temp_target);
+	}
+      } // end if there are any targets in file
+      // read in all moving targets
+      if (const Node *target_parameters = target_doc.FindValue("moving_targets")){
+	ROS_INFO_STREAM("Found "<<target_parameters->size()<<" moving targets ");
+	for (unsigned int i = 0; i < target_parameters->size(); i++){
+	  shared_ptr<Target> temp_target = parse_single_target(target_parameters[i]);
+	  temp_target->is_moving_ = true;
+	  targets.push_back(temp_target);
+	}
+      } // end if there are any targets in file
+      ROS_INFO_STREAM("Successfully read in " << (int) targets.size() << " targets");
+      return(true);
+    }
+    catch{
+      return(false);
+    }
   }
 
-  shared_ptr<Target> parse_single_target(const Node &node)
+  shared_ptr<Target> parseSingleTarget(const Node &node)
   {
     shared_ptr<Target> temp_target = make_shared<Target>();
     shared_ptr<TransformInterface> temp_ti;
@@ -104,7 +110,7 @@ namespace industrial_extrinsic_cal {
       ROS_INFO_STREAM("target name    = " << temp_target->target_name_.c_str());
       ROS_INFO_STREAM("target type    = " << temp_target->target_type_);
       ROS_INFO_STREAM("target frame    = " << temp_target->target_frame_.c_str());
-    ROS_INFO_STREAM("num_points    = " << temp_target->num_points_);
+      ROS_INFO_STREAM("num_points    = " << temp_target->num_points_);
       ROS_INFO_STREAM("angle_axis_ax  = " << temp_target->pose_.ax);
       ROS_INFO_STREAM("angle_axis_ay = " << temp_target->pose_.ay);
       ROS_INFO_STREAM("angle_axis_az  = " << temp_target->pose_.az);
@@ -115,7 +121,7 @@ namespace industrial_extrinsic_cal {
     return(temp_target);
   }// end parse_single_target
   
-  int parse_target_points(const Node &node, std::vector<Point3d> points)
+  int parseTargetPoints(const Node &node, std::vector<Point3d> points)
   {
     ROS_DEBUG_STREAM("FoundPoints: "<<node.size());
     points.clear();
