@@ -137,12 +137,17 @@ public:
     poses.push_back(target_pose);
     move_group_->setPoseTargets(poses, "ee_link");
 
-    if(move_group_->move()){
-      sleep(1);
-      pose_server_.setSucceeded();
+    moveit::Plan plan;
+    if(move_group_->plan(plan)){
+      if(move_group_->execute(plan)){
+	pose_server_.setSucceeded();
+      }
+      else{
+	ROS_ERROR("execute in poseCallBack failed");
+      }
     }
     else {
-      ROS_ERROR("move in poseCallBack failed");
+      ROS_ERROR("plan in poseCallBack failed");
     }
   };
 
