@@ -26,8 +26,6 @@
       camera_file: "intrinsic_cameras.yaml"
       target_file: "circlegrid7x5.yaml"
       cal_job_file: "intrinsic_caljob.yaml"
-      store_results_package_name: "industrial_extrinsic_cal"
-      store_results_file_name: "junk_tf_broadcaster.launch"
     </rosparam>
   </node>
 

@@ -48,7 +48,7 @@ namespace pattern_options
 {
   enum pattern_options_
     {
-      Chessboard = 0, CircleGrid = 1,  ModifiedCircleGrid=2, ARtag = 3, Balls =4
+      Chessboard = 0, CircleGrid = 1,  ModifiedCircleGrid = 2, ARtag = 3, Balls = 4, SingleBall = 5
     };
 }
 typedef pattern_options::pattern_options_ PatternOption;
@@ -241,6 +241,8 @@ namespace industrial_extrinsic_cal
   private:
     int image_number_; /**< a counter of images recieved */
     cv::Mat last_raw_image_; /**< the image last received */
+    bool use_circle_detector_;
+    bool white_blobs_;
     
   };
 

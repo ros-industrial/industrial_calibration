@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <arg name="camera_number" default="1"/>
+  <arg name="camera_name" default="basler$(arg camera_number)"/>
+  <arg name="image_topic" default="Basler$(arg camera_number)/image_rect"/>
+  <arg name="output_file" default="$(find caljob_creator)/launch/B$(arg camera_number)_caljob.yaml"/>
+  <arg name="capture_scene" default="false"/>
+  <arg name="quit" default="false"/>
+  <arg name="joints_topic" default="ur5/joint_states"/>
+  <arg name="motion_type" default="joint"/>
+  <arg name="to_frame" default="cal_grid"/>
+  <arg name="from_frame" default="world"/>
+  <arg name="image_width" default="1920" />
+  <arg name="image_height" default="1080" />
+
+
+  <node pkg="caljob_creator" type="caljob_creator_node" name="caljob_creator">
+    <param name="camera_name" value="$(arg camera_name)"/>
+    <param name="image_topic" value="$(arg image_topic)"/>
+    <param name="output_file" value="$(arg output_file)"/>
+    <param name="capture_scene" value="$(arg capture_scene)"/>
+    <param name="quit" value="$(arg quit)"/>
+    <param name="joints_topic" value="$(arg joints_topic)"/>
+    <param name="motion_type" value="$(arg motion_type)"/>
+    <param name="to_frame" value="$(arg to_frame)"/>
+    <param name="from_frame" value="$(arg from_frame)"/>
+    <param name="image_width" value="$(arg image_width)" />
+    <param name="image_height" value="$(arg image_height)" />
+  </node>
+
+</launch>

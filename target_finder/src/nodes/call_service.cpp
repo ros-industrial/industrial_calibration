@@ -35,7 +35,18 @@ public:
   callService(ros::NodeHandle nh): nh_(nh)
   {
     client_ = nh_.serviceClient<target_finder::target_locater>("TargetLocateService");
+    ros::NodeHandle pnh("~") ;
+    if(!pnh.getParam("roi_width", roi_width_)){
+      roi_width_ = 1280;
+    }
+    if(!pnh.getParam("roi_height", roi_height_)){
+      roi_width_ = 1024;
+    }
+    if(!pnh.getParam("optical_frame", optical_frame_)){
+      optical_frame_ = "basler1_optical_frame";
+    }
     setRequest();
+
   }
   bool callTheService();
   void copyResponseToRequest();
@@ -45,6 +56,9 @@ private:
   ros::ServiceClient client_;
   target_finder::target_locater srv_;
   tf::TransformBroadcaster tf_broadcaster_;
+  int roi_width_;
+  int roi_height_;
+  std::string optical_frame_;
 };
 
 void callService::copyResponseToRequest()
@@ -69,7 +83,7 @@ bool callService::callTheService()
     qy = srv_.response.final_pose.orientation.y;
     qz = srv_.response.final_pose.orientation.z;
     qw = srv_.response.final_pose.orientation.w;
-    ROS_INFO("Pose: tx= %5.3lf  %5.3lf  %5.3lf quat= %5.3lf  %5.3lf  %5.3lf %5.3lf, cost= %5.3lf",
+    ROS_INFO("Pose: tx= %5.4lf  %5.4lf  %5.4lf quat= %5.3lf  %5.3lf  %5.3lf %5.3lf, cost= %5.3lf",
 	     srv_.response.final_pose.position.x,
 	     srv_.response.final_pose.position.y,
 	     srv_.response.final_pose.position.z,
@@ -82,7 +96,7 @@ bool callService::callTheService()
     tf::Quaternion quat(qx,qy,qz,qw);
     camera_to_target.setOrigin(tf::Vector3(x,y,z));
     camera_to_target.setRotation(quat);
-    tf::StampedTransform stf(camera_to_target, ros::Time::now(), "basler1_rgb_optical_frame", "target_frame");
+    tf::StampedTransform stf(camera_to_target, ros::Time::now(), optical_frame_.c_str(), "target_frame");
     tf_broadcaster_.sendTransform(stf);
     return(true);
   }
@@ -94,8 +108,8 @@ void callService::setRequest()
 {
     srv_.request.roi.x_offset =0;
     srv_.request.roi.y_offset =0;
-    srv_.request.roi.width = 1280;
-    srv_.request.roi.height = 1024;
+    srv_.request.roi.width = roi_width_;
+    srv_.request.roi.height = roi_height_;
     srv_.request.initial_pose.position.x = 0.0;
     srv_.request.initial_pose.position.y = 0.1;
     srv_.request.initial_pose.position.z = 1.0;

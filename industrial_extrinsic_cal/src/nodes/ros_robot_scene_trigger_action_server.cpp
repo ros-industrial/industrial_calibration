@@ -44,7 +44,7 @@ public:
     move_group_->setPlanningTime(10.0); // give it 10 seconds to plan
     move_group_->setNumPlanningAttempts(30.0); // Allow parallel planner to hybridize this many plans
     move_group_->setPlannerId("RRTConnectkConfigDefault"); // use this planner
-
+  
   };
 
   ~ServersNode() 
@@ -78,6 +78,15 @@ public:
 		var_names[4].c_str(),
 		var_names[5].c_str());
     }
+    if(var_names.size()>7){
+      ROS_INFO("%d variables %s %s %s %s %s %s", (int)var_names.size(),
+		var_names[0].c_str(),
+		var_names[1].c_str(),
+		var_names[2].c_str(),
+		var_names[3].c_str(),
+		var_names[4].c_str(),
+		var_names[5].c_str());
+    }
     move_group_->setStartState(*current_state);
     move_group_->setJointValueTarget(goal->joint_values);
     if(move_group_->move()){
@@ -91,10 +100,15 @@ public:
   
   void poseCallBack(const industrial_extrinsic_cal::robot_pose_triggerGoalConstPtr& goal)
   {
-    moveit::core::RobotStatePtr current_state = move_group_->getCurrentState();
-    move_group_->setStartState(*current_state);
+
+    move_group_->setPoseReferenceFrame("world");
+    move_group_->setEndEffectorLink("ee_link");
+    move_group_->setGoalPositionTolerance(0.005);
+    move_group_->setGoalOrientationTolerance(0.005);
+    move_group_->setStartStateToCurrentState();
+
     geometry_msgs::PoseStamped current_pose = move_group_->getCurrentPose();
-    ROS_INFO("starting pose = %lf  %lf  %lf  %lf  %lf  %lf  %lf",
+    ROS_ERROR("starting pose = %lf  %lf  %lf  %lf  %lf  %lf  %lf",
 	      current_pose.pose.position.x,
 	      current_pose.pose.position.y,
 	      current_pose.pose.position.z,
@@ -103,16 +117,29 @@ public:
 	      current_pose.pose.orientation.z,
 	      current_pose.pose.orientation.w);
     geometry_msgs::Pose target_pose;
+    std::vector<geometry_msgs::Pose> poses;
     target_pose.position.x = goal->pose.position.x;
     target_pose.position.y = goal->pose.position.y;
     target_pose.position.z = goal->pose.position.z;
-    target_pose.orientation.w = goal->pose.orientation.x;
-    target_pose.orientation.w = goal->pose.orientation.y;
-    target_pose.orientation.w = goal->pose.orientation.z;
+    target_pose.orientation.x= goal->pose.orientation.x;
+    target_pose.orientation.y = goal->pose.orientation.y;
+    target_pose.orientation.z = goal->pose.orientation.z;
     target_pose.orientation.w = goal->pose.orientation.w;
-    move_group_->setPoseTarget(target_pose);
+    ROS_ERROR("target   pose = %lf  %lf  %lf  %lf  %lf  %lf  %lf",
+	      target_pose.position.x,
+	      target_pose.position.y,
+	      target_pose.position.z,
+	      target_pose.orientation.x,
+	      target_pose.orientation.y,
+	      target_pose.orientation.z,
+	      target_pose.orientation.w);
+
+    poses.push_back(target_pose);
+    move_group_->setPoseTargets(poses, "ee_link");
+
     if(move_group_->move()){
-      joint_value_server_.setSucceeded();
+      sleep(1);
+      pose_server_.setSucceeded();
     }
     else {
       ROS_ERROR("move in poseCallBack failed");

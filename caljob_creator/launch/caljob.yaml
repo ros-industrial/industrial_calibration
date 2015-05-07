@@ -1,0 +1,66 @@
+---
+reference_frame: world
+scenes:
+-
+     scene_id: 0
+     trigger: ROS_ROBOT_POSE_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_pose
+     pose:
+        - -0.480833
+        - 0.141146
+        - 0.418373
+        - 0.544482
+        - -0.281203
+        - 0.790012
+        - -0.0185566
+     observations:
+     -
+          camera: basler1
+          target: modified_circle_10x10
+          roi_x_min: 0
+          roi_x_max: 1280
+          roi_y_min: 0
+          roi_y_max: 1024
+          cost_type: PosedTargetCameraReprjErrorPK
+-
+     scene_id: 1
+     trigger: ROS_ROBOT_POSE_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_pose
+     pose:
+        - -0.480826
+        - 0.141129
+        - 0.438313
+        - 0.544475
+        - -0.281188
+        - 0.790023
+        - -0.0185619
+     observations:
+     -
+          camera: basler1
+          target: modified_circle_10x10
+          roi_x_min: 0
+          roi_x_max: 1280
+          roi_y_min: 0
+          roi_y_max: 1024
+          cost_type: PosedTargetCameraReprjErrorPK
+-
+     scene_id: 2
+     trigger: ROS_ROBOT_POSE_ACTION_TRIGGER
+     trig_action_server: rosRobotSceneTrigger_pose
+     pose:
+        - -0.459296
+        - 0.14114
+        - 0.438291
+        - 0.544458
+        - -0.281163
+        - 0.790043
+        - -0.0185482
+     observations:
+     -
+          camera: basler1
+          target: modified_circle_10x10
+          roi_x_min: 0
+          roi_x_max: 1280
+          roi_y_min: 0
+          roi_y_max: 1024
+          cost_type: PosedTargetCameraReprjErrorPK

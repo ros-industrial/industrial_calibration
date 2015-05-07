@@ -40,21 +40,21 @@
                     <parent link="${child_link}_z_trans" />
 	     <child  link="${child_link}_yaw" />
                     <origin xyz="0 0 0" rpy="0 0 0" />
-	     <limit lower="-3.1415" upper="3.1415" effort="2" velocity="10"/>
+	     <limit lower="-6.2832" upper="6.2832" effort="2" velocity="10"/>
                     <axis xyz="0 0 1" />
 	</joint>
                <joint name="${child_link}_pitch_joint" type="revolute">
                     <parent link="${child_link}_yaw" />
 	     <child  link="${child_link}_pitch"/>
                     <origin xyz="0 0 0" rpy="0 0 0" />
-	     <limit lower="-3.1415" upper="3.1415" effort="2" velocity="10"/>
+	     <limit lower="-6.2832" upper="6.2832" effort="2" velocity="10"/>
                     <axis xyz="0 1 0" />
 	</joint>
                <joint name="${child_link}_roll_joint" type="revolute">
                     <parent link="${child_link}_pitch" />
 	     <child  link="${child_link}" />
                     <origin xyz="0 0 0" rpy="0 0 0" />
-	     <limit lower="-3.1415" upper="3.1415" effort="2" velocity="10"/>
+	     <limit lower="-6.2832" upper="6.2832" effort="2" velocity="10"/>
                     <axis xyz="1 0 0" />
 	</joint>
 
