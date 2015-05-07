@@ -33,13 +33,37 @@
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
+#include "ceres/types.h"
 #include <ros/console.h>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 #include <iostream>
 
+
 namespace industrial_extrinsic_cal
 {
+  namespace covariance_requests{
+    enum CovarianceRequestType { 
+      DefaultInvalid=0,
+      StaticCameraIntrinsicParams,
+      StaticCameraExtrinsicParams,
+      MovingCameraIntrinsicParams,
+      MovingCameraExtrinsicParams,
+      StaticTargetPoseParams,
+      MovingTargetPoseParams
+    };
+  } // end of namespace covariance_requests
+  struct CovarianceVariableRequest{
+    covariance_requests::CovarianceRequestType request_type;
+    std::string object_name;
+    int scene_id;
+  };
+
+  /*! @brief converts an integer to a covariance request type
+   * @param request the integer request type
+   * @returns the covariance request type
+   */
+  covariance_requests::CovarianceRequestType intToCovRequest(int request);
 
 /*! @brief defines and executes the calibration script */
 class CalibrationJob
@@ -47,7 +71,7 @@ class CalibrationJob
 public:
   /** @brief constructor */
   CalibrationJob(std::string camera_fn, std::string target_fn, std::string caljob_fn) :
-      camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn)
+    camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn), solved_(false), problem_(NULL)
   {  } ;
 
   /** @brief default destructor */
@@ -103,10 +127,22 @@ public:
     return ceres_blocks_.reference_frame_;
   }
 
-  const std::vector<std::string>& getTargetFrames() const
-  {
-    return target_frames_;
-  }
+  /** @brief get cost per observation
+   *   @returns average cost per observation after optimization
+   **/
+  double finalCostPerObservation();
+
+  /** @brief get initial cost per observation
+   *   @returns cost per observation before optimization
+   **/
+  double initialCostPerObservation();
+
+  /** @brief This is a diagnostics routine to compute the covariance of the results for the requested variables
+   *    @param variables a list of cameras and targets
+   *    @param covariance_file_name name of file to store the resulting matrix in
+   */
+  bool computeCovariance(std::vector<CovarianceVariableRequest> &variables, std::string &covariance_file_name);
+
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 protected:
@@ -182,20 +218,22 @@ protected:
 */
   void pullTransforms(int scene_id);
 
+
 private:
   std::vector<ObservationDataPointList> observation_data_point_list_; /*!< a list of observation data points */
   std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
   std::string camera_def_file_name_; /*!< this file describes all cameras in job */
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
-  std::vector<std::string> target_frames_; /*!< this the frame of the target points */
   int current_scene_; /*!< id of current scene under review or construction */
   std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
   std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
   CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
-  ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
   std::vector<P_BLOCK> original_extrinsics_; /*!< This is the parameter block which holds the original camera extrinsics */
-
+  ceres::Problem  *problem_; /*!< this is the object used to define the optimization problem for ceres */
+  ceres::Solver::Summary ceres_summary_; /*!< object for displaying solver results */
+  int total_observations_; /*< number of observations/cost elements in problem */
+  bool solved_; /*< set once the problem has been solved, allows covariance to be computed*/
 };//end class
 
 }//end namespace industrial_extrinsic_cal

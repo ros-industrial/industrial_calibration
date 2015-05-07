@@ -1,0 +1,20 @@
+<launch>
+
+   <node name="create_caljob" pkg="intrinsic_cal" type="create_ical_scenes" >
+        <param name="caljob_filename" value="$(find intrinsic_cal)/yaml/test1.yaml"/>
+        <param name="target_name" value="mytarget"/>
+        <param name="camera_name" value="Asus1"/>
+        <param name="image_topic" value="Asus/rgb/image_color_raw"/>
+        <param name="image_width" value="640"/>
+        <param name="image_height" value="480"/>
+        <param name="sample_rows" value="4"/>
+        <param name="sample_cols" value="5"/>
+        <param name="sample_layers" value="4"/>
+        <param name="min_image_percent" value="25.0"/>
+        <param name="max_image_percent" value="75.0"/>
+        <param name="reference_frame" value="world_frame"/>
+        <param name="target_type" value="2"/>
+        <param name="cost_type" value="CameraReprjErrorWithDistortionPK"/>
+   </node>
+
+</launch>

@@ -356,7 +356,7 @@ namespace industrial_extrinsic_cal
     Pose6d getIntermediateFrame();
 
   private:
-    ros::NodeHandle *nh_;
+    ros::NodeHandle *nh_;/**< the standard node handle for ros*/
     std::string housing_frame_; /**< housing frame name */
     std::string mounting_frame_; /**< mounting frame name */
     Pose6d pose_; /**< pose associated with the transform from reference frame to housing frame */
@@ -366,12 +366,12 @@ namespace industrial_extrinsic_cal
     ros::ServiceClient store_client_; /**< a client for calling the service to store the joint values associated with the transform */
     std::vector<std::string> joint_names_; /**< names of joints  */
     std::vector<double> joint_values_; /**< values of joints  */
-    industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_;
-    industrial_extrinsic_cal::get_mutable_joint_states::Response get_response_;
-    industrial_extrinsic_cal::set_mutable_joint_states::Request set_request_;
-    industrial_extrinsic_cal::set_mutable_joint_states::Response set_response_;
-    industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_;
-    industrial_extrinsic_cal::store_mutable_joint_states::Response  store_response_;
+    industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_; /**< request when transform is part of a mutable set */
+    industrial_extrinsic_cal::get_mutable_joint_states::Response get_response_; /**< response when transform is part of a mutable set */
+    industrial_extrinsic_cal::set_mutable_joint_states::Request set_request_; /**< request when transform is part of a mutable set */
+    industrial_extrinsic_cal::set_mutable_joint_states::Response set_response_; /**< response when transform is part of a mutable set */
+    industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_; /**< request to store when  part of a mutable set */
+    industrial_extrinsic_cal::store_mutable_joint_states::Response  store_response_;/**< response to store when  part of a mutable set */
   };
 
   /** @brief this is expected to be used for calibrating a target
@@ -403,6 +403,69 @@ namespace industrial_extrinsic_cal
      * @brief Default destructor
      */
     ~ROSSimpleCalTInterface()  {  
+    } ;
+
+    /** @brief  uses the pose to compute the new joint values, and sends them to the mutable joint state publisher
+     * @param Pose the pose is the transform from the parent frame to the transform
+     */
+    bool pushTransform(Pose6d & Pose);
+
+    /** @brief get the transform from the mutable transform publisher, and compute the optical to reference frame pose*/
+    Pose6d pullTransform();
+
+    /** @brief as a listener interface, tells the mutable transform publisher to store its current values in its yaml file */
+    bool store(std::string &filePath);
+
+    /** @brief sets the reference frame of the transform interface, sometimes not used */
+    void setReferenceFrame(std::string &ref_frame);
+
+  private:
+    ros::NodeHandle *nh_;
+    std::string transform_frame_; /**< transform frame name */
+    std::string parent_frame_; /**< parent's frame name */
+    Pose6d pose_; /**< pose associated with the transform from reference frame to housing frame */
+    ros::ServiceClient get_client_; /**< a client for calling the service to get the joint values associated with the transform */
+    ros::ServiceClient set_client_; /**< a client for calling the service to set the joint values associated with the transform */
+    ros::ServiceClient store_client_; /**< a client for calling the service to store the joint values associated with the transform */
+    std::vector<std::string> joint_names_; /**< names of joints  */
+    std::vector<double> joint_values_; /**< values of joints  */
+    industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_;
+    industrial_extrinsic_cal::get_mutable_joint_states::Response get_response_;
+    industrial_extrinsic_cal::set_mutable_joint_states::Request set_request_;
+    industrial_extrinsic_cal::set_mutable_joint_states::Response set_response_;
+    industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_;
+    industrial_extrinsic_cal::store_mutable_joint_states::Response  store_response_;
+  };
+
+  /** @brief this is expected to be used for calibrating a camera
+   *             The macro takes a child and a parent link, and defines the following joints
+   *             {child}_x_joint: 
+   *             {child}_y_joint: 
+   *             {child}_z_joint: 
+   *             {child}_yaw_joint: 
+   *             {child}_pitch_joint:
+   *             {child}_roll_joint:
+   *             it is expected that the launch file for the workcell will include a mutable_joint_state_publisher
+   *             and that these joints are defined in the file whose name is held in the  mutableJointStateYamlFile parameter
+   *             push updates the joint states by calling the set_mutable_joint_states service
+   *             pull listens to the joint states by calling the get_mutable_joint_states service, and computes the transform
+   *             store updates the yaml file by calling the store_mutable_joint_states service
+   */
+  class ROSSimpleCameraCalTInterface : public TransformInterface
+  {
+  public:
+
+    /**
+     * @brief constructor
+     * @param transform_frame The name of frame being calibrated
+     * @param parent_frame The name of camera housing's frame
+     */
+    ROSSimpleCameraCalTInterface(const std::string &transform_frame,  const std::string &parent_frame);
+
+    /**
+     * @brief Default destructor
+     */
+    ~ROSSimpleCameraCalTInterface()  {  
     } ;
 
     /** @brief  uses the pose to compute the new joint values, and sends them to the mutable joint state publisher

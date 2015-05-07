@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<launch>
+     <node pkg="target_finder" type="target_locator_srv" name="target_locator" output="screen" >
+          <param name="image_topic" value="Basler1/image_color" />
+          <param name="target_type" value="2" />
+          <param name="target_rows" value="10" />
+          <param name="target_cols" value="10" />
+          <param name="target_circle_dia" value="0.012" />
+          <param name="target_spacing" value="0.02" />
+          <param name="focal_length_x" value="872" />
+          <param name="focal_length_y" value="872" />
+          <param name="center_x" value="676.9" />
+          <param name="center_y" value="355.0" />
+     </node>
+ 
+     <node pkg="target_finder" type="call_service" name="call_service" output="screen" />
+
+     <include file="$(find target_finder)/launch/single_camera.launch" >
+          <arg name="view_cameras" value="true"/>
+          <arg name="camera_id" value="21135424"/>
+     </include>
+
+     <node pkg="image_view" type="image_view" name="debug_view" >
+          <remap from="image" to="observer_raw_image"/>
+     </node>
+
+     <node pkg="tf" type="static_transform_publisher" name="target_frame" args="0.1 0.0 1.0 0.0 1.5708 0.0 world basler1_rgb_optical_frame 100" />
+
+     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find target_finder)/config/target_finder.rviz" required="true" />
+
+</launch>

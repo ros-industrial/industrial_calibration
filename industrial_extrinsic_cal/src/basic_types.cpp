@@ -36,43 +36,17 @@ namespace industrial_extrinsic_cal
   }
   void Pose6d::setBasis( tf::Matrix3x3 & m)
   { 
-    // see Google ceres rotation.h for the source of these computations, I copied them
-    // from the RotationMatrixToAngleAxis()
-    ax = m[2][1] - m[1][2]; // R[5] - R[7]
-    ay = m[0][2] - m[2][0]; // R[6] - R[2]
-    az = m[1][0] - m[0][1]; // R[1] - R[3]
-    double costheta = std::min(std::max((m[0][0] + m[1][1] + m[2][2] - 1.0) / 2.0, -1.0), 1.0);
-    double sintheta = std::min(sqrt(ax * ax + ay*ay + az*az) / 2.0, 1.0);
-    double theta = atan2(sintheta, costheta);
-    static double kThreshold = 1e-12; 
-    if ((sintheta > kThreshold) || (sintheta < -kThreshold)) {
-      double r = theta / (2.0 * sintheta);
-      ax *= r;
-      ay *= r;
-      az *= r;
-      return;
-    }
-    if (costheta > 0.0) {
-      ax *= 0.5;
-      ay *= 0.5;
-      az *= 0.5;
-      return;
-    }
-    double inv_one_minus_costheta = 1.0/ (1.0 - costheta);
-    ax = theta * sqrt((m[0][0] - costheta) * inv_one_minus_costheta);
-    if (((sintheta < 0.0) && (ax > 0.0)) ||((sintheta > 0.0) && (ax < 0.0))) {
-      ax = -ax;
-    }
-    ay = theta * sqrt((m[1][1] - costheta) * inv_one_minus_costheta);
-    if (((sintheta < 0.0) && (ay > 0.0)) ||((sintheta > 0.0) && (ay < 0.0))) {
-      ay = -ay;
-    }
-    az = theta * sqrt((m[2][2] - costheta) * inv_one_minus_costheta);
-    if (((sintheta < 0.0) && (az > 0.0)) ||((sintheta > 0.0) && (az < 0.0))) {
-      az = -az;
-    }
+    double R[9];
+    R[0] = m[0][0];     R[1] = m[1][0];    R[2] = m[2][0];
+    R[3] = m[0][1];     R[4] = m[1][1];    R[5] = m[2][1];
+    R[6] = m[0][2];     R[7] = m[1][2];    R[8] = m[2][2];
+    double angle_axis[3];
+    ceres::RotationMatrixToAngleAxis(R, angle_axis);
+    ax = angle_axis[0];
+    ay = angle_axis[1];
+    az = angle_axis[2];
   }
-
+  
   void Pose6d::setOrigin(tf::Vector3 & v)
   {
     x = v.m_floats[0];
@@ -182,26 +156,18 @@ namespace industrial_extrinsic_cal
      ey = theta;
      ex = psi;
    }
-  void Pose6d::getQuaternion(double &qx,  double &qy, double &qz, double &qw)
+  void Pose6d::getQuaternion(double &qx,  double &qy, double &qz, double &qw) const
   {
-    // the following was taken from ceres equivalent function
-    double theta_squared = ax*ax + ay*ay + az*az;
-    if(theta_squared>0.0){
-      double theta = sqrt(theta_squared);
-      double half_theta = theta*0.5;
-      double k = sin(half_theta)/theta;
-      qw = cos(half_theta);
-      qx = ax*k;
-      qy = ay*k;
-      qz = az*k;
-    }
-    else{ // can't do division by zeor
-      double k = 0.5;
-      qw = 1.0;
-      qx = ax*k;
-      qy = ay*k;
-      qz = az*k;
-    }
+    double angle_axis[3];
+    angle_axis[0] = ax;
+    angle_axis[1] = ay;
+    angle_axis[2] = az;
+    double quaternion[4];
+    ceres::AngleAxisToQuaternion(angle_axis, quaternion);
+    qw = quaternion[0];
+    qx = quaternion[1];
+    qy = quaternion[2];
+    qz = quaternion[3];
   }
 
   Pose6d Pose6d::getInverse() const

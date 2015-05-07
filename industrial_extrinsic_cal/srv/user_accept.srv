@@ -1,0 +1,5 @@
+# Define the goal
+float64 allowable_error_per_pixel
+---
+# Define the result
+float64 resultant_error_per_pixel

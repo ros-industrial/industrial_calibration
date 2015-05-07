@@ -1,0 +1,8 @@
+# Define the goal
+float64 allowable_cost_per_observation
+---
+# Define the result
+float64 cost_per_observation
+---
+# Define a feedback message
+float32 percent_complete
