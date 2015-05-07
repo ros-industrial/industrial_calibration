@@ -137,7 +137,7 @@ public:
     poses.push_back(target_pose);
     move_group_->setPoseTargets(poses, "ee_link");
 
-    moveit::Plan plan;
+    moveit::planning_interface::MoveGroup::Plan plan;
     if(move_group_->plan(plan)){
       if(move_group_->execute(plan)){
 	pose_server_.setSucceeded();
