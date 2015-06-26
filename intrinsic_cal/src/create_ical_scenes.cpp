@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     exit(1);
   }
   if(target_type<0 || target_type>3){
-    ROS_ERROR("target_type not valid", target_type);
+    ROS_ERROR("target_type not valid %d", target_type);
   }
   
   // write the header

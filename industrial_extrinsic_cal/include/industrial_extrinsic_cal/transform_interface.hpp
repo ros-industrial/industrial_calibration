@@ -89,7 +89,7 @@ namespace industrial_extrinsic_cal
     /** @brief  constructor 
      *   @param pose the pose associated with the transform interface
      */
-    DefaultTransformInterface(const Pose6d &pose){ pose_ = pose;};
+    DefaultTransformInterface(){};
 
     /** @brief  destructor */
     ~DefaultTransformInterface(){} ;

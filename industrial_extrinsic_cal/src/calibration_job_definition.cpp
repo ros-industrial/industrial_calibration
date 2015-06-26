@@ -27,6 +27,7 @@
 #include <industrial_extrinsic_cal/trigger.h>
 #include <industrial_extrinsic_cal/ros_triggers.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
+#include <industrial_extrinsic_cal/camera_yaml_parser.h>
 
 using std::string;
 using boost::shared_ptr;
@@ -151,7 +152,27 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::loadCamera()
   {
+    bool rtn=true;
+    std::vector<shared_ptr<Camera> >  all_cameras;
     std::ifstream camera_input_file(camera_def_file_name_.c_str());
+    if(!parseCameras(camera_input_file, all_cameras)){
+      ROS_ERROR("failed to parse cameras from %s", camera_def_file_name_.c_str());
+      rtn = false;
+    }
+    for(int i=0; i< (int) all_cameras.size(); i++){
+      if(all_cameras[i]->is_moving_) {
+	int scene_id = 0;
+	ceres_blocks_.addMovingCamera(all_cameras[i], scene_id);
+      }
+      else{
+	ceres_blocks_.addStaticCamera(all_cameras[i]);
+      }
+    }
+    return rtn;
+  }
+  bool CalibrationJob::loadCamera_original()
+  {
+   std::ifstream camera_input_file(camera_def_file_name_.c_str());
     if (camera_input_file.fail())
       {
 	ROS_ERROR_STREAM(
@@ -252,13 +273,13 @@ namespace industrial_extrinsic_cal
 		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
 		}
 		else if(transform_interface == std::string("ros_bti")){ // this option makes no sense for a camera
-		  temp_ti = make_shared<ROSBroadcastTransInterface>(camera_optical_frame, pose);
+		  temp_ti = make_shared<ROSBroadcastTransInterface>(camera_optical_frame);
 		}
 		else if(transform_interface == std::string("ros_camera_lti")){ 
 		  temp_ti = make_shared<ROSCameraListenerTransInterface>(camera_optical_frame);
 		}
 		else if(transform_interface == std::string("ros_camera_bti")){ 
-		  temp_ti = make_shared<ROSCameraBroadcastTransInterface>(camera_optical_frame, pose);
+		  temp_ti = make_shared<ROSCameraBroadcastTransInterface>(camera_optical_frame);
 		}
 		else if(transform_interface == std::string("ros_camera_housing_lti")){ 
 		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame;
@@ -266,7 +287,10 @@ namespace industrial_extrinsic_cal
 		}
 		else if(transform_interface == std::string("ros_camera_housing_bti")){ 
 		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; // note, this is unused
-		  temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame,  pose);
+		  (*camera_parameters)[i]["camera_mounting_frame"] >> camera_mounting_frame; 
+		  temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame,
+									     camera_housing_frame,
+									     camera_mounting_frame);
 		}
 		else if(transform_interface == std::string("ros_camera_housing_cti")){ 
 		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; 
@@ -284,11 +308,11 @@ namespace industrial_extrinsic_cal
 		  temp_ti = make_shared<ROSSimpleCameraCalTInterface>(camera_optical_frame,  camera_mounting_frame);
 		}
 		else if(transform_interface == std::string("default_ti")){
-		  temp_ti = make_shared<DefaultTransformInterface>(pose);
+		  temp_ti = make_shared<DefaultTransformInterface>();
 		}
 		else{
 		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
-		  temp_ti = make_shared<DefaultTransformInterface>(pose);
+		  temp_ti = make_shared<DefaultTransformInterface>();
 		}
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
@@ -372,21 +396,24 @@ namespace industrial_extrinsic_cal
 		  temp_ti = make_shared<ROSListenerTransInterface>(camera_optical_frame);
 		}
 		else if(transform_interface == std::string("ros_bti")){ // this option makes no sense for a camera
-		  temp_ti = make_shared<ROSBroadcastTransInterface>(camera_optical_frame, pose);
+		  temp_ti = make_shared<ROSBroadcastTransInterface>(camera_optical_frame);
 		}
 		else if(transform_interface == std::string("ros_camera_lti")){ 
 		  temp_ti = make_shared<ROSCameraListenerTransInterface>(camera_optical_frame);
 		}
 		else if(transform_interface == std::string("ros_camera_bti")){ 
-		  temp_ti = make_shared<ROSCameraBroadcastTransInterface>(camera_optical_frame, pose);
+		  temp_ti = make_shared<ROSCameraBroadcastTransInterface>(camera_optical_frame);
 		}
 		else if(transform_interface == std::string("ros_camera_housing_lti")){ 
 		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; 
 		  temp_ti = make_shared<ROSCameraHousingListenerTInterface>(camera_optical_frame, camera_housing_frame);
 		}
 		else if(transform_interface == std::string("ros_camera_housing_bti")){ 
-		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; // note, this is unused
-		  temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame, pose);
+		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; 
+		  (*camera_parameters)[i]["camera_mounting_frame"] >> camera_mounting_frame; 
+		  temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(camera_optical_frame,
+									     camera_housing_frame,
+									     camera_mounting_frame);
 		}
 		else if(transform_interface == std::string("ros_camera_housing_cti")){ 
 		  (*camera_parameters)[i]["camera_housing_frame"] >> camera_housing_frame; 
@@ -404,11 +431,11 @@ namespace industrial_extrinsic_cal
 		  temp_ti = make_shared<ROSSimpleCameraCalTInterface>(camera_optical_frame,  camera_mounting_frame);
 		}
 		else if(transform_interface == std::string("default_ti")){
-		  temp_ti = make_shared<DefaultTransformInterface>(pose);
+		  temp_ti = make_shared<DefaultTransformInterface>();
 		}
 		else{
 		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
-		  temp_ti = make_shared<DefaultTransformInterface>(pose);
+		  temp_ti = make_shared<DefaultTransformInterface>();
 		}
 		temp_camera->setTransformInterface(temp_ti);// install the transform interface 
 		temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
@@ -426,7 +453,7 @@ namespace industrial_extrinsic_cal
       }
     return true;
   }
-
+  
   bool CalibrationJob::loadTarget()
   {
     std::ifstream target_input_file(target_def_file_name_.c_str());
@@ -504,7 +531,7 @@ namespace industrial_extrinsic_cal
 		  temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
 		}
 		else if(transform_interface == std::string("ros_bti")){ 
-		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_, temp_target->pose_);
+		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_);
 		}
 		else if(transform_interface == std::string("ros_scti")){ 
 		  std::string parent_frame;
@@ -517,11 +544,11 @@ namespace industrial_extrinsic_cal
 		  temp_ti = make_shared<ROSSimpleCameraCalTInterface>(temp_target->target_frame_,  parent_frame);
 		}
 		else if(transform_interface == std::string("default_ti")){
-		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+		  temp_ti = make_shared<DefaultTransformInterface>();
 		}
 		else{
 		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
-		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+		  temp_ti = make_shared<DefaultTransformInterface>();
 		}
 		temp_target->setTransformInterface(temp_ti);// install the transform interface 
 		(*target_parameters)[i]["num_points"] >> temp_target->num_points_;
@@ -607,7 +634,7 @@ namespace industrial_extrinsic_cal
 		  temp_ti = make_shared<ROSListenerTransInterface>(temp_target->target_frame_);
 		}
 		else if(transform_interface == std::string("ros_bti")){ 
-		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_, temp_target->pose_);
+		  temp_ti = make_shared<ROSBroadcastTransInterface>(temp_target->target_frame_);
 		}
 		else if(transform_interface == std::string("ros_scti")){ 
 		  std::string parent_frame;
@@ -620,11 +647,11 @@ namespace industrial_extrinsic_cal
 		  temp_ti = make_shared<ROSSimpleCameraCalTInterface>(temp_target->target_frame_,  parent_frame);
 		}
 		else if(transform_interface == std::string("default_ti")){
-		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+		  temp_ti = make_shared<DefaultTransformInterface>();
 		}
 		else{
 		  ROS_ERROR("Unimplemented Transform Interface: %s",transform_interface.c_str());
-		  temp_ti = make_shared<DefaultTransformInterface>(temp_target->pose_);
+		  temp_ti = make_shared<DefaultTransformInterface>();
 		}
 		temp_target->setTransformInterface(temp_ti);// install the transform interface 
 		
@@ -656,7 +683,6 @@ namespace industrial_extrinsic_cal
 	return (false);
       }
     return true;
-
   }
 
   bool CalibrationJob::loadCalJob()
@@ -797,7 +823,7 @@ namespace industrial_extrinsic_cal
 	return (false);
       }
     return true;
-  }
+}
 
   bool CalibrationJob::run()
   {
@@ -867,6 +893,7 @@ namespace industrial_extrinsic_cal
 	      {
 		// next line does nothing if camera already exist in blocks
 		ceres_blocks_.addMovingCamera(camera, scene_id);
+		// TODO why is there a second call to pull transforms here?
 		pullTransforms(scene_id); // gets transforms of targets and cameras from their interfaces
 		intrinsics = ceres_blocks_.getMovingCameraParameterBlockIntrinsics(camera_name);
 		extrinsics = ceres_blocks_.getMovingCameraParameterBlockExtrinsics(camera_name, scene_id);
@@ -934,6 +961,16 @@ namespace industrial_extrinsic_cal
     total_observations_ =0;
     for(int i=0;i<observation_data_point_list_.size();i++){
       total_observations_ += observation_data_point_list_[i].items_.size();
+      std::stringstream observations_ss;
+      for (int pntIdx = 0; pntIdx < observation_data_point_list_[i].items_.size(); pntIdx++) {
+        const ObservationDataPoint& odp = observation_data_point_list_[i].items_[pntIdx];
+        ROS_INFO("%d: id=%d pos=[%f, %f, %f] img=[%f, %f]", pntIdx,
+            odp.point_id_,
+            odp.point_position_[0], odp.point_position_[1], odp.point_position_[2],
+            odp.image_x_, odp.image_y_);
+        observations_ss << "[" << odp.image_x_ << ", " << odp.image_y_ << "],";
+      }
+      ROS_INFO("project_points2d: %s", observations_ss.str().c_str());
     }
     if(total_observations_ == 0){ // TODO really need more than number of parameters being computed
       ROS_ERROR("Too few observations: %d",total_observations_);
@@ -1366,11 +1403,7 @@ namespace industrial_extrinsic_cal
   options.max_num_iterations = 1000;
   ceres::Solve(options, problem_, &ceres_summary_);
 
-  if(ceres_summary_.termination_type == ceres::USER_SUCCESS
-     || ceres_summary_.termination_type == ceres::FUNCTION_TOLERANCE
-     || ceres_summary_.termination_type == ceres::GRADIENT_TOLERANCE
-     || ceres_summary_.termination_type == ceres::PARAMETER_TOLERANCE
-     ){
+  if(ceres_summary_.termination_type != ceres::NO_CONVERGENCE ){
       ROS_INFO("Problem Solved");
       double error_per_observation = ceres_summary_.initial_cost/total_observations_;
 

@@ -65,26 +65,26 @@ namespace industrial_extrinsic_cal {
     shared_ptr<Target> temp_target = make_shared<Target>();
     shared_ptr<TransformInterface> temp_ti;
     try{
-      node["target_name"] >> temp_target->target_name_;
-      node["target_frame"] >> temp_target->target_frame_;
-      node["target_type"] >> temp_target->target_type_;
+      parseString(node, "target_name", temp_target->target_name_);
+      parseString(node, "target_frame", temp_target->target_frame_);
+      parseUInt(node, "target_type", temp_target->target_type_);
       switch (temp_target->target_type_){
       case pattern_options::Chessboard:
-	node["target_rows"] >> temp_target->checker_board_parameters_.pattern_rows;
-	node["target_cols"] >> temp_target->checker_board_parameters_.pattern_cols;
+	parseInt(node, "target_rows", temp_target->checker_board_parameters_.pattern_rows);
+	parseInt(node, "target_cols", temp_target->checker_board_parameters_.pattern_cols);
 	ROS_DEBUG_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
 	break;
       case pattern_options::CircleGrid:
-	node["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
-	node["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
-	node["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
+	parseInt(node, "target_rows", temp_target->circle_grid_parameters_.pattern_rows);
+	parseInt(node, "target_cols", temp_target->circle_grid_parameters_.pattern_cols);
+	parseDouble(node, "circle_dia", temp_target->circle_grid_parameters_.circle_diameter);
 	temp_target->circle_grid_parameters_.is_symmetric=true;
 	ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
 	break;
       case pattern_options::ModifiedCircleGrid:
-	node["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
-	node["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
-	node["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
+	parseInt(node, "target_rows", temp_target->circle_grid_parameters_.pattern_rows);
+	parseInt(node, "target_cols", temp_target->circle_grid_parameters_.pattern_cols);
+	parseDouble(node, "circle_dia", temp_target->circle_grid_parameters_.circle_diameter);
 	temp_target->circle_grid_parameters_.is_symmetric=true;
 	ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
 	break;
@@ -95,14 +95,21 @@ namespace industrial_extrinsic_cal {
 	ROS_ERROR_STREAM("unknown pattern option (Chessboard, CircleGrid, or ModifiedCircleGrid, Balls)");
 	break;
       } // end of target type
-      temp_target->pose_ = parsePose(node);
+      bool transform_available = parsePose(node, temp_target->pose_);
       std::string transform_interface;
-      node["transform_interface"] >> transform_interface;
+      parseString(node, "transform_interface", transform_interface);
       shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, temp_target->target_frame_);
       temp_target->setTransformInterface(temp_ti);// install the transform interface 
+      if(transform_available){
+	temp_target->pushTransform();
+      }
+      else{
+	temp_target->pullTransform();
+      }
 
-      node["num_points"] >> temp_target->num_points_;
-      const Node *points_node = node.FindValue("points");
+      parseUInt(node, "num_points", temp_target->num_points_);
+      
+      const Node *points_node = parseNode(node, "points");
       int num_points = parseTargetPoints((*points_node)[0], temp_target->pts_);
       if(num_points  != temp_target->num_points_ ){
 	ROS_ERROR("Expecting %d points found %d",temp_target->num_points_, num_points);
@@ -130,9 +137,8 @@ namespace industrial_extrinsic_cal {
     ROS_DEBUG_STREAM("FoundPoints: "<<node.size());
     points.clear();
     for (int i = 0; i <(int) node.size(); i++){
-      const YAML::Node *pnt_node = node[i].FindValue("pnt");
-      std::vector<float> temp_pnt;
-      (*pnt_node) >> temp_pnt;
+      std::vector<double> temp_pnt;
+      parseVectorD(node[i], "pnt", temp_pnt);
       Point3d temp_pnt3d;
       temp_pnt3d.x = temp_pnt[0];
       temp_pnt3d.y = temp_pnt[1];

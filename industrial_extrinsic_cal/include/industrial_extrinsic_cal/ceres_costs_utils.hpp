@@ -600,7 +600,7 @@ namespace industrial_extrinsic_cal
     /** the client code. */
     static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point)
     {
-      return (new ceres::AutoDiffCostFunction<CameraReprjErrorWithDistortionPK, 2, 6, 7>(new CameraReprjErrorWithDistortionPK(o_x, o_y, point)));
+      return (new ceres::AutoDiffCostFunction<CameraReprjErrorWithDistortionPK, 2, 6, 9>(new CameraReprjErrorWithDistortionPK(o_x, o_y, point)));
     }
     double ox_; /** observed x location of object in image */
     double oy_; /** observed y location of object in image */

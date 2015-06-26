@@ -20,7 +20,7 @@
 
 namespace industrial_extrinsic_cal
 {
-
+  
   Pose6d::Pose6d(double tx, double ty, double tz, double aax, double aay, double aaz)
   {
     x = tx;
@@ -53,14 +53,14 @@ namespace industrial_extrinsic_cal
     y = v.m_floats[1];
     z = v.m_floats[2];
   }
-
+  
   void Pose6d::setOrigin(double tx, double ty, double tz)
   {
     x = tx;
     y = ty;
     z = tz;
   }
-
+  
   void Pose6d::setEulerZYX(double ez, double ey, double ex)
   {
     double ci = cos(ex);
@@ -78,10 +78,10 @@ namespace industrial_extrinsic_cal
     m[0][0] = cj*ch;  m[0][1] = sj*sc - cs;     m[0][2] = sj*cc + ss;
     m[1][0] = cj*sh;  m[1][1] = sj*ss + cc;   m[1][2] = sj*cs - sc;
     m[2][0] = -sj;      m[2][1] = cj*si;           m[2][2] =cj*ci ;
-
+    
     setBasis(m);
   }
-
+  
   void Pose6d::setQuaternion(double qx, double qy, double qz, double qw)
   {
     double angle = 2.0 * acos(qw);
@@ -124,32 +124,32 @@ namespace industrial_extrinsic_cal
     tf::Vector3 V(x, y, z);
     return(V);
   }
-
-    void Pose6d::getEulerZYX(double &ez, double &ey, double &ex) const
-    {
-     double PI = 4*atan(1);
-     double theta;
-     double psi;
-     double phi;
-     tf::Matrix3x3 R = this->getBasis();
-     
-     if( fabs(R[2][0]) != 1.0 ){ // cos(theta) = 0.0
-       theta = -asin(R[2][0]);
-       double cos_theta = cos(theta);
-       psi = atan2(R[2][1]/cos_theta, R[2][2]/cos_theta);
-       phi = atan2(R[1][0]/cos_theta,R[0][0]/cos_theta);
-     }
-     else{
-       phi = 0.0; // could be anything
-       if(R[2][0] == -1.0){
-	 theta = PI/2.0;
-	 psi = phi + atan2(R[0][1], R[0][2]);
+  
+  void Pose6d::getEulerZYX(double &ez, double &ey, double &ex) const
+  {
+    double PI = 4*atan(1);
+    double theta;
+    double psi;
+    double phi;
+    tf::Matrix3x3 R = this->getBasis();
+    
+    if( fabs(R[2][0]) != 1.0 ){ // cos(theta) = 0.0
+      theta = -asin(R[2][0]);
+      double cos_theta = cos(theta);
+      psi = atan2(R[2][1]/cos_theta, R[2][2]/cos_theta);
+      phi = atan2(R[1][0]/cos_theta,R[0][0]/cos_theta);
+    }
+    else{
+      phi = 0.0; // could be anything
+      if(R[2][0] == -1.0){
+	theta = PI/2.0;
+	psi = phi + atan2(R[0][1], R[0][2]);
+      }
+      else{
+	theta = -PI/2.0;
+	psi = -phi + atan2(-R[0][1], -R[0][2]);
        }
-       else{
-	 theta = -PI/2.0;
-	 psi = -phi + atan2(-R[0][1], -R[0][2]);
-       }
-     } // end of cos(theta) = 0
+    } // end of cos(theta) = 0
 
      // Rz(phi) * Ry(theta) * Rx(psi)
      ez = phi;

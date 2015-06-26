@@ -109,12 +109,11 @@ namespace industrial_extrinsic_cal
     }
   }
 
-  ROSBroadcastTransInterface::ROSBroadcastTransInterface(const string & transform_frame, const Pose6d & pose)
+  ROSBroadcastTransInterface::ROSBroadcastTransInterface(const string & transform_frame)
   {
     transform_frame_                = transform_frame;
     transform_.child_frame_id_ = transform_frame_;
     ref_frame_initialized_         = false;    // still need to initialize ref_frame_
-    pose_                                 = pose;
   }
 
   bool   ROSBroadcastTransInterface::pushTransform(Pose6d & pose)
@@ -154,7 +153,7 @@ namespace industrial_extrinsic_cal
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
-    ref_frame_defined_ = true;
+    ref_frame_initialized_ = true;
     timer_                     = nh.createTimer(ros::Rate(1.0),&ROSBroadcastTransInterface::timerCallback, this);
   }
 
@@ -164,16 +163,14 @@ namespace industrial_extrinsic_cal
     transform_.setOrigin(pose_.getOrigin());
     transform_.child_frame_id_ = transform_frame_;
     transform_.frame_id_ = ref_frame_;
-    //    ROS_INFO("broadcasting %s in %s",transform_frame_.c_str(),ref_frame_.c_str());
-    tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), transform_frame_, ref_frame_));
+    tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), ref_frame_, transform_frame_));
   }
 
-  ROSCameraBroadcastTransInterface::ROSCameraBroadcastTransInterface(const string & transform_frame, const Pose6d & pose)
+  ROSCameraBroadcastTransInterface::ROSCameraBroadcastTransInterface(const string & transform_frame)
   {
     transform_frame_                = transform_frame;
     transform_.child_frame_id_ = transform_frame_;
     ref_frame_initialized_         = false;    // still need to initialize ref_frame_
-    pose_                                 = pose;
   }
 
   bool   ROSCameraBroadcastTransInterface::pushTransform(Pose6d & pose)
@@ -213,7 +210,7 @@ namespace industrial_extrinsic_cal
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
-    ref_frame_defined_ = true;
+    ref_frame_initialized_ = true;
     timer_                     = nh.createTimer(ros::Rate(1.0),&ROSCameraBroadcastTransInterface::timerCallback, this);
   }
 
@@ -227,17 +224,23 @@ namespace industrial_extrinsic_cal
     tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), transform_frame_, ref_frame_));
   }
 
-  ROSCameraHousingBroadcastTInterface::ROSCameraHousingBroadcastTInterface(const string & transform_frame, const Pose6d & pose)
+  ROSCameraHousingBroadcastTInterface::ROSCameraHousingBroadcastTInterface(const string & transform_frame,
+									   const string &housing_frame,
+									   const string &mounting_frame)
   {
     transform_frame_                = transform_frame;
+    housing_frame_                  = housing_frame; 
+    mounting_frame_                 = mounting_frame;
     transform_.child_frame_id_ = transform_frame_;
     ref_frame_initialized_         = false;    // still need to initialize ref_frame_
-    pose_                                 = pose;
   }
 
   bool   ROSCameraHousingBroadcastTInterface::pushTransform(Pose6d & pose)
   {
-    pose_ = pose; 
+    Pose6d mountingMVoptical = pose.getInverse();
+    Pose6d opticalMVhousing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
+    Pose6d mountingMVhousing = mountingMVoptical * opticalMVhousing;
+    pose_ = mountingMVhousing;
     if(!ref_frame_initialized_){ 
       return(false);		// timer won't start publishing until ref_frame_ is defined
     }
@@ -252,8 +255,7 @@ namespace industrial_extrinsic_cal
       // Camer housing to camera optical frame is specified by urdf   optical2housing
       // Desired ref2optical = optical2ref^-1 * optical2housing
       
-      Pose6d optical2housing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
-      Pose6d ref2housing        = pose_.getInverse() * optical2housing;
+      Pose6d ref2housing = pose_;
       
       // append the transform to a launch file
       double qx,qy,qz,qw;
@@ -263,7 +265,7 @@ namespace industrial_extrinsic_cal
       outputFile<< ref2housing.x << ' '<< ref2housing.y << ' '<< ref2housing.z << ' ';
       outputFile<< qx << ' '<< qy << ' '<<qz << ' ' << qw ;
       outputFile<<" "<<ref_frame_;
-      outputFile<<" "<<transform_frame_;
+      outputFile<<" "<<housing_frame_;
       outputFile<<" 100\" />"<<std::endl;
       outputFile.close();	
       return(true);
@@ -278,26 +280,33 @@ namespace industrial_extrinsic_cal
   {
     static ros::NodeHandle nh;
     ref_frame_              = ref_frame;
-    ref_frame_defined_ = true;
+    ref_frame_initialized_ = true;
     timer_                     = nh.createTimer(ros::Rate(1.0),&ROSCameraHousingBroadcastTInterface::timerCallback, this);
   }
 
   void  ROSCameraHousingBroadcastTInterface::timerCallback(const ros::TimerEvent & timer_event)
   { // broadcast current value of pose.inverse() as a transform each time called
 
-    // Camer optical frame to ref is estimated by bundle adjustment  pose_ = optical2ref
-    // Camer housing to camera optical frame is specified by urdf   optical2housing
-    // Desired ref2housing = optical2ref^-1 * optical2housing
-
-    Pose6d optical2housing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
-    Pose6d ref2housing = pose_.getInverse() * optical2housing;
+    Pose6d ref2housing = pose_;
     
-    // copy into the stamped transform
     transform_.setBasis(ref2housing.getBasis());
     transform_.setOrigin(ref2housing.getOrigin());
-    transform_.child_frame_id_ = housing_frame_;
-    transform_.frame_id_ = ref_frame_;
-    tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), housing_frame_, ref_frame_));
+    tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), ref_frame_, housing_frame_));
+  }
+
+  Pose6d ROSCameraHousingBroadcastTInterface::pullTransform()
+  {
+    if(!ref_frame_initialized_){ // still need the reference frame in order to return the transform!!
+      Pose6d pose(0,0,0,0,0,0);
+      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
+      return(pose);
+    }
+
+    Pose6d opticalMVhousing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
+    Pose6d mountingMVhousing = pose_;
+    Pose6d housingMVmounting = mountingMVhousing.getInverse();
+    Pose6d opticalMVmounting = opticalMVhousing * housingMVmounting;
+    return(opticalMVmounting);
   }
 
   ROSCameraHousingCalTInterface::ROSCameraHousingCalTInterface(const string &transform_frame, 
@@ -362,6 +371,7 @@ namespace industrial_extrinsic_cal
     Pose6d optical2mount = optical2housing * housing2mount;
     pose_ = optical2mount;
     getIntermediateFrame(); // update intermediate frame from tf
+    optical2mount.show("res: optical2mount");
     return(optical2mount);
   }
 

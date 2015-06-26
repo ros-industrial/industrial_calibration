@@ -8,7 +8,7 @@
 #include <industrial_extrinsic_cal/camera_definition.h>
 #include <industrial_extrinsic_cal/transform_interface.hpp>
 #include <industrial_extrinsic_cal/trigger.h>
-
+#include <industrial_extrinsic_cal/yaml_utils.h>
 
 namespace industrial_extrinsic_cal {
 
@@ -32,15 +32,17 @@ namespace industrial_extrinsic_cal {
   boost::shared_ptr<Trigger> parseTrigger(const YAML::Node &node, std::string &name);
   /** @brief parses a Pose6d
    *   @param node, the yaml node 
-   *   @return Pose6d parsed
+   *   @param pose as 6dof pose from parsed position and angle axis parameters xyz,wx,wy,wz
+   *   @return true if sucessful
    **/
-  Pose6d parsePose(const YAML::Node &node);
+  bool parsePose(const YAML::Node &node, Pose6d &pose);
   /** @brief parse all the cameras, the main function of this module
    *   @param camera_input_file the stream from which to parse a vector of cameras
    *   @param returned vector of shared pointers to cameras
    *   @return true if successful
    **/
   bool parseCameras(std::ifstream &cameras_input_file, std::vector<boost::shared_ptr<Camera> >& cameras);
+
 }// end industrial_extrinsic_cal namespace
 
 #endif

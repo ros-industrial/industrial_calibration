@@ -175,10 +175,7 @@ bool TargetLocatorService::executeCallBack( target_locater::Request &req, target
   options.max_num_iterations = 1000;
   ceres::Solve(options, &problem, &summary);
 
-  if(summary.termination_type == ceres::USER_SUCCESS
-     || summary.termination_type == ceres::FUNCTION_TOLERANCE
-     || summary.termination_type == ceres::GRADIENT_TOLERANCE
-     || summary.termination_type == ceres::PARAMETER_TOLERANCE
+  if(summary.termination_type != ceres::NO_CONVERGENCE
      ){
 
     double error_per_observation = summary.final_cost/num_observations;
