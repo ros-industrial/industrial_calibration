@@ -29,7 +29,6 @@ namespace industrial_extrinsic_cal {
     bool rtn=true;
     try{
       camera_parser.GetNextDocument(camera_doc);
-      
       // read in all static cameras
       cameras.clear();
       if (const Node *camera_parameters = parseNode(camera_doc, "static_cameras") ){
@@ -38,7 +37,11 @@ namespace industrial_extrinsic_cal {
 	  shared_ptr<Camera> temp_camera = parseSingleCamera((*camera_parameters)[i]);
 	  cameras.push_back(temp_camera);
 	}
-      } // end if there are any cameras in file
+      }      // end if there are any cameras in file
+      else{
+	ROS_INFO("no static cameras");
+      }
+
       // read in all moving cameras
       if (const Node *camera_parameters = parseNode(camera_doc, "moving_cameras")){
 	ROS_INFO_STREAM("Found "<<camera_parameters->size()<<" moving cameras ");
@@ -48,7 +51,11 @@ namespace industrial_extrinsic_cal {
 	  cameras.push_back(temp_camera);
 	}
       } // end if there are any movingcameras in file
-      ROS_INFO_STREAM("Successfully read in " << (int) cameras.size() << " cameras");
+      else{
+	ROS_INFO("no moving cameras");
+      }
+
+      ROS_INFO_STREAM("Successfully read in " << (int) cameras.size() << " total cameras");
     }
     catch (YAML::ParserException& e){
       ROS_ERROR("Camera parsing failure");
@@ -69,14 +76,16 @@ namespace industrial_extrinsic_cal {
       parseString(node, "camera_optical_frame", camera_optical_frame);
       parseString(node, "transform_interface", transform_interface);
 
-      bool transform_available=true;       /* need to know if camera parameters are defined in YAML */
-      transform_available &= parseDouble(node, "angle_axis_ax", temp_parameters.angle_axis[0]);
-      transform_available &= parseDouble(node, "angle_axis_ay", temp_parameters.angle_axis[1]);
-      transform_available &= parseDouble(node, "angle_axis_az", temp_parameters.angle_axis[2]);
-      transform_available &= parseDouble(node, "position_x", temp_parameters.position[0]);
-      transform_available &= parseDouble(node, "position_y", temp_parameters.position[1]);
-      transform_available &= parseDouble(node, "position_z", temp_parameters.position[2]);
-
+      Pose6d pose;
+      bool transform_available = parsePose(node, pose);
+      if(transform_available){
+	temp_parameters.angle_axis[0] = pose.ax;
+	temp_parameters.angle_axis[1] = pose.ay;
+	temp_parameters.angle_axis[2] = pose.az;
+	temp_parameters.position[0] = pose.x;
+	temp_parameters.position[1] = pose.y;
+	temp_parameters.position[2] = pose.z;
+      }
       parseDouble(node, "focal_length_x", temp_parameters.focal_length_x);
       parseDouble(node, "focal_length_y", temp_parameters.focal_length_y);
       parseDouble(node, "center_x", temp_parameters.center_x);
@@ -95,6 +104,7 @@ namespace industrial_extrinsic_cal {
       shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, camera_optical_frame);
       temp_camera->setTransformInterface(temp_ti);// install the transform interface 
       if(transform_available){
+	ros::Duration(1.0).sleep(); // wait for listeners to wake up
 	temp_camera->pushTransform();
       }
       else{
@@ -148,10 +158,26 @@ namespace industrial_extrinsic_cal {
       temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
     }
     else if(name == string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
-      parseString(node, "trig_action_server", trig_action_server);
+      const YAML::Node *trig_node = parseNode(node,"trigger_parameters");
+      parseString(*trig_node, "trig_action_server", trig_action_server);
       Pose6d pose;
-      parsePose(node, pose);
+      parsePose(*trig_node, pose);
       temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
+    }
+    else if(name == string("ROS_CAMERA_OBSERVER_TRIGGER")){
+      const YAML::Node *trig_node = parseNode(node,"trigger_parameters");
+      Roi roi;
+      std::string service_name;
+      std::string instructions;
+      std::string image_topic;
+      parseString(*trig_node, "service_name", service_name);
+      parseString(*trig_node, "instructions", instructions);
+      parseString(*trig_node, "image_topic", image_topic);
+      parseInt(*trig_node, "roi_min_x", roi.x_min);
+      parseInt(*trig_node, "roi_max_x", roi.x_max);
+      parseInt(*trig_node, "roi_min_y", roi.y_min);
+      parseInt(*trig_node, "roi_max_y", roi.y_max);
+      temp_trigger = make_shared<ROSCameraObserverTrigger>(service_name, instructions, image_topic, roi);
     }
     else{
       ROS_ERROR("No scene trigger of type %s", name.c_str());
@@ -216,25 +242,32 @@ namespace industrial_extrinsic_cal {
   {
     bool rtn = true;
     std::vector<double> temp_values;
-    if(parseVectorD(node, "pose", temp_values)){
-      if(temp_values.size() != 7){
-	ROS_ERROR("did not read pose correctly, %d values, 7 required", (int) temp_values.size());
-	rtn = false;
-      }
-      else{
+    if(parseVectorD(node, "xyz_quat_pose", temp_values)){
+      if(temp_values.size() == 7){
 	pose.x = temp_values[0];
 	pose.y = temp_values[1];
 	pose.z = temp_values[2];
-	double qx,qy,qz,qw;
-	qx = temp_values[3];
-	qy = temp_values[4];
-	qz = temp_values[5];
-	qw = temp_values[6];
-	pose.setQuaternion(qx, qy, qz, qw);
+	pose.setQuaternion(temp_values[3], temp_values[4], temp_values[5], temp_values[6]);
+      }// got 7 values
+      else{ // not 7 values
+	ROS_ERROR("did not read xyz_quat_pose correctly, %d values, 7 required", (int) temp_values.size());
+	rtn = false;
       }// right number of values
-    }// "pose" exists in yaml node
-    else{
-      rtn = false;
+    }// "xyz_quat_pose" exists in yaml node
+    else if(parseVectorD(node, "xyz_aaxis_pose", temp_values)){
+      if(temp_values.size() == 6){     
+	pose.x = temp_values[0];
+	pose.y = temp_values[1];
+	pose.z = temp_values[2];
+	pose.setAngleAxis(temp_values[3], temp_values[4], temp_values[5]);
+      }// got 6 values
+      else{// can't find xyz_aaxis_pose
+	ROS_ERROR("did not read xyz_aaxis_pose correctly, %d values, 6 required v[0] = %lf", (int) temp_values.size(), temp_values[0]);
+	rtn = false;
+      }
+    }
+    else { // cant read xyz_aaxis either
+      rtn =false;
     }
     return rtn ;
   }

@@ -1,0 +1,159 @@
+---
+
+static_cameras:
+ -
+    camera_name: asus1
+    camera_optical_frame: /asus1_rgb_optical_frame
+    trigger: NO_WAIT_TRIGGER
+    image_topic: /asus1/rgb/image_raw
+    xyz_aaxis_pose: [ 0.0, 0.0, 0.0, 3.4, 0.0, 0.0 ]
+    transform_interface: default_ti
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 320
+    center_y: 240
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01
+    image_width: 2000
+    image_height: 1080
+ -
+    camera_name: asus2
+    camera_optical_frame: /asus2_rgb_optical_frame
+    trigger: NO_WAIT_TRIGGER
+    image_topic: /asus2/rgb/image_raw
+    xyz_quat_pose: [ 0.0, 0.0, 0.0, 3.4, 0.0, 0.0, 0.0 ]
+    transform_interface: ros_lti
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 320
+    center_y: 240
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01
+    image_width: 2000
+    image_height: 1080
+ -
+    camera_name: asus3
+    camera_optical_frame: /asus3_rgb_optical_frame
+    trigger: ROS_PARAM_TRIGGER
+    trig_param: set_me_to_true_to_trigger_this_camera
+    image_topic: /asus3/rgb/image_raw
+    xyz_quat_pose: [ 0.0, 0.0, 0.0, 3.4, 0.0, 0.0, 0.0 ]
+    transform_interface: ros_lti
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 320
+    center_y: 240
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01
+    image_width: 2000
+    image_height: 1080
+ -
+    camera_name: asus4
+    camera_optical_frame: /asus4_rgb_optical_frame
+    trigger: ROS_ACTION_TRIGGER
+    trig_action_server: name_of_action_server_to_call_to_trigger_camera
+    trig_action_message: message_for_display
+    image_topic: /asus4/rgb/image_raw
+    xyz_quat_pose: [ 0.0, 0.0, 0.0, 3.4, 0.0, 0.0, 0.0 ]
+    transform_interface: ros_lti
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 320
+    center_y: 240
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01
+    image_width: 2000
+    image_height: 1080
+
+moving_cameras:
+-
+    camera_name: asus5
+    camera_optical_frame: /asus5_rgb_optical_frame
+    trigger: ROS_CAMERA_OBSERVER_TRIGGER
+    trigger_parameters:
+    -
+         service_name: ObserverTrigger
+         instructions: message for user
+         image_topic: /basler1/rgb/image
+         roi_min_x: 0
+         roi_max_x: 600
+         roi_min_y: 0
+         roi_max_y: 500
+    image_topic: /asus5/rgb/image_raw
+    xyz_quat_pose: [ 0.0, 0.0, 0.0, 3.4, 0.0, 0.0, 0.0 ]
+    transform_interface: ros_lti
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 320
+    center_y: 240
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01
+    image_width: 2000
+    image_height: 1080
+-
+    camera_name: asus6
+    camera_optical_frame: /asus6_rgb_optical_frame
+    trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER
+    trig_action_server: name_of_robot_action_trigger
+    joint_values: 
+       - 1.0
+       - 2.0
+       - 3.0
+       - -1.0
+       - -2.0
+       - -3.0
+       -  0.0
+    image_topic: /asus6/rgb/image_raw
+    xyz_quat_pose: [ 0.0, 0.0, 0.0, 3.4, 0.0, 0.0, 0.0 ]
+    transform_interface: ros_camera_housing_lti
+    camera_housing_frame: housing_frame
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 320
+    center_y: 240
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01
+    image_width: 2000
+    image_height: 1080
+-
+    camera_name: asus7
+    camera_optical_frame: asus7_rgb_optical_frame
+    trigger: ROS_ROBOT_POSE_ACTION_TRIGGER
+    trigger_parameters:
+    -
+            trigger_action_server: the_robots_action_server
+            xyz_aaxis_pose: [ 1.0, 2.0, 3.0, -1.0, -2.0, -3.0 ]
+    image_topic: /asus7/rgb/image_raw
+    xyz_quat_pose: [ 0.0, 0.0, 0.0, 3.4, 0.0, 0.0, 0.0 ]
+    transform_interface: ros_camera_housing_bti
+    camera_housing_frame: housing_frame
+    camera_mounting_frame: mounting_frame
+    focal_length_x: 525
+    focal_length_y: 525
+    center_x: 320
+    center_y: 240
+    distortion_k1: 0.01
+    distortion_k2: 0.02
+    distortion_k3: 0.03
+    distortion_p1: 0.01
+    distortion_p2: 0.01
+    image_width: 2000
+    image_height: 1080

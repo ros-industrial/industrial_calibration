@@ -1,0 +1,16 @@
+---
+reference_frame: world_frame
+scenes:
+-
+     scene_id: 0
+     trigger_type: 1
+     observations: 
+     -
+          camera: Asus1
+          target: CircleGrid
+          roi_x_min: 0
+          roi_x_max: 400
+          roi_y_min: 0
+          roi_y_max: 430
+
+optimization_parameters: xx
