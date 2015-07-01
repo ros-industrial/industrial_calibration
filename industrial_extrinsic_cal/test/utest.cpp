@@ -19,6 +19,8 @@
 #include <industrial_extrinsic_cal/calibration_job_definition.h>
 #include <industrial_extrinsic_cal/ceres_blocks.h>
 #include <industrial_extrinsic_cal/observation_scene.h>
+#include <industrial_extrinsic_cal/target.h>
+#include <industrial_extrinsic_cal/camera_definition.h>
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
@@ -39,7 +41,39 @@ TEST(IndustrialExtrinsicCalSuite, loadCamera)
   industrial_extrinsic_cal::CeresBlocks * cblocks = cal_job.getBlocks();
   std::vector<industrial_extrinsic_cal::ObservationScene> * scenes = cal_job.getScenes();
   // now, compare the data in these to that expected
+  EXPECT_EQ((int) scenes->size(), 2);
+  EXPECT_EQ((*scenes)[0].get_id(), 0);
+  EXPECT_EQ((*scenes)[1].get_id(), 1);
 
+  // cursury check to see if the targets were loaded by names
+  boost::shared_ptr<industrial_extrinsic_cal::Target> T1 = boost::make_shared<industrial_extrinsic_cal::Target>();
+  boost::shared_ptr<industrial_extrinsic_cal::Target> T2 = boost::make_shared<industrial_extrinsic_cal::Target>();
+  boost::shared_ptr<industrial_extrinsic_cal::Target> T3 = boost::make_shared<industrial_extrinsic_cal::Target>();
+  boost::shared_ptr<industrial_extrinsic_cal::Target> T4 = boost::make_shared<industrial_extrinsic_cal::Target>();
+  T1 = cblocks->getTargetByName("Chessboard");
+  EXPECT_EQ(T1->target_name_, "Chessboard");
+  T2 = cblocks->getTargetByName("CircleGrid");
+  EXPECT_EQ(T2->target_name_, "CircleGrid");
+  T3 = cblocks->getTargetByName("MCircleGrid");
+  EXPECT_EQ(T3->target_name_, "MCircleGrid");
+  T4 = cblocks->getTargetByName("Balls");
+  EXPECT_EQ(T4->target_name_, "Balls");
+
+  // cursury check to see if the cameras were loaded by names
+  boost::shared_ptr<industrial_extrinsic_cal::Camera> C1 = boost::make_shared<industrial_extrinsic_cal::Camera>();
+  boost::shared_ptr<industrial_extrinsic_cal::Camera> C2 = boost::make_shared<industrial_extrinsic_cal::Camera>();
+  boost::shared_ptr<industrial_extrinsic_cal::Camera> C3 = boost::make_shared<industrial_extrinsic_cal::Camera>();
+  boost::shared_ptr<industrial_extrinsic_cal::Camera> C4 = boost::make_shared<industrial_extrinsic_cal::Camera>();
+  C1 = cblocks->getCameraByName("asus1");
+  EXPECT_EQ(C1->camera_name_, "asus1");
+  C2 = cblocks->getCameraByName("asus2");
+  EXPECT_EQ(C2->camera_name_, "asus2");
+  C3 = cblocks->getCameraByName("asus6");
+  EXPECT_EQ(C3->camera_name_, "asus6");
+  C4 = cblocks->getCameraByName("asus7");
+  EXPECT_EQ(C4->camera_name_, "asus7");
+
+  
 }
 
 // Run all the tests that were declared with TEST()

@@ -159,14 +159,12 @@ protected:
    * @return true if successfully loaded target file
    */
   bool loadTarget();
-  bool loadTarget_original();
 
   /*!
    * \brief reads camera input files to create static and moving cameras
    * @return true if successfully loaded camera file
    */
   bool loadCamera();
-  bool loadCamera_original(); // here temporarily until new version can be compared, remove once working
 
   /*!
    * \brief reads target input files to create a calibration job
