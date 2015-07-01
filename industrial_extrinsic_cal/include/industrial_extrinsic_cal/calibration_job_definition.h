@@ -171,7 +171,6 @@ protected:
    * @return true if successfully loaded caljob file
    */
   bool loadCalJob();
-  bool loadCalJob_original();
 
   /** @brief runs the data collection portion of the job
    * @return true if successful
