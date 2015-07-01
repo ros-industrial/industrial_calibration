@@ -29,6 +29,7 @@
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
 #include <industrial_extrinsic_cal/camera_yaml_parser.h>
 #include <industrial_extrinsic_cal/targets_yaml_parser.h>
+#include <industrial_extrinsic_cal/caljob_yaml_parser.h>
 
 using std::string;
 using boost::shared_ptr;
@@ -109,29 +110,17 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::load()
   {
-    if(CalibrationJob::loadCamera())
-      {
-	ROS_INFO_STREAM("Successfully read in cameras ");
-      }
-    else
+    if(!CalibrationJob::loadCamera())
       {
 	ROS_ERROR_STREAM("Camera file parsing failed");
 	return false;
       }
-    if(CalibrationJob::loadTarget())
-      {
-	ROS_INFO_STREAM("Successfully read in targets");
-      }
-    else
+    if(!CalibrationJob::loadTarget())
       {
 	ROS_ERROR_STREAM("Target file parsing failed");
 	return false;
       }
-    if(CalibrationJob::loadCalJob())
-      {
-	ROS_INFO_STREAM("Successfully read in CalJob");
-      }
-    else
+    if(!CalibrationJob::loadCalJob())
       {
 	ROS_ERROR_STREAM("Calibration Job file parsing failed");
 	return false;
@@ -155,7 +144,6 @@ namespace industrial_extrinsic_cal
   {
     bool rtn=true;
     std::vector<shared_ptr<Camera> >  all_cameras;
-    ROS_INFO("camera_file = %s", camera_def_file_name_.c_str());
     std::ifstream camera_input_file(camera_def_file_name_.c_str());
     if(!parseCameras(camera_input_file, all_cameras)){
       ROS_ERROR("failed to parse cameras from %s", camera_def_file_name_.c_str());
@@ -719,146 +707,20 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::loadCalJob()
   {
+    bool rtn = true;
     std::ifstream caljob_input_file(caljob_def_file_name_.c_str());
-    if (caljob_input_file.fail())
-      {
-	ROS_ERROR_STREAM(
-			 "ERROR CalibrationJob::load(), couldn't open caljob_input_file: "
-			 << caljob_def_file_name_.c_str());
-	return (false);
-      }
-    parseCaljob(caljob_input_file, scene_list_, reference_frame);
-    ceres_blocks_.setReferenceFrame(reference_frame);
-
-    int scene_id_num=0;
-    std::string trigger_name;
-    std::string trig_param;
-    std::string trig_action_server;
-    std::string trig_action_msg;
-    std::string camera_name;
-    std::string target_name;
-    std::string cost_type_string;
-    Cost_function cost_type;
-    std::string reference_frame;
-    shared_ptr<Camera> temp_cam = make_shared<Camera>();
-    shared_ptr<Target> temp_targ = make_shared<Target>();
-    Roi temp_roi;
-
-    try
-      {
-	YAML::Parser caljob_parser(caljob_input_file);
-	YAML::Node caljob_doc;
-	caljob_parser.GetNextDocument(caljob_doc);
-	parseString("reference_frame", reference_frame);
-      }
-	// read in all scenes
-	if (const YAML::Node *caljob_scenes = caljob_doc.FindValue("scenes"))
-	  {
-	    ROS_DEBUG_STREAM("Found "<<caljob_scenes->size() <<" scenes");
-	    scene_list_.clear();
-	    scene_list_.resize(caljob_scenes->size() );
-	    for (unsigned int i = 0; i < caljob_scenes->size(); i++)
-	      {
-		(*caljob_scenes)[i]["trigger"] >> trigger_name;
-		string ros_bool_param;
-		string message;
-		string server_name;
-		boost::shared_ptr<Trigger> temp_trigger;
-
-		// handle all the different trigger cases
-		if(trigger_name == std::string("NO_WAIT_TRIGGER")){
-		  temp_trigger = make_shared<NoWaitTrigger>();
-		}
-		else if(trigger_name == std::string("ROS_PARAM_TRIGGER")){
-		  (*caljob_scenes)[i]["trig_param"] >> trig_param;
-		  temp_trigger = make_shared<ROSParamTrigger>(trig_param);
-		}
-		else if(trigger_name == std::string("ROS_ACTION_TRIGGER")){
-		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
-		  (*caljob_scenes)[i]["trig_action_msg"] >> trig_action_msg;
-		  temp_trigger = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
-		}
-		else if(trigger_name == std::string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
-		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
-		  std::vector<double>joint_values;
-		  (*caljob_scenes)[i]["joint_values"] >> joint_values;
-		  if(joint_values.size()<1){
-		    ROS_ERROR("Couldn't read  joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
-		  }
-		  temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
-		}
-		else if(trigger_name == std::string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
-		  (*caljob_scenes)[i]["trig_action_server"] >> trig_action_server;
-		  Pose6d pose;
-		  (*caljob_scenes)[i]["pose"][0] >> pose.x;
-		  (*caljob_scenes)[i]["pose"][1] >> pose.y;
-		  (*caljob_scenes)[i]["pose"][2] >> pose.z;
-		  double qx,qy,qz,qw;
-		  (*caljob_scenes)[i]["pose"][3] >> qx;
-		  (*caljob_scenes)[i]["pose"][4] >> qy;
-		  (*caljob_scenes)[i]["pose"][5] >> qz;
-		  (*caljob_scenes)[i]["pose"][6] >> qw;
-		  pose.setQuaternion(qx, qy, qz, qw);
-		  temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
-		}
-		else if(trigger_name == std::string("ROS_CAMERA_OBSERVER_TRIGGER")){
-		  const YAML::Node *trigger_parameters = (*caljob_scenes)[i].FindValue("trigger_parameters");
-		  Roi roi;
-		  std::string service_name;
-		  std::string instructions;
-		  std::string image_topic;
-		  (*trigger_parameters)[0]["service_name"] >> service_name;
-		  (*trigger_parameters)[0]["instructions"] >> instructions;
-		  (*trigger_parameters)[0]["image_topic"] >> image_topic;
-		  (*trigger_parameters)[0]["roi_min_x"] >> roi.x_min;
-		  (*trigger_parameters)[0]["roi_max_x"] >> roi.x_max;
-		  (*trigger_parameters)[0]["roi_min_y"] >> roi.y_min;
-		  (*trigger_parameters)[0]["roi_max_y"] >> roi.y_max;
-		  temp_trigger = make_shared<ROSCameraObserverTrigger>(service_name, instructions, image_topic, roi);
-		}
-		else{
-		  ROS_ERROR("Unknown scene trigger type %s", trigger_name.c_str());
-		}
-		scene_list_.at(i).setTrigger(temp_trigger);
-		scene_list_.at(i).setSceneId(scene_id_num);
-
-		const YAML::Node *obs_node = (*caljob_scenes)[i].FindValue("observations");
-		ROS_DEBUG_STREAM("Found "<<obs_node->size() <<" observations within scene "<<i);
-		for (unsigned int j = 0; j < obs_node->size(); j++)
-		  {
-		    (*obs_node)[j]["camera"] >> camera_name;
-		    (*obs_node)[j]["roi_x_min"] >> temp_roi.x_min;
-		    (*obs_node)[j]["roi_x_max"] >> temp_roi.x_max;
-		    (*obs_node)[j]["roi_y_min"] >> temp_roi.y_min;
-		    (*obs_node)[j]["roi_y_max"] >> temp_roi.y_max;
-		    (*obs_node)[j]["target"] >> target_name;
-		    (*obs_node)[j]["cost_type"] >> cost_type_string;
-		    cost_type = string2CostType(cost_type_string);
-		    if((temp_cam = ceres_blocks_.getCameraByName(camera_name)) == NULL){
-		      ROS_ERROR("Couldn't find camea %s",camera_name.c_str());
-		    }
-		    if((temp_targ = ceres_blocks_.getTargetByName(target_name)) == NULL){;
-		      ROS_ERROR("Couldn't find target %s",target_name.c_str());
-		    }
-		    if(scene_id_num !=0 && temp_targ->is_moving_){ // if we have a moving target, we need to add it to the blocks
-		      ceres_blocks_.addMovingTarget(temp_targ, scene_id_num);
-		      temp_targ =  ceres_blocks_.getTargetByName(target_name, scene_id_num);
-		    }
-		    scene_list_.at(i).addCameraToScene(temp_cam);
-		    cost_type = string2CostType(cost_type_string);
-		    scene_list_.at(i).populateObsCmdList(temp_cam, temp_targ, temp_roi, cost_type);
-		  }
-		scene_id_num++;
-	      }
-	  }
-      } // end try
-    catch (YAML::ParserException& e)
-      {
-	ROS_ERROR("load() Failed to read in caljob yaml file");
-	ROS_ERROR_STREAM("Failed with exception "<< e.what());
-	return (false);
-      }
-    return true;
+    if (caljob_input_file.fail()){
+      ROS_ERROR_STREAM(
+		       "ERROR CalibrationJob::load(), couldn't open caljob_input_file: "
+		       << caljob_def_file_name_.c_str());
+      rtn = false;
+    }
+    else{
+      std::string reference_frame;
+      rtn = parseCaljob(caljob_input_file, scene_list_, reference_frame, ceres_blocks_);
+      ceres_blocks_.setReferenceFrame(reference_frame);
+    }
+    return rtn;
 }
   bool CalibrationJob::loadCalJob_original()
   {

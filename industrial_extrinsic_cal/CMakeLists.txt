@@ -119,6 +119,7 @@ add_library(industrial_extrinsic_cal
    src/camera_yaml_parser.cpp
    src/targets_yaml_parser.cpp
    src/points_yaml_parser.cpp
+   src/caljob_yaml_parser.cpp
    src/calibration_job_definition.cpp
 )
 

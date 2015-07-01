@@ -33,32 +33,28 @@ namespace industrial_extrinsic_cal {
       target_parser.GetNextDocument(target_doc);
       // read in all static cameras
       targets.clear();
+      int n_static =0;
       if (const Node *target_parameters = target_doc.FindValue("static_targets")){
-	ROS_INFO_STREAM("Found "<<target_parameters->size()<<" static targets ");
 	for (unsigned int i = 0; i < target_parameters->size(); i++){
 	  shared_ptr<Target> temp_target = parseSingleTarget((*target_parameters)[i]);
 	  targets.push_back(temp_target);
+	  n_static++;
 	}
       } // end if there are any targets in file
-      else{
-	ROS_INFO("no static targets");
-      }
 
 
       // read in all moving targets
+      int n_moving=0;
       if (const Node *target_parameters = target_doc.FindValue("moving_targets")){
-	ROS_INFO_STREAM("Found " << target_parameters->size() << " moving targets ");
 	for (unsigned int i = 0; i < target_parameters->size(); i++){
 	  shared_ptr<Target> temp_target = parseSingleTarget((*target_parameters)[i]);
 	  temp_target->is_moving_ = true;
 	  targets.push_back(temp_target);
+	  n_moving++;
 	}
       } // end if there are any moving targets in file
-      else{
-	ROS_INFO("no moving targets");
-      }
 
-      ROS_INFO_STREAM("Successfully read in " << (int) targets.size() << " targets");
+      ROS_INFO_STREAM((int) targets.size() << " targets " << n_static << " static " << n_moving << " moving");
     }
     catch (YAML::ParserException& e){
       ROS_ERROR_STREAM("Failed to parse targets with exception "<< e.what());
@@ -81,12 +77,6 @@ namespace industrial_extrinsic_cal {
 		  temp_target->target_name_.c_str(),
 		  temp_target->target_frame_.c_str(),
 		  temp_target->target_type_);
-      }      
-      else{
-	ROS_INFO("target name, frame and type %s %s %u",
-		 temp_target->target_name_.c_str(),
-		 temp_target->target_frame_.c_str(),
-		 temp_target->target_type_);
       }      
       Pose6d pose;
       bool transform_available = parsePose(node, pose);
@@ -169,7 +159,6 @@ namespace industrial_extrinsic_cal {
   
   int parseTargetPoints(const Node &node, std::vector<Point3d> points)
   {
-    ROS_INFO("FoundPoints: %d", (int)node.size());
     points.clear();
     for (int i = 0; i <(int) node.size(); i++){
       std::vector<double> temp_pnt;

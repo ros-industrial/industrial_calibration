@@ -29,33 +29,30 @@ namespace industrial_extrinsic_cal {
     bool rtn=true;
     try{
       camera_parser.GetNextDocument(camera_doc);
-      // read in all static cameras
       cameras.clear();
+
+      // read in all static cameras
+      int n_static=0;
       if (const Node *camera_parameters = parseNode(camera_doc, "static_cameras") ){
-	ROS_INFO_STREAM("Found "<<camera_parameters->size()<<" static cameras ");
 	for (unsigned int i = 0; i < camera_parameters->size(); i++){
 	  shared_ptr<Camera> temp_camera = parseSingleCamera((*camera_parameters)[i]);
 	  cameras.push_back(temp_camera);
+	  n_static++;
 	}
       }      // end if there are any cameras in file
-      else{
-	ROS_INFO("no static cameras");
-      }
 
       // read in all moving cameras
+      int n_moving=0;
       if (const Node *camera_parameters = parseNode(camera_doc, "moving_cameras")){
-	ROS_INFO_STREAM("Found "<<camera_parameters->size()<<" moving cameras ");
 	for (unsigned int i = 0; i < camera_parameters->size(); i++){
 	  shared_ptr<Camera> temp_camera = parseSingleCamera((*camera_parameters)[i]);
 	  temp_camera->is_moving_ = true;
 	  cameras.push_back(temp_camera);
+	  n_moving++;
 	}
       } // end if there are any movingcameras in file
-      else{
-	ROS_INFO("no moving cameras");
-      }
 
-      ROS_INFO_STREAM("Successfully read in " << (int) cameras.size() << " total cameras");
+      ROS_INFO_STREAM((int) cameras.size() << " cameras " <<n_static <<" static " << n_moving << " moving");
     }
     catch (YAML::ParserException& e){
       ROS_ERROR("Camera parsing failure");
@@ -104,7 +101,7 @@ namespace industrial_extrinsic_cal {
       shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, camera_optical_frame);
       temp_camera->setTransformInterface(temp_ti);// install the transform interface 
       if(transform_available){
-	ros::Duration(1.0).sleep(); // wait for listeners to wake up
+	ros::Duration(0.25).sleep(); // wait for listeners to wake up
 	temp_camera->pushTransform();
       }
       else{
