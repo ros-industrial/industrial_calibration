@@ -54,7 +54,7 @@ namespace industrial_extrinsic_cal
   {
     if(!ref_frame_initialized_){
       Pose6d pose(0,0,0,0,0,0);
-      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
+      ROS_ERROR("Trying to pull transform from interface without setting ref frame ROSListenerTransInterface");
       return(pose);
     }
     else{
@@ -74,7 +74,7 @@ namespace industrial_extrinsic_cal
   {
     if(!ref_frame_initialized_){
       Pose6d pose(0,0,0,0,0,0);
-      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
+      ROS_ERROR("Trying to pull transform from interface without setting reference frame ROSCameraListenerTransInterface");
       return(pose);
     }
     else{
@@ -100,7 +100,7 @@ namespace industrial_extrinsic_cal
   {
     if(!ref_frame_initialized_){
       Pose6d pose(0,0,0,0,0,0);
-      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
+      ROS_ERROR("Trying to pull transform from interface without setting reference frame ROSCameraHousingListenerTInterface");
       return(pose);
     }
     else{
@@ -298,7 +298,7 @@ namespace industrial_extrinsic_cal
   {
     if(!ref_frame_initialized_){ // still need the reference frame in order to return the transform!!
       Pose6d pose(0,0,0,0,0,0);
-      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
+      ROS_ERROR("Trying to pull transform from interface without setting reference frame ROSCameraHousingBroadcastTInterface");
       return(pose);
     }
 
@@ -351,13 +351,7 @@ namespace industrial_extrinsic_cal
     // The computed transform from the optical frame to the mounting frame is composed of 2 transforms
     // one from the optical frame to the housing, and
     // one from the housing to the mounting frame which is composed of the 6DOF unknowns we are trying to calibrate
-    // there is also an intermediate frame from the mount point to the reference frame which is known
-
-    if(!ref_frame_initialized_){ // still need the reference frame in order to return the transform!!
-      Pose6d pose(0,0,0,0,0,0);
-      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
-      return(pose);
-    }
+    // there is also an intermediate frame from the mount point to the reference frame which we don't need here
 
     // get all the information from tf and from the mutable joint state publisher
     Pose6d optical2housing = getPoseFromTF( transform_frame_, housing_frame_, tf_listener_);
@@ -370,8 +364,6 @@ namespace industrial_extrinsic_cal
     Pose6d housing2mount = mount2housing.getInverse();
     Pose6d optical2mount = optical2housing * housing2mount;
     pose_ = optical2mount;
-    getIntermediateFrame(); // update intermediate frame from tf
-    optical2mount.show("res: optical2mount");
     return(optical2mount);
   }
 
@@ -416,8 +408,13 @@ namespace industrial_extrinsic_cal
 
   Pose6d ROSCameraHousingCalTInterface::getIntermediateFrame()
   {
-    ROS_ERROR("intermediate frame from %s to %s",ref_frame_.c_str(), mounting_frame_.c_str());
-    Pose6d pose =  getPoseFromTF(ref_frame_, mounting_frame_, tf_listener_);
+    Pose6d pose(0,0,0,0,0,0);
+    if(ref_frame_initialized_){
+      pose =  getPoseFromTF(ref_frame_, mounting_frame_, tf_listener_);
+    }
+    else{
+      ROS_ERROR("ROSCameraHousingCalTInterface requires ref_frame_ initialized before calling getIntermediateFrame()");
+    }
     return(pose);
   }
 
@@ -467,7 +464,7 @@ namespace industrial_extrinsic_cal
 
     if(!ref_frame_initialized_){ // still need the reference frame in order to return the transform!!
       Pose6d pose(0,0,0,0,0,0);
-      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
+      ROS_ERROR("Trying to pull transform from interface without setting reference frame ROSSimpleCalTInterface");
       return(pose);
     }
 
@@ -553,7 +550,7 @@ namespace industrial_extrinsic_cal
 
     if(!ref_frame_initialized_){ // still need the reference frame in order to return the transform!!
       Pose6d pose(0,0,0,0,0,0);
-      ROS_ERROR("Trying to pull transform from interface without setting reference frame");
+      ROS_ERROR("Trying to pull transform from interface without setting reference frame ROSSimpleCameraCalTInterface");
       return(pose);
     }
 

@@ -21,7 +21,7 @@ using YAML::Node;
 namespace industrial_extrinsic_cal {
 
   // prototypes
-  int parseTargetPoints(const Node &node, std::vector<Point3d> points);
+  int parseTargetPoints(const Node &node, std::vector<Point3d> &points);
 
 
   bool parseTargets(ifstream &targets_input_file,vector< boost::shared_ptr<Target> > & targets)
@@ -37,6 +37,7 @@ namespace industrial_extrinsic_cal {
       if (const Node *target_parameters = target_doc.FindValue("static_targets")){
 	for (unsigned int i = 0; i < target_parameters->size(); i++){
 	  shared_ptr<Target> temp_target = parseSingleTarget((*target_parameters)[i]);
+	  temp_target->is_moving_ = false;
 	  targets.push_back(temp_target);
 	  n_static++;
 	}
@@ -126,9 +127,6 @@ namespace industrial_extrinsic_cal {
 	if(transform_available){
 	  temp_target->pushTransform();
 	}
-	else{
-	  temp_target->pullTransform();
-	}
       }
 
       if(!parseUInt(node, "num_points", temp_target->num_points_)){
@@ -136,7 +134,7 @@ namespace industrial_extrinsic_cal {
       }
       const Node *points_node = parseNode(node, "points");
       int num_points = parseTargetPoints(*points_node, temp_target->pts_);
-      if(num_points  != temp_target->num_points_ ){
+      if(num_points  != temp_target->num_points_  || num_points != (int)temp_target->pts_.size()){
 	ROS_ERROR("Expecting %d points found %d",temp_target->num_points_, num_points);
       }
     }// end try
@@ -157,7 +155,7 @@ namespace industrial_extrinsic_cal {
     return(temp_target);
   }// end parse_single_target
   
-  int parseTargetPoints(const Node &node, std::vector<Point3d> points)
+  int parseTargetPoints(const Node &node, std::vector<Point3d> &points)
   {
     points.clear();
     for (int i = 0; i <(int) node.size(); i++){

@@ -150,7 +150,7 @@ add_dependencies(camera_observer_scene_trigger ${PROJECT_NAME}_generate_messages
 ## Specify libraries to link a library or executable target against
 target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES} )
 target_link_libraries(nist_analysis industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
-target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} )
+target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES}  ${CERES_LIBRARIES})
 target_link_libraries(mono_ex_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 
 #target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES})

@@ -212,7 +212,7 @@ namespace industrial_extrinsic_cal
 
   bool CalibrationJob::run()
   {
-    ROS_INFO("Running observations");
+    ROS_INFO("Collecting observations");
     runObservations();
     ROS_INFO("Running optimization");
     solved_ = runOptimization();
@@ -349,17 +349,20 @@ namespace industrial_extrinsic_cal
       std::stringstream observations_ss;
       for (int pntIdx = 0; pntIdx < observation_data_point_list_[i].items_.size(); pntIdx++) {
         const ObservationDataPoint& odp = observation_data_point_list_[i].items_[pntIdx];
-        ROS_INFO("%d: id=%d pos=[%f, %f, %f] img=[%f, %f]", pntIdx,
-            odp.point_id_,
-            odp.point_position_[0], odp.point_position_[1], odp.point_position_[2],
-            odp.image_x_, odp.image_y_);
+        ROS_DEBUG("%d: id=%d pos=[%f, %f, %f] img=[%f, %f]", pntIdx,
+		 odp.point_id_,
+		 odp.point_position_[0], odp.point_position_[1], odp.point_position_[2],
+		 odp.image_x_, odp.image_y_);
         observations_ss << "[" << odp.image_x_ << ", " << odp.image_y_ << "],";
       }
-      ROS_INFO("project_points2d: %s", observations_ss.str().c_str());
+      ROS_DEBUG("project_points2d: %s", observations_ss.str().c_str());
     }
     if(total_observations_ == 0){ // TODO really need more than number of parameters being computed
       ROS_ERROR("Too few observations: %d",total_observations_);
       return(false);
+    } 
+    else{
+      ROS_INFO("total observations = %d", total_observations_);
     }
     
     ceres_blocks_.displayMovingCameras();
