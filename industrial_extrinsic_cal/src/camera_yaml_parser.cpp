@@ -55,7 +55,7 @@ namespace industrial_extrinsic_cal {
       ROS_INFO_STREAM((int) cameras.size() << " cameras " <<n_static <<" static " << n_moving << " moving");
     }
     catch (YAML::ParserException& e){
-      ROS_ERROR("Camera parsing failure");
+      ROS_ERROR_STREAM("Camera parsing failure " << e.what());
       rtn = false;
     }
     return(rtn);
@@ -67,11 +67,11 @@ namespace industrial_extrinsic_cal {
       string temp_name, temp_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame, parent_frame;
       string trigger_name, transform_interface;
       CameraParameters temp_parameters;
-      parseString(node, "camera_name", temp_name);
-      parseString(node, "trigger", trigger_name);
-      parseString(node, "image_topic", temp_topic);
-      parseString(node, "camera_optical_frame", camera_optical_frame);
-      parseString(node, "transform_interface", transform_interface);
+      if(!parseString(node, "camera_name", temp_name)) ROS_ERROR("Can't read camera_name");
+      if(!parseString(node, "trigger", trigger_name)) ROS_ERROR("Can't read trigger");
+      if(!parseString(node, "image_topic", temp_topic)) ROS_ERROR("Can't read image_topic");
+      if(!parseString(node, "camera_optical_frame", camera_optical_frame)) ROS_ERROR("Can't read camera_optical_frame");
+      if(!parseString(node, "transform_interface", transform_interface)) ROS_ERROR("Can't read transform_interface");
 
       Pose6d pose;
       bool transform_available = parsePose(node, pose);
@@ -83,17 +83,17 @@ namespace industrial_extrinsic_cal {
 	temp_parameters.position[1] = pose.y;
 	temp_parameters.position[2] = pose.z;
       }
-      parseDouble(node, "focal_length_x", temp_parameters.focal_length_x);
-      parseDouble(node, "focal_length_y", temp_parameters.focal_length_y);
-      parseDouble(node, "center_x", temp_parameters.center_x);
-      parseDouble(node, "center_y", temp_parameters.center_y);
-      parseDouble(node, "distortion_k1", temp_parameters.distortion_k1);
-      parseDouble(node, "distortion_k2", temp_parameters.distortion_k2);
-      parseDouble(node, "distortion_k3", temp_parameters.distortion_k3);
-      parseDouble(node, "distortion_p1", temp_parameters.distortion_p1);
-      parseDouble(node, "distortion_p2", temp_parameters.distortion_p2);
-      parseInt(node, "image_height", temp_parameters.height);
-      parseInt(node, "image_width", temp_parameters.width);
+      if(!parseDouble(node, "focal_length_x", temp_parameters.focal_length_x)) ROS_ERROR("Can't read focal_length_x");
+      if(!parseDouble(node, "focal_length_y", temp_parameters.focal_length_y)) ROS_ERROR("Can't read focal_length_y");
+      if(!parseDouble(node, "center_x", temp_parameters.center_x)) ROS_ERROR("Can't read center_x");
+      if(!parseDouble(node, "center_y", temp_parameters.center_y)) ROS_ERROR("Can't read center_y");
+      if(!parseDouble(node, "distortion_k1", temp_parameters.distortion_k1)) ROS_ERROR("Can't read distortion_k1");
+      if(!parseDouble(node, "distortion_k2", temp_parameters.distortion_k2)) ROS_ERROR("Can't read distortion_k2");
+      if(!parseDouble(node, "distortion_k3", temp_parameters.distortion_k3)) ROS_ERROR("Can't read distortion_k2");
+      if(!parseDouble(node, "distortion_p1", temp_parameters.distortion_p1)) ROS_ERROR("Can't read distortion_p1");
+      if(!parseDouble(node, "distortion_p2", temp_parameters.distortion_p2)) ROS_ERROR("Can't read distortion_p2");
+      if(!parseInt(node, "image_height", temp_parameters.height)) ROS_ERROR("Can't read image_height");
+      if(!parseInt(node, "image_width", temp_parameters.width)) ROS_ERROR("Can't read image_width");
     
       // create a shared camera and a shared transform interface
       temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
@@ -137,18 +137,18 @@ namespace industrial_extrinsic_cal {
       temp_trigger = make_shared<NoWaitTrigger>();
     }
     else if(name == string("ROS_PARAM_TRIGGER")){
-      parseString(node, "trig_param", trig_param);
+      if(!parseString(node, "trig_param", trig_param)) ROS_ERROR("Can't read trig_param");
       temp_trigger = make_shared<ROSParamTrigger>(trig_param);
     }
     else if(name == string("ROS_ACTION_TRIGGER")){
-      parseString(node, "trig_action_server", trig_action_server);
-      parseString(node, "trig_action_msg", trig_action_msg);
+      if(!parseString(node, "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
+      if(!parseString(node, "trig_action_msg", trig_action_msg)) ROS_ERROR("Can't read trig_action_msg");
       temp_trigger = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
     }
     else if(name == string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
-      parseString(node, "trig_action_server", trig_action_server);
+      if(!parseString(node, "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
       std::vector<double>joint_values;
-      parseVectorD(node, "joint_values", joint_values);
+      if(!parseVectorD(node, "joint_values", joint_values)) ROS_ERROR("Can't read joint_values");
       if(joint_values.size()<0){
 	ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
       }
@@ -156,7 +156,7 @@ namespace industrial_extrinsic_cal {
     }
     else if(name == string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
       const YAML::Node *trig_node = parseNode(node,"trigger_parameters");
-      parseString(*trig_node, "trig_action_server", trig_action_server);
+      if(!parseString(*trig_node, "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
       Pose6d pose;
       parsePose(*trig_node, pose);
       temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
@@ -167,13 +167,13 @@ namespace industrial_extrinsic_cal {
       std::string service_name;
       std::string instructions;
       std::string image_topic;
-      parseString(*trig_node, "service_name", service_name);
-      parseString(*trig_node, "instructions", instructions);
-      parseString(*trig_node, "image_topic", image_topic);
-      parseInt(*trig_node, "roi_min_x", roi.x_min);
-      parseInt(*trig_node, "roi_max_x", roi.x_max);
-      parseInt(*trig_node, "roi_min_y", roi.y_min);
-      parseInt(*trig_node, "roi_max_y", roi.y_max);
+      if(!parseString(*trig_node, "service_name", service_name)) ROS_ERROR("Can't read service_name");
+      if(!parseString(*trig_node, "instructions", instructions)) ROS_ERROR("Can't read instructions");
+      if(!parseString(*trig_node, "image_topic", image_topic)) ROS_ERROR("Can't read image_topic");
+      if(!parseInt(*trig_node, "roi_min_x", roi.x_min)) ROS_ERROR("Can't read roi_min_x");
+      if(!parseInt(*trig_node, "roi_max_x", roi.x_max)) ROS_ERROR("Can't read roi_max_x");
+      if(!parseInt(*trig_node, "roi_min_y", roi.y_min)) ROS_ERROR("Can't read roi_min_y");
+      if(!parseInt(*trig_node, "roi_max_y", roi.y_max)) ROS_ERROR("Can't read roi_max_y");
       temp_trigger = make_shared<ROSCameraObserverTrigger>(service_name, instructions, image_topic, roi);
     }
     else{
@@ -200,29 +200,29 @@ namespace industrial_extrinsic_cal {
       temp_ti = make_shared<ROSCameraBroadcastTransInterface>(frame);
     }
     else if(name == std::string("ros_camera_housing_lti")){ 
-      parseString(node, "camera_housing_frame", camera_housing_frame);
+      if(!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
       temp_ti = make_shared<ROSCameraHousingListenerTInterface>(frame,camera_housing_frame);
     }
     else if(name == std::string("ros_camera_housing_bti")){ 
-      parseString(node, "camera_housing_frame", camera_housing_frame); 
-      parseString(node, "camera_mounting_frame", camera_mounting_frame);
+      if(!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
+      if(!parseString(node, "camera_mounting_frame", camera_mounting_frame)) ROS_ERROR("Can't read camera_mounting_frame");
       temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(frame, 
 								 camera_housing_frame,
 								 camera_mounting_frame);
     }
     else if(name == std::string("ros_camera_housing_cti")){ 
-      parseString(node, "camera_housing_frame", camera_housing_frame); 
-      parseString(node, "camera_mounting_frame", camera_mounting_frame);
+      if(!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
+      if(!parseString(node, "camera_mounting_frame", camera_mounting_frame)) ROS_ERROR("Can't read camera_mounting_frame");
       temp_ti = make_shared<ROSCameraHousingCalTInterface>(frame, 
 							   camera_housing_frame,
 							   camera_mounting_frame);
     }
     else if(name == std::string("ros_scti")){ 
-      parseString(node, "parent_frame", camera_mounting_frame);
+      if(!parseString(node, "parent_frame", camera_mounting_frame)) ROS_ERROR("Can't read parent_frame");
       temp_ti = make_shared<ROSSimpleCalTInterface>(frame,  camera_mounting_frame);
     }
     else if(name == std::string("ros_camera_scti")){ 
-      parseString(node, "parent_frame", camera_mounting_frame);
+      if(!parseString(node, "parent_frame", camera_mounting_frame)) ROS_ERROR("Can't read parent_frame");
       temp_ti = make_shared<ROSSimpleCameraCalTInterface>(frame,  camera_mounting_frame);
     }
     else if(name == std::string("default_ti")){
