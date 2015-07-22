@@ -365,7 +365,7 @@ namespace industrial_extrinsic_cal
       ROS_INFO("total observations = %d", total_observations_);
     }
     
-    ceres_blocks_.displayMovingCameras();
+    // TODO remove commented code     ceres_blocks_.displayMovingCameras();
 
     // take all the data collected and create a Ceres optimization problem and run it
     ROS_INFO("Running Optimization with %d scenes",(int)scene_list_.size());

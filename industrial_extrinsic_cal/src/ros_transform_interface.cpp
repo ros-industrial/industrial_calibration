@@ -34,7 +34,12 @@ namespace industrial_extrinsic_cal
     while(!tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0))){
       ROS_INFO("waiting for tranform from %s to %s",from_frame.c_str(),to_frame.c_str());
     }
-    tf_listener.lookupTransform(from_frame, to_frame, now, tf_transform);
+    try{
+      tf_listener.lookupTransform(from_frame, to_frame, now, tf_transform);
+    }
+    catch (tf::TransformException &ex) {
+      ROS_ERROR("%s",ex.what());
+    }
     Pose6d pose;
     pose.setBasis(tf_transform.getBasis());
     pose.setOrigin(tf_transform.getOrigin());
@@ -364,6 +369,7 @@ namespace industrial_extrinsic_cal
     Pose6d housing2mount = mount2housing.getInverse();
     Pose6d optical2mount = optical2housing * housing2mount;
     pose_ = optical2mount;
+
     return(optical2mount);
   }
 

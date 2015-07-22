@@ -156,9 +156,9 @@ namespace industrial_extrinsic_cal {
     }
     else if(name == string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
       const YAML::Node *trig_node = parseNode(node,"trigger_parameters");
-      if(!parseString(*trig_node, "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
+      if(!parseString((*trig_node)[0], "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
       Pose6d pose;
-      parsePose(*trig_node, pose);
+      parsePose((*trig_node)[0], pose);
       temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
     }
     else if(name == string("ROS_CAMERA_OBSERVER_TRIGGER")){
@@ -167,13 +167,13 @@ namespace industrial_extrinsic_cal {
       std::string service_name;
       std::string instructions;
       std::string image_topic;
-      if(!parseString(*trig_node, "service_name", service_name)) ROS_ERROR("Can't read service_name");
-      if(!parseString(*trig_node, "instructions", instructions)) ROS_ERROR("Can't read instructions");
-      if(!parseString(*trig_node, "image_topic", image_topic)) ROS_ERROR("Can't read image_topic");
-      if(!parseInt(*trig_node, "roi_min_x", roi.x_min)) ROS_ERROR("Can't read roi_min_x");
-      if(!parseInt(*trig_node, "roi_max_x", roi.x_max)) ROS_ERROR("Can't read roi_max_x");
-      if(!parseInt(*trig_node, "roi_min_y", roi.y_min)) ROS_ERROR("Can't read roi_min_y");
-      if(!parseInt(*trig_node, "roi_max_y", roi.y_max)) ROS_ERROR("Can't read roi_max_y");
+      if(!parseString((*trig_node)[0], "service_name", service_name)) ROS_ERROR("Can't read service_name");
+      if(!parseString((*trig_node)[0], "instructions", instructions)) ROS_ERROR("Can't read instructions");
+      if(!parseString((*trig_node)[0], "image_topic", image_topic)) ROS_ERROR("Can't read image_topic");
+      if(!parseInt((*trig_node)[0], "roi_min_x", roi.x_min)) ROS_ERROR("Can't read roi_min_x");
+      if(!parseInt((*trig_node)[0], "roi_max_x", roi.x_max)) ROS_ERROR("Can't read roi_max_x");
+      if(!parseInt((*trig_node)[0], "roi_min_y", roi.y_min)) ROS_ERROR("Can't read roi_min_y");
+      if(!parseInt((*trig_node)[0], "roi_max_y", roi.y_max)) ROS_ERROR("Can't read roi_max_y");
       temp_trigger = make_shared<ROSCameraObserverTrigger>(service_name, instructions, image_topic, roi);
     }
     else{
