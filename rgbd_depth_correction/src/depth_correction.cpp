@@ -35,36 +35,68 @@ class DepthCorrectionNodelet : public nodelet::Nodelet
 {
 private:
 
-  bool depth_exp_;
-  double d1_, d2_;
+  bool use_depth_exp_;  /**< @brief Flag to determine whether to use the depth coefficients or not */
+  double d1_, d2_;      /**< @brief The depth coefficients */
 
-  int version_;
-  std::vector<double> depth_correction_;
-  pcl::PointCloud<pcl::PointXYZRGB> correction_cloud_;
+  int version_;  /**< @brief The version number found in the YAML file */
+  pcl::PointCloud<pcl::PointXYZRGB> correction_cloud_;  /**< @brief The depth correction point cloud containing the depth correction values */
 
-  ros::Subscriber pcl_sub_;
-  ros::Publisher pcl_pub_;
-  ros::ServiceServer depth_change_;
+  ros::Subscriber pcl_sub_;          /**< @brief PCL point cloud subscriber */
+  ros::Publisher pcl_pub_;           /**< @brief PCL point cloud publisher for the corrected point cloud */
+  ros::ServiceServer depth_change_;  /**< @brief The service server for changing whether to use the depth coefficients or not */
 
+  /**
+     * @brief PCL raw point cloud subscriber callback
+     *
+     * @param[in] cloud Latest point cloud received
+     */
   void pointcloudCallback(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& cloud);
 
+  /**
+     * @brief Give a pathway and file name, reads the version number and loads the appropriate depth correction parameters
+     *
+     * @param[in] pathway The pathway to the file to be read
+     * @param[in] yaml_file The name of the file to be read
+     * @return True if the YAML file was read correctly, false if there was an error or the file is not of the correct version
+     */
   bool readYamlFile(const std::string & pathway, const std::string & yaml_file);
 
+  /**
+     * @brief Reads and loads the parameters for depth correction version one
+     *
+     * @param[in] doc The YAML document to read from
+     * @param[in] file The file name used to the open similarly named point cloud depth correction file
+     */
   void loadVersionOne(const YAML::Node& doc, const std::string& file);
+  /**
+     * @brief Peforms point cloud depth correction using the version one parameters and equations, then republishes the corrected cloud
+     *
+     * @param[in] cloud The point cloud to be corrected and republished
+     */
   void correctionVersionOne(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr &cloud);
 
 public:
 
+  /**
+     * @brief For debug testing, turns off/on the use of the depth correction coefficients to see how accurate the results are
+     *
+     * @param[in] request Empty
+     * @param[out] response Empty
+     * @return always returns true
+     */
   bool setEnableDepth(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
   {
-    depth_exp_ = !depth_exp_;
-    ROS_INFO_STREAM("Using depth exponential correction: " << depth_exp_);
+    use_depth_exp_ = !use_depth_exp_;
+    ROS_INFO_STREAM("Using depth exponential correction: " << use_depth_exp_);
     return true;
   }
 
+  /**
+     * @brief On startup of nodelet, reads the YAML config file and starts the publishers/subscribers
+     */
   virtual void onInit()
   {
-    depth_exp_ = true;
+    use_depth_exp_ = true;
     ros::NodeHandle nh = getMTNodeHandle();
     ros::NodeHandle priv_nh = getMTPrivateNodeHandle();
 
@@ -182,7 +214,7 @@ void DepthCorrectionNodelet::correctionVersionOne(const pcl::PointCloud<pcl::Poi
         continue;
       }
 
-      if(depth_exp_)
+      if(use_depth_exp_)
       {
         corrected_cloud.points.at(i).z += correction_cloud_.points.at(i).z * exp(d1_ + d2_ * corrected_cloud.points.at(i).z);
       }

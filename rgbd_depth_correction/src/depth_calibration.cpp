@@ -75,7 +75,6 @@ DepthCalibrator::DepthCalibrator(ros::NodeHandle& nh)
   calibrate_depth_ = nh_.advertiseService("depth_calibration", &DepthCalibrator::calibrateCameraDepth, this);
   calibrate_pixel_depth_ = nh_.advertiseService("pixel_depth_calibration", &DepthCalibrator::calibrateCameraPixelDepth, this);
   set_store_cloud_ = nh_.advertiseService("store_cloud", &DepthCalibrator::setStoreCloud, this);
-  //point_cloud_ = nh_.subscribe("depth_points",1,&DepthCalibrator::pointCloudCallback, this);
   get_target_pose_ = nh.serviceClient<target_finder::target_locater>("TargetLocateService");
 
   this->point_cloud_sub_ = boost::shared_ptr<PointCloudSubscriberType>(new PointCloudSubscriberType(nh, "depth_points", 1));
