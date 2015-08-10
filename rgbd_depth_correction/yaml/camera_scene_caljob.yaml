@@ -1,0 +1,17 @@
+---
+reference_frame: world
+scenes:
+-
+     scene_id: 0
+     trigger: NO_WAIT_TRIGGER
+     observations:
+     -
+          camera: kinect
+          target: circle_grid
+          roi_x_min: 0
+          roi_x_max: 640
+          roi_y_min: 0
+          roi_y_max: 480
+          cost_type: FixedCircleTargetCameraReprjErrorPK
+
+optimization_parameters: xx
