@@ -41,8 +41,20 @@ DepthCalibrator::DepthCalibrator(ros::NodeHandle& nh)
   ros::NodeHandle pnh("~");
 
   // get parameters for services, topics, and filename
-  pnh.param<std::string>("filename", filename_, "");
-  pnh.param<std::string>("filepath", filepath_, "");
+  if(!pnh.getParam("filename", filename_))
+  {
+    ROS_WARN("Depth calibration file name not given for saving calibration results.  Defaulting to 'camera'.");
+    filename_ = "camera";
+  }
+  if(!pnh.getParam("filepath", filepath_))
+  {
+    ROS_WARN("Depth calibration file path not given for saving calibration results.  Results will not be saved.  Please provide path and re-execute to save results");
+    save_data_ = false;
+  }
+  else
+  {
+    save_data_ = true;
+  }
 
   store_point_cloud_ = false;
 
@@ -157,7 +169,10 @@ bool DepthCalibrator::calibrateCameraDepth(std_srvs::Empty::Request &request, st
            summary.total_time_in_seconds, summary.final_cost, summary.num_residuals);
 
   //Store distortion coefficients in YAML file
-  storeCalibration((filepath_ + "/" +filename_ + ".yaml"), dp);
+  if(save_data_)
+  {
+    storeCalibration((filepath_ + "/" +filename_ + ".yaml"), dp);
+  }
   saved_clouds_.clear();
   plane_equations_.clear();
   saved_images_.clear();
@@ -335,9 +350,12 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
   correction_cloud_.is_dense = false;
 
   // Store depth correction results
-  std::string out_file = filepath_ + "/" + filename_ + ".pcd";
-  ROS_INFO_STREAM("Done generating depth correction point cloud.  Saving results to " << out_file);
-  pcl::io::savePCDFile( out_file, correction_cloud_);
+  if(save_data_)
+  {
+    std::string out_file = filepath_ + "/" + filename_ + ".pcd";
+    ROS_INFO_STREAM("Done generating depth correction point cloud.  Saving results to " << out_file);
+    pcl::io::savePCDFile( out_file, correction_cloud_);
+  }
 
   return true;
 }

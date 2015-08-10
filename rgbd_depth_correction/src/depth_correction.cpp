@@ -28,6 +28,8 @@
 #include "pluginlib/class_list_macros.h"
 #include <nodelet/nodelet.h>
 
+#include <industrial_extrinsic_cal/yaml_utils.h>
+
 
 namespace rgbd_depth_correction{
 
@@ -153,20 +155,24 @@ bool DepthCorrectionNodelet::readYamlFile(const std::string &pathway, const std:
       YAML::Node doc;
       parser.GetNextDocument(doc);
 
-      if(const YAML::Node *pName = doc.FindValue("version"))
-      {
-        *pName >> version_;
-      }
 
-      switch (version_)
+      if(!industrial_extrinsic_cal::parseInt(doc, "version", version_))
       {
-        case 1:
-          loadVersionOne(doc, pathway + yaml_file);
-          break;
-        default:
-          ROS_ERROR("Version in YAML file did not match any known versions");
-          rtn = false;
-          break;
+        ROS_ERROR("Yaml file did not contain depth correction version information");
+        rtn = false;
+      }
+      else
+      {
+        switch (version_)
+        {
+          case 1:
+            loadVersionOne(doc, pathway + yaml_file);
+            break;
+          default:
+            ROS_ERROR("Version in YAML file did not match any known versions");
+            rtn = false;
+            break;
+        }
       }
     }
     catch(YAML::ParserException& e)
@@ -186,13 +192,15 @@ bool DepthCorrectionNodelet::readYamlFile(const std::string &pathway, const std:
 
 void DepthCorrectionNodelet::loadVersionOne(const YAML::Node &doc, const std::string &file)
 {
-  if(const YAML::Node *pName = doc.FindValue("d1"))
+  if(!industrial_extrinsic_cal::parseDouble(doc, "d1", d1_) )
   {
-    *pName >> d1_;
+    ROS_ERROR("Yaml file did not contain depth correction parameter d1, setting to zero");
+    d1_ = 0;
   }
-  if(const YAML::Node *pName = doc.FindValue("d2"))
+  if(!industrial_extrinsic_cal::parseDouble(doc, "d2", d2_))
   {
-    *pName >> d2_;
+    ROS_ERROR("Yaml file did not contain depth correction parameter d2, setting to zero");
+    d2_ = 0;
   }
 
   std::string pcd_file;

@@ -173,6 +173,7 @@ private:
   const static unsigned int VERSION_NUMBER_;  /**< @brief Version number for the calibration package  */
 
   ros::NodeHandle nh_;  /**< @brief ROS node handle */
+  bool save_data_;      /**< @brief Flag to determine whether to save calibration results or not */
 
   typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2, sensor_msgs::Image> PolicyType;
   typedef message_filters::Subscriber<sensor_msgs::PointCloud2> PointCloudSubscriberType;
