@@ -12,6 +12,7 @@
 #include <industrial_extrinsic_cal/trigger.h>
 #include <industrial_extrinsic_cal/ros_triggers.h>
 #include <industrial_extrinsic_cal/camera_yaml_parser.h>
+#include <industrial_extrinsic_cal/yaml_utils.h>
 
 using std::ifstream;
 using std::string;
@@ -22,20 +23,19 @@ using YAML::Node;
 
 namespace industrial_extrinsic_cal {
 
-  bool parseCameras(ifstream &cameras_input_file,vector<shared_ptr<Camera> >& cameras)
+  bool parseCameras(std::string &cameras_input_file,vector<shared_ptr<Camera> >& cameras)
   {
-    YAML::Parser camera_parser(cameras_input_file);
     Node camera_doc;
     bool rtn=true;
     try{
-      camera_parser.GetNextDocument(camera_doc);
+      Node camera_doc = yamlNodeFromFileName(cameras_input_file);
       cameras.clear();
 
       // read in all static cameras
       int n_static=0;
-      if (const Node *camera_parameters = parseNode(camera_doc, "static_cameras") ){
-	for (unsigned int i = 0; i < camera_parameters->size(); i++){
-	  shared_ptr<Camera> temp_camera = parseSingleCamera((*camera_parameters)[i]);
+      if (const Node camera_parameters = parseNode(camera_doc, "static_cameras") ){
+	for (unsigned int i = 0; i < camera_parameters.size(); i++){
+	  shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
 	  cameras.push_back(temp_camera);
 	  n_static++;
 	}
@@ -43,9 +43,9 @@ namespace industrial_extrinsic_cal {
 
       // read in all moving cameras
       int n_moving=0;
-      if (const Node *camera_parameters = parseNode(camera_doc, "moving_cameras")){
-	for (unsigned int i = 0; i < camera_parameters->size(); i++){
-	  shared_ptr<Camera> temp_camera = parseSingleCamera((*camera_parameters)[i]);
+      if (const Node camera_parameters = parseNode(camera_doc, "moving_cameras")){
+	for (unsigned int i = 0; i < camera_parameters.size(); i++){
+	  shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
 	  temp_camera->is_moving_ = true;
 	  cameras.push_back(temp_camera);
 	  n_moving++;
@@ -155,25 +155,25 @@ namespace industrial_extrinsic_cal {
       temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
     }
     else if(name == string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
-      const YAML::Node *trig_node = parseNode(node,"trigger_parameters");
-      if(!parseString((*trig_node)[0], "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
+      const YAML::Node trig_node = parseNode(node,"trigger_parameters");
+      if(!parseString(trig_node, "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
       Pose6d pose;
-      parsePose((*trig_node)[0], pose);
+      parsePose(trig_node, pose);
       temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
     }
     else if(name == string("ROS_CAMERA_OBSERVER_TRIGGER")){
-      const YAML::Node *trig_node = parseNode(node,"trigger_parameters");
+      const YAML::Node trig_node = parseNode(node,"trigger_parameters");
       Roi roi;
       std::string service_name;
       std::string instructions;
       std::string image_topic;
-      if(!parseString((*trig_node)[0], "service_name", service_name)) ROS_ERROR("Can't read service_name");
-      if(!parseString((*trig_node)[0], "instructions", instructions)) ROS_ERROR("Can't read instructions");
-      if(!parseString((*trig_node)[0], "image_topic", image_topic)) ROS_ERROR("Can't read image_topic");
-      if(!parseInt((*trig_node)[0], "roi_min_x", roi.x_min)) ROS_ERROR("Can't read roi_min_x");
-      if(!parseInt((*trig_node)[0], "roi_max_x", roi.x_max)) ROS_ERROR("Can't read roi_max_x");
-      if(!parseInt((*trig_node)[0], "roi_min_y", roi.y_min)) ROS_ERROR("Can't read roi_min_y");
-      if(!parseInt((*trig_node)[0], "roi_max_y", roi.y_max)) ROS_ERROR("Can't read roi_max_y");
+      if(!parseString(trig_node, "service_name", service_name)) ROS_ERROR("Can't read service_name");
+      if(!parseString(trig_node, "instructions", instructions)) ROS_ERROR("Can't read instructions");
+      if(!parseString(trig_node, "image_topic", image_topic)) ROS_ERROR("Can't read image_topic");
+      if(!parseInt(trig_node, "roi_min_x", roi.x_min)) ROS_ERROR("Can't read roi_min_x");
+      if(!parseInt(trig_node, "roi_max_x", roi.x_max)) ROS_ERROR("Can't read roi_max_x");
+      if(!parseInt(trig_node, "roi_min_y", roi.y_min)) ROS_ERROR("Can't read roi_min_y");
+      if(!parseInt(trig_node, "roi_max_y", roi.y_max)) ROS_ERROR("Can't read roi_max_y");
       temp_trigger = make_shared<ROSCameraObserverTrigger>(service_name, instructions, image_topic, roi);
     }
     else{

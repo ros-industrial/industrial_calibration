@@ -15,20 +15,18 @@ using YAML::Node;
 
 namespace industrial_extrinsic_cal {
 
-  bool parsePoints(ifstream &points_input_file,vector<Point3d> &points)
+  bool parsePoints(std::string &points_input_file,vector<Point3d> &points)
   {
     // parse points
     bool return_value = true;
     try
       {
-	YAML::Parser points_parser(points_input_file);
-	YAML::Node points_doc;
-	points_parser.GetNextDocument(points_doc);
-
+	const YAML::Node points_doc = yamlNodeFromFileName(points_input_file);
+	
 	// read in all points
 	points.clear();
-	const YAML::Node *points_node = parseNode(points_doc, "points");
-	for (int j = 0; j < points_node->size(); j++){
+	const YAML::Node points_node = parseNode(points_doc, "points");
+	for (int j = 0; j < points_node.size(); j++){
 	  vector<double> temp_pnt;
 	  parseVectorD(points_node[j], "pnt", temp_pnt);
 	  Point3d temp_pnt3d;

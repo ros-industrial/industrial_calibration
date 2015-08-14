@@ -23,7 +23,7 @@ namespace industrial_extrinsic_cal {
    *   @param reference_frame the retured reference frame
    *   @param blocks the blocks containing pointers to all the camera and target parameters for ceres
    **/
-  bool parseCaljob(std::ifstream &caljob_input_file, 
+  bool parseCaljob(std::string &caljob_input_file, 
 		   std::vector<ObservationScene>  &scene_list, 
 		   std::string &reference_frame, 
 		   CeresBlocks &blocks);

@@ -37,11 +37,11 @@ namespace industrial_extrinsic_cal {
    **/
   bool parsePose(const YAML::Node &node, Pose6d &pose);
   /** @brief parse all the cameras, the main function of this module
-   *   @param camera_input_file the stream from which to parse a vector of cameras
+   *   @param camera_input_file path/file from which to parse a vector of cameras
    *   @param returned vector of shared pointers to cameras
    *   @return true if successful
    **/
-  bool parseCameras(std::ifstream &cameras_input_file, std::vector<boost::shared_ptr<Camera> >& cameras);
+  bool parseCameras(std::string &cameras_input_file, std::vector<boost::shared_ptr<Camera> >& cameras);
 
 }// end industrial_extrinsic_cal namespace
 

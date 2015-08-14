@@ -12,7 +12,7 @@ namespace industrial_extrinsic_cal {
    *  @param points the returned vector of points
    *  @return true if success, false otherwise
    */
-  bool parsePoints(std::ifstream &points_input_file, std::vector<industrial_extrinsic_cal::Point3d> &points);
+  bool parsePoints(std::string &points_input_file, std::vector<industrial_extrinsic_cal::Point3d> &points);
   
 }// end industrial_extrinsic_cal namespace
 

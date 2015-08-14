@@ -16,8 +16,10 @@
  * limitations under the License.
  */
 
-#include <industrial_extrinsic_cal/mutable_joint_state_publisher.h>
+
 #include "yaml-cpp/yaml.h"
+#include <industrial_extrinsic_cal/mutable_joint_state_publisher.h>
+#include <industrial_extrinsic_cal/yaml_utils.h>
 #include <iostream>
 #include <fstream>
 namespace industrial_extrinsic_cal
@@ -118,11 +120,9 @@ namespace industrial_extrinsic_cal
     // joint1_name: <float_value1>
     // joint2_name: <float_value2>
     try{
-      std::ifstream fin(yaml_file_name_.c_str());
-      YAML::Parser parser(fin);
-      YAML::Node doc;
-      while(parser.GetNextDocument(doc)){
-	for(YAML::Iterator it=doc.begin();it!=doc.end();++it) {
+      YAML::Node doc = yamlNodeFromFileName(yaml_file_name_);
+      for(int i=0; i<doc.size(); i++){
+	for(YAML::iterator it=doc[i].begin();it!=doc[i].end();++it) {
 	  std::string key;
 	  double value;
 	  parseKeyDValue( it, key, value);

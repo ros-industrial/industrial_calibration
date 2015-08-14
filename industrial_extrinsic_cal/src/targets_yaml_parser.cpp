@@ -24,19 +24,18 @@ namespace industrial_extrinsic_cal {
   int parseTargetPoints(const Node &node, std::vector<Point3d> &points);
 
 
-  bool parseTargets(ifstream &targets_input_file,vector< boost::shared_ptr<Target> > & targets)
+  bool parseTargets(std::string &target_file,vector< boost::shared_ptr<Target> > & targets)
   {
-    YAML::Parser target_parser(targets_input_file);
     bool rtn = true;
     Node target_doc;
     try{
-      target_parser.GetNextDocument(target_doc);
+      YAML::Node target_doc = yamlNodeFromFileName(target_file);
       // read in all static cameras
       targets.clear();
       int n_static =0;
-      if (const Node *target_parameters = target_doc.FindValue("static_targets")){
-	for (unsigned int i = 0; i < target_parameters->size(); i++){
-	  shared_ptr<Target> temp_target = parseSingleTarget((*target_parameters)[i]);
+      if (const Node target_parameters = parseNode(target_doc, "static_targets")){
+	for (unsigned int i = 0; i < target_parameters.size(); i++){
+	  shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
 	  temp_target->is_moving_ = false;
 	  targets.push_back(temp_target);
 	  n_static++;
@@ -46,9 +45,9 @@ namespace industrial_extrinsic_cal {
 
       // read in all moving targets
       int n_moving=0;
-      if (const Node *target_parameters = target_doc.FindValue("moving_targets")){
-	for (unsigned int i = 0; i < target_parameters->size(); i++){
-	  shared_ptr<Target> temp_target = parseSingleTarget((*target_parameters)[i]);
+      if (const Node target_parameters = parseNode(target_doc, "moving_targets")){
+	for (unsigned int i = 0; i < target_parameters.size(); i++){
+	  shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
 	  temp_target->is_moving_ = true;
 	  targets.push_back(temp_target);
 	  n_moving++;
@@ -132,8 +131,8 @@ namespace industrial_extrinsic_cal {
       if(!parseUInt(node, "num_points", temp_target->num_points_)){
 	ROS_ERROR("must set target num_points");
       }
-      const Node *points_node = parseNode(node, "points");
-      int num_points = parseTargetPoints(*points_node, temp_target->pts_);
+      const Node points_node = parseNode(node, "points");
+      int num_points = parseTargetPoints(points_node, temp_target->pts_);
       if(num_points  != temp_target->num_points_  || num_points != (int)temp_target->pts_.size()){
 	ROS_ERROR("Expecting %d points found %d",temp_target->num_points_, num_points);
       }

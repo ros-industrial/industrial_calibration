@@ -186,21 +186,8 @@ int main(int argc, char** argv)
       return (false);
     }
 
-  ifstream cameras_file(argv[2]);
-  if (cameras_file.fail())
-    {
-      string temp(argv[2]);
-      ROS_ERROR_STREAM("ERROR can't open cameras_file:  "<< temp.c_str());
-      return (false);
-    }
-
-  ifstream field_points_file(argv[3]);
-  if (field_points_file.fail())
-    {
-      string temp(argv[1]);
-      ROS_ERROR_STREAM("ERROR can't open field_points_file:  "<< temp.c_str());
-      return (false);
-    }
+  std::string cameras_file(argv[2]);
+  std::string field_points_file(argv[3]);
 
   // read in the camera data, observation data and field points from yaml files
   parseCameras(cameras_file, original_cameras_sp); 

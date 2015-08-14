@@ -144,8 +144,7 @@ namespace industrial_extrinsic_cal
   {
     bool rtn=true;
     std::vector<shared_ptr<Camera> >  all_cameras;
-    std::ifstream camera_input_file(camera_def_file_name_.c_str());
-    if(!parseCameras(camera_input_file, all_cameras)){
+    if(!parseCameras(camera_def_file_name_, all_cameras)){
       ROS_ERROR("failed to parse cameras from %s", camera_def_file_name_.c_str());
       rtn = false;
     }
@@ -165,48 +164,30 @@ namespace industrial_extrinsic_cal
   {
     bool rtn=true;
     std::vector<shared_ptr<Target> >  all_targets;
-    std::ifstream target_input_file(target_def_file_name_.c_str());
-    if (target_input_file.fail()){
-      ROS_ERROR_STREAM(
-		       "CalibrationJob::load(), couldn't open target_input_file: "
-		       << target_def_file_name_.c_str());
+    if(!parseTargets(target_def_file_name_, all_targets)){
+      ROS_ERROR("failed to parse targets from %s", target_def_file_name_.c_str());
       rtn = false;
     }
-    else{// target file exists
-      if(!parseTargets(target_input_file, all_targets)){
-	ROS_ERROR("failed to parse targets from %s", target_def_file_name_.c_str());
-	rtn = false;
-      }
-      else { // target file parses ok
-	for(int i=0; i< (int) all_targets.size(); i++){
-	  if(all_targets[i]->is_moving_) {
-	    int scene_id = 0;
-	    ceres_blocks_.addMovingTarget(all_targets[i], scene_id);
-	  }
-	  else{
-	    ceres_blocks_.addStaticTarget(all_targets[i]);
-	  }
-	}// end for every target found
-      }// end else target file parsed ok
-    }// target file exists
+    else { // target file parses ok
+      for(int i=0; i< (int) all_targets.size(); i++){
+	if(all_targets[i]->is_moving_) {
+	  int scene_id = 0;
+	  ceres_blocks_.addMovingTarget(all_targets[i], scene_id);
+	}
+	else{
+	  ceres_blocks_.addStaticTarget(all_targets[i]);
+	}
+      }// end for every target found
+    }// end else target file parsed ok
     return rtn;
   }
 
   bool CalibrationJob::loadCalJob()
   {
     bool rtn = true;
-    std::ifstream caljob_input_file(caljob_def_file_name_.c_str());
-    if (caljob_input_file.fail()){
-      ROS_ERROR_STREAM(
-		       "ERROR CalibrationJob::load(), couldn't open caljob_input_file: "
-		       << caljob_def_file_name_.c_str());
-      rtn = false;
-    }
-    else{
-      std::string reference_frame;
-      rtn = parseCaljob(caljob_input_file, scene_list_, reference_frame, ceres_blocks_);
-      ceres_blocks_.setReferenceFrame(reference_frame);
-    }
+    std::string reference_frame;
+    rtn = parseCaljob(caljob_def_file_name_, scene_list_, reference_frame, ceres_blocks_);
+    if(rtn) ceres_blocks_.setReferenceFrame(reference_frame);
     return rtn;
 }
 
