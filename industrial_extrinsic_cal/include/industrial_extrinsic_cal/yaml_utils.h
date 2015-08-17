@@ -73,6 +73,9 @@ namespace industrial_extrinsic_cal
 
   inline const YAML::Node  parseNode(const YAML::Node &node, char const * var_name)
   {
+    if(!node[var_name]){
+      ROS_INFO("can't parse node[%s]", var_name);
+    }
     return(node[var_name]);
   }
   inline void parseKeyDValue(YAML::iterator &it, std::string &key, double &dvalue)

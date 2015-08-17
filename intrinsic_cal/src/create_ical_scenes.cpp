@@ -110,7 +110,6 @@ int main(int argc, char** argv)
 	int x = i*(image_width- roi_width)/(sample_rows-1.0);
 	int y = j*(image_height-roi_height)/(sample_cols-1.0);
 	fprintf(fp,"-\n");
-	fprintf(fp,"    scene_id: %d\n", scene_id++);
 	fprintf(fp,"    trigger: ROS_CAMERA_OBSERVER_TRIGGER\n");
 	fprintf(fp,"    trigger_parameters:\n");
 	fprintf(fp,"    -\n");
