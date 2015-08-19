@@ -464,7 +464,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	std::vector<cv::Point2f> centers;
 	std::vector<cv::KeyPoint> keypoints;
 	circle_detector_ptr_->detect(red_binary_image, keypoints);
-	ROS_ERROR("Red keypoints: %lu",keypoints.size());
+	ROS_ERROR("Red keypoints: %u",keypoints.size());
 	if(keypoints.size() == 1 ){
 	    observation_pts_.push_back(keypoints[0].pt);
 	    large_point.x = keypoints[0].pt.x;
@@ -474,7 +474,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  ROS_ERROR("found %d red blobs, expected one", (int) keypoints.size());
 	}
 	circle_detector_ptr_->detect(green_binary_image, keypoints);
-	ROS_ERROR("Green keypoints: %lu",keypoints.size());
+	ROS_ERROR("Green keypoints: %u",keypoints.size());
 	if(keypoints.size() == 1){
 	    observation_pts_.push_back(keypoints[0].pt);
 	}// end of outer loop
@@ -482,7 +482,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  ROS_ERROR("found %d green blobs, expected one", (int) keypoints.size());
 	}
 	circle_detector_ptr_->detect(yellow_binary_image, keypoints);
-	ROS_ERROR("Blue keypoints: %lu",keypoints.size());
+	ROS_ERROR("Blue keypoints: %u",keypoints.size());
 	if(keypoints.size() == 1){
 	    observation_pts_.push_back(keypoints[0].pt);
 	}// end of outer loop

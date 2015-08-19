@@ -113,10 +113,10 @@ namespace industrial_extrinsic_cal
 
   bool  MutableJointStatePublisher::loadFromYamlFile()
   {
-      // yaml file should have the followng format:
-      // joint0_name: <float_value0>
-      // joint1_name: <float_value1>
-      // joint2_name: <float_value2>
+    // yaml file should have the followng format:
+    // joint0_name: <float_value0>
+    // joint1_name: <float_value1>
+    // joint2_name: <float_value2>
     try{
       std::ifstream fin(yaml_file_name_.c_str());
       YAML::Parser parser(fin);
@@ -125,8 +125,7 @@ namespace industrial_extrinsic_cal
 	for(YAML::Iterator it=doc.begin();it!=doc.end();++it) {
 	  std::string key;
 	  double value;
-	  it.first() >> key;
-	  it.second() >> value;
+	  parseKeyDValue( it, key, value);
 	  joints_[key.c_str()] = value;
 	}
       }
@@ -137,38 +136,39 @@ namespace industrial_extrinsic_cal
       return (false);
     }
     if(joints_.size() == 0) ROS_ERROR("mutable_joint_state_publisher has no joints");
-
+    
     // output so we know they have been read in correctly
     for (std::map<std::string, double>::iterator it= joints_.begin(); it != joints_.end(); ++it){
       ROS_INFO("mutable joint %s has value %lf",it->first.c_str(), it->second);
     }
-
+    
     return(true);
   } 					     
 
   bool MutableJointStatePublisher::publishJointStates()
   {
-    sensor_msgs::JointState joint_states;
-    joint_states.header.stamp = ros::Time::now();
-    joint_states.name.clear();
-    joint_states.position.clear();
-    joint_states.velocity.clear();
-    joint_states.effort.clear();
-    for (std::map<string, double>::iterator it=joints_.begin(); it!=joints_.end(); ++it){
-      joint_states.name.push_back(it->first);
-      joint_states.position.push_back(it->second);
-      joint_states.velocity.push_back(0.0);
-      joint_states.effort.push_back(0.0);
-    }
-    joint_state_pub_.publish(joint_states);
+      sensor_msgs::JointState joint_states;
+      joint_states.header.stamp = ros::Time::now();
+      joint_states.name.clear();
+      joint_states.position.clear();
+      joint_states.velocity.clear();
+      joint_states.effort.clear();
+      for (std::map<string, double>::iterator it=joints_.begin(); it!=joints_.end(); ++it){
+        joint_states.name.push_back(it->first);
+        joint_states.position.push_back(it->second);
+        joint_states.velocity.push_back(0.0);
+        joint_states.effort.push_back(0.0);
+      }
+      joint_state_pub_.publish(joint_states);
   }
-} // end namespace industrial_extrinsic_cal
+} // end namespace mutable_joint_state_publisher
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "mutable_joint_state_publisher");
   ros::NodeHandle nh;
   industrial_extrinsic_cal::MutableJointStatePublisher MJSP(nh);
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(1);
   while(ros::ok()){
     MJSP.publishJointStates();
     ros::spinOnce();

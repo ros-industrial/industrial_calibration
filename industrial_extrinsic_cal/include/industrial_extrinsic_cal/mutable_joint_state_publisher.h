@@ -24,6 +24,7 @@
 #include <industrial_extrinsic_cal/set_mutable_joint_states.h>
 #include <industrial_extrinsic_cal/get_mutable_joint_states.h>
 #include <industrial_extrinsic_cal/store_mutable_joint_states.h>
+#include <industrial_extrinsic_cal/yaml_utils.h>
 #include <sensor_msgs/JointState.h>
 namespace industrial_extrinsic_cal
 {

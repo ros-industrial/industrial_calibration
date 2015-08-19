@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <industrial_extrinsic_cal/basic_types.h>
+#include <industrial_extrinsic_cal/yaml_utils.h>
 
 namespace industrial_extrinsic_cal {
 

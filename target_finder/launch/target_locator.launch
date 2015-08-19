@@ -32,4 +32,9 @@
 
      <node name="rviz" pkg="rviz" type="rviz" args="-d $(find target_finder)/config/target_finder.rviz" required="true" />
 
+
+<node pkg="tf" type="static_transform_publisher" name="target_frame" args="0.1 0.0 1.0 0.0 1.5708 0.0 world asus_rgb_optical_frame 100" />
+
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find target_finder)/config/target_finder.rviz" required="true" />
+
 </launch>

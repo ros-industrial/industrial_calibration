@@ -21,7 +21,7 @@ using YAML::Node;
 namespace industrial_extrinsic_cal {
 
   // prototypes
-  int parseTargetPoints(const Node &node, std::vector<Point3d> points);
+  int parseTargetPoints(const Node &node, std::vector<Point3d> &points);
 
 
   bool parseTargets(ifstream &targets_input_file,vector< boost::shared_ptr<Target> > & targets)
@@ -31,27 +31,31 @@ namespace industrial_extrinsic_cal {
     Node target_doc;
     try{
       target_parser.GetNextDocument(target_doc);
-      
       // read in all static cameras
       targets.clear();
+      int n_static =0;
       if (const Node *target_parameters = target_doc.FindValue("static_targets")){
-	ROS_INFO_STREAM("Found "<<target_parameters->size()<<" static targets ");
 	for (unsigned int i = 0; i < target_parameters->size(); i++){
-	  shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
+	  shared_ptr<Target> temp_target = parseSingleTarget((*target_parameters)[i]);
+	  temp_target->is_moving_ = false;
 	  targets.push_back(temp_target);
+	  n_static++;
 	}
       } // end if there are any targets in file
 
+
       // read in all moving targets
+      int n_moving=0;
       if (const Node *target_parameters = target_doc.FindValue("moving_targets")){
-	ROS_INFO_STREAM("Found " << target_parameters->size() << " moving targets ");
 	for (unsigned int i = 0; i < target_parameters->size(); i++){
-	  shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
+	  shared_ptr<Target> temp_target = parseSingleTarget((*target_parameters)[i]);
 	  temp_target->is_moving_ = true;
 	  targets.push_back(temp_target);
+	  n_moving++;
 	}
       } // end if there are any moving targets in file
-      ROS_INFO_STREAM("Successfully read in " << (int) targets.size() << " targets");
+
+      ROS_INFO_STREAM((int) targets.size() << " targets " << n_static << " static " << n_moving << " moving");
     }
     catch (YAML::ParserException& e){
       ROS_ERROR_STREAM("Failed to parse targets with exception "<< e.what());
@@ -65,46 +69,72 @@ namespace industrial_extrinsic_cal {
     shared_ptr<Target> temp_target = make_shared<Target>();
     shared_ptr<TransformInterface> temp_ti;
     try{
-      node["target_name"] >> temp_target->target_name_;
-      node["target_frame"] >> temp_target->target_frame_;
-      node["target_type"] >> temp_target->target_type_;
+      bool success=true;
+      success &= parseString(node, "target_name", temp_target->target_name_);
+      success &= parseString(node, "target_frame", temp_target->target_frame_);
+      success &= parseUInt(node, "target_type", temp_target->target_type_);
+      if(!success){
+	ROS_ERROR("must set target name, frame and type %s %s %u",
+		  temp_target->target_name_.c_str(),
+		  temp_target->target_frame_.c_str(),
+		  temp_target->target_type_);
+      }      
+      Pose6d pose;
+      bool transform_available = parsePose(node, pose);
+      if(transform_available){
+	temp_target->pose_ = pose;
+      }
+
       switch (temp_target->target_type_){
       case pattern_options::Chessboard:
-	node["target_rows"] >> temp_target->checker_board_parameters_.pattern_rows;
-	node["target_cols"] >> temp_target->checker_board_parameters_.pattern_cols;
+	success &=parseInt(node, "target_rows", temp_target->checker_board_parameters_.pattern_rows);
+	success &=parseInt(node, "target_cols", temp_target->checker_board_parameters_.pattern_cols);
 	ROS_DEBUG_STREAM("TargetRows: "<<temp_target->checker_board_parameters_.pattern_rows);
+	if(!success) ROS_ERROR("must set rows and cols");
 	break;
       case pattern_options::CircleGrid:
-	node["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
-	node["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
-	node["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
+	parseInt(node, "target_rows", temp_target->circle_grid_parameters_.pattern_rows);
+	parseInt(node, "target_cols", temp_target->circle_grid_parameters_.pattern_cols);
+	parseDouble(node, "circle_dia", temp_target->circle_grid_parameters_.circle_diameter);
 	temp_target->circle_grid_parameters_.is_symmetric=true;
 	ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
 	break;
       case pattern_options::ModifiedCircleGrid:
-	node["target_rows"] >> temp_target->circle_grid_parameters_.pattern_rows;
-	node["target_cols"] >> temp_target->circle_grid_parameters_.pattern_cols;
-	node["circle_dia"]  >> temp_target->circle_grid_parameters_.circle_diameter;
+	parseInt(node, "target_rows", temp_target->circle_grid_parameters_.pattern_rows);
+	parseInt(node, "target_cols", temp_target->circle_grid_parameters_.pattern_cols);
+	parseDouble(node, "circle_dia", temp_target->circle_grid_parameters_.circle_diameter);
 	temp_target->circle_grid_parameters_.is_symmetric=true;
 	ROS_DEBUG_STREAM("TargetRows: "<<temp_target->circle_grid_parameters_.pattern_rows);
+	break;
+      case pattern_options::ARtag:
+	// no parameters yet
 	break;
       case pattern_options::Balls:
 	// no parameters yet
 	break;
       default:
-	ROS_ERROR_STREAM("unknown pattern option (Chessboard, CircleGrid, or ModifiedCircleGrid, Balls)");
+	ROS_ERROR("unknown pattern option %d (Chessboard, CircleGrid, or ModifiedCircleGrid, Balls)", 
+			 (int) temp_target->target_type_);
 	break;
       } // end of target type
-      temp_target->pose_ = parsePose(node);
       std::string transform_interface;
-      node["transform_interface"] >> transform_interface;
-      shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, temp_target->target_frame_);
-      temp_target->setTransformInterface(temp_ti);// install the transform interface 
+      if(!parseString(node, "transform_interface", transform_interface)){
+	ROS_ERROR("must set transform interface for target");
+      }
+      else{
+	shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, temp_target->target_frame_);
+	temp_target->setTransformInterface(temp_ti);// install the transform interface 
+	if(transform_available){
+	  temp_target->pushTransform();
+	}
+      }
 
-      node["num_points"] >> temp_target->num_points_;
-      const Node *points_node = node.FindValue("points");
-      int num_points = parseTargetPoints((*points_node)[0], temp_target->pts_);
-      if(num_points  != temp_target->num_points_ ){
+      if(!parseUInt(node, "num_points", temp_target->num_points_)){
+	ROS_ERROR("must set target num_points");
+      }
+      const Node *points_node = parseNode(node, "points");
+      int num_points = parseTargetPoints(*points_node, temp_target->pts_);
+      if(num_points  != temp_target->num_points_  || num_points != (int)temp_target->pts_.size()){
 	ROS_ERROR("Expecting %d points found %d",temp_target->num_points_, num_points);
       }
     }// end try
@@ -125,14 +155,12 @@ namespace industrial_extrinsic_cal {
     return(temp_target);
   }// end parse_single_target
   
-  int parseTargetPoints(const Node &node, std::vector<Point3d> points)
+  int parseTargetPoints(const Node &node, std::vector<Point3d> &points)
   {
-    ROS_DEBUG_STREAM("FoundPoints: "<<node.size());
     points.clear();
     for (int i = 0; i <(int) node.size(); i++){
-      const YAML::Node *pnt_node = node[i].FindValue("pnt");
-      std::vector<float> temp_pnt;
-      (*pnt_node) >> temp_pnt;
+      std::vector<double> temp_pnt;
+      parseVectorD(node[i], "pnt", temp_pnt);
       Point3d temp_pnt3d;
       temp_pnt3d.x = temp_pnt[0];
       temp_pnt3d.y = temp_pnt[1];

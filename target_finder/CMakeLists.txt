@@ -17,6 +17,9 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs 
   sensor_msgs
 )
+
+set(CMAKE_CXX_FLAGS ${CMAKE_CSS_FLAGS} "-fPIC") 
+
 # Opencv
 FIND_PACKAGE(OpenCV REQUIRED)
 IF (OPENCV_FOUND)
@@ -30,10 +33,10 @@ IF (CERES_FOUND)
 ENDIF (CERES_FOUND)
 
 # Eigen
-FIND_PACKAGE(Eigen REQUIRED)
-IF (EIGEN_FOUND)
-  MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
-ENDIF (EIGEN_FOUND)
+#FIND_PACKAGE(Eigen REQUIRED)
+#IF (EIGEN_FOUND)
+#  MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
+#ENDIF (EIGEN_FOUND)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -121,7 +124,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
+#  ${catkin_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
@@ -130,14 +134,14 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-# add_executable(target_finder_node src/target_finder_node.cpp)
+add_executable(target_gen src/nodes/grid_generator.cpp)
 add_executable(call_service src/nodes/call_service.cpp)
 add_executable(target_locator_srv src/nodes/target_locator.cpp)
 
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(target_finder_node target_finder_generate_messages_cpp)
+add_dependencies(target_gen ${catkin_EXPORTED_TARGETS})
 add_dependencies(call_service ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 add_dependencies(target_locator_srv ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
@@ -145,6 +149,7 @@ add_dependencies(target_locator_srv ${PROJECT_NAME}_generate_messages_cpp ${catk
 # target_link_libraries(target_finder_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(target_gen ${catkin_LIBRARIES}  )
 target_link_libraries(call_service industrial_extrinsic_cal ${catkin_LIBRARIES}  )
 target_link_libraries(target_locator_srv industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 

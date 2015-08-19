@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <param name="/test/yaml_file_path" value="$(find industrial_extrinsic_cal)/test/yaml"/>
+  <node pkg="tf" type="static_transform_publisher" 
+                 name="housing_to_optical" 
+                 args="3 4 5 0 0 0 asus7_rgb_optical_frame housing_frame 100" />
+
+</launch>

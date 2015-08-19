@@ -71,7 +71,11 @@ class CalibrationJob
 public:
   /** @brief constructor */
   CalibrationJob(std::string camera_fn, std::string target_fn, std::string caljob_fn) :
-    camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn), solved_(false), problem_(NULL), post_proc_on_(false)
+    camera_def_file_name_(camera_fn), 
+    target_def_file_name_(target_fn), 
+    caljob_def_file_name_(caljob_fn), 
+    solved_(false), problem_(NULL),
+    post_proc_on_(false)
   {  } ;
 
   /** @brief default destructor */
@@ -112,15 +116,6 @@ public:
    */
   bool clearObservationData();
 
-  /**
-   * @brief get the private member original_extrinsics_
-   * @return a parameter block of the original extrinsics of calibration_job
-   */
-  const std::vector<P_BLOCK> getOriginalExtrinsics() const
-  {
-    return original_extrinsics_;
-  }
-
 
   const std::string& getReferenceFrame() const
   {
@@ -151,6 +146,11 @@ public:
   /** @brief clears the flag that saves observation data to a file for post processing */
   void postProcessingOff();
 
+/*@brief get pointer to the blocks moving and static cameras and targets */
+  CeresBlocks * getBlocks(){return &ceres_blocks_; }; 
+
+/*@brief get pointer to list of scenes*/
+  std::vector<ObservationScene> * getScenes(){return &scene_list_;}; 
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 protected:
@@ -234,10 +234,7 @@ private:
   std::string target_def_file_name_; /*!< this file describes all targets in job */
   std::string caljob_def_file_name_; /*!< this file describes all observations in job */
   int current_scene_; /*!< id of current scene under review or construction */
-  std::vector<ROSCameraObserver> camera_observers_; /*!< interface to images from cameras */
-  std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
   CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
-  std::vector<P_BLOCK> original_extrinsics_; /*!< This is the parameter block which holds the original camera extrinsics */
   ceres::Problem  *problem_; /*!< this is the object used to define the optimization problem for ceres */
   ceres::Solver::Summary ceres_summary_; /*!< object for displaying solver results */
   int total_observations_; /*< number of observations/cost elements in problem */

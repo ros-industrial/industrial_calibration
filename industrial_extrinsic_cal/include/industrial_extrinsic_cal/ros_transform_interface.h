@@ -133,7 +133,7 @@ namespace industrial_extrinsic_cal
     /**
      * @brief constructor
      * @param optical_frame The name of the optical frame defined in the urdf
-     * @param optical_frame The name of camera housing frame defined in the urdf
+     * @param housing_frame The name of camera housing frame defined in the urdf
      */
     ROSCameraHousingListenerTInterface(const std::string & optical_frame, const std::string & housing_frame);
 
@@ -174,9 +174,9 @@ namespace industrial_extrinsic_cal
 
     /**
      * @brief constructor
-     * @param image_topic name of published image topic
+     * @param transform_frame the frame associated with this transform
      */
-    ROSBroadcastTransInterface(const std::string & transform_frame, const Pose6d & pose);
+    ROSBroadcastTransInterface(const std::string & transform_frame);
 
     /**
      * @brief Default destructor
@@ -203,7 +203,6 @@ namespace industrial_extrinsic_cal
     ros::Timer timer_; /**< need a timer to initiate broadcast of transform */
     tf::StampedTransform transform_; /**< the broadcaster needs this which we get values from pose_ */
     tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
-    bool ref_frame_defined_; /**< the broadcaster can't start until the reference frame is defined, this is set then */
   };
 
   /** @brief This transform interface is used when the camera pose  is determined through calibration
@@ -218,9 +217,9 @@ namespace industrial_extrinsic_cal
 
     /**
      * @brief constructor
-     * @param image_topic name of published image topic
+     * @param transform_frame the frame associated with this transform
      */
-    ROSCameraBroadcastTransInterface(const std::string & transform_frame, const Pose6d & pose);
+    ROSCameraBroadcastTransInterface(const std::string & transform_frame);
 
     /**
      * @brief Default destructor
@@ -247,7 +246,6 @@ namespace industrial_extrinsic_cal
     ros::Timer timer_; /**< need a timer to initiate broadcast of transform */
     tf::StampedTransform transform_; /**< the broadcaster needs this which we get values from pose_ */
     tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
-    bool ref_frame_defined_; /**< the broadcaster can't start until the reference frame is defined, this is set then */
   };
 
 
@@ -262,9 +260,11 @@ namespace industrial_extrinsic_cal
 
     /**
      * @brief constructor
-     * @param image_topic name of published image topic
+     * @param transform_frame the frame associated with this transform
+     * @param housing_frame the camera's housing frame
+     * @param mounting_frame the camera's mounting frame
      */
-    ROSCameraHousingBroadcastTInterface(const std::string & transform_frame, const Pose6d & pose);
+    ROSCameraHousingBroadcastTInterface(const std::string & transform_frame, const std::string &housing_frame, const std::string &mounting_frame);
 
     /**
      * @brief Default destructor
@@ -275,7 +275,7 @@ namespace industrial_extrinsic_cal
     bool pushTransform(Pose6d & Pose);
 
     /** @brief returns the pose used in construction, or the one most recently pushed */
-    Pose6d pullTransform(){ return(pose_);};
+    Pose6d pullTransform();
 
     /** @brief appends pose as a static transform publisher to the file */
     bool store(std::string &filePath);
@@ -292,8 +292,8 @@ namespace industrial_extrinsic_cal
     tf::StampedTransform transform_; /**< the broadcaster needs this which we get values from pose_ */
     tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
     tf::TransformListener tf_listener_; // need this to get the tranform from housing to optical frame from tf
-    bool ref_frame_defined_; /**< the broadcaster can't start until the reference frame is defined, this is set then */
     std::string housing_frame_; /**< frame name for the housing */
+    std::string mounting_frame_; /**< mounting frame name */
   };
 
   /** @brief this is expected to be used by a camera who's position is defined by the urdf using the calibration xacro macro
@@ -316,7 +316,6 @@ namespace industrial_extrinsic_cal
 
     /**
      * @brief constructor
-     * @param optical_frame The name of the optical frame defined in the urdf
      * @param transform_frame The name of camera's optical frame 
      * @param housing_frame The name of camera housing's frame
      * @param mounting_frame The name of frame on which the camera housing is mounted

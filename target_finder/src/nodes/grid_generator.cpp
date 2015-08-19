@@ -19,9 +19,13 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <ros/console.h>
-#include <boost/foreach>
+#include <boost/foreach.hpp>
 
 using std::string;
+
+typedef struct {
+  double x,y,z;
+}Point3d;
 
 int main(int argc, char** argv)
 {
@@ -33,7 +37,7 @@ int main(int argc, char** argv)
   std::string target_name;
   std::string target_frame;
   std::string target_file_path;
-  int target_type = 2;
+  int target_type;
 
   if(!pnh.getParam( "target_rows", rows)){
     ROS_ERROR("Must set param:  target_rows");
@@ -56,14 +60,18 @@ int main(int argc, char** argv)
   if(!pnh.getParam( "target_file_path", target_file_path)){
     ROS_ERROR("Must set param:  target_file_path");
   }
+  if(!pnh.getParam( "target_type", target_type)){
+    ROS_ERROR("target_type not set, default = 2");
+    target_type=2;
+  }
   // generate points
   std::vector<Point3d> pts;
-  pts_.clear();
-  for(int i=0; i<rows; i++){
-    for(int j=0; j<cols; j++){
+  pts.clear();
+  for(int j=0; j<rows; j++){
+    for(int i=0; i<cols; i++){
       Point3d point;
-      point.x = (rows -1 -i)*spacing;
-      point.y = (cols -1 -j)*spacing;
+      point.x = i*spacing;
+      point.y = (rows -1 -j)*spacing;
       point.z = 0.0;
       pts.push_back(point);
     }
@@ -80,22 +88,18 @@ int main(int argc, char** argv)
     fprintf(fp,"     circle_dia: %f\n", diameter);
     fprintf(fp,"     target_frame: %s\n", target_frame.c_str());
     fprintf(fp,"     transform_interface: %s\n", "default_ti");
-    fprintf(fp,"     angle_axis_ax: 0.0\n");
-    fprintf(fp,"     angle_axis_ay: 0.0\n");
-    fprintf(fp,"     angle_axis_az: 0.0\n");
-    fprintf(fp,"     position_x: 0.0\n");
-    fprintf(fp,"     position_y: 0.0\n");
-    fprintf(fp,"     position_z: 0.0\n");
+    fprintf(fp,"     xyz_aaxis_pose: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n");
     fprintf(fp,"     target_rows: %d\n", rows);
     fprintf(fp,"     target_cols: %d\n", cols);
     fprintf(fp,"     num_points: %d\n", (int)pts.size());
+    fprintf(fp,"     points:\n");
     BOOST_FOREACH(Point3d pt, pts){
-      fprintf("     - pnt: [ %7.4lf,  %7.4lf,  %7.4lf]\n", pt.x, pt.y, pt.z);
+      fprintf(fp, "        - pnt: [ %7.4lf,  %7.4lf,  %7.4lf]\n", pt.x, pt.y, pt.z);
     }
     fclose(fp);
+    ROS_INFO("target created at %s",target_file_path.c_str());
   }
   else{
     ROS_ERROR("Could not open target file %s", target_file_path.c_str());
   }
-  return 1;
 }
