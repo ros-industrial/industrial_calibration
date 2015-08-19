@@ -11,7 +11,7 @@
 
 namespace industrial_extrinsic_cal 
 {
-#define YAML_ITERATOR YAML::Iterator
+#define YAML_ITERATOR YAML::iterator
   
   inline bool parseDouble(const YAML::Node &node, char const * var_name, double &var_value)
   {
@@ -85,10 +85,19 @@ namespace industrial_extrinsic_cal
       dvalue = it->second.as<double>();
     }
 
-  inline const YAML::Node yamlNodeFromFileName(std::string filename)
+  inline bool yamlNodeFromFileName(std::string filename, YAML::Node & ynode)
     {
-      YAML::Node ynode = YAML::LoadFile(filename.c_str());
-      return (ynode);
+      bool rtn = true;
+      try
+	{
+	  ynode = YAML::LoadFile(filename.c_str());
+	}
+      catch( int e)
+	{
+	  ROS_ERROR("could not open %s in yamlNodeFromFileName()", filename.c_str());
+	  rtn= false;
+	}
+      return (rtn);
     }
 
 } //end namespace
