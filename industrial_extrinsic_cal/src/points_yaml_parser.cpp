@@ -21,11 +21,13 @@ namespace industrial_extrinsic_cal {
     bool return_value = true;
     try
       {
-	const YAML::Node points_doc = yamlNodeFromFileName(points_input_file);
-	
+	YAML::Node points_doc;
+	if(!yamlNodeFromFileName(points_input_file, points_doc)){
+	  ROS_ERROR("Can't parse yaml file %s", points_input_file.c_str());
+	}
 	// read in all points
 	points.clear();
-	const YAML::Node points_node = parseNode(points_doc, "points");
+	const YAML::Node& points_node = parseNode(points_doc, "points");
 	for (int j = 0; j < points_node.size(); j++){
 	  vector<double> temp_pnt;
 	  parseVectorD(points_node[j], "pnt", temp_pnt);

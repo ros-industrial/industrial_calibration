@@ -120,9 +120,12 @@ namespace industrial_extrinsic_cal
     // joint1_name: <float_value1>
     // joint2_name: <float_value2>
     try{
-      YAML::Node doc = yamlNodeFromFileName(yaml_file_name_);
+      YAML::Node doc;
+      if(!yamlNodeFromFileName(yaml_file_name_, doc)){
+	ROS_ERROR("Can't read yaml file %s", yaml_file_name_.c_str());
+      }
       for(int i=0; i<doc.size(); i++){
-	for(YAML::iterator it=doc[i].begin();it!=doc[i].end();++it) {
+	for(YAML_ITERATOR it=doc[i].begin();it!=doc[i].end();++it) {
 	  std::string key;
 	  double value;
 	  parseKeyDValue( it, key, value);

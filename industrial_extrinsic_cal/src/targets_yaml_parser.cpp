@@ -29,30 +29,32 @@ namespace industrial_extrinsic_cal {
     bool rtn = true;
     Node target_doc;
     try{
-      YAML::Node target_doc = yamlNodeFromFileName(target_file);
+      YAML::Node target_doc;
+      if(!yamlNodeFromFileName(target_file, target_doc)){
+	ROS_ERROR("Can't parse yaml file %s", target_file.c_str());
+      }
       // read in all static cameras
       targets.clear();
       int n_static =0;
-      if (const Node target_parameters = parseNode(target_doc, "static_targets")){
-	for (unsigned int i = 0; i < target_parameters.size(); i++){
-	  shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
-	  temp_target->is_moving_ = false;
-	  targets.push_back(temp_target);
-	  n_static++;
-	}
-      } // end if there are any targets in file
+      const YAML::Node& target_parameters = parseNode(target_doc, "static_targets");
+      for (unsigned int i = 0; i < target_parameters.size(); i++){
+	shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
+	temp_target->is_moving_ = false;
+	targets.push_back(temp_target);
+	n_static++;
+      }
+
 
 
       // read in all moving targets
       int n_moving=0;
-      if (const Node target_parameters = parseNode(target_doc, "moving_targets")){
-	for (unsigned int i = 0; i < target_parameters.size(); i++){
-	  shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
-	  temp_target->is_moving_ = true;
-	  targets.push_back(temp_target);
-	  n_moving++;
-	}
-      } // end if there are any moving targets in file
+      const YAML::Node& target_parameters2 = parseNode(target_doc, "moving_targets");
+      for (unsigned int i = 0; i < target_parameters2.size(); i++){
+	shared_ptr<Target> temp_target = parseSingleTarget(target_parameters2[i]);
+	temp_target->is_moving_ = true;
+	targets.push_back(temp_target);
+	n_moving++;
+      }
 
       ROS_INFO_STREAM((int) targets.size() << " targets " << n_static << " static " << n_moving << " moving");
     }
@@ -131,7 +133,7 @@ namespace industrial_extrinsic_cal {
       if(!parseUInt(node, "num_points", temp_target->num_points_)){
 	ROS_ERROR("must set target num_points");
       }
-      const Node points_node = parseNode(node, "points");
+      const YAML::Node& points_node = parseNode(node, "points");
       int num_points = parseTargetPoints(points_node, temp_target->pts_);
       if(num_points  != temp_target->num_points_  || num_points != (int)temp_target->pts_.size()){
 	ROS_ERROR("Expecting %d points found %d",temp_target->num_points_, num_points);
