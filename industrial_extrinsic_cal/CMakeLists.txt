@@ -120,7 +120,7 @@ add_library(industrial_extrinsic_cal
    src/targets_yaml_parser.cpp
    src/points_yaml_parser.cpp
    src/caljob_yaml_parser.cpp
-   src/calibration_job_definition.cpp
+#   src/calibration_job_definition.cpp
 )
 
 ## This insures the creation of headers for all ros messages, services and actions 
@@ -128,9 +128,9 @@ add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp 
 
 ## Declare a cpp executable
 add_executable(manual_calt_adjust src/nodes/manual_calt_adjuster.cpp)
-add_executable(nist_analysis src/nodes/nist_analysis.cpp)
-add_executable(mono_ex_cal src/nodes/mono_ex_cal.cpp)
-add_executable(service_node src/nodes/calibration_service.cpp )
+add_executable(nist_analysis src/nodes/nist_analysis.cpp src/calibration_job_definition.cpp)
+add_executable(mono_ex_cal src/nodes/mono_ex_cal.cpp )
+add_executable(service_node src/nodes/calibration_service.cpp src/calibration_job_definition.cpp)
 add_executable(trigger_service src/nodes/ros_scene_trigger_server.cpp)
 add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
 add_executable(mutable_joint_state_publisher src/nodes/mutable_joint_state_publisher.cpp)

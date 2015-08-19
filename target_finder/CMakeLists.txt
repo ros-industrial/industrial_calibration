@@ -134,14 +134,14 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-# add_executable(target_finder_node src/target_finder_node.cpp)
+add_executable(target_gen src/nodes/grid_generator.cpp)
 add_executable(call_service src/nodes/call_service.cpp)
 add_executable(target_locator_srv src/nodes/target_locator.cpp)
 
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(target_finder_node target_finder_generate_messages_cpp)
+add_dependencies(target_gen ${catkin_EXPORTED_TARGETS})
 add_dependencies(call_service ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 add_dependencies(target_locator_srv ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
@@ -149,6 +149,7 @@ add_dependencies(target_locator_srv ${PROJECT_NAME}_generate_messages_cpp ${catk
 # target_link_libraries(target_finder_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(target_gen ${catkin_LIBRARIES}  )
 target_link_libraries(call_service industrial_extrinsic_cal ${catkin_LIBRARIES}  )
 target_link_libraries(target_locator_srv industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 
