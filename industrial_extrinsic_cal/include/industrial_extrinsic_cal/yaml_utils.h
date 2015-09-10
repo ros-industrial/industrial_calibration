@@ -78,7 +78,7 @@ namespace industrial_extrinsic_cal
     }
     return(node[var_name]);
   }
-  inline void parseKeyDValue(YAML::iterator &it, std::string &key, double &dvalue)
+  inline void parseKeyDValue(YAML::const_iterator &it, std::string &key, double &dvalue)
     {
       key = it->first.as<std::string>();
       dvalue = it->second.as<double>();

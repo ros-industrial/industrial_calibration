@@ -115,20 +115,25 @@ namespace industrial_extrinsic_cal
 
   bool  MutableJointStatePublisher::loadFromYamlFile()
   {
+      ROS_INFO_STREAM(yaml_file_name_);
     // yaml file should have the followng format:
     // joint0_name: <float_value0>
     // joint1_name: <float_value1>
     // joint2_name: <float_value2>
     try{
       YAML::Node doc = yamlNodeFromFileName(yaml_file_name_);
-      for(int i=0; i<doc.size(); i++){
-	for(YAML::iterator it=doc[i].begin();it!=doc[i].end();++it) {
-	  std::string key;
-	  double value;
-	  parseKeyDValue( it, key, value);
-	  joints_[key.c_str()] = value;
-	}
-      }
+      ROS_INFO("doc size: %d", doc.size());
+
+        for(YAML::const_iterator it=doc.begin();it!=doc.end();++it)
+        {
+
+          std::string key;
+          double value;
+          parseKeyDValue( it, key, value);
+          ROS_INFO_STREAM(key << ": " << value);
+          joints_[key.c_str()] = value;
+        }
+
     }	// end try
     catch (YAML::ParserException& e){
       ROS_ERROR("mutableJointStatePublisher: parsing joint states file");
