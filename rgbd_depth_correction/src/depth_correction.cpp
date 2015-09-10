@@ -146,47 +146,29 @@ bool DepthCorrectionNodelet::readYamlFile(const std::string &pathway, const std:
   bool rtn = true;
   std::string file;
   file = pathway + yaml_file + ".yaml";
-  std::ifstream fin(file.c_str());
-  if( fin.is_open())
-  {
-    try
-    {
-      YAML::Parser parser(fin);
-      YAML::Node doc;
-      parser.GetNextDocument(doc);
-
-
-      if(!industrial_extrinsic_cal::parseInt(doc, "version", version_))
-      {
-        ROS_ERROR("Yaml file did not contain depth correction version information");
-        rtn = false;
-      }
-      else
-      {
-        switch (version_)
-        {
-          case 1:
-            loadVersionOne(doc, pathway + yaml_file);
-            break;
-          default:
-            ROS_ERROR("Version in YAML file did not match any known versions");
-            rtn = false;
-            break;
-        }
-      }
-    }
-    catch(YAML::ParserException& e)
-    {
-      ROS_ERROR_STREAM("Yaml parser exception: " << e.what());
-      rtn = false;
-    }
-  }
-  else
-  {
-    ROS_ERROR_STREAM("Failed to read in yaml file: " << yaml_file);
+  YAML::Node doc;
+  if(!industrial_extrinsic_cal::yamlNodeFromFileName(file, doc)){
+    ROS_ERROR("could not open yaml file %s", file.c_str());
     rtn = false;
   }
-
+  else if(!industrial_extrinsic_cal::parseInt(doc, "version", version_))
+    {
+      ROS_ERROR("Yaml file did not contain depth correction version information");
+      rtn = false;
+    }
+  else
+    {
+      switch (version_)
+        {
+	case 1:
+	  loadVersionOne(doc, pathway + yaml_file);
+	  break;
+	default:
+	  ROS_ERROR("Version in YAML file did not match any known versions");
+	  rtn = false;
+	  break;
+        }
+    }
   return rtn;
 }
 
