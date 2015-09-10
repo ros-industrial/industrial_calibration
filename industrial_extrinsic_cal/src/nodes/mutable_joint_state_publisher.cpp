@@ -115,6 +115,7 @@ namespace industrial_extrinsic_cal
 
   bool  MutableJointStatePublisher::loadFromYamlFile()
   {
+      ROS_INFO_STREAM(yaml_file_name_);
     // yaml file should have the followng format:
     // joint0_name: <float_value0>
     // joint1_name: <float_value1>
@@ -124,13 +125,11 @@ namespace industrial_extrinsic_cal
       if(!yamlNodeFromFileName(yaml_file_name_, doc)){
 	ROS_ERROR("Can't read yaml file %s", yaml_file_name_.c_str());
       }
-      for(int i=0; i<doc.size(); i++){
-	for(YAML_ITERATOR it=doc[i].begin();it!=doc[i].end();++it) {
+      for(YAML_ITERATOR it=doc.begin(); it != doc.end(); ++it) {
 	  std::string key;
 	  double value;
 	  parseKeyDValue( it, key, value);
 	  joints_[key.c_str()] = value;
-	}
       }
     }	// end try
     catch (YAML::ParserException& e){

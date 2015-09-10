@@ -38,7 +38,7 @@ using YAML::Node;
       if (!parseString(caljob_doc, "reference_frame", reference_frame)){
 	ROS_ERROR("must set caljob's reference frame");
       }
-
+   
       // read in all scenes
       scene_list.clear();
       const YAML::Node& scenes_node = parseNode(caljob_doc, "scenes");
