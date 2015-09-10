@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<launch>
+  <node pkg="nodelet" type="nodelet" name="depth_correction_nodelet"  args="manager" output="screen">
+    <param name="world_frame_name" value="target_frame" />
+  </node>
+ 
+  <node pkg="nodelet" type="nodelet" name="depth_correction" args="load depth_calibration/DepthCorrectionNodelet depth_correction_nodelet no-bond" output="screen">
+
+    <param name="filename" value="/camera_cal_1" />
+    <param name="filepath" value="$(find depth_calibration)/yaml" />
+    <remap from="in_cloud" to="/kinect/depth_registered/points"/>
+    <remap from="out_cloud" to="/camera/depth/corrected_points" />
+  </node>
+
+  <node pkg="nodelet" type="nodelet" name="depth_correction_2" args="load depth_calibration/DepthCorrectionNodelet depth_correction_nodelet no-bond" output="screen">
+
+    <param name="filename" value="/camera_cal_3" />
+    <param name="filepath" value="$(find depth_calibration)/yaml" />
+    <remap from="in_cloud" to="/kinect2/depth_registered/points"/>
+    <remap from="out_cloud" to="/camera2/depth/corrected_points" />
+    <remap from="change_depth_factor" to="change_depth_factor2" />
+  </node>
+
+
+
+  <arg name="live" default="True" />
+  <arg name="gui" value="True" />
+  <arg name="cal_pkg_name" value="bolles_calibration" />
+  <arg name="cal_pkg_path" value="$(find bolles_calibration)" />
+  <arg name="urdf_path" value="$(find bolles_calibration)/urdf/camera_scene.urdf" />
+  <arg name="camera_ns" value="kinect" />
+
+  <node pkg="industrial_extrinsic_cal" type="service_node" name="calibration_service_node" output="screen" >
+   <param name="yaml_file_path" value="$(arg cal_pkg_path)/yaml/" />
+   <param name="store_results_package_name" value="$(arg cal_pkg_name)" />
+   <!--Target file can be switched between
+       - calibration_target_7x5.yaml - small target
+       - calibration_target_5x4.yaml - medium target
+   -->
+   <rosparam>
+     camera_file: "dual_camera_scene_cameras.yaml"
+     target_file: "calibration_target_7x5_double_sized.yaml"
+     cal_job_file: "dual_camera_scene_caljob.yaml"
+     store_results_file_name: "camera_scene_transforms.launch"
+   </rosparam>
+  </node>
+
+  <node  name="mutable_joint_state_publisher" pkg="industrial_extrinsic_cal" type="mutable_joint_state_publisher" >
+    <param name="mutable_joint_state_yaml_file" value="$(arg cal_pkg_path)/yaml/camera_scene_mutable_joint_states.yaml" />
+  </node>
+
+  <group  if="$(arg live)">
+    <include file="$(find openni2_launch)/launch/openni2.launch" >
+      <arg name="publish_tf" value="false" />
+      <arg name="camera" value="kinect" />
+      <!-- Hardware depth registration is required because urdf does not contain depth frames-->
+      <arg name="depth_registration" default="true" />
+      <arg name="device_id" value="3@1"/>
+      <arg name="rgb_camera_info_url"   value="file://$(find depth_calibration)/yaml/kinect_rgb_PS1080_PrimeSense.yaml" />
+      <arg name="depth_camera_info_url" value="file://$(find depth_calibration)/yaml/kinect_depth_PS1080_PrimeSense.yaml" />
+    </include>
+  </group>
+
+  <group  if="$(arg live)">
+    <include file="$(find openni2_launch)/launch/openni2.launch" >
+      <arg name="publish_tf" value="false" />
+      <arg name="camera" value="kinect2" />
+      <!-- Hardware depth registration is required because urdf does not contain depth frames-->
+      <arg name="depth_registration" default="true" />
+      <arg name="device_id" value="3@2"/>
+      <arg name="rgb_camera_info_url"   value="file://$(find depth_calibration)/yaml/kinect2_rgb_PS1080_PrimeSense.yaml" />
+      <arg name="depth_camera_info_url" value="file://$(find depth_calibration)/yaml/kinect2_depth_PS1080_PrimeSense.yaml" />
+
+    </include>
+  </group>
+
+  <group ns="$(arg camera_ns)" >
+    <!-- Load robot description -->
+    <param name="robot_description" textfile="$(arg urdf_path)" />
+
+    <!-- Launch robot state/joint state publishers for camera and target -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" >
+      <param name="publish_frequency" value="50" />
+    </node>
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" >
+      <rosparam param="source_list">[/mutable_joint_states]</rosparam>
+    </node>
+
+    <!-- Launch Rviz -->
+
+    <group  if="$(arg gui)">
+      <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg cal_pkg_path)/config/kinect_calibration.rviz" required ="true"/>
+    </group>
+  </group>
+    <node pkg="tf" type="static_transform_publisher" name="t2_frame" args="0.280 0 0 0 0 0 target_frame t2_frame 100" />
+    <node pkg="tf" type="static_transform_publisher" name="t3_frame" args="0 .420 0 0 0 0 target_frame t3_frame 100" />
+    <node pkg="tf" type="static_transform_publisher" name="t4_frame" args="0.280 0.420  0 0 0 0 target_frame t4_frame 100" />
+
+</launch>
