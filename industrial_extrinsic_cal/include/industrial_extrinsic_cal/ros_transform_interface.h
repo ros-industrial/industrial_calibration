@@ -264,7 +264,10 @@ namespace industrial_extrinsic_cal
      * @param housing_frame the camera's housing frame
      * @param mounting_frame the camera's mounting frame
      */
-    ROSCameraHousingBroadcastTInterface(const std::string & transform_frame, const std::string &housing_frame, const std::string &mounting_frame);
+    ROSCameraHousingBroadcastTInterface(const std::string & transform_frame, 
+					const std::string &housing_frame, 
+                                                                          const std::string &mounting_frame,
+					const Pose6d & pose);
 
     /**
      * @brief Default destructor

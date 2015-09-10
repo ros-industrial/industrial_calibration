@@ -123,7 +123,7 @@ namespace industrial_extrinsic_cal {
 	ROS_ERROR("must set transform interface for target");
       }
       else{
-	shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, temp_target->target_frame_);
+	shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, temp_target->target_frame_, pose);
 	temp_target->setTransformInterface(temp_ti);// install the transform interface 
 	if(transform_available){
 	  temp_target->pushTransform();

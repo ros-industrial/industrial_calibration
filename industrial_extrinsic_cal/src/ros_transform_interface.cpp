@@ -231,7 +231,8 @@ namespace industrial_extrinsic_cal
 
   ROSCameraHousingBroadcastTInterface::ROSCameraHousingBroadcastTInterface(const string & transform_frame,
 									   const string &housing_frame,
-									   const string &mounting_frame)
+									   const string &mounting_frame,
+									   const Pose6d &pose)
   {
     transform_frame_                = transform_frame;
     housing_frame_                  = housing_frame; 

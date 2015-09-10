@@ -21,9 +21,10 @@ namespace industrial_extrinsic_cal {
   /** @brief parses a transform interface
    *   @param node, the yaml node 
    *   @param frame, the frame that the transform interface refers to
+   *   @param pose, the initial value of the pose
    *   @return a shared pointer to transform interface parsed
    **/
-  boost::shared_ptr<TransformInterface> parseTransformInterface(const YAML::Node &node, std::string &name, std::string &frame);
+  boost::shared_ptr<TransformInterface> parseTransformInterface(const YAML::Node &node, std::string &name, std::string &frame, Pose6d &pose);
   /** @brief parses a trigger
    *   @param node, the yaml node 
    *   @param name name of trigger

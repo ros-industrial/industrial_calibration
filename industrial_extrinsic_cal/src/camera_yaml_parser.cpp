@@ -99,7 +99,7 @@ namespace industrial_extrinsic_cal {
       // create a shared camera and a shared transform interface
       temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
       temp_camera->trigger_ = parseTrigger(node, trigger_name);
-      shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, camera_optical_frame);
+      shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, camera_optical_frame, pose);
       temp_camera->setTransformInterface(temp_ti);// install the transform interface 
       if(transform_available){
 	ros::Duration(0.25).sleep(); // wait for listeners to wake up
@@ -183,7 +183,7 @@ namespace industrial_extrinsic_cal {
     return(temp_trigger);
   }
   
-  shared_ptr<TransformInterface> parseTransformInterface(const Node &node, std::string &name, std::string &frame)
+  shared_ptr<TransformInterface> parseTransformInterface(const Node &node, std::string &name, std::string &frame, Pose6d &pose)
   {
     shared_ptr<TransformInterface> temp_ti;
     std::string camera_housing_frame;
@@ -209,7 +209,8 @@ namespace industrial_extrinsic_cal {
       if(!parseString(node, "camera_mounting_frame", camera_mounting_frame)) ROS_ERROR("Can't read camera_mounting_frame");
       temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(frame, 
 								 camera_housing_frame,
-								 camera_mounting_frame);
+								 camera_mounting_frame,
+								 pose);
     }
     else if(name == std::string("ros_camera_housing_cti")){ 
       if(!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
