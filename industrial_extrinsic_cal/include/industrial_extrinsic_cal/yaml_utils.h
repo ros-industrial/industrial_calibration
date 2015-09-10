@@ -4,7 +4,6 @@
 #include <boost/shared_ptr.hpp>
 #include <yaml-cpp/yaml.h>
 #include <iostream>
-#include <fstream>
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/camera_definition.h>
 #include <industrial_extrinsic_cal/transform_interface.hpp>
@@ -12,13 +11,12 @@
 
 namespace industrial_extrinsic_cal 
 {
-
-#define YAML_ITERATOR YAML::Iterator
+#define YAML_ITERATOR YAML::const_iterator
   
   inline bool parseDouble(const YAML::Node &node, char const * var_name, double &var_value)
   {
-    if(node.FindValue(var_name)){
-      node[var_name] >> var_value;
+    if(node[var_name]){
+      var_value = node[var_name].as<double> ();
       return true;
     }
     return false;
@@ -26,16 +24,16 @@ namespace industrial_extrinsic_cal
 
   inline bool parseInt(const YAML::Node &node, char const * var_name, int &var_value)
   {
-    if(node.FindValue(var_name)){
-      node[var_name] >> var_value;
+    if(node[var_name]){
+      var_value = node[var_name].as<int> ();
       return true;
     }
     return false;
   }
   inline bool parseUInt(const YAML::Node &node, char const * var_name, unsigned int &var_value)
   {
-    if(node.FindValue(var_name)){
-      node[var_name] >> var_value;
+    if(node[var_name]){
+      var_value = node[var_name].as<unsigned int> ();
       return true;
     }
     return false;
@@ -43,8 +41,8 @@ namespace industrial_extrinsic_cal
 
   inline bool parseString(const YAML::Node &node, char const * var_name, std::string &var_value)
   {
-    if(node.FindValue(var_name)){
-      node[var_name] >> var_value;
+    if(node[var_name]){
+      var_value = node[var_name].as<std::string> ();
       return true;
     }
     return false;
@@ -52,8 +50,8 @@ namespace industrial_extrinsic_cal
 
   inline bool parseBool(const YAML::Node &node, char const * var_name, bool &var_value)
   {
-    if(node.FindValue(var_name)){
-      node[var_name] >> var_value;
+    if(node[var_name]){
+      var_value = node[var_name];
       return true;
     }
     return false;
@@ -61,12 +59,12 @@ namespace industrial_extrinsic_cal
 
   inline bool parseVectorD(const YAML::Node &node, char const * var_name, std::vector<double> &var_value)
   {
-    if(node.FindValue(var_name)){
+    if(node[var_name]){
       var_value.clear();
-      const YAML::Node *n = node.FindValue(var_name);
-      for(int i=0; i<(int) n->size(); i++){
+      const YAML::Node n = node[var_name];
+      for(int i=0; i<(int) n.size(); i++){
 	double value;
-	(*n)[i] >> value;
+	value = n[i].as<double> ();
 	var_value.push_back(value);
       }
       return true;
@@ -74,37 +72,31 @@ namespace industrial_extrinsic_cal
     return false;
   }
 
-  inline const YAML::Node& parseNode(const YAML::Node &node, char const * var_name)
+  inline const YAML::Node  parseNode(const YAML::Node &node, char const * var_name)
   {
-    
-    if(!node.FindValue(var_name)){
-      ROS_ERROR("Can't parse node %s", var_name);
-      return(YAML::Node());
-    } 
+    if(!node[var_name]){
+      ROS_ERROR("Can't parse node[%s]", var_name);
+    }
     return(node[var_name]);
-
   }
-
-  inline void parseKeyDValue(YAML::Iterator &it, std::string &key, double &dvalue)
+  inline void parseKeyDValue(YAML::const_iterator &it, std::string &key, double &dvalue)
     {
-      it.first() >> key;
-      it.second() >> dvalue;
+      key = it->first.as<std::string>();
+      dvalue = it->second.as<double>();
     }
 
   inline bool yamlNodeFromFileName(std::string filename, YAML::Node & ynode)
     {
-      bool rtn;
-      std::ifstream fs;
-      fs.open(filename.c_str());
-      if(fs.fail()){
-	ROS_ERROR("could not open %s in yamlNodeFromFileName()", filename.c_str());
-	rtn = false;
-      }
-      else{
-	YAML::Parser parser(fs);
-	parser.GetNextDocument(ynode);
-	rtn = true;
-      }
+      bool rtn = true;
+      try
+	{
+	  ynode = YAML::LoadFile(filename.c_str());
+	}
+      catch( int e)
+	{
+	  ROS_ERROR("could not open %s in yamlNodeFromFileName()", filename.c_str());
+	  rtn= false;
+	}
       return (rtn);
     }
 
