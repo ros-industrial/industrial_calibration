@@ -28,29 +28,30 @@ namespace industrial_extrinsic_cal {
     Node camera_doc;
     bool rtn=true;
     try{
-      Node camera_doc = yamlNodeFromFileName(cameras_input_file);
+      Node camera_doc;
+      if(!yamlNodeFromFileName(cameras_input_file, camera_doc)){
+	ROS_ERROR("Can't parse yaml file %s",cameras_input_file.c_str());
+      }
       cameras.clear();
 
       // read in all static cameras
       int n_static=0;
-      if (const Node camera_parameters = parseNode(camera_doc, "static_cameras") ){
-	for (unsigned int i = 0; i < camera_parameters.size(); i++){
-	  shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
-	  cameras.push_back(temp_camera);
-	  n_static++;
-	}
-      }      // end if there are any cameras in file
+      const YAML::Node& camera_parameters = parseNode(camera_doc, "static_cameras");
+      for (unsigned int i = 0; i < camera_parameters.size(); i++){
+	shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
+	cameras.push_back(temp_camera);
+	n_static++;
+      }
 
       // read in all moving cameras
       int n_moving=0;
-      if (const Node camera_parameters = parseNode(camera_doc, "moving_cameras")){
-	for (unsigned int i = 0; i < camera_parameters.size(); i++){
-	  shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
-	  temp_camera->is_moving_ = true;
-	  cameras.push_back(temp_camera);
+      const YAML::Node& camera_parameters2 = parseNode(camera_doc, "moving_cameras");
+      for (unsigned int i = 0; i < camera_parameters2.size(); i++){
+	shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters2[i]);
+	temp_camera->is_moving_ = true;
+	cameras.push_back(temp_camera);
 	  n_moving++;
-	}
-      } // end if there are any movingcameras in file
+      }
 
       ROS_INFO_STREAM((int) cameras.size() << " cameras " <<n_static <<" static " << n_moving << " moving");
     }
@@ -155,14 +156,14 @@ namespace industrial_extrinsic_cal {
       temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
     }
     else if(name == string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
-      const YAML::Node trig_node = parseNode(node,"trigger_parameters");
+      const YAML::Node& trig_node = parseNode(node,"trigger_parameters");
       if(!parseString(trig_node[0], "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
       Pose6d pose;
       parsePose(trig_node, pose);
       temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
     }
     else if(name == string("ROS_CAMERA_OBSERVER_TRIGGER")){
-      const YAML::Node trig_node = parseNode(node,"trigger_parameters");
+      const YAML::Node& trig_node = parseNode(node,"trigger_parameters");
       Roi roi;
       std::string service_name;
       std::string instructions;

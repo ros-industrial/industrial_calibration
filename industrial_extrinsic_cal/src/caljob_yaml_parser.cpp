@@ -29,7 +29,10 @@ using YAML::Node;
   {
     bool rtn=true;
     try{
-      Node caljob_doc = yamlNodeFromFileName(caljob_input_file);
+      Node caljob_doc;
+      if(!yamlNodeFromFileName(caljob_input_file, caljob_doc)){
+	ROS_ERROR("Can't parse yaml file %s", caljob_input_file.c_str());
+      }
 
       // get reference frame       
       if (!parseString(caljob_doc, "reference_frame", reference_frame)){
@@ -38,15 +41,11 @@ using YAML::Node;
    
       // read in all scenes
       scene_list.clear();
-      if (const Node scenes_node = parseNode(caljob_doc, "scenes") ){
-	for (unsigned int i = 0; i < scenes_node.size(); i++){
-	  ObservationScene temp_scene = parseSingleScene(scenes_node[i], i, blocks);
-	  temp_scene.setSceneId(i);
-	  scene_list.push_back(temp_scene);
-	}
-      }      // end if there are any scenes
-      else{
-	ROS_ERROR("no scenes in caljob");
+      const YAML::Node& scenes_node = parseNode(caljob_doc, "scenes");
+      for (unsigned int i = 0; i < scenes_node.size(); i++){
+	ObservationScene temp_scene = parseSingleScene(scenes_node[i], i, blocks);
+	temp_scene.setSceneId(i);
+	scene_list.push_back(temp_scene);
       }
       ROS_INFO_STREAM( (int) scene_list.size() << " scenes");
     }
@@ -67,7 +66,7 @@ using YAML::Node;
       temp_scene.setTrigger(temp_trigger);
 
       // parse the observations
-      const YAML::Node observation_node = parseNode(node, "observations");
+      const YAML::Node& observation_node = parseNode(node, "observations");
       for(int i=0; i<(int)observation_node.size();i++){
 	std::string camera_name;
 	std::string target_name;

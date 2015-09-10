@@ -121,19 +121,16 @@ namespace industrial_extrinsic_cal
     // joint1_name: <float_value1>
     // joint2_name: <float_value2>
     try{
-      YAML::Node doc = yamlNodeFromFileName(yaml_file_name_);
-      ROS_INFO("doc size: %d", doc.size());
-
-        for(YAML::const_iterator it=doc.begin();it!=doc.end();++it)
-        {
-
-          std::string key;
-          double value;
-          parseKeyDValue( it, key, value);
-          ROS_INFO_STREAM(key << ": " << value);
-          joints_[key.c_str()] = value;
-        }
-
+      YAML::Node doc;
+      if(!yamlNodeFromFileName(yaml_file_name_, doc)){
+	ROS_ERROR("Can't read yaml file %s", yaml_file_name_.c_str());
+      }
+      for(YAML_ITERATOR it=doc.begin(); it != doc.end(); ++it) {
+	  std::string key;
+	  double value;
+	  parseKeyDValue( it, key, value);
+	  joints_[key.c_str()] = value;
+      }
     }	// end try
     catch (YAML::ParserException& e){
       ROS_ERROR("mutableJointStatePublisher: parsing joint states file");
