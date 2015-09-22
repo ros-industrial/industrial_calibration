@@ -53,7 +53,7 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        asus_rgb_optical_frame:
+        basler1_optical_frame:
           Value: true
         world:
           Value: true
@@ -64,7 +64,7 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          asus_rgb_optical_frame:
+          basler1_optical_frame:
             {}
       Update Interval: 0
       Value: true
@@ -125,5 +125,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 58
-  Y: 60
+  X: 55
+  Y: 50

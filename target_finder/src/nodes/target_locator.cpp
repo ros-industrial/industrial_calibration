@@ -25,7 +25,7 @@
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.h> 
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp> 
-#include <target_finder/target_locater.h> 
+#include <target_finder/target_locater.h>
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
 #include "ceres/types.h"

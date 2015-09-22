@@ -39,7 +39,9 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/SetCameraInfo.h>
 #include <geometry_msgs/PointStamped.h>
+
 
 /**
  *  @brief enumerator containing three options for the type of pattern to detect
@@ -64,7 +66,7 @@ namespace industrial_extrinsic_cal
      * @brief constructor
      * @param image_topic name of published image topic
      */
-    ROSCameraObserver(const std::string &image_topic);
+    ROSCameraObserver(const std::string &image_topic, const std::string &camera_info_topic="none");
     
     /**
      * @brief Default destructor
@@ -114,6 +116,11 @@ namespace industrial_extrinsic_cal
      * @brief topic name for image which is input at constructor
      */
     std::string image_topic_;
+
+    /**
+     * @brief topic name for camera_info which is input at constructor
+     */
+    std::string camera_info_topic_;
 
     /**
      *  @brief cropped image based on original image and region of interest
@@ -238,12 +245,42 @@ namespace industrial_extrinsic_cal
      */
     cv::Mat getLastImage();
 
+
+    /**
+     *  @brief push the computed camera parameters out to the camera driver
+     *  @param fx the focal length in x
+     *  @param fx the focal length in y
+     *  @param cx the optical center in x
+     *  @param cy the optical center in y
+     *  @param k1 the radial distortion 2nd order term
+     *  @param k2 the radial distortion 4th order term
+     *  @param k3 the radial distortion 6th order term
+     *  @param p1 the decentering distortion p1
+     *  @param p2 the decentering distortion p2
+     */
+    bool  pushCameraInfo(double &fx, double &fy,	 double &cx,  double &cy,  double &k1,	 double &k2, double &k3,  double &p1,	 double &p2);
+
+    /**
+     *  @brief pull the computed camera parameters out to the camera driver
+     *  @param fx the focal length in x
+     *  @param fx the focal length in y
+     *  @param cx the optical center in x
+     *  @param cy the optical center in y
+     *  @param k1 the radial distortion 2nd order term
+     *  @param k2 the radial distortion 4th order term
+     *  @param k3 the radial distortion 6th order term
+     *  @param p1 the decentering distortion p1
+     *  @param p2 the decentering distortion p2
+     */
+    bool  pullCameraInfo(double &fx, double &fy,	 double &cx,  double &cy,  double &k1,	 double &k2, double &k3,  double &p1,	 double &p2);
+
   private:
     int image_number_; /**< a counter of images recieved */
     cv::Mat last_raw_image_; /**< the image last received */
     bool use_circle_detector_;
     bool white_blobs_;
-    
+    ros::ServiceClient client_;    
+    sensor_msgs::SetCameraInfo srv_;
   };
 
 } //end industrial_extrinsic_cal namespace

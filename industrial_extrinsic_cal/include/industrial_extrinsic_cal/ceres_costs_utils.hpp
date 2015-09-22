@@ -81,6 +81,23 @@ namespace industrial_extrinsic_cal
     p2  = intrinsics[8]; /** distortion p2  */
   }
 
+  /*! \brief ceres compliant template to extract the camera parameters from an ambigious vector of parameters without distortion
+   *   @param intrinsics[9] vector of parameters
+   *   @param fx focal length in x
+   *   @param fy focal length in y
+   *   @param cx optical center in x
+   *   @param cy optical center in y
+   */
+
+  template<typename T>  void extractCameraIntrinsics(const T intrinsics[4], T &fx, T &fy, T &cx, T &cy);
+  template<typename T> inline void extractCameraIntrinsics(const T intrinsics[4], T &fx, T &fy, T &cx, T &cy)
+  {
+    fx  = intrinsics[0]; /** focal length x */
+    fy  = intrinsics[1]; /** focal length y */
+    cx  = intrinsics[2]; /** central point x */
+    cy  = intrinsics[3]; /** central point y */
+  }
+
 
   /*! \brief ceres compliant template to extract the camera pose from an ambigious vector of parameters
    *   @param extrinsics[9] vector of parameters
@@ -2324,6 +2341,58 @@ namespace industrial_extrinsic_cal
       return (new ceres::AutoDiffCostFunction<RailICal, 2, 9, 6>
 	      (
 	       new RailICal(o_x, o_y, rail_position, point)
+	       )
+	      );
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double rail_position_; /** location of camera along rail */
+    Point3d point_; /** point expressed in target coordinates */
+  };
+
+  class  RailICal2
+  {
+  public:
+    RailICal2(double ob_x, double ob_y, double rail_position, Point3d point) :
+      ox_(ob_x), oy_(ob_y), rail_position_(rail_position), point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(	    const T* const c_p1,  /**intrinsics [4] */
+		    const T* const c_p2,  /**target_pose [6] */
+		    T* residual) const
+    {
+      T fx, fy, cx, cy;      // extract intrinsics
+      extractCameraIntrinsics(c_p1, fx, fy, cx, cy);
+      const T *target_aa(& c_p2[0]); // extract target's angle axis
+      const T *target_tx(& c_p2[3]); // extract target's position
+      T target_tx2[3];
+      target_tx2[0] = target_tx[0];
+      target_tx2[1] = target_tx[1];
+      target_tx2[2] = target_tx[2] + T(rail_position_);// transform to camera's location along rail
+
+      /** transform point into camera frame */
+      T camera_point[3]; /** point in camera coordinates */
+      transformPoint3d(target_aa, target_tx2, point_, camera_point);
+
+      /** compute project point into image plane and compute residual */
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y, 
+				       const double rail_position,
+				       Point3d point)
+    {
+      return (new ceres::AutoDiffCostFunction<RailICal2, 2, 4, 6>
+	      (
+	       new RailICal2(o_x, o_y, rail_position, point)
 	       )
 	      );
     }

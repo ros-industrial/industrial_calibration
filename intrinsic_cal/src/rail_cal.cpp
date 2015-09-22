@@ -134,10 +134,10 @@ RailCalService::RailCalService(ros::NodeHandle nh)
   camera_parameters_.position[1] = pose.y;
   camera_parameters_.position[2] = pose.z;
 
-  camera_parameters_.focal_length_x = 3000.0;
-  camera_parameters_.focal_length_y = 3000.0;
-  camera_parameters_.center_x = image_width_/2.0;
-  camera_parameters_.center_y = image_height_/2.0;
+  camera_parameters_.focal_length_x = 2785.0;
+  camera_parameters_.focal_length_y = 2781.0;
+  camera_parameters_.center_x = 963.505;
+  camera_parameters_.center_y = 575.686;
   
   bool is_moving = true;
   camera_ =  make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
@@ -179,7 +179,7 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
   R[2][0] = 0;   R[2][1] = 0;   R[2][2] = -1;
   
   target_->pose_.setBasis(R);
-  target_->pose_.setOrigin(0.0, 0.0, D0_);
+  target_->pose_.setOrigin(-0.011, 0.05, D0_);
   target_->pose_.show("initial target pose");  
   ros::NodeHandle pnh("~");
   bool camera_ready = false;
@@ -208,13 +208,13 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
     if(num_observations != target_rows_* target_cols_){
       ROS_ERROR("Target Locator could not find target %d", num_observations);
     }
-
+    CostFunction* cost_function[num_observations];
     for(int i=0; i<num_observations; i++){
       double image_x = camera_observations[i].image_loc_x;
       double image_y = camera_observations[i].image_loc_y;
       Point3d point = target_->pts_[i]; // assume correct ordering from camera observer
-      CostFunction* cost_function = industrial_extrinsic_cal::RailICal::Create(image_x, image_y, rail_position, point);
-      problem.AddResidualBlock(cost_function, NULL , 
+      cost_function[i] = industrial_extrinsic_cal::RailICal::Create(image_x, image_y, rail_position, point);
+      problem.AddResidualBlock(cost_function[i], NULL , 
 			       camera_->camera_parameters_.pb_intrinsics,
 			       target_->pose_.pb_pose);
       double residual[2];
@@ -239,19 +239,23 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
 		      camera_->camera_parameters_.position[0],
 		      camera_->camera_parameters_.position[1],
 		      camera_->camera_parameters_.position[2]);
-    final_pose.show("camera_pose");
-    ROS_ERROR("fx, fy, cx, cy %lf %lf %lf %lf", 
+    //    final_pose.show("camera_pose");
+    ROS_ERROR("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]", 
 	      camera_->camera_parameters_.focal_length_x,
-	      camera_->camera_parameters_.focal_length_y,
 	      camera_->camera_parameters_.center_x,
+	      camera_->camera_parameters_.focal_length_y,
 	      camera_->camera_parameters_.center_y);
-    ROS_ERROR("distortion: %6.3lf %6.3lf %6.3lf %6.3lf %6.3lf", 
-	      camera_->camera_parameters_.distortion_k1,
-	      camera_->camera_parameters_.distortion_k2,
-	      camera_->camera_parameters_.distortion_k3,
-	      camera_->camera_parameters_.distortion_p1,
-	      camera_->camera_parameters_.distortion_p2);
-
+    ROS_ERROR("distortion data: [ %lf,  %lf,  %lf,  %lf,  %lf]",
+   	      camera_->camera_parameters_.distortion_k1,
+   	      camera_->camera_parameters_.distortion_k2,
+   	      camera_->camera_parameters_.distortion_p1,
+   	      camera_->camera_parameters_.distortion_p2,
+   	      camera_->camera_parameters_.distortion_k3);
+    ROS_ERROR("projection_matrix data: [ %lf, 0.0, %lf, 0.0, 0.0, %lf, %lf, 0.0, 0.0, 0.0, 1.0, 0.0]", 
+	      camera_->camera_parameters_.focal_length_x,
+	      camera_->camera_parameters_.center_x,
+	      camera_->camera_parameters_.focal_length_y,
+	      camera_->camera_parameters_.center_y);
     if(final_cost <= req.allowable_cost_per_observation){
       res.final_pose.position.x = target_->pose_.x;
       res.final_pose.position.y = target_->pose_.y;

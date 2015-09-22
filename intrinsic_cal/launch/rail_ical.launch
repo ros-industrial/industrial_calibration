@@ -24,7 +24,7 @@
    <arg name="bin_y" default="1"/>
    <arg name="roi_x" default="0"/>
    <arg name="roi_y" default="0"/>
-   <arg name="roi_width" default="1624"/>
+   <arg name="roi_width" default="1920"/>
    <arg name="roi_height" default="1080"/>
    <arg name="url" default="file://$(find ind_cal_multi_camera)/camera_info/Basler$(arg basler_sn).yaml"/>
 
@@ -45,19 +45,31 @@
 
      <node pkg="intrinsic_cal" type="rail_ical" name="rail_intrinsic_calibration" output="screen" >
           <param name="image_topic" value="Basler$(arg camera_number)/image_raw" />
-          <param name="target_rows" value="10" />
-          <param name="target_cols" value="10" />
-          <param name="target_circle_dia" value="0.012" />
-          <param name="target_spacing" value="0.02" />
-          <param name="num_camera_locations" value="5" />
-          <param name="camera_spacing" value=".1" />
+          <param name="target_rows" value="16" />
+          <param name="target_cols" value="29" />
+          <param name="target_circle_dia" value="0.0125" />
+          <param name="target_spacing" value="0.025393" />
+          <param name="num_camera_locations" value="16" />
+          <param name="camera_spacing" value=".050" />
           <param name="image_height" value="1080" />
-          <param name="image_width" value="1624" />
-          <param name="target_to_rail_distance" value="1.0" />
+          <param name="image_width" value="1920" />
+          <param name="target_to_rail_distance" value="0.876" />
+          <param name="use_circle_detector" value="true"/>
+     </node>
+
+     <node pkg="nodelet" type="nodelet" name="image_proc_nodelet$(arg camera_number)"  args="manager"/>
+     <node pkg="nodelet" type="nodelet" name="rectify$(arg camera_number)" args="load image_proc/rectify image_proc_nodelet$(arg camera_number)">
+        <remap from="camera_info" to="Basler$(arg camera_number)/camera_info"/>
+        <remap from="image_mono" to="Basler$(arg camera_number)/image_raw"/>
+        <remap from="image_rect" to="Basler$(arg camera_number)/image_rect"/>
      </node>
 
   <node name="B1_view" pkg="image_view" type="image_view" >
       <remap to="/Basler1/image_raw" from="image"/>
+  </node>
+
+  <node name="observation_view" pkg="image_view" type="image_view" >
+      <remap to="/observer_results_image" from="image"/>
   </node>
 
 </launch>

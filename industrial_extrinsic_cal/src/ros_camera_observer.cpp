@@ -18,18 +18,23 @@
 
 #include <industrial_extrinsic_cal/ros_camera_observer.h>
 #include <industrial_extrinsic_cal/circle_detector.hpp>
+#include <image_transport/image_transport.h> 
+
+
 using cv::CircleDetector;
 namespace industrial_extrinsic_cal
 {
 
-ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic) :
+  ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic, const std::string &camera_info_topic) :
   sym_circle_(true), pattern_(pattern_options::Chessboard), pattern_rows_(0), pattern_cols_(0), new_image_collected_(false), 
-  store_observation_images_(false), load_observation_images_(false), image_directory_(""), image_number_(0)
+  store_observation_images_(false), load_observation_images_(false), image_directory_(""), image_number_(0), 
+  camera_info_topic_(camera_info_topic)
 {
   image_topic_ = camera_topic;  
   results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
   debug_pub_ = nh_.advertise<sensor_msgs::Image>("observer_raw_image", 100);
- 
+  client_ = nh_.serviceClient<sensor_msgs::SetCameraInfo>(camera_info_topic_); 
+
   ros::NodeHandle pnh("~");
   pnh.getParam("image_directory", image_directory_);
   pnh.getParam("store_observation_images", store_observation_images_);
@@ -464,7 +469,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	std::vector<cv::Point2f> centers;
 	std::vector<cv::KeyPoint> keypoints;
 	circle_detector_ptr_->detect(red_binary_image, keypoints);
-	ROS_ERROR("Red keypoints: %u",keypoints.size());
+	ROS_ERROR("Red keypoints: %d", (int) keypoints.size());
 	if(keypoints.size() == 1 ){
 	    observation_pts_.push_back(keypoints[0].pt);
 	    large_point.x = keypoints[0].pt.x;
@@ -474,7 +479,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  ROS_ERROR("found %d red blobs, expected one", (int) keypoints.size());
 	}
 	circle_detector_ptr_->detect(green_binary_image, keypoints);
-	ROS_ERROR("Green keypoints: %u",keypoints.size());
+	ROS_ERROR("Green keypoints: %d",(int)keypoints.size());
 	if(keypoints.size() == 1){
 	    observation_pts_.push_back(keypoints[0].pt);
 	}// end of outer loop
@@ -482,7 +487,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 	  ROS_ERROR("found %d green blobs, expected one", (int) keypoints.size());
 	}
 	circle_detector_ptr_->detect(yellow_binary_image, keypoints);
-	ROS_ERROR("Blue keypoints: %u",keypoints.size());
+	ROS_ERROR("Blue keypoints: %d", (int)keypoints.size());
 	if(keypoints.size() == 1){
 	    observation_pts_.push_back(keypoints[0].pt);
 	}// end of outer loop
@@ -658,5 +663,101 @@ bool ROSCameraObserver::observationsDone()
 cv::Mat ROSCameraObserver::getLastImage()
 {
   return(last_raw_image_);
+}
+bool ROSCameraObserver::pushCameraInfo(double &fx,
+					 double &fy,
+					 double &cx, 
+					 double &cy, 
+					 double &k1,
+					 double &k2,
+					 double &k3, 
+					 double &p1,
+					 double &p2)
+
+{
+  if(camera_info_topic_ == "none"){
+    ROS_ERROR("camera info topic not set");
+    return(false);
+  }
+  // must pull to get all the header information that we don't compute
+  const sensor_msgs::CameraInfoConstPtr& info_msg = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic_);
+  srv_.request.camera_info.header = info_msg->header;
+  srv_.request.camera_info.height  = info_msg->height;
+  srv_.request.camera_info.width   = info_msg->width;
+  srv_.request.camera_info.D         =  info_msg->D;
+  srv_.request.camera_info.K         =  info_msg->K;
+  srv_.request.camera_info.R         =  info_msg->R;
+  srv_.request.camera_info.P         =  info_msg->P;
+
+  // set distortion parameters
+  srv_.request.camera_info.D[0] = k1;
+  srv_.request.camera_info.D[1] = k2;
+  srv_.request.camera_info.D[2] = p1;
+  srv_.request.camera_info.D[3] = p2;
+  srv_.request.camera_info.D[4] = k3;
+
+  // set camera matrix assuming tx=ty=0.0
+  srv_.request.camera_info.K[0] = fx;
+  srv_.request.camera_info.K[1] = 0.0;
+  srv_.request.camera_info.K[2] = cx;
+  srv_.request.camera_info.K[3] = 0.0;
+  srv_.request.camera_info.K[4] = 0.0;
+  srv_.request.camera_info.K[5] = fy;
+  srv_.request.camera_info.K[6] = cy;
+  srv_.request.camera_info.K[7] = 0.0;
+  srv_.request.camera_info.K[8] = 0.0;
+  srv_.request.camera_info.K[9] = 1.0;
+
+  // set projection matrix for rectified image 
+  srv_.request.camera_info.P[0] = fx;
+  srv_.request.camera_info.P[1] = 0.0;
+  srv_.request.camera_info.P[2] = cx;
+  srv_.request.camera_info.P[3] = 0.0;
+  srv_.request.camera_info.P[4] = 0.0;
+  srv_.request.camera_info.P[5] = fy;
+  srv_.request.camera_info.P[6] = cy;
+  srv_.request.camera_info.P[7] = 0.0;
+  srv_.request.camera_info.P[8] = 0.0;
+  srv_.request.camera_info.P[9] = 0.0;
+  srv_.request.camera_info.P[10] = 1.0;
+  srv_.request.camera_info.P[11] = 0.0;
+
+  client_.call(srv_);
+  if(!srv_.response.success){
+    ROS_ERROR("set request failed: %s", srv_.response.status_message.c_str());
+    return(false);
+  }
+  return(true);
+}
+
+ bool  ROSCameraObserver::pullCameraInfo(double &fx,
+					 double &fy,
+					 double &cx, 
+					 double &cy, 
+					 double &k1,
+					 double &k2,
+					 double &k3, 
+					 double &p1,
+					 double &p2)
+{
+  if(camera_info_topic_ == "none"){
+    ROS_ERROR("camera info topic not set");
+    return(false);
+  }
+  const sensor_msgs::CameraInfoConstPtr& info_msg = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic_);
+  if(info_msg->K[0]  ==0){
+    ROS_ERROR("camera info msg not correct");
+    return(false);
+  }
+  k1 = info_msg->D[0];
+  k2 = info_msg->D[1];
+  p1 = info_msg->D[2];
+  p2 = info_msg->D[3];
+  k3 = info_msg->D[4];
+  fx = info_msg->K[0];
+  cx = info_msg->K[2];
+  fy = info_msg->K[5];
+  cy = info_msg->K[6];
+  return(true);
 }
 } //industrial_extrinsic_cal
