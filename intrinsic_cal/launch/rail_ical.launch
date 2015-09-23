@@ -45,6 +45,7 @@
 
      <node pkg="intrinsic_cal" type="rail_ical" name="rail_intrinsic_calibration" output="screen" >
           <param name="image_topic" value="Basler$(arg camera_number)/image_raw" />
+          <param name="camera_info_topic" value="Basler$(arg camera_number)/camera_info" />
           <param name="target_rows" value="16" />
           <param name="target_cols" value="29" />
           <param name="target_circle_dia" value="0.0125" />
