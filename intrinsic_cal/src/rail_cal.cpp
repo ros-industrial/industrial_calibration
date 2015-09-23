@@ -65,6 +65,7 @@ private:
   double center_x_;
   double center_y_;
   string image_topic_;
+  string camera_info_topic_;
   int target_type_;
   int target_rows_;
   int target_cols_;
@@ -86,6 +87,10 @@ RailCalService::RailCalService(ros::NodeHandle nh)
 
   if(!pnh.getParam( "image_topic", image_topic_)){
     ROS_ERROR("Must set param:  image_topic");
+  }
+
+  if(!pnh.getParam( "camera_info_topic", camera_info_topic_)){
+    ROS_ERROR("Must set param:  camera_info_topic");
   }
 
   target_type_ == pattern_options::ModifiedCircleGrid;
@@ -142,8 +147,16 @@ RailCalService::RailCalService(ros::NodeHandle nh)
   bool is_moving = true;
   camera_ =  make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
   camera_->trigger_ = make_shared<NoWaitTrigger>();
-  camera_->camera_observer_ = make_shared<ROSCameraObserver>(image_topic_);
-
+  camera_->camera_observer_ = make_shared<ROSCameraObserver>(image_topic_, camera_info_topic_);
+  camera_->camera_observer_->pullCameraInfo(camera_->camera_parameters_.focal_length_x,
+                                           camera_->camera_parameters_.focal_length_y,
+                                           camera_->camera_parameters_.center_x,
+                                           camera_->camera_parameters_.center_y,
+                                           camera_->camera_parameters_.distortion_k1,
+                                           camera_->camera_parameters_.distortion_k2,
+                                           camera_->camera_parameters_.distortion_k3,
+                                           camera_->camera_parameters_.distortion_p1,
+                                           camera_->camera_parameters_.distortion_p2);
   initMCircleTarget(target_rows_, target_cols_, circle_diameter_, circle_spacing_);
   rail_cal_server_ = nh_.advertiseService( "RailCalService", &RailCalService::executeCallBack, this);
 }
@@ -154,11 +167,10 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
   CameraObservations camera_observations;
   int num_observations ;
 
-
   camera_->camera_observer_->clearObservations();
   camera_->camera_observer_->clearTargets();
 
-  // set the roi to the requested
+  // set the roi to the whole image
   Roi roi;
   roi.x_min = 0;
   roi.y_min = 0;
@@ -166,7 +178,7 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
   roi.y_max = image_height_;
 
   industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::CameraReprjErrorWithDistortion;
-  Problem problem;
+  Problem problem; // note, a new problem gets created each time execute is called, so old observation data is not re-used.
 
   // set initial conditions, 
   // x of target aligned with y of rail    [ 0  0  1 ]
@@ -208,7 +220,9 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
     if(num_observations != target_rows_* target_cols_){
       ROS_ERROR("Target Locator could not find target %d", num_observations);
     }
-    CostFunction* cost_function[num_observations];
+    
+    // add a new cost to the problem for each observation
+    CostFunction* cost_function[num_observations]; // not sure I need a new cost function each time, but this just uses memory
     for(int i=0; i<num_observations; i++){
       double image_x = camera_observations[i].image_loc_x;
       double image_y = camera_observations[i].image_loc_y;
@@ -222,6 +236,7 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
     } // for each observation at this camera_location
   }// for each camera_location
 
+  // set up and solve the problem
   Solver::Options options;
   Solver::Summary summary;
   options.linear_solver_type = ceres::DENSE_SCHUR;
@@ -233,13 +248,6 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
     double final_cost = summary.final_cost/num_observations;
     ROS_INFO("Problem solved, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
     target_->pose_.show("target_pose");
-    Pose6d final_pose(camera_->camera_parameters_.angle_axis[0],
-		      camera_->camera_parameters_.angle_axis[1],
-		      camera_->camera_parameters_.angle_axis[2],
-		      camera_->camera_parameters_.position[0],
-		      camera_->camera_parameters_.position[1],
-		      camera_->camera_parameters_.position[2]);
-    //    final_pose.show("camera_pose");
     ROS_ERROR("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]", 
 	      camera_->camera_parameters_.focal_length_x,
 	      camera_->camera_parameters_.center_x,
@@ -265,6 +273,16 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
 				   res.final_pose.orientation.y, 
 				   res.final_pose.orientation.z,
 				   res.final_pose.orientation.w);
+  camera_->camera_observer_->pushCameraInfo(camera_->camera_parameters_.focal_length_x,
+                                           camera_->camera_parameters_.focal_length_y,
+                                           camera_->camera_parameters_.center_x,
+                                           camera_->camera_parameters_.center_y,
+                                           camera_->camera_parameters_.distortion_k1,
+                                           camera_->camera_parameters_.distortion_k2,
+                                           camera_->camera_parameters_.distortion_k3,
+                                           camera_->camera_parameters_.distortion_p1,
+                                           camera_->camera_parameters_.distortion_p2);
+
       return true;
     }
     else{
