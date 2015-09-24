@@ -66,7 +66,7 @@ namespace industrial_extrinsic_cal
      * @brief constructor
      * @param image_topic name of published image topic
      */
-    ROSCameraObserver(const std::string &image_topic, const std::string &camera_info_topic="none");
+    ROSCameraObserver(const std::string &image_topic, const std::string &camera_name="none");
     
     /**
      * @brief Default destructor
@@ -120,7 +120,7 @@ namespace industrial_extrinsic_cal
     /**
      * @brief topic name for camera_info which is input at constructor
      */
-    std::string camera_info_topic_;
+    std::string camera_name_;
 
     /**
      *  @brief cropped image based on original image and region of interest

@@ -25,15 +25,17 @@ using cv::CircleDetector;
 namespace industrial_extrinsic_cal
 {
 
-  ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic, const std::string &camera_info_topic) :
+  ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic, const std::string &camera_name) :
   sym_circle_(true), pattern_(pattern_options::Chessboard), pattern_rows_(0), pattern_cols_(0), new_image_collected_(false), 
   store_observation_images_(false), load_observation_images_(false), image_directory_(""), image_number_(0), 
-  camera_info_topic_(camera_info_topic)
+  camera_name_(camera_name)
 {
   image_topic_ = camera_topic;  
   results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
   debug_pub_ = nh_.advertise<sensor_msgs::Image>("observer_raw_image", 100);
-  client_ = nh_.serviceClient<sensor_msgs::SetCameraInfo>(camera_info_topic_); 
+  std::string set_camera_info_service = camera_name_ + "/set_camera_info";
+  ROS_ERROR("using set_camera_info service= %s", set_camera_info_service.c_str());
+  client_ = nh_.serviceClient<sensor_msgs::SetCameraInfo>(set_camera_info_service); 
 
   ros::NodeHandle pnh("~");
   pnh.getParam("image_directory", image_directory_);
@@ -675,12 +677,13 @@ bool ROSCameraObserver::pushCameraInfo(double &fx,
 					 double &p2)
 
 {
-  if(camera_info_topic_ == "none"){
-    ROS_ERROR("camera info topic not set");
+  if(camera_name_ == "none"){
+    ROS_ERROR("camera name not set");
     return(false);
   }
   // must pull to get all the header information that we don't compute
-  const sensor_msgs::CameraInfoConstPtr& info_msg = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic_);
+  std::string camera_info_topic = camera_name_+"/camera_info";
+  const sensor_msgs::CameraInfoConstPtr& info_msg = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic);
   srv_.request.camera_info.header = info_msg->header;
   srv_.request.camera_info.height  = info_msg->height;
   srv_.request.camera_info.width   = info_msg->width;
@@ -701,12 +704,11 @@ bool ROSCameraObserver::pushCameraInfo(double &fx,
   srv_.request.camera_info.K[1] = 0.0;
   srv_.request.camera_info.K[2] = cx;
   srv_.request.camera_info.K[3] = 0.0;
-  srv_.request.camera_info.K[4] = 0.0;
-  srv_.request.camera_info.K[5] = fy;
-  srv_.request.camera_info.K[6] = cy;
+  srv_.request.camera_info.K[4] = fy;
+  srv_.request.camera_info.K[5] = cy;
+  srv_.request.camera_info.K[6] = 0.0;
   srv_.request.camera_info.K[7] = 0.0;
-  srv_.request.camera_info.K[8] = 0.0;
-  srv_.request.camera_info.K[9] = 1.0;
+  srv_.request.camera_info.K[8] = 1.0;
 
   // set projection matrix for rectified image 
   srv_.request.camera_info.P[0] = fx;
@@ -740,11 +742,12 @@ bool ROSCameraObserver::pushCameraInfo(double &fx,
 					 double &p1,
 					 double &p2)
 {
-  if(camera_info_topic_ == "none"){
-    ROS_ERROR("camera info topic not set");
+  if(camera_name_ == "none"){
+    ROS_ERROR("camera name set");
     return(false);
   }
-  const sensor_msgs::CameraInfoConstPtr& info_msg = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic_);
+  std::string camera_info_topic = camera_name_ + "/camera_info";
+  const sensor_msgs::CameraInfoConstPtr& info_msg = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic);
   if(info_msg->K[0]  ==0){
     ROS_ERROR("camera info msg not correct");
     return(false);

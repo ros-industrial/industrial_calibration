@@ -45,7 +45,7 @@
 
      <node pkg="intrinsic_cal" type="rail_ical" name="rail_intrinsic_calibration" output="screen" >
           <param name="image_topic" value="Basler$(arg camera_number)/image_raw" />
-          <param name="camera_info_topic" value="Basler$(arg camera_number)/camera_info" />
+          <param name="camera_name" value="Basler$(arg camera_number)" />
           <param name="target_rows" value="16" />
           <param name="target_cols" value="29" />
           <param name="target_circle_dia" value="0.0125" />
@@ -55,7 +55,7 @@
           <param name="image_height" value="1080" />
           <param name="image_width" value="1920" />
           <param name="target_to_rail_distance" value="0.876" />
-          <param name="use_circle_detector" value="true"/>
+          <param name="use_circle_detector" value="false"/>
      </node>
 
      <node pkg="nodelet" type="nodelet" name="image_proc_nodelet$(arg camera_number)"  args="manager"/>

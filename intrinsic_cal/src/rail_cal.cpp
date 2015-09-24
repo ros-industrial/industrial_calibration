@@ -65,7 +65,7 @@ private:
   double center_x_;
   double center_y_;
   string image_topic_;
-  string camera_info_topic_;
+  string camera_name_;
   int target_type_;
   int target_rows_;
   int target_cols_;
@@ -89,8 +89,8 @@ RailCalService::RailCalService(ros::NodeHandle nh)
     ROS_ERROR("Must set param:  image_topic");
   }
 
-  if(!pnh.getParam( "camera_info_topic", camera_info_topic_)){
-    ROS_ERROR("Must set param:  camera_info_topic");
+  if(!pnh.getParam( "camera_name", camera_name_)){
+    ROS_ERROR("Must set param:  camera_name");
   }
 
   target_type_ == pattern_options::ModifiedCircleGrid;
@@ -147,7 +147,7 @@ RailCalService::RailCalService(ros::NodeHandle nh)
   bool is_moving = true;
   camera_ =  make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
   camera_->trigger_ = make_shared<NoWaitTrigger>();
-  camera_->camera_observer_ = make_shared<ROSCameraObserver>(image_topic_, camera_info_topic_);
+  camera_->camera_observer_ = make_shared<ROSCameraObserver>(image_topic_, camera_name_);
   camera_->camera_observer_->pullCameraInfo(camera_->camera_parameters_.focal_length_x,
                                            camera_->camera_parameters_.focal_length_y,
                                            camera_->camera_parameters_.center_x,
@@ -208,7 +208,6 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
 	ROS_ERROR("parameter camera_ready does not exists");
       }
     }
-    
     // gather next image
     camera_->camera_observer_->clearTargets();
     camera_->camera_observer_->clearObservations();
@@ -216,6 +215,7 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
     camera_->camera_observer_->triggerCamera();
     while (!camera_->camera_observer_->observationsDone()) ;
     camera_->camera_observer_->getObservations(camera_observations);
+    ROS_INFO("Found %d observations",(int) camera_observations.size());
     num_observations = (int) camera_observations.size();
     if(num_observations != target_rows_* target_cols_){
       ROS_ERROR("Target Locator could not find target %d", num_observations);
@@ -273,16 +273,16 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
 				   res.final_pose.orientation.y, 
 				   res.final_pose.orientation.z,
 				   res.final_pose.orientation.w);
-  camera_->camera_observer_->pushCameraInfo(camera_->camera_parameters_.focal_length_x,
-                                           camera_->camera_parameters_.focal_length_y,
-                                           camera_->camera_parameters_.center_x,
-                                           camera_->camera_parameters_.center_y,
-                                           camera_->camera_parameters_.distortion_k1,
-                                           camera_->camera_parameters_.distortion_k2,
-                                           camera_->camera_parameters_.distortion_k3,
-                                           camera_->camera_parameters_.distortion_p1,
-                                           camera_->camera_parameters_.distortion_p2);
-
+      camera_->camera_observer_->pushCameraInfo(camera_->camera_parameters_.focal_length_x,
+                                                camera_->camera_parameters_.focal_length_y,
+                                                camera_->camera_parameters_.center_x,
+                                                camera_->camera_parameters_.center_y,
+                                                camera_->camera_parameters_.distortion_k1,
+                                                camera_->camera_parameters_.distortion_k2,
+                                                camera_->camera_parameters_.distortion_k3,
+                                                camera_->camera_parameters_.distortion_p1,
+                                                camera_->camera_parameters_.distortion_p2);
+      
       return true;
     }
     else{
