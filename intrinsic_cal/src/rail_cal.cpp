@@ -157,6 +157,17 @@ RailCalService::RailCalService(ros::NodeHandle nh)
                                            camera_->camera_parameters_.distortion_k3,
                                            camera_->camera_parameters_.distortion_p1,
                                            camera_->camera_parameters_.distortion_p2);
+  ROS_INFO("initial camera info focal:%f %f center:%f %f  radial:%f %f %f tang: %f %f",
+            camera_->camera_parameters_.focal_length_x,
+            camera_->camera_parameters_.focal_length_y,
+            camera_->camera_parameters_.center_x,
+            camera_->camera_parameters_.center_y,
+            camera_->camera_parameters_.distortion_k1,
+            camera_->camera_parameters_.distortion_k2,
+            camera_->camera_parameters_.distortion_k3,
+            camera_->camera_parameters_.distortion_p1,
+            camera_->camera_parameters_.distortion_p2);
+            
   initMCircleTarget(target_rows_, target_cols_, circle_diameter_, circle_spacing_);
   rail_cal_server_ = nh_.advertiseService( "RailCalService", &RailCalService::executeCallBack, this);
 }
@@ -248,18 +259,18 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
     double final_cost = summary.final_cost/num_observations;
     ROS_INFO("Problem solved, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
     target_->pose_.show("target_pose");
-    ROS_ERROR("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]", 
+    ROS_INFO("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]", 
 	      camera_->camera_parameters_.focal_length_x,
 	      camera_->camera_parameters_.center_x,
 	      camera_->camera_parameters_.focal_length_y,
 	      camera_->camera_parameters_.center_y);
-    ROS_ERROR("distortion data: [ %lf,  %lf,  %lf,  %lf,  %lf]",
+    ROS_INFO("distortion data: [ %lf,  %lf,  %lf,  %lf,  %lf]",
    	      camera_->camera_parameters_.distortion_k1,
    	      camera_->camera_parameters_.distortion_k2,
    	      camera_->camera_parameters_.distortion_p1,
    	      camera_->camera_parameters_.distortion_p2,
    	      camera_->camera_parameters_.distortion_k3);
-    ROS_ERROR("projection_matrix data: [ %lf, 0.0, %lf, 0.0, 0.0, %lf, %lf, 0.0, 0.0, 0.0, 1.0, 0.0]", 
+    ROS_INFO("projection_matrix data: [ %lf, 0.0, %lf, 0.0, 0.0, %lf, %lf, 0.0, 0.0, 0.0, 1.0, 0.0]", 
 	      camera_->camera_parameters_.focal_length_x,
 	      camera_->camera_parameters_.center_x,
 	      camera_->camera_parameters_.focal_length_y,

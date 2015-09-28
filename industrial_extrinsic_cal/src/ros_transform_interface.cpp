@@ -32,6 +32,7 @@ namespace industrial_extrinsic_cal
     tf::StampedTransform tf_transform; 
     ros::Time now = ros::Time::now();
     while(!tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0))){
+      now = ros::Time::now();
       ROS_INFO("waiting for tranform from %s to %s",from_frame.c_str(),to_frame.c_str());
     }
     try{

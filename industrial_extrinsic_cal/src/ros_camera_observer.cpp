@@ -34,7 +34,6 @@ namespace industrial_extrinsic_cal
   results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
   debug_pub_ = nh_.advertise<sensor_msgs::Image>("observer_raw_image", 100);
   std::string set_camera_info_service = camera_name_ + "/set_camera_info";
-  ROS_ERROR("using set_camera_info service= %s", set_camera_info_service.c_str());
   client_ = nh_.serviceClient<sensor_msgs::SetCameraInfo>(set_camera_info_service); 
 
   ros::NodeHandle pnh("~");
@@ -624,24 +623,30 @@ void ROSCameraObserver::triggerCamera()
       
       ROS_DEBUG("captured image in trigger");
       try
-	{
-	  input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
-	  output_bridge_ = cv_bridge::toCvCopy(recent_image, "bgr8");
-	  last_raw_image_ = output_bridge_->image.clone();
-	  out_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
-	  new_image_collected_ = true;
-	  ROS_DEBUG("cv image created based on ros image");
-	  done = true;
-	  ROS_DEBUG("height = %d width=%d step=%d encoding=%s", 
-		    recent_image->height, 
-		    recent_image->width, 
-		    recent_image->step,  
-		    recent_image->encoding.c_str());
-
-	}
+      {
+        if(recent_image->encoding == "mono16"){  // asus and kinect ir images are mono16, bridge mishandles conversion to mono8
+          input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono16");
+          input_bridge_->image.convertTo(input_bridge_->image, CV_8UC1, 1.0, 0.0);
+        }
+        else{
+          input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
+        }
+        output_bridge_ = cv_bridge::toCvCopy(recent_image, "bgr8");
+        last_raw_image_ = output_bridge_->image.clone();
+        out_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
+        new_image_collected_ = true;
+        ROS_DEBUG("cv image created based on ros image");
+        done = true;
+        ROS_DEBUG("height = %d width=%d step=%d encoding=%s", 
+                  recent_image->height, 
+                  recent_image->width, 
+                  recent_image->step,  
+                  recent_image->encoding.c_str());
+        
+      }
       catch (cv_bridge::Exception& ex)
-	{
-	  ROS_ERROR("Failed to convert image");
+      {
+        ROS_ERROR("Failed to convert image");
 	  ROS_ERROR("height = %d width=%d step=%d encoding=%s", 
 		    recent_image->height, 
 		    recent_image->width, 
@@ -759,8 +764,8 @@ bool ROSCameraObserver::pushCameraInfo(double &fx,
   k3 = info_msg->D[4];
   fx = info_msg->K[0];
   cx = info_msg->K[2];
-  fy = info_msg->K[5];
-  cy = info_msg->K[6];
+  fy = info_msg->K[4];
+  cy = info_msg->K[5];
   return(true);
 }
 } //industrial_extrinsic_cal
