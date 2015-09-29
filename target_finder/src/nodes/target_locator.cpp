@@ -56,10 +56,6 @@ private:
   ros::NodeHandle nh_;
   ros::ServiceServer target_locate_server_;
   shared_ptr<Target> target_;
-  double focal_length_x_;
-  double focal_length_y_;
-  double center_x_;
-  double center_y_;
   string image_topic_;
   int target_type_;
   int target_rows_;
@@ -107,20 +103,6 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
     ROS_ERROR("Target type not supported, check your launch file, only 2, and 4 for MCircle, and Balls type targets");
   }
 
-  // camera parameters
-  if(!pnh.getParam( "focal_length_x", focal_length_x_)){
-    ROS_ERROR("Must set param:  focal_length_x");
-  }
-  if(!pnh.getParam( "focal_length_y", focal_length_y_)){
-    ROS_ERROR("Must set param:  focal_length_y");
-  }
-  if(!pnh.getParam( "center_x", center_x_)){
-    ROS_ERROR("Must set param:  center_x");
-  }
-  if(!pnh.getParam( "center_y", center_y_)){
-    ROS_ERROR("Must set param:  center_y");
-  }
-
   target_locate_server_ = nh_.advertiseService( "TargetLocateService", &TargetLocatorService::executeCallBack, this);
 }
 
@@ -130,6 +112,13 @@ bool TargetLocatorService::executeCallBack( target_locater::Request &req, target
   CameraObservations camera_observations;
 
   ROSCameraObserver camera_observer(image_topic_);
+
+  // get the focal length and optical center
+  double fx,fy,cx,cy; 
+  double k1,k2,k3,p1,p2;// unused 
+  if(!camera_observer.pullCameraInfo(fx, fy, cx, cy, k1, k2, k3, p1, p2)){
+    ROS_ERROR("could not access camera info");
+  }
   camera_observer.clearObservations();
   camera_observer.clearTargets();
 
@@ -165,7 +154,7 @@ bool TargetLocatorService::executeCallBack( target_locater::Request &req, target
     double image_y = camera_observations[i].image_loc_y;
     Point3d point = target_->pts_[i]; // assume the correct ordering
     CostFunction* cost_function =
-      industrial_extrinsic_cal::CameraReprjErrorPK::Create(image_x, image_y, focal_length_x_, focal_length_y_,center_x_, center_y_, point);
+      industrial_extrinsic_cal::CameraReprjErrorPK::Create(image_x, image_y, fx, fy, cx, cy, point);
     problem.AddResidualBlock(cost_function, NULL , target_->pose_.pb_pose);
   }
   Solver::Options options;

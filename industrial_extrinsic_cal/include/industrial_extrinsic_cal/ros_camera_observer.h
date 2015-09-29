@@ -245,7 +245,7 @@ namespace industrial_extrinsic_cal
      */
     cv::Mat getLastImage();
 
-
+  public:
     /**
      *  @brief push the computed camera parameters out to the camera driver
      *  @param fx the focal length in x
