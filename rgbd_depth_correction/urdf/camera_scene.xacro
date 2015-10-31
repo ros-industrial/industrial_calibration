@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+
+<robot name="industrial_kinect_calibration" xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:include filename="$(find industrial_extrinsic_cal)/urdf/asus_sensor_cal_macro.xacro" />
+
+    <link name="world" />
+
+    <link name="target_frame" >
+      <visual>
+        <origin xyz="0.0875  0.1225 0" />
+        <geometry>
+          <box size="0.175 0.245 0.025" />
+        </geometry>
+      </visual>
+    </link>
+
+    <joint name="world_2_cal_target" type="fixed" >
+      <parent link="world" />
+	    <child link="target_frame" />
+	    <origin rpy="0 0 0" xyz="0 0 0" />
+    </joint>
+
+    <xacro:asus_sensor_definitions prefix="kinect" parent_link="world" />
+    
+
+</robot>
+

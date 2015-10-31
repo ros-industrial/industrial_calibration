@@ -69,10 +69,16 @@ namespace industrial_extrinsic_cal
       Pose6d Identity;// default constructor is all zero's for translation and anlge axis. 
       return(Identity);
       };
+
+    /** @brief  checks to see if the reference frame has been initialized */
+    bool isRefFrameInitialized(){ 
+      return(ref_frame_initialized_);
+    }
   protected:
     std::string ref_frame_; /*!< name of reference frame for transform (parent frame_id in  Rviz) */
     std::string transform_frame_; /*!< name of frame being defined (frame_id in Rviz) */
-    bool ref_frame_initialized_;
+    bool ref_frame_initialized_;/*!< can't interact with a transform interface until the reference frame is set */
+
   };
 
 
@@ -83,7 +89,7 @@ namespace industrial_extrinsic_cal
     /** @brief  constructor 
      *   @param pose the pose associated with the transform interface
      */
-    DefaultTransformInterface(const Pose6d &pose){ pose_ = pose;};
+    DefaultTransformInterface(){};
 
     /** @brief  destructor */
     ~DefaultTransformInterface(){} ;

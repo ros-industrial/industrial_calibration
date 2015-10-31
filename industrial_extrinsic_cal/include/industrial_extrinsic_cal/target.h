@@ -60,8 +60,6 @@ namespace industrial_extrinsic_cal
     Pose6d pose_;		/**< pose of target */
     unsigned int num_points_;	/**< number of points in the point array */
     std::vector<Point3d> pts_;	/**< an array of points expressed relative to Pose p. */
-    bool fixed_pose_;		/**< is the location of the target known? **/
-    bool fixed_points_;		/**< are the locations of the points within the target known */
     bool is_moving_;		/**< observed in multiple locations or it fixed to ref frame */
     std::string target_name_;	/**< Name of target */
     std::string target_frame_;	/**< name of target's coordinate frame */

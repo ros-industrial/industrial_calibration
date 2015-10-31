@@ -90,17 +90,13 @@ public:
    * TODO since we have a get and set, why is it public?
    */
   boost::shared_ptr<TransformInterface> getTransformInterface();
-
   boost::shared_ptr<CameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
   boost::shared_ptr<Trigger>  trigger_; /*!< pointer to the trigger mechanism for this camera*/
   CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
   boost::shared_ptr<TransformInterface>  transform_interface_; /**< interface to transform, tf for example  */
   Pose6d intermediate_frame_; /**< Sometimes there is an intermediate transform from ref to origin of intrinsics */
-
-private:
   bool is_moving_; /*!< bool is_moving_  false for static cameras */
-
 };
 // end of class Camera
 

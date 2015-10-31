@@ -31,7 +31,7 @@ ObservationDataPointList::~ObservationDataPointList()
 {
       items_.clear();
 }
-;
+
 
 void ObservationDataPointList::addObservationPoint(ObservationDataPoint new_data_point)
 {

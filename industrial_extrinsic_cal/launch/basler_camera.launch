@@ -1,0 +1,55 @@
+<launch>
+
+  <arg name="camera_number"/>
+  <arg name="camera_id"/>
+  <arg name="view_cameras" default="true"/>
+  <arg name="acquisition_rate" default="2.0"/>
+
+  <!-- Basler camera node   use with new driver -->
+  <!--node pkg="camera_aravis" type="camnode" name="Basler$(arg camera_number)">
+    <param name="guid" value="Basler-$(arg camera_id)"/>
+    <param name="ExposureAuto" value="Off" /> 
+    <param name="GainAuto" value="Once" />
+    <param name="ExposureTimeAbs" value="10000.0" />
+    <param name="Gain" value="1.0" />
+    <param name="AcquisitionFrameRate" value="$(arg acquisition_rate)" />
+    <param name="frame_id" value="Basler$(arg camera_number)_optical_frame"/>
+    <param name="TriggerMode" value="Off" />
+    <param name="TriggerSource" value="Line1" />
+    <param name="PixelFormat" value="Mono8"/>
+    <param name="url" value="file://$(find nist_cal)/camera_info/Basler$(arg camera_number).yaml"/>
+  </node-->
+
+  <!-- Basler camera node   use with old driver -->
+  <node pkg="aravis_camera_driver" type="aravis_camera_node" name="aravis_camera_node">
+    <param name="camera_id" value="Basler-$(arg camera_id)"/>
+    <param name="pixel_format" value="bayer_bggr8"/>
+    <param name="exposure_mode" value="auto_once"/>
+    <param name="exposure_time" value="1000"/>
+    <param name="auto_white_balance_once" value="true"/>
+    <param name="gain_mode" value="auto_once"/>
+    <param name="gain" value="0"/>
+    <param name="digital_shift" value="0"/>
+    <param name="mtu" value="1500"/>
+    <param name="bin_x" value="1"/>
+    <param name="bin_y" value="1"/>
+    <param name="roi_x" value="0"/>
+    <param name="roi_y" value="0"/>
+    <param name="roi_width" value="1624"/>
+    <param name="roi_height" value="1234"/>
+    <param name="frame_rate" value="30"/>
+  </node>
+
+
+  <node pkg="nodelet" type="nodelet" name="image_proc_nodelet$(arg camera_number)"  args="manager"/>
+  <node pkg="nodelet" type="nodelet" name="rectify$(arg camera_number)" args="load image_proc/rectify image_proc_nodelet$(arg camera_number)">
+    <remap from="camera_info" to="Basler$(arg camera_number)/camera_info"/>
+    <remap from="image_mono" to="Basler$(arg camera_number)/image_raw"/>
+    <remap from="image_rect" to="Basler$(arg camera_number)/image_rect"/>
+  </node>
+
+  <node if="$(arg view_cameras)" pkg="image_view" type="image_view" name="Basler$(arg camera_number)_view" >
+   <remap from="image" to="Basler$(arg camera_number)/image_rect"/>
+  </node>
+
+</launch>

@@ -1,0 +1,10 @@
+<launch>
+       <arg name="camera_id" default="21135424"/>
+       <arg name="view_cameras" default="true"/>
+       <include file="$(find industrial_extrinsic_cal)/launch/basler_camera.launch" >
+          <arg name="camera_number" value="1"/>
+          <arg name="camera_id" value="$(arg camera_id)"/>
+          <arg name="view_cameras" value="$(arg view_cameras)"/>
+          <!--arg name="acquisition_rate" value="20"/-->
+       </include>
+</launch>

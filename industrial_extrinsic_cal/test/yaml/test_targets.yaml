@@ -1,0 +1,119 @@
+---
+
+static_targets:
+-
+    target_name: Chessboard
+    target_frame: target_frame
+    transform_interface: default_ti
+    target_type: 0
+    target_rows: 7
+    target_cols: 5
+    xyz_aaxis_pose: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    num_points: 35
+    points:
+    - pnt: [-0.070,-0.105,0]
+    - pnt: [-0.035,-0.105,0]
+    - pnt: [-0.000,-0.105,0]
+    - pnt: [0.035,-0.105,0]
+    - pnt: [0.070,-0.105,0]
+    - pnt: [-0.070,-0.07,0]
+    - pnt: [0.000,-0.07,0]
+    - pnt: [0.035,-0.07,0]
+    - pnt: [0.070,-0.07,0]
+    - pnt: [-0.035,-0.07,0]
+    - pnt: [-0.070,-0.035,0]
+    - pnt: [-0.035,-0.035,0]
+    - pnt: [0.000,-0.035,0]
+    - pnt: [0.035,-0.035,0]
+    - pnt: [0.070,-0.035,0]
+    - pnt: [-0.070,0,0]
+    - pnt: [-0.035,0,0]
+    - pnt: [0.0, 0.0, 0.0]
+    - pnt: [0.035,0,0]
+    - pnt: [0.070,0,0]
+    - pnt: [-0.070,0.035,0]
+    - pnt: [-0.035,0.035,0]
+    - pnt: [0.00,0.035,0]
+    - pnt: [0.035,0.035,0]
+    - pnt: [0.070,0.035,0]
+    - pnt: [-0.070,0.07,0]
+    - pnt: [-0.035,0.07,0]
+    - pnt: [0.000,0.07,0]
+    - pnt: [0.035,0.07,0]
+    - pnt: [0.070,0.07,0]
+    - pnt: [-0.070,0.105,0]
+    - pnt: [-0.035,0.105,0]
+    - pnt: [0.00,0.105,0]
+    - pnt: [0.035,0.105,0]
+    - pnt: [0.070,0.105,0]
+-
+    target_name: CircleGrid
+    target_frame: target_frame
+    transform_interface: default_ti
+    target_type: 1
+    target_rows: 7
+    target_cols: 5
+    xyz_aaxis_pose: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    num_points: 35
+    points:
+    - pnt: [-0.070,-0.105,0]
+    - pnt: [-0.035,-0.105,0]
+    - pnt: [-0.000,-0.105,0]
+    - pnt: [0.035,-0.105,0]
+    - pnt: [0.070,-0.105,0]
+    - pnt: [-0.070,-0.07,0]
+    - pnt: [0.000,-0.07,0]
+    - pnt: [0.035,-0.07,0]
+    - pnt: [0.070,-0.07,0]
+    - pnt: [-0.035,-0.07,0]
+    - pnt: [-0.070,-0.035,0]
+    - pnt: [-0.035,-0.035,0]
+    - pnt: [0.000,-0.035,0]
+    - pnt: [0.035,-0.035,0]
+    - pnt: [0.070,-0.035,0]
+    - pnt: [-0.070,0,0]
+    - pnt: [-0.035,0,0]
+    - pnt: [0.0, 0.0, 0.0]
+    - pnt: [0.035,0,0]
+    - pnt: [0.070,0,0]
+    - pnt: [-0.070,0.035,0]
+    - pnt: [-0.035,0.035,0]
+    - pnt: [0.00,0.035,0]
+    - pnt: [0.035,0.035,0]
+    - pnt: [0.070,0.035,0]
+    - pnt: [-0.070,0.07,0]
+    - pnt: [-0.035,0.07,0]
+    - pnt: [0.000,0.07,0]
+    - pnt: [0.035,0.07,0]
+    - pnt: [0.070,0.07,0]
+    - pnt: [-0.070,0.105,0]
+    - pnt: [-0.035,0.105,0]
+    - pnt: [0.00,0.105,0]
+    - pnt: [0.035,0.105,0]
+    - pnt: [0.070,0.105,0]
+-
+    target_name: MCircleGrid
+    target_frame: target_frame
+    transform_interface: default_ti
+    target_type: 2
+    target_rows: 2
+    target_cols: 2
+    xyz_aaxis_pose: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    num_points: 4
+    points:
+    - pnt: [-0.070,-0.105,0]
+    - pnt: [-0.035,-0.105,0]
+    - pnt: [-0.000,-0.105,0]
+    - pnt: [0.035,-0.105,0]
+-
+    target_name: Balls
+    target_frame: target_frame
+    transform_interface: default_ti
+    target_type: 4
+    xyz_aaxis_pose: [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    num_points: 4
+    points:
+    - pnt: [-0.070,-0.105,0]
+    - pnt: [-0.035,-0.105,0]
+    - pnt: [-0.000,-0.105,0]
+    - pnt: [0.035,-0.105,0]

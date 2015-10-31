@@ -26,6 +26,7 @@
 #include <industrial_extrinsic_cal/manual_triggerAction.h>
 #include <industrial_extrinsic_cal/robot_joint_values_triggerAction.h>
 #include <industrial_extrinsic_cal/robot_pose_triggerAction.h>
+#include <industrial_extrinsic_cal/camera_observer_trigger.h>
 
 namespace industrial_extrinsic_cal
 {
@@ -33,6 +34,7 @@ namespace industrial_extrinsic_cal
   {
   public:
     /*! \brief Constructor,
+     * @param parameter_name, name of trigger
      */
     ROSParamTrigger(const std::string & parameter_name) 
       {
@@ -65,6 +67,8 @@ namespace industrial_extrinsic_cal
   {
   public:
     /*! \brief Constructor,
+     * @param server_name, name of tigger service
+     * @param action_message message to display
      */
     ROSActionServerTrigger(const std::string & server_name, const  std::string  & action_message) 
       {
@@ -107,6 +111,8 @@ namespace industrial_extrinsic_cal
   {
   public:
     /*! \brief Constructor,
+     *  @param server name , name of server
+     *  @param joint_values, vector of joint values describing the pose of the robot for the trigger
      */
     ROSRobotJointValuesActionServerTrigger(const std::string & server_name, const  std::vector<double> &joint_values) 
       {
@@ -158,12 +164,22 @@ namespace industrial_extrinsic_cal
   {
   public:
     /*! \brief Constructor,
+     *   @param server_name name of the service
+     *   @param pose the pose of the robot for the trigger
      */
-    ROSRobotPoseActionServerTrigger(const std::string & server_name, const  geometry_msgs::Pose pose) 
+    ROSRobotPoseActionServerTrigger(const std::string & server_name, const  Pose6d pose) 
       {
 	server_name_ = server_name;  
 	joint_values_.clear();
-	pose_ = pose;
+	pose_.position.x = pose.x;
+	pose_.position.y = pose.y;
+	pose_.position.z = pose.z;
+	double qx,qy,qz,qw;
+	pose.getQuaternion(qx, qy, qz, qw);
+	pose_.orientation.x = qx;
+	pose_.orientation.y = qy;
+	pose_.orientation.z = qz;
+	pose_.orientation.w = qw;
 	client_ = new Robot_Pose_Client(server_name_.c_str(),true);
       };
 
@@ -193,6 +209,61 @@ namespace industrial_extrinsic_cal
     std::string server_name_;	/**< name of server */
     geometry_msgs::Pose pose_; /**< pose of robot */
     std::vector<double> joint_values_; /**< joint values */
+  };
+
+  class ROSCameraObserverTrigger : public Trigger
+  {
+  public:
+    /*! \brief Constructor,
+     *   @param service_name name of service
+     *    @param instructions a message for the user
+     *    @param image_topic the image to use and display to user to accept the trigger
+     *    @param roi the region of interest in the image displayed to the user
+     */
+    ROSCameraObserverTrigger(const std::string & service_name, 
+			     const std::string &instructions, 
+			     const std::string &image_topic, 
+			     const Roi &roi ) 
+      {
+	 nh_ = new ros::NodeHandle;
+	 service_name_ = service_name;  
+	 instructions_ = instructions;
+	 image_topic_ = image_topic;
+	 client_          = nh_->serviceClient<industrial_extrinsic_cal::camera_observer_trigger>(service_name_.c_str());
+	 roi_ = roi;
+      };
+
+    /*! \brief Destructor
+     */
+    ~ROSCameraObserverTrigger(){};
+
+    /*! \brief Initiates and waits for trigger to finish
+     */
+    bool waitForTrigger()
+    {
+      industrial_extrinsic_cal::camera_observer_trigger::Request request; 
+      industrial_extrinsic_cal::camera_observer_trigger::Response response;
+
+      ROS_INFO("ROSRobotPoseActionServerTrigger: waiting for trigger server %s to complete ",service_name_.c_str());
+      request.image_topic = image_topic_;
+      request.instructions = instructions_;
+      request.roi_min_x   = roi_.x_min;
+      request.roi_max_x   = roi_.x_max;
+      request.roi_min_y   = roi_.y_min;
+      request.roi_max_y   = roi_.y_max;
+
+      if(!client_.call(request, response)){
+	ROS_ERROR("Trigger failed");
+      }
+      return(true);  /**< TODO implement a timeout, cancels action and with returns false*/
+    };
+  private: 
+    ros::ServiceClient client_; /**< the client to call supplying this trigger */
+    ros::NodeHandle *nh_;	/**< node handle */
+    std::string service_name_;	/**< name of server */
+    std::string instructions_;	/**< instructions to display to user */
+    std::string image_topic_; /**< image from this ros topic used to find target within the given roi */
+    industrial_extrinsic_cal::Roi roi_; /**< region to find the target */
   };
 
 }// end of namespace

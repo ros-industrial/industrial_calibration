@@ -1,0 +1,3 @@
+float64 allowable_cost_per_observation
+---
+float64 cost_per_observation

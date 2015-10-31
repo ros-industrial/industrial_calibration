@@ -85,9 +85,10 @@ public:
    * \brief grabs a target from the target list given the target name
    * @param target_name is the name of the target
    * @param target is the target from the list, either moving or static
-   * @return true if target found
+   * @param scene_id, when a target is moving, it has a separate object for each scene
+   * @return shared pointer to target
    */
-  const boost::shared_ptr<Target>  getTargetByName(const std::string &target_name);
+  const boost::shared_ptr<Target>  getTargetByName(const std::string &target_name, int scene_id=0);
 
   /*! @brief gets a pointer to the intrinsic parameters of a static camera 
    *  @param camera_name the camera's name

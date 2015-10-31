@@ -5,7 +5,7 @@
 
   <!-- Basler camera node   -->
   <node pkg="aravis_camera_driver" type="aravis_camera_node" name="aravis_camera_node">
-    <param name="camera_id" value="Basler-21135423"/>
+    <param name="camera_id" value="Basler-21135424"/>
     <param name="pixel_format" value="bayer_bggr8"/>
     <param name="exposure_mode" value="auto_once"/>
     <param name="exposure_time" value="1000"/>
@@ -65,8 +65,6 @@
       camera_file: "basler_camera_def.yaml"
       target_file: "circlegrid5x7n7x5.yaml"
       cal_job_file: "basler_caljob_def.yaml"
-      store_results_package_name: "industrial_extrinsic_cal"
-      store_results_file_name: "world_to_basler_tf_broadcaster.launch"
     </rosparam>
   </node>
 

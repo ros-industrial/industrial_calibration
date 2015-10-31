@@ -1,0 +1,9 @@
+string file_name
+string block_name1
+int32 request_type1
+int32 scene_id1 #only used if a moving object and pose requested
+string block_name2
+int32 request_type2
+int32 scene_id2 #only used if a moving object and pose requested
+---
+uint32 result # just a placeholder
