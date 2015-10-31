@@ -1,0 +1,4 @@
+float64 allowable_cost_per_observation
+---
+float64 final_cost_per_observation
+geometry_msgs/Pose final_pose

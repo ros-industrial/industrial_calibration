@@ -1,0 +1,53 @@
+<launch>
+
+   <arg name="asus_device_id" value="3@1"/>
+   <arg name="asus_camera_name" value="asus1"/>
+   <arg name="asus_calprefix" value="1"/>
+   <arg name="rgb_camera_info_url" value="file://$(find ind_cal_multi_camera)/camera_info/$(arg asus_calprefix)_rgb.yaml" />
+   <arg name="depth_camera_info_url" value="file://$(find ind_cal_multi_camera)/camera_info/$(arg asus_calprefix)_ir.yaml" />
+
+   <!-- Launch the asus camera node -->
+   <include file="$(find ind_cal_multi_camera)/launch/kinect_camera.launch" >
+     <arg name="topic_ns" value="$(arg asus_camera_name)" />
+     <arg name="tf_prefix" value="$(arg asus_camera_name)"/>
+     <arg name="cal_prefix" value="$(arg asus_calprefix)" />
+     <arg name="rgb_frame_id" value="$arg rgb_frame_id)"/>
+     <arg name="depth_frame_id" value="$arg depth_frame_id)"/>
+     <arg name="rgb_camera_info_url" value="$(arg rgb_camera_info_url)"/>
+     <arg name="depth_camera_info_url" value="$(arg depth_camera_info_url)"/>
+     <arg name="depth_registration" value="false"/>
+     <arg name="color_depth_synchronization" value="false" />
+     <arg name="auto_exposure" value="true" />
+     <arg name="auto_white_balance" value="true" />
+     <arg name="rgb_processing"                  value="false"  />
+     <arg name="debayer_processing"              value="false" />
+     <arg name="ir_processing"                   value="true" />
+     <arg name="depth_processing"                value="true" />
+     <arg name="depth_registered_processing"     value="true" />
+     <arg name="disparity_processing"            value="true" />
+     <arg name="disparity_registered_processing" value="true" />
+     <arg name="device_id" value="$(arg asus_device_id)" />
+     <arg name="publish_tf" value="false" />
+   </include> 
+
+     <node pkg="intrinsic_cal" type="rail_ical" name="rail_intrinsic_calibration" output="screen" >
+          <param name="camera_name" value="$(arg asus_camera_name)/ir" />
+          <param name="image_topic" value="$(arg asus_camera_name)/ir/image" />
+          <param name="target_rows" value="16" />
+          <param name="target_cols" value="29" />
+          <param name="target_circle_dia" value="0.0125" />
+          <param name="target_spacing" value="0.025393" />
+          <param name="num_camera_locations" value="14" />
+          <param name="camera_spacing" value=".050" />
+          <param name="image_height" value="480" />
+          <param name="image_width" value="640" />
+          <param name="target_to_rail_distance" value="0.876" />
+     </node>
+
+     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find intrinsic_cal)/asus_ir_cal.rviz"/>
+
+     <node name="observation_view" pkg="image_view" type="image_view" >
+         <remap to="/observer_results_image" from="image"/>
+     </node>
+
+</launch>

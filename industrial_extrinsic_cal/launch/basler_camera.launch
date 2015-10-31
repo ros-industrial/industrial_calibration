@@ -6,7 +6,7 @@
   <arg name="acquisition_rate" default="2.0"/>
 
   <!-- Basler camera node   use with new driver -->
-  <!--node pkg="camera_aravis" type="camnode" name="Basler$(arg camera_number)">
+  <node pkg="camera_aravis" type="camnode" name="Basler$(arg camera_number)">
     <param name="guid" value="Basler-$(arg camera_id)"/>
     <param name="ExposureAuto" value="Off" /> 
     <param name="GainAuto" value="Once" />
@@ -18,9 +18,9 @@
     <param name="TriggerSource" value="Line1" />
     <param name="PixelFormat" value="Mono8"/>
     <param name="url" value="file://$(find nist_cal)/camera_info/Basler$(arg camera_number).yaml"/>
-  </node-->
+  </node>
 
-  <!-- Basler camera node   use with old driver -->
+  <!-- Basler camera node   use with old driver 
   <node pkg="aravis_camera_driver" type="aravis_camera_node" name="aravis_camera_node">
     <param name="camera_id" value="Basler-$(arg camera_id)"/>
     <param name="pixel_format" value="bayer_bggr8"/>
@@ -39,6 +39,7 @@
     <param name="roi_height" value="1234"/>
     <param name="frame_rate" value="30"/>
   </node>
+-->
 
 
   <node pkg="nodelet" type="nodelet" name="image_proc_nodelet$(arg camera_number)"  args="manager"/>

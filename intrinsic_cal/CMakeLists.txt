@@ -9,10 +9,23 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  std_srvs 
+  roslib
+  genmsg
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+
+# Ceres
+FIND_PACKAGE(Ceres REQUIRED)
+IF (CERES_FOUND)
+  MESSAGE("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
+ENDIF (CERES_FOUND)
+
+SET (CMAKE_CXX_FLAGS -fPIC)
+
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -50,13 +63,12 @@ find_package(catkin REQUIRED COMPONENTS
 #   Message1.msg
 #   Message2.msg
 # )
-
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+ add_service_files(
+   FILES
+   rail_ical_run.srv
+ )
+
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -66,10 +78,12 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+   geometry_msgs
+ )
+set(CMAKE_CXX_FLAGS ${CMAKE_CSS_FLAGS} "-fPIC") 
 
 ###################################
 ## catkin specific configuration ##
@@ -81,9 +95,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include /usr/include/eigen3
 #  LIBRARIES intrinsic_cal
-#  CATKIN_DEPENDS industrial_extrinsic_cal roscpp rospy std_msgs
+  CATKIN_DEPENDS  roscpp rospy std_msgs geometry_msgs
 #  DEPENDS system_lib
 )
 
@@ -95,7 +109,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
@@ -105,6 +119,9 @@ include_directories(
 
 ## Declare a cpp executable
 #add_executable(create_ical_scenes src/create_ical_scenes.cpp)
+add_executable(rail_ical src/rail_cal.cpp)
+add_dependencies( rail_ical ${PROJECT_NAME}_generate_messages_cpp)
+target_link_libraries(rail_ical industrial_extrinsic_cal ${catkin_LIBRARIES} )
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -115,6 +132,7 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 #target_link_libraries(create_ical_scenes ${catkin_LIBRARIES}  )
+target_link_libraries(rail_ical ${catkin_LIBRARIES}  )
 
 #############
 ## Install ##
