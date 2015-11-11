@@ -1,229 +1,243 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(industrial_extrinsic_cal)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge tf roslint std_srvs roslib genmsg actionlib_msgs actionlib moveit_ros_planning_interface geometry_msgs sensor_msgs)
+find_package(catkin REQUIRED COMPONENTS
+  actionlib
+  actionlib_msgs
+  cv_bridge
+  geometry_msgs
+  image_transport
+  message_generation
+  moveit_ros_planning_interface
+  rosconsole
+  roscpp
+  roslib
+  roslint
+  sensor_msgs
+  std_msgs
+  std_srvs
+  tf
+  tf_conversions
+)
 
-# Opencv
-FIND_PACKAGE(OpenCV REQUIRED)
-IF (OPENCV_FOUND)
-  MESSAGE("-- Found OpenCV version ${OPENCV_VERSION}: ${OPENCV_INCLUDE_DIRS}")
-ENDIF (OPENCV_FOUND)
+#set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-fPIC")
 
-# Ceres
-FIND_PACKAGE(Ceres REQUIRED)
-IF (CERES_FOUND)
-  MESSAGE("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
-ENDIF (CERES_FOUND)
 
-SET (CMAKE_CXX_FLAGS -fPIC)
+find_package(Boost REQUIRED)
 
-# Eigen
-#FIND_PACKAGE(Eigen REQUIRED)
-#IF (EIGEN_FOUND)
-#  MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
-#ENDIF (EIGEN_FOUND)
+find_package(Ceres REQUIRED)
+message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(OpenCV 2 REQUIRED)
+message("-- Found OpenCV version ${OpenCV_VERSION}: ${OpenCV_INCLUDE_DIRS}")
 
-## Uncomment this if the package has a setup.py. This macro ensures
-## modules and global scripts declared therein get installed
-## See http://ros.org/doc/groovy/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(yaml_cpp REQUIRED yaml-cpp)
+if(NOT ${yaml_cpp_VERSION} VERSION_LESS "0.5")
+  add_definitions(-DHAVE_NEW_YAMLCPP)
+endif()
 
-#######################################
-## Declare ROS messages and services ##
-#######################################
+find_path(
+  yaml_cpp_INCLUDE_DIR
+  # bit of a trick
+  NAMES yaml-cpp/yaml.h
+  PATHS ${yaml_cpp_INCLUDE_DIRS}
+)
 
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+find_library(
+  yaml_cpp_LIBRARY
+  NAMES ${yaml_cpp_LIBRARIES}
+  PATHS ${yaml_cpp_LIBRARY_DIRS}
+)
 
-## Generate services in the 'srv' folder
- add_service_files(
-   FILES
-   get_mutable_joint_states.srv
-   set_mutable_joint_states.srv
-   store_mutable_joint_states.srv
-   camera_observer_trigger.srv
-   user_accept.srv
-   calibrate.srv
-   covariance.srv
- )
+#message("yaml_cpp_INCLUDE_DIRS: ${yaml_cpp_INCLUDE_DIRS}")
+#message("yaml_cpp_INCLUDE_DIR: ${yaml_cpp_INCLUDE_DIR}")
+#message("yaml_cpp_LIBRARY: ${yaml_cpp_LIBRARY}")
 
-add_action_files(DIRECTORY  action  FILES  manual_trigger.action robot_joint_values_trigger.action  robot_pose_trigger.action manual_target_location.action calibration.action)
 
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+add_service_files(
+  FILES
+    calibrate.srv
+    camera_observer_trigger.srv
+    covariance.srv
+    get_mutable_joint_states.srv
+    set_mutable_joint_states.srv
+    store_mutable_joint_states.srv
+    user_accept.srv
+)
+
+add_action_files(
+  DIRECTORY
+   action
+  FILES
+   calibration.action
+   manual_target_location.action
+   manual_trigger.action
+   robot_joint_values_trigger.action
+   robot_pose_trigger.action
+)
 
 generate_messages(
-    DEPENDENCIES 
-    std_msgs
-    geometry_msgs 
-    actionlib_msgs 
+  DEPENDENCIES
+    actionlib_msgs
+    geometry_msgs
     sensor_msgs
+    std_msgs
 )
 
-set(CMAKE_CXX_FLAGS ${CMAKE_CSS_FLAGS} "-fPIC") 
 
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-   INCLUDE_DIRS include /usr/include/eigen3
-#  LIBRARIES 
-   CATKIN_DEPENDS roscpp std_msgs rosconsole std_srvs roslib 
-#  DEPENDS 
+  LIBRARIES
+    industrial_extrinsic_cal
+  INCLUDE_DIRS
+    include
+  CATKIN_DEPENDS
+    actionlib
+    actionlib_msgs
+    cv_bridge
+    geometry_msgs
+    image_transport
+    message_runtime
+    moveit_ros_planning_interface
+    rosconsole
+    roscpp
+    roslib
+    roslint
+    sensor_msgs
+    std_msgs
+    std_srvs
+    tf
+    tf_conversions
+  DEPENDS
+    Boost
+    CERES
 )
 
-###########
-## Build ##
-###########
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-include_directories(include
-#  ${catkin_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
-  ${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
+
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${CERES_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+  ${yaml_cpp_INCLUDE_DIR}
 )
 
-## Declare a cpp library
-# For Example:
-# add_library(industrial_extrinsic_cal  src/${PROJECT_NAME}/industrial_extrinsic_cal.cpp)
-#
-add_library(industrial_extrinsic_cal
-   src/ros_camera_observer.cpp
-   src/camera_definition.cpp
-   src/target.cpp
-   src/observation_scene.cpp
-   src/observation_data_point.cpp
-   src/ceres_blocks.cpp
-   src/basic_types.cpp
-   src/ros_transform_interface.cpp
-   src/ceres_costs_utils.cpp
-   src/circle_detector.cpp
-   src/camera_yaml_parser.cpp
-   src/targets_yaml_parser.cpp
-   src/points_yaml_parser.cpp
-   src/caljob_yaml_parser.cpp
-   src/calibration_job_definition.cpp
-)
 
-## This insures the creation of headers for all ros messages, services and actions 
+# target: main library
+add_library(
+  industrial_extrinsic_cal
+
+  src/basic_types.cpp
+  src/calibration_job_definition.cpp
+  src/caljob_yaml_parser.cpp
+  src/camera_definition.cpp
+  src/camera_yaml_parser.cpp
+  src/ceres_blocks.cpp
+  src/ceres_costs_utils.cpp
+  src/circle_detector.cpp
+  src/observation_data_point.cpp
+  src/observation_scene.cpp
+  src/points_yaml_parser.cpp
+  src/ros_camera_observer.cpp
+  src/ros_transform_interface.cpp
+  src/target.cpp
+  src/targets_yaml_parser.cpp
+)
 add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+target_link_libraries(
+  industrial_extrinsic_cal
 
-## Declare a cpp executable
-add_executable(manual_calt_adjust src/nodes/manual_calt_adjuster.cpp)
-add_executable(nist_analysis src/nodes/nist_analysis.cpp)
-add_executable(mono_ex_cal src/nodes/mono_ex_cal.cpp)
-add_executable(service_node src/nodes/calibration_service.cpp )
-add_executable(trigger_service src/nodes/ros_scene_trigger_server.cpp)
+  ${yaml_cpp_LIBRARY}
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${CERES_LIBRARIES}
+)
+
+
+# targets: other nodes
+add_executable(camera_observer_scene_trigger    src/nodes/camera_observer_scene_trigger.cpp)
+add_executable(manual_calt_adjust               src/nodes/manual_calt_adjuster.cpp)
+add_executable(mono_ex_cal                      src/nodes/mono_ex_cal.cpp)
+add_executable(mutable_joint_state_publisher    src/nodes/mutable_joint_state_publisher.cpp)
+add_executable(nist_analysis                    src/nodes/nist_analysis.cpp)
 add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
-add_executable(mutable_joint_state_publisher src/nodes/mutable_joint_state_publisher.cpp)
-add_executable(camera_observer_scene_trigger src/nodes/camera_observer_scene_trigger.cpp)
+add_executable(service_node                     src/nodes/calibration_service.cpp)
+add_executable(trigger_service                  src/nodes/ros_scene_trigger_server.cpp)
 
-## These insure the message, action and service headers are created first
-add_dependencies(service_node ${PROJECT_NAME}_generate_messages_cpp )
-add_dependencies(trigger_service ${PROJECT_NAME}_generate_messages_cpp )
-add_dependencies(ros_robot_trigger_action_service  ${PROJECT_NAME}_generate_messages_cpp)
-add_dependencies(mutable_joint_state_publisher  ${PROJECT_NAME}_generate_messages_cpp)
-add_dependencies(camera_observer_scene_trigger ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(camera_observer_scene_trigger    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+add_dependencies(mutable_joint_state_publisher    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+add_dependencies(ros_robot_trigger_action_service ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+add_dependencies(service_node                     ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+add_dependencies(trigger_service                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(industrial_extrinsic_cal_node industrial_extrinsic_cal_generate_messages_cpp)
+target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY} ${CERES_LIBRARIES})
+target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES})
+target_link_libraries(mono_ex_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY})
+target_link_libraries(nist_analysis industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES})
+target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
+#target_link_libraries(test_obs industrial_extrinsic_cal ${yaml_cpp_LIBRARY} ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(trigger_service ${catkin_LIBRARIES})
 
-## Specify libraries to link a library or executable target against
-target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES} )
-target_link_libraries(nist_analysis industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
-target_link_libraries(industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES}  ${CERES_LIBRARIES})
-target_link_libraries(mono_ex_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 
-#target_link_libraries(test_obs industrial_extrinsic_cal yaml-cpp ${catkin_LIBRARIES} ${CERES_LIBRARIES})
-target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES} )
-target_link_libraries(trigger_service ${catkin_LIBRARIES} )
-target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES} )
-target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} yaml-cpp )
-target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} yaml-cpp )
-catkin_add_gtest(utest_inds_cal test/utest.cpp)
-target_link_libraries(utest_inds_cal ${PROJECT_NAME} industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+install(
+  TARGETS
+    camera_observer_scene_trigger
+    industrial_extrinsic_cal
+    manual_calt_adjust
+    mono_ex_cal
+    mutable_joint_state_publisher
+    nist_analysis
+    ros_robot_trigger_action_service
+    service_node
+    trigger_service
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
-add_dependencies(ros_robot_trigger_action_service ${catkin_EXPORTED_TARGETS})
+install(
+  DIRECTORY
+    include/${PROJECT_NAME}
+  DESTINATION
+    ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
 
-#############
-## Install ##
-#############
+install(
+  DIRECTORY
+    config launch targets urdf yaml
+  DESTINATION
+    ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/groovy/api/catkin/html/adv_user_guide/variables.html
 
-## Mark executable scripts (Python etc.) for installation
-## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+if (CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(utest_inds_cal test/utest.cpp)
 
-## Mark executables and/or libraries for installation
-# install(TARGETS industrial_extrinsic_cal industrial_extrinsic_cal_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+  target_link_libraries(
+    utest_inds_cal
 
-## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+    industrial_extrinsic_cal
+    ${catkin_LIBRARIES}
+    ${CERES_LIBRARIES}
+  )
+endif()
 
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
-
-#############
-## Testing ##
-#############
-
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_industrial_extrinsic_cal.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
 
 ## ROSlint checks
 ## For more information see: http://wiki.ros.org/roslint
 ##
 ## CPPlint options justifications
 ## - whitespace/* - errors are ignored, it is assumed that the follwing eclipse
-##   format file has been applied: 
+##   format file has been applied:
 ##   http://wiki.ros.org/IDEs?action=AttachFile&do=get&target=ROS_format.xml
 ## - build/header_guard - #ifdef/#ifndef naming doesn't match ROS sytle
 ## - readability/stream - does not apply to logging (the typical use in ROS)
 ## - runtime/references - pass by reference is allowed for output parameters
-set(ROSLINT_CPP_OPTS 
-"--filter=-whitespace,-build/header_guard,-build/include_order,-readability/streams,-runtime/references")
-file(GLOB_RECURSE ${PROJECT_NAME}_LINT_SRCS 
+set(ROSLINT_CPP_OPTS
+  "--filter=-whitespace,-build/header_guard,-build/include_order,-readability/streams,-runtime/references")
+file(GLOB_RECURSE ${PROJECT_NAME}_LINT_SRCS
      RELATIVE ${PROJECT_SOURCE_DIR} src/*.cpp include/*.h)
 roslint_cpp(${${PROJECT_NAME}_LINT_SRCS})
