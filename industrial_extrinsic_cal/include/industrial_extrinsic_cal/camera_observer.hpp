@@ -99,6 +99,21 @@ public:
   /** @returns true if successful */
   virtual bool pullCameraInfo(double &fx, double &fy, double &cx, double &cy, double &k1,  double &k2,  double &k3,  double &p1,  double &p2)=0;
 
+  /** @brief pulls the camera_info in from the camera driver */
+  /** @param fx the focal length in x*/
+  /** @param fy the focal length in y*/
+  /** @param cx the optical center in x*/
+  /** @param fx the optical center in y*/
+  /** @param k1 distortion 2nd order radial*/
+  /** @param k2 distortion 4th order radial */
+  /** @param k3 distortion 6th order radial */
+  /** @param p1 distortion decentering */
+  /** @param p2 distortion decentering */
+  /** @param width image width */
+  /** @param height image height */
+  /** @returns true if successful */
+  virtual bool pullCameraInfo(double &fx, double &fy, double &cx, double &cy, double &k1,  double &k2,  double &k3,  double &p1,  double &p2, int &width, int &height)=0;
+
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
 
   /** @brief print this object TODO */
