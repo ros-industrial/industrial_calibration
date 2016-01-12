@@ -830,8 +830,8 @@ bool  ROSCameraObserver::pullCameraInfo(double &fx, double &fy,
   k3 = info_msg->D[4];
   fx = info_msg->K[0];
   cx = info_msg->K[2];
-  fy = info_msg->K[5];
-  cy = info_msg->K[6];
+  fy = info_msg->K[4];
+  cy = info_msg->K[5];
   width = info_msg->width;
   height = info_msg->height;
   return(true);
