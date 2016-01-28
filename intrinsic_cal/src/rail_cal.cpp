@@ -82,6 +82,7 @@ private:
   int image_height_;
   int image_width_;
   double D0_;
+  double qx_, qy_, qz_, qw_;
   CameraParameters camera_parameters_;
 };
 
@@ -123,39 +124,37 @@ RailCalService::RailCalService(ros::NodeHandle nh)
     ROS_ERROR("Must set param:  target_to_rail_distance");
   }
 
+  bool use_quaternion = false;
+  if(pnh.getParam( "qx", qx_))
+  {
+    if(pnh.getParam( "qy", qy_))
+    {
+      if(pnh.getParam( "qz", qz_))
+      {
+        if(pnh.getParam( "qw", qw_))
+        {
+          use_quaternion = true;
+        }
+      }
+    }
+  }
+
   u_int32_t queue_size = 5;
   rgb_sub_ = nh_.subscribe("color_image", queue_size, &RailCalService::cameraCallback, this);
   rgb_pub_ = nh_.advertise<sensor_msgs::Image>("color_image_center", 1);
 
-  // setting camera extrinsic parameters in no longer necessary they are not used
-  tf::Matrix3x3 R;
-  Pose6d pose;
-  //R[0][0] = 0;   R[0][1] = 0;   R[0][2] = -1;
-  //R[1][0] = 1;   R[1][1] = 0;   R[1][2] = 0;
-  //R[2][0] = 0;   R[2][1] = -1;   R[2][2] = 0;
-  R[0][0] = 0;   R[0][1] = -1;   R[0][2] = 0;
-  R[1][0] = -1;   R[1][1] = 0;   R[1][2] = 0;
-  R[2][0] = 0;   R[2][1] = 0;   R[2][2] = -1;
-
-  pose.setBasis(R);
-  pose.setOrigin(0.0, 0.0, 0.0);
-  camera_parameters_.angle_axis[0] = pose.ax;
-  camera_parameters_.angle_axis[1] = pose.ay;
-  camera_parameters_.angle_axis[1] = pose.az;
-  camera_parameters_.position[0] = pose.x;
-  camera_parameters_.position[1] = pose.y;
-  camera_parameters_.position[2] = pose.z;
-
-  camera_parameters_.focal_length_x = 530.0;
-  camera_parameters_.focal_length_y = 530.0;
-  camera_parameters_.center_x = 320.0;
-  camera_parameters_.center_y = 240.0;
+  if(!use_quaternion)
+  {
+    qx_ = 1.0;
+    qy_ = qz_ = qw_ = 0.0;
+    ROS_WARN("parameters qx, qy, qz, and qw not provided, using default values of (%.2f, %.2f, %.2f, %.2f)", qx_, qy_, qz_, qw_);
+  }
 
   bool is_moving = true;
   camera_ =  make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
   camera_->trigger_ = make_shared<NoWaitTrigger>();
   camera_->camera_observer_ = make_shared<ROSCameraObserver>(image_topic_, camera_name_);
-  camera_->camera_observer_->pullCameraInfo(camera_->camera_parameters_.focal_length_x,
+  if(!camera_->camera_observer_->pullCameraInfo(camera_->camera_parameters_.focal_length_x,
                                            camera_->camera_parameters_.focal_length_y,
                                            camera_->camera_parameters_.center_x,
                                            camera_->camera_parameters_.center_y,
@@ -164,7 +163,12 @@ RailCalService::RailCalService(ros::NodeHandle nh)
                                            camera_->camera_parameters_.distortion_k3,
                                            camera_->camera_parameters_.distortion_p1,
                                            camera_->camera_parameters_.distortion_p2,
-                                           image_width_, image_height_);
+                                           image_width_, image_height_))
+  {
+    ROS_FATAL("Could not get camera information for %s from topic %s. Shutting down node.", camera_name_.c_str(), image_topic_.c_str());
+    ros::shutdown();
+  }
+
   ROS_INFO("initial camera info focal:%f %f center:%f %f  radial:%f %f %f tang: %f %f",
             camera_->camera_parameters_.focal_length_x,
             camera_->camera_parameters_.focal_length_y,
@@ -214,21 +218,8 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
   Problem problem; // note, a new problem gets created each time execute is called, so old observation data is not re-used.
 
   // set initial conditions,
-  // x of target aligned with y of rail    [ 0  0  1 ]
-  // y of target aligned with z of rail    [ 1  0  0 ]
-  // z of target aligned with x of rail,   [ 0  1  0 ]
-  // target about D0 meters behind rail
-  tf::Matrix3x3 R;
-  //R[0][0] = 1;   R[0][1] = 0;   R[0][2] = 0;
-  //R[1][0] = 0;   R[1][1] = -1;   R[1][2] = 0;
-  //R[2][0] = 0;   R[2][1] = 0;   R[2][2] = -1;
-  R[0][0] = 0;   R[0][1] = -1.0;   R[0][2] = 0;
-  R[1][0] = -1.0;   R[1][1] = 0;   R[1][2] = 0;
-  R[2][0] = 0;   R[2][1] = 0;   R[2][2] = -1;
-
-  //target_->pose_.setBasis(R);
   // Need to use setQuaternion because setBasis does not work for some rotations (results in flipped yaw values and negative focal lengths)
-  target_->pose_.setQuaternion(0.707, -0.707, 0, 0 );
+  target_->pose_.setQuaternion(qx_, qy_, qz_, qw_);
   target_->pose_.setOrigin(0.011, 0.05, D0_);
   target_->pose_.show("initial target pose");
   ros::NodeHandle pnh("~");
@@ -243,7 +234,7 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
     pnh.setParam("camera_ready", camera_ready);
     while(camera_ready == false){
       if(!pnh.getParam("camera_ready", camera_ready)){
-        ROS_ERROR("parameter camera_ready does not exists");
+        ROS_ERROR_THROTTLE(1, "parameter camera_ready does not exists");
         ros::Duration(0.25).sleep();
       }
     }
