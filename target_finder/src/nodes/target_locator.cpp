@@ -57,6 +57,7 @@ private:
   ros::ServiceServer target_locate_server_;
   shared_ptr<Target> target_;
   string image_topic_;
+  string camera_name_;
   int target_type_;
   int target_rows_;
   int target_cols_;
@@ -77,6 +78,11 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
 
   if(!pnh.getParam( "target_type", target_type_)){
     ROS_ERROR("Must set param: target_type");
+
+  }
+
+  if(!pnh.getParam( "camera_name", camera_name_)){
+    ROS_ERROR("Must set param: camera_name");
 
   }
 
@@ -111,12 +117,13 @@ bool TargetLocatorService::executeCallBack( target_locater::Request &req, target
   ros::NodeHandle nh;
   CameraObservations camera_observations;
 
-  ROSCameraObserver camera_observer(image_topic_);
+  ROSCameraObserver camera_observer(image_topic_, camera_name_);
 
   // get the focal length and optical center
   double fx,fy,cx,cy; 
   double k1,k2,k3,p1,p2;// unused 
-  if(!camera_observer.pullCameraInfo(fx, fy, cx, cy, k1, k2, k3, p1, p2)){
+  int height, width; //unused
+  if(!camera_observer.pullCameraInfo(fx, fy, cx, cy, k1, k2, k3, p1, p2, width, height)){
     ROS_ERROR("could not access camera info");
   }
   camera_observer.clearObservations();

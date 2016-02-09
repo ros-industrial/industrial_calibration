@@ -66,7 +66,7 @@ namespace industrial_extrinsic_cal
      * @brief constructor
      * @param image_topic name of published image topic
      */
-    ROSCameraObserver(const std::string &image_topic, const std::string &camera_name="none");
+    ROSCameraObserver(const std::string &image_topic, const std::string &camera_name="");
     
     /**
      * @brief Default destructor
@@ -233,11 +233,11 @@ namespace industrial_extrinsic_cal
     /**
      *  @brief getImageNumber 
      */
-    int getImageNumber(){ return(image_number_);};
+    int getImageNumber(){ return(image_number_);}
     /**
      *  @brief setImageNumber allows users of the load feature to switch to a different image for the next observation
      */
-    void setImageNumber(int image_number){ image_number_ = image_number;};
+    void setImageNumber(int image_number){ image_number_ = image_number;}
 
     /**
      *  @brief get last image
@@ -273,6 +273,23 @@ namespace industrial_extrinsic_cal
      *  @param p2 the decentering distortion p2
      */
     bool  pullCameraInfo(double &fx, double &fy,	 double &cx,  double &cy,  double &k1,	 double &k2, double &k3,  double &p1,	 double &p2);
+
+    /**
+     *  @brief pull the computed camera parameters out to the camera driver
+     *  @param fx the focal length in x
+     *  @param fx the focal length in y
+     *  @param cx the optical center in x
+     *  @param cy the optical center in y
+     *  @param k1 the radial distortion 2nd order term
+     *  @param k2 the radial distortion 4th order term
+     *  @param k3 the radial distortion 6th order term
+     *  @param p1 the decentering distortion p1
+     *  @param p2 the decentering distortion p2
+     *  @param width the image width
+     *  @param height the image height
+     */
+    bool  pullCameraInfo(double &fx, double &fy,	 double &cx,  double &cy,  double &k1,	 double &k2, double &k3,  double &p1,	 double &p2,
+                         int &width, int &height);
 
   private:
     int image_number_; /**< a counter of images recieved */
