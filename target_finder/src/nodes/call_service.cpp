@@ -40,7 +40,7 @@ public:
       roi_width_ = 1280;
     }
     if(!pnh.getParam("roi_height", roi_height_)){
-      roi_width_ = 1024;
+      roi_height_ = 1024;
     }
     if(!pnh.getParam("optical_frame", optical_frame_)){
       optical_frame_ = "basler1_optical_frame";

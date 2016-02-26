@@ -2,20 +2,17 @@
 <launch>
        <arg name="view_cameras" default="false"/>
        <arg name="camera_number" default="1"/>
-       <arg name="basler_sn" default="21511095"/>
+       <arg name="basler_sn" default="21511083"/>
        <arg name="focal_length" default="2758.0"/>
 
      <node pkg="target_finder" type="target_locator_srv" name="target_locator" output="screen" >
           <param name="image_topic" value="Basler$(arg camera_number)/image_rect" />
+          <param name="camera_name" value="Basler$(arg camera_number)" />
           <param name="target_type" value="2" />
           <param name="target_rows" value="16" />
           <param name="target_cols" value="29" />
           <param name="target_circle_dia" value="0.0125" />
           <param name="target_spacing" value="0.025393" />
-          <param name="focal_length_x" value="2780.832152" />
-          <param name="focal_length_y" value="2781.639220"/>
-          <param name="center_x" value="984.043471" />
-          <param name="center_y" value="572.531329" />
           <param name="use_circle_detector" value="false"/>
      </node>
  

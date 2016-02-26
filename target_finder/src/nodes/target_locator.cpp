@@ -109,7 +109,11 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
     ROS_ERROR("Target type not supported, check your launch file, only 2, and 4 for MCircle, and Balls type targets");
   }
 
-  target_locate_server_ = nh_.advertiseService( "TargetLocateService", &TargetLocatorService::executeCallBack, this);
+  std::string service_name;
+  if(!pnh.getParam("service_name", service_name)){
+    service_name = "TargetLocateService";
+  }
+  target_locate_server_ = nh_.advertiseService( service_name.c_str(), &TargetLocatorService::executeCallBack, this);
 }
 
 bool TargetLocatorService::executeCallBack( target_locater::Request &req, target_locater::Response &res)
