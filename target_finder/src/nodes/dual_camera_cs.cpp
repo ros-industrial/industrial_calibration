@@ -170,6 +170,11 @@ bool callService::callTheService()
   }
 
   // resend camera1 to camera2 tf
+  ROS_INFO("publishing %s to %s %f %f %f", c1_optical_frame_.c_str(), c2_optical_frame_.c_str(),
+	   camera1_to_camera2_.getOrigin().x(),
+	   camera1_to_camera2_.getOrigin().y(),
+	   camera1_to_camera2_.getOrigin().z());
+
   tf::StampedTransform stf(camera1_to_camera2_, ros::Time::now(), c1_optical_frame_.c_str(), c2_optical_frame_.c_str());
   tf_broadcaster_.sendTransform(stf);
 
@@ -189,41 +194,38 @@ bool callService::resetC2()
   tf::Transform c1_to_target;
   tf::Transform c2_to_target;
 
-  if(c1_client_.call(c1_srv_)){
-    double x,y,z,qx,qy,qz,qw;
-    x = c1_srv_.response.final_pose.position.x;
-    y = c1_srv_.response.final_pose.position.y;
-    z = c1_srv_.response.final_pose.position.z;
-    qx = c1_srv_.response.final_pose.orientation.x;
-    qy = c1_srv_.response.final_pose.orientation.y;
-    qz = c1_srv_.response.final_pose.orientation.z;
-    qw = c1_srv_.response.final_pose.orientation.w;
-    tf::Quaternion quat(qx,qy,qz,qw);
-    c1_to_target.setOrigin(tf::Vector3(x,y,z));
-    c1_to_target.setRotation(quat);
-    c1_target_found = 1;
-  }
-  else{
+  while(!c1_client_.call(c1_srv_)){
     ROS_ERROR("C1 call failed");
+    sleep(1);
   }
-
-  if(c2_client_.call(c2_srv_)){
-    double x,y,z,qx,qy,qz,qw;
-    x = c2_srv_.response.final_pose.position.x;
-    y = c2_srv_.response.final_pose.position.y;
-    z = c2_srv_.response.final_pose.position.z;
-    qx = c2_srv_.response.final_pose.orientation.x;
-    qy = c2_srv_.response.final_pose.orientation.y;
-    qz = c2_srv_.response.final_pose.orientation.z;
-    qw = c2_srv_.response.final_pose.orientation.w;
-    tf::Quaternion quat(qx,qy,qz,qw);
-    c2_to_target.setOrigin(tf::Vector3(x,y,z));
-    c2_to_target.setRotation(quat);
-    c2_target_found = 1;
-  }
-  else{
+  double x,y,z,qx,qy,qz,qw;
+  x = c1_srv_.response.final_pose.position.x;
+  y = c1_srv_.response.final_pose.position.y;
+  z = c1_srv_.response.final_pose.position.z;
+  qx = c1_srv_.response.final_pose.orientation.x;
+  qy = c1_srv_.response.final_pose.orientation.y;
+  qz = c1_srv_.response.final_pose.orientation.z;
+  qw = c1_srv_.response.final_pose.orientation.w;
+  tf::Quaternion quat(qx,qy,qz,qw);
+  c1_to_target.setOrigin(tf::Vector3(x,y,z));
+  c1_to_target.setRotation(quat);
+  c1_target_found = 1;
+  
+  while(!c2_client_.call(c2_srv_)){
     ROS_ERROR("C2 call failed");
+    sleep(1);
   }
+  x = c2_srv_.response.final_pose.position.x;
+  y = c2_srv_.response.final_pose.position.y;
+  z = c2_srv_.response.final_pose.position.z;
+  qx = c2_srv_.response.final_pose.orientation.x;
+  qy = c2_srv_.response.final_pose.orientation.y;
+  qz = c2_srv_.response.final_pose.orientation.z;
+  qw = c2_srv_.response.final_pose.orientation.w;
+  tf::Quaternion quat2(qx,qy,qz,qw);
+  c2_to_target.setOrigin(tf::Vector3(x,y,z));
+  c2_to_target.setRotation(quat2);
+  c2_target_found = 1;
 
   if(c1_target_found && c2_target_found){
     camera1_to_camera2_ = c1_to_target * c2_to_target.inverse();

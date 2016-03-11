@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+
+<robot name="Robot1" xmlns:xacro="http://ros.org/wiki/xacro">
+     <xacro:include filename="$(find industrial_extrinsic_cal)/urdf/basler_macro.xacro" />
+
+      <link name="world_frame" />
+
+      <link name="c1_target_frame" >
+           <visual>
+                  <origin xyz="0.4 0.25 0.0" />
+ 	   <geometry>
+                      <mesh filename="$(find target_finder)/meshes/cal_pattern.stl"/>
+                  </geometry>
+           </visual>
+     </link>
+
+      <link name="c2_target_frame" >
+           <visual>
+                  <origin xyz="0.4  0.25 0.0" />
+ 	   <geometry>
+                      <mesh filename="package://target_finder/meshes/cal_pattern.stl"/>
+<!--mesh filename="package://robots_abb/meshes/irb_5500_North/visual/Rail_Link1.stl"/-->
+                  </geometry>
+           </visual>
+     </link>
+
+     <joint name="$world_2_cal_target_joint" type="fixed" >
+        <parent link="world_frame" />
+	<child link="c1_target_frame" />
+	<origin rpy="1.5708 0.0 0.0" xyz="0.0 0.0  1.0" />
+     </joint>
+
+     <!-- create first camera and attach to target frame -->
+     <xacro:basler_definitions prefix="basler1" parent="c1_target_frame" />
+
+     <!-- create second camera and attach to optical frame of first camera -->
+     <xacro:basler_definitions prefix="basler2" parent="basler1_optical_frame" />
+
+     <joint name="$c2_2_target2_joint" type="floating" >
+               <parent link="basler2_optical_frame" />
+	<child link="c2_target_frame" />
+     </joint>
+
+
+</robot>
+

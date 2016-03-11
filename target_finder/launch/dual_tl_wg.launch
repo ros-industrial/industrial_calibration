@@ -1,0 +1,115 @@
+<?xml version="1.0" ?>
+<launch>
+       <arg name="view_cameras" default="false"/>
+       <arg name="camera1_number" default="1"/>
+       <arg name="camera2_number" default="2"/>
+       <arg name="basler1_sn" default="21511083"/>
+       <arg name="basler2_sn" default="21511088"/>
+       <arg name="c1_target_frame" default="c1_target_frame"/>
+       <arg name="c2_target_frame" default="c2_target_frame"/>
+
+     <node pkg="target_finder" type="target_locator_srv" name="c1_target_locator" output="screen" >
+          <param name="image_topic" value="Basler$(arg camera1_number)/image_rect" />
+          <param name="camera_name" value="Basler$(arg camera1_number)" />
+          <param name="target_type" value="2" />
+          <param name="target_rows" value="20" />
+          <param name="target_cols" value="33" />
+          <param name="target_circle_dia" value="0.0125" />
+          <param name="target_spacing" value="0.025393" />
+          <param name="use_circle_detector" value="false"/>
+          <param name="service_name" value="C1_TargetLocateService"/>
+     </node>
+     <node pkg="target_finder" type="target_locator_srv" name="c2_target_locator" output="screen" >
+          <param name="image_topic" value="Basler$(arg camera2_number)/image_rect" />
+          <param name="camera_name" value="Basler$(arg camera2_number)" />
+          <param name="target_type" value="2" />
+          <param name="target_rows" value="20" />
+          <param name="target_cols" value="33" />
+          <param name="target_circle_dia" value="0.0125" />
+          <param name="target_spacing" value="0.025393" />
+          <param name="use_circle_detector" value="false"/>
+          <param name="service_name" value="C2_TargetLocateService"/>
+     </node>
+ 
+     <node pkg="target_finder" type="dual_call_service" name="call_service" output="screen" >
+           <param name="c1_roi_width" value="1920"/>
+           <param name="c1_roi_height" value="1080"/>
+           <param name="c2_roi_width" value="1920"/>
+           <param name="c2_roi_height" value="1080"/>
+           <param name="c1_optical_frame" value="basler$(arg camera1_number)_optical_frame"/>
+           <param name="c2_optical_frame" value="basler$(arg camera2_number)_optical_frame"/>
+           <param name="c1_target_frame" value="$(arg c1_target_frame)"/>
+           <param name="c2_target_frame" value="$(arg c2_target_frame)"/>
+           <param name="camera1_target_locate_service" value="C1_TargetLocateService"/>
+           <param name="camera2_target_locate_service" value="C2_TargetLocateService"/>
+
+     </node>
+ 
+    <include  file="$(find ind_cal_multi_camera)/launch/basler_camera.launch" >
+         <arg name="camera_name" value="Basler$(arg camera1_number)"/>
+         <arg name="camera_aravis_package" value="true"/>
+         <arg name="basler_sn" value="$(arg basler1_sn)"/>
+         <arg name="exposure_auto" value="auto_once"/>
+         <arg name="exposure_time" value="2000"/>
+         <arg name="gain_auto" value="Once" />
+         <arg name="gain" value="0" />
+         <arg name="frame_rate" value="20"/>
+         <arg name="trigger_mode" value="Off"/>
+         <arg name="trigger_source" value="Line1"/>
+         <arg name="pixel_format" value="Mono8"/>
+        <arg name="url" value="file://$(find ind_cal_multi_camera)/camera_info/Basler$(arg basler1_sn).yaml"/>
+     </include>
+
+     <node pkg="nodelet" type="nodelet" name="image_proc_nodelet$(arg camera1_number)"  args="manager"/>
+     <node pkg="nodelet" type="nodelet" name="rectify$(arg camera1_number)" args="load image_proc/rectify image_proc_nodelet$(arg camera1_number)">
+        <remap from="camera_info" to="Basler$(arg camera1_number)/camera_info"/>
+        <remap from="image_mono" to="Basler$(arg camera1_number)/image_raw"/>
+        <remap from="image_rect" to="Basler$(arg camera1_number)/image_rect"/>
+     </node>
+
+    <include  file="$(find ind_cal_multi_camera)/launch/basler_camera.launch" >
+         <arg name="camera_name" value="Basler$(arg camera2_number)"/>
+         <arg name="camera_aravis_package" value="true"/>
+         <arg name="basler_sn" value="$(arg basler2_sn)"/>
+         <arg name="exposure_auto" value="auto_once"/>
+         <arg name="exposure_time" value="2000"/>
+         <arg name="gain_auto" value="Once" />
+         <arg name="gain" value="0" />
+         <arg name="frame_rate" value="20"/>
+         <arg name="trigger_mode" value="Off"/>
+         <arg name="trigger_source" value="Line1"/>
+         <arg name="pixel_format" value="Mono8"/>
+        <arg name="url" value="file://$(find ind_cal_multi_camera)/camera_info/Basler$(arg basler2_sn).yaml"/>
+     </include>
+
+     <node pkg="nodelet" type="nodelet" name="image_proc_nodelet$(arg camera2_number)"  args="manager"/>
+     <node pkg="nodelet" type="nodelet" name="rectify$(arg camera2_number)" args="load image_proc/rectify image_proc_nodelet$(arg camera2_number)">
+        <remap from="camera_info" to="Basler$(arg camera2_number)/camera_info"/>
+        <remap from="image_mono" to="Basler$(arg camera2_number)/image_raw"/>
+        <remap from="image_rect" to="Basler$(arg camera2_number)/image_rect"/>
+     </node>
+
+     <node pkg="image_view" type="image_view" name="debug_view" >
+          <remap from="image" to="observer_raw_image"/>
+     </node>
+
+   <!-- load robot -->
+   <!-- launch robot state publisher -->
+   <arg name="gui" default="False" />
+   <arg name="robot1" default="camera_scene" />
+   <arg name="xacro_model" default="$(find target_finder)/urdf/dual_camera_ical.xacro" />
+
+   <!-- Load the xacro file of the cameras and target onto the parameter server as a robot description -->
+   <param name="$(arg robot1)/robot_description" command="$(find xacro)/xacro.py $(arg xacro_model)" />
+   <param name="use_gui" value="$(arg gui)" />
+
+   <!-- Launch robot state publishers for scene -->
+   <node ns="$(arg robot1)" name="camera_scene_state_publisher" pkg="robot_state_publisher" type="state_publisher" >
+            <param name="publish_frequency" value="100" />
+   </node>
+
+
+     <!--node pkg="tf" type="static_transform_publisher" name="target_frame" args="0.0 0.0 1.0 0.0 0.0 1.5708 world $(arg c1_target_frame) 100" /-->
+     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find target_finder)/config/dual_target_finder.rviz" required="false" />
+
+</launch>

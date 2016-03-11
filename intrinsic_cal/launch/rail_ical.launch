@@ -54,8 +54,9 @@
           <param name="camera_spacing" value=".050" />
           <param name="image_height" value="1080" />
           <param name="image_width" value="1920" />
-          <param name="target_to_rail_distance" value="1.340" />
+          <param name="target_to_rail_distance" value="1.490" />
           <param name="use_circle_detector" value="false"/>
+          <remap from="color_image" to="Basler$(arg camera_number)/image_raw" />
      </node>
 
      <node pkg="nodelet" type="nodelet" name="image_proc_nodelet$(arg camera_number)"  args="manager"/>
