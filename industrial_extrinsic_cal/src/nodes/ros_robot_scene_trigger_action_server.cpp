@@ -40,7 +40,7 @@ public:
   {
     joint_value_server_.start();
     pose_server_.start();
-    move_group_ = new moveit::planning_interface::MoveGroup("Manipulator");
+    move_group_ = new moveit::planning_interface::MoveGroup("manipulator");
     move_group_->setPlanningTime(10.0); // give it 10 seconds to plan
     move_group_->setNumPlanningAttempts(30.0); // Allow parallel planner to hybridize this many plans
     move_group_->setPlannerId("RRTConnectkConfigDefault"); // use this planner
