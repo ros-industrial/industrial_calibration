@@ -20,9 +20,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf_conversions
 )
 
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-fPIC -pthread")
-
-
 find_package(Boost REQUIRED)
 
 find_package(Ceres REQUIRED)
