@@ -27,8 +27,8 @@
 #include <industrial_extrinsic_cal/ros_camera_observer.h>
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/camera_definition.h>
-#include <industrial_extrinsic_cal/ceres_costs_utils.h>
-#include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
+#include <industrial_extrinsic_cal/ceres_costs_utils.h> 
+#include <industrial_extrinsic_cal/ceres_costs_utils.hpp> 
 #include <intrinsic_cal/rail_ical_run.h>
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
@@ -50,7 +50,7 @@ using industrial_extrinsic_cal::Camera;
 using industrial_extrinsic_cal::CameraParameters;
 using industrial_extrinsic_cal::NoWaitTrigger;
 
-class RailCalService
+class RailCalService 
 {
 public:
   RailCalService(ros::NodeHandle nh);
@@ -88,7 +88,7 @@ private:
 
 RailCalService::RailCalService(ros::NodeHandle nh)
 {
-
+  
   nh_ = nh;
   ros::NodeHandle pnh("~");
 
@@ -119,6 +119,12 @@ RailCalService::RailCalService(ros::NodeHandle nh)
   }
   if(!pnh.getParam( "camera_spacing", camera_spacing_)){
     ROS_ERROR("Must set param:  camera_spacing");
+  }
+  if(!pnh.getParam( "image_height", image_height_)){
+    ROS_ERROR("Must set param:  image_height_");
+  }
+  if(!pnh.getParam( "image_width", image_width_)){
+    ROS_ERROR("Must set param:  image_width_");
   }
   if(!pnh.getParam( "target_to_rail_distance", D0_)){
     ROS_ERROR("Must set param:  target_to_rail_distance");
@@ -179,7 +185,7 @@ RailCalService::RailCalService(ros::NodeHandle nh)
             camera_->camera_parameters_.distortion_k3,
             camera_->camera_parameters_.distortion_p1,
             camera_->camera_parameters_.distortion_p2);
-
+            
   initMCircleTarget(target_rows_, target_cols_, circle_diameter_, circle_spacing_);
   rail_cal_server_ = nh_.advertiseService( "RailCalService", &RailCalService::executeCallBack, this);
 }
@@ -203,6 +209,10 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
   ros::NodeHandle nh;
   CameraObservations camera_observations;
   int num_observations ;
+  int total_observations=0;
+  double rxry[2]; // pitch and yaw of camera relative to rail
+  rxry[0] = 0.0;
+  rxry[1] = 0.0;
 
   camera_->camera_observer_->clearObservations();
   camera_->camera_observer_->clearTargets();
@@ -250,9 +260,10 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
     if(num_observations != target_rows_* target_cols_){
       ROS_ERROR("Target Locator could not find target %d", num_observations);
     }
-
+    
     // add a new cost to the problem for each observation
     CostFunction* cost_function[num_observations]; // not sure I need a new cost function each time, but this just uses memory
+    total_observations += num_observations;
     for(int i=0; i<num_observations; i++){
       double image_x = camera_observations[i].image_loc_x;
       double image_y = camera_observations[i].image_loc_y;
@@ -274,35 +285,35 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
   options.max_num_iterations = 2000;
   ceres::Solve(options, &problem, &summary);
   if(summary.termination_type != ceres::NO_CONVERGENCE){
-    double initial_cost = summary.initial_cost/num_observations;
-    double final_cost = summary.final_cost/num_observations;
+    double initial_cost = summary.initial_cost/total_observations;
+    double final_cost = summary.final_cost/total_observations;
     ROS_INFO("Problem solved, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
     target_->pose_.show("target_pose");
-    ROS_INFO("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]",
-        camera_->camera_parameters_.focal_length_x,
-        camera_->camera_parameters_.center_x,
-        camera_->camera_parameters_.focal_length_y,
-        camera_->camera_parameters_.center_y);
+    ROS_INFO("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]", 
+	      camera_->camera_parameters_.focal_length_x,
+	      camera_->camera_parameters_.center_x,
+	      camera_->camera_parameters_.focal_length_y,
+	      camera_->camera_parameters_.center_y);
     ROS_INFO("distortion data: [ %lf,  %lf,  %lf,  %lf,  %lf]",
-          camera_->camera_parameters_.distortion_k1,
-          camera_->camera_parameters_.distortion_k2,
-          camera_->camera_parameters_.distortion_p1,
-          camera_->camera_parameters_.distortion_p2,
-          camera_->camera_parameters_.distortion_k3);
-    ROS_INFO("projection_matrix data: [ %lf, 0.0, %lf, 0.0, 0.0, %lf, %lf, 0.0, 0.0, 0.0, 1.0, 0.0]",
-        camera_->camera_parameters_.focal_length_x,
-        camera_->camera_parameters_.center_x,
-        camera_->camera_parameters_.focal_length_y,
-        camera_->camera_parameters_.center_y);
+   	      camera_->camera_parameters_.distortion_k1,
+   	      camera_->camera_parameters_.distortion_k2,
+   	      camera_->camera_parameters_.distortion_p1,
+   	      camera_->camera_parameters_.distortion_p2,
+   	      camera_->camera_parameters_.distortion_k3);
+    ROS_INFO("projection_matrix data: [ %lf, 0.0, %lf, 0.0, 0.0, %lf, %lf, 0.0, 0.0, 0.0, 1.0, 0.0]", 
+	      camera_->camera_parameters_.focal_length_x,
+	      camera_->camera_parameters_.center_x,
+	      camera_->camera_parameters_.focal_length_y,
+	      camera_->camera_parameters_.center_y);
     if(final_cost <= req.allowable_cost_per_observation){
       res.final_pose.position.x = target_->pose_.x;
       res.final_pose.position.y = target_->pose_.y;
       res.final_pose.position.z = target_->pose_.z;
       res.final_cost_per_observation  = final_cost;
       target_->pose_.getQuaternion(res.final_pose.orientation.x,
-           res.final_pose.orientation.y,
-           res.final_pose.orientation.z,
-           res.final_pose.orientation.w);
+				   res.final_pose.orientation.y, 
+				   res.final_pose.orientation.z,
+				   res.final_pose.orientation.w);
       camera_->camera_observer_->pushCameraInfo(camera_->camera_parameters_.focal_length_x,
                                                 camera_->camera_parameters_.focal_length_y,
                                                 camera_->camera_parameters_.center_x,
@@ -333,7 +344,7 @@ void RailCalService::initMCircleTarget(int rows, int cols, double circle_dia, do
   target_->circle_grid_parameters_.pattern_rows =rows;
   target_->circle_grid_parameters_.pattern_cols = cols;
   target_->circle_grid_parameters_.circle_diameter = circle_dia;
-  target_->circle_grid_parameters_.is_symmetric = true;
+  target_->circle_grid_parameters_.is_symmetric = true; 
   // create a grid of points
   target_->pts_.clear();
   target_->num_points_ = rows*cols;

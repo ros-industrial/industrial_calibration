@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+     <xacro:property name="basler_length" value="0.1"/>
+     <xacro:property name="basler_lengthD2" value="0.015"/>
+     <xacro:property name="basler_width" value="0.03"/>
+     <xacro:property name="basler_height" value="0.03"/>
+     <xacro:property name="basler_radius" value="0.015"/>
+
+     <xacro:macro name="basler_definitions" params="prefix parent">
+
+	<!-- links: XXXXX_optical_frame and XXXXX_link-->
+              <link name="${prefix}_optical_frame"/>
+       
+               <!-- create geometry -->
+	<material name="${prefix}dark_silver">
+		<color rgba="0.30 0.30 0.30 1"/>
+	</material>
+
+	<link name="${prefix}_link">
+		<visual>
+			<origin rpy="0 0 0" xyz="0 0 -${basler_lengthD2}"/>
+			<geometry>
+				<box size="${basler_width} ${basler_height} ${basler_length}"/>
+			</geometry>
+			<material name="${prefix}dark_silver"/>
+		</visual>
+		<collision>
+			<origin rpy="0 0 0" xyz="0 0 0"/>
+			<geometry>
+				<box size="${basler_width} ${basler_length} ${basler_height}"/>
+			</geometry>
+		</collision>
+	</link>
+	<!-- end of sensor links -->
+
+	<!-- joint to attach the optical frame to parent with a floating joint-->
+	<joint name="${prefix}_frame_joint" type="floating">
+		<parent link="${parent}"/>
+		<child link="${prefix}_optical_frame"/>
+		<origin rpy="0 0 0" xyz="0 0 0"/>
+	</joint>
+
+	<!-- joint to attach the camera geometry to the optical frame -->
+	<joint name="${prefix}_optical_joint" type="fixed">
+		<parent link="${prefix}_optical_frame"/>
+		<child link="${prefix}_link"/>
+		<origin rpy="0 0 0" xyz="0 0 0"/>
+	</joint>
+
+     </xacro:macro>
+
+</robot>
+
+

@@ -63,18 +63,22 @@ include_directories(
 
 add_executable(target_gen src/nodes/grid_generator.cpp)
 add_executable(call_service src/nodes/call_service.cpp)
+add_executable(dual_call_service src/nodes/dual_camera_cs.cpp)
 add_executable(target_locator_srv src/nodes/target_locator.cpp)
 
 add_dependencies(call_service ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
+add_dependencies(dual_call_service ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
 add_dependencies(target_locator_srv ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
 
 target_link_libraries(target_gen ${catkin_LIBRARIES})
 target_link_libraries(call_service ${catkin_LIBRARIES})
+target_link_libraries(dual_call_service ${catkin_LIBRARIES})
 target_link_libraries(target_locator_srv ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 
 
 install(
   TARGETS
+    dual_call_service
     call_service
     target_gen
     target_locator_srv
