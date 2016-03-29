@@ -56,7 +56,8 @@ DepthCalibrator::DepthCalibrator(ros::NodeHandle& nh)
     save_data_ = true;
   }
 
-  store_point_cloud_ = false;
+  std_dev_error_ = 0.1;
+  depth_error_threshold_ = 0.2;
 
   double x,y,z,w;
 
@@ -308,7 +309,7 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
     // depth correction value is error between calculated depth and average depth for the given pixel
     double error = (ideal_depth - avg_cloud.points.at(j).z);
 
-    if(fabs(error) > 0.2)
+    if(fabs(error) > depth_error_threshold_)
     {
       ROS_WARN("depth error for pixel %d is too great (%.3f), setting to NAN", j, error);
       pcl::PointXYZ pt;
@@ -464,6 +465,7 @@ bool DepthCalibrator::findAveragePlane(std::vector<double>& plane_eq, geometry_m
 {
   bool rtn = false;
 
+  plane_eq.clear();
   geometry_msgs::Pose temp_pose;
   std::vector<double> a, b, c, d;
   int error = 0;
@@ -500,8 +502,8 @@ bool DepthCalibrator::findAveragePlane(std::vector<double>& plane_eq, geometry_m
   if(error < num_attempts_)
   {
     // calculate the average plane equation parameters
-    double avg_a, avg_b, avg_c, avg_d;
-    avg_a = avg_b = avg_c = avg_d = 0;
+    double avg_a, avg_b, avg_c, avg_d, std_a, std_b, std_c, std_d;
+    avg_a = avg_b = avg_c = avg_d = std_a = std_b = std_c = std_d = 0;
     for(int i = 0; i < a.size(); ++i)
     {
       avg_a += a[i];
@@ -514,12 +516,31 @@ bool DepthCalibrator::findAveragePlane(std::vector<double>& plane_eq, geometry_m
     avg_c = avg_c / c.size();
     avg_d = avg_d / d.size();
 
-    plane_eq.push_back(avg_a);
-    plane_eq.push_back(avg_b);
-    plane_eq.push_back(avg_c);
-    plane_eq.push_back(avg_d);
+    for(int i = 0; i < a.size(); ++i)
+    {
+      std_a += pow(a[i] - avg_a, 2.0);
+      std_b += pow(b[i] - avg_b, 2.0);
+      std_c += pow(c[i] - avg_c, 2.0);
+      std_d += pow(d[i] - avg_d, 2.0);
+    }
+    std_a = sqrt(std_a/ (a.size()-1));
+    std_b = sqrt(std_a/ (a.size()-1));
+    std_c = sqrt(std_a/ (a.size()-1));
+    std_d = sqrt(std_a/ (a.size()-1));
 
-    rtn = true;
+    // If standard deviation is too large, return an error
+    if(std_a < std_dev_error_ && std_b < std_dev_error_ && std_c < std_dev_error_ && std_d < std_dev_error_)
+    {
+      plane_eq.push_back(avg_a);
+      plane_eq.push_back(avg_b);
+      plane_eq.push_back(avg_c);
+      plane_eq.push_back(avg_d);
+      rtn = true;
+    }
+    else
+    {
+      ROS_ERROR("Standard deviation of target pose is too large (possible target motion)");
+    }
   }
   else
   {
