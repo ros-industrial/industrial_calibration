@@ -29,6 +29,7 @@
 #include <nodelet/nodelet.h>
 
 #include <industrial_extrinsic_cal/yaml_utils.h>
+#include <openni2_camera/GetSerial.h>
 
 
 namespace rgbd_depth_correction{
@@ -41,7 +42,7 @@ private:
   double d1_, d2_;      /**< @brief The depth coefficients */
 
   int version_;  /**< @brief The version number found in the YAML file */
-  pcl::PointCloud<pcl::PointXYZRGB> correction_cloud_;  /**< @brief The depth correction point cloud containing the depth correction values */
+  pcl::PointCloud<pcl::PointXYZ> correction_cloud_;  /**< @brief The depth correction point cloud containing the depth correction values */
 
   ros::Subscriber pcl_sub_;          /**< @brief PCL point cloud subscriber */
   ros::Publisher pcl_pub_;           /**< @brief PCL point cloud publisher for the corrected point cloud */
@@ -52,7 +53,7 @@ private:
      *
      * @param[in] cloud Latest point cloud received
      */
-  void pointcloudCallback(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& cloud);
+  void pointcloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloud);
 
   /**
      * @brief Give a pathway and file name, reads the version number and loads the appropriate depth correction parameters
@@ -75,7 +76,7 @@ private:
      *
      * @param[in] cloud The point cloud to be corrected and republished
      */
-  void correctionVersionOne(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr &cloud);
+  void correctionVersionOne(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud);
 
 public:
 
@@ -102,15 +103,44 @@ public:
     ros::NodeHandle nh = getMTNodeHandle();
     ros::NodeHandle priv_nh = getMTPrivateNodeHandle();
 
-    // get parameters for services, topics, and filename
+    ros::ServiceClient get_serial_no = nh.serviceClient<openni2_camera::GetSerial>("get_serial");
+    openni2_camera::GetSerial msg;
+
     std::string filename, filepath;
-    if(!priv_nh.getParam("filename", filename) || !priv_nh.getParam("filepath", filepath))
+
+    if(!priv_nh.getParam("filepath", filepath))
     {
-      ROS_ERROR("File name and/or pathway not provided.  Closing depth correction node.");
+      ROS_ERROR("File pathway not provided.  Closing depth correction node.");
       return;
     }
 
-    ROS_INFO_STREAM("Reading in yaml file " << filepath << filename);
+    // Check for filename argument first, use 'get_serial' service if argument is not provided
+    if(priv_nh.getParam("filename", filename))
+    {
+      ROS_INFO("Using provided camera file name argument '%s' for depth correction", filename.c_str());
+    }
+    else if(get_serial_no.waitForExistence(ros::Duration(30.0)))
+    {
+      if(get_serial_no.call(msg.request, msg.response))
+      {
+        filename = msg.response.serial;
+        ROS_INFO("Using camera serial number '%s' from camera driver service for depth correction", filename.c_str());
+      }
+      else
+      {
+        ROS_ERROR("Camera get serial number service not available.  Closing depth correction node.");
+        return;
+      }
+    }
+    else
+    {
+      ROS_ERROR("Cannot open configuration files because argument 'filename' not provided and camera 'get_serial' service not available. Closing depth correction node.");
+      return;
+    }
+
+    // get parameters for services, topics, and filename
+
+    ROS_INFO_STREAM("Reading in yaml file " << filepath << filename << ".yaml");
 
     if(!readYamlFile(filepath, filename))
     {
@@ -120,7 +150,7 @@ public:
 
     ROS_INFO("Done reading yaml file");
 
-    pcl_pub_ = nh.advertise<pcl::PointCloud<pcl::PointXYZRGB> >("out_cloud",1);
+    pcl_pub_ = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("out_cloud",1);
     pcl_sub_ = nh.subscribe("in_cloud", 1, &DepthCorrectionNodelet::pointcloudCallback, this);
 
     depth_change_ = nh.advertiseService("change_depth_factor", &DepthCorrectionNodelet::setEnableDepth, this);
@@ -128,7 +158,7 @@ public:
   }
 };
 
-void DepthCorrectionNodelet::pointcloudCallback(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr &cloud)
+void DepthCorrectionNodelet::pointcloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud)
 {
   switch(version_)
   {
@@ -152,23 +182,23 @@ bool DepthCorrectionNodelet::readYamlFile(const std::string &pathway, const std:
     rtn = false;
   }
   else if(!industrial_extrinsic_cal::parseInt(doc, "version", version_))
-    {
-      ROS_ERROR("Yaml file did not contain depth correction version information");
-      rtn = false;
-    }
+  {
+    ROS_ERROR("Yaml file did not contain depth correction version information");
+    rtn = false;
+  }
   else
+  {
+    switch (version_)
     {
-      switch (version_)
-        {
-	case 1:
-	  loadVersionOne(doc, pathway + yaml_file);
-	  break;
-	default:
-	  ROS_ERROR("Version in YAML file did not match any known versions");
-	  rtn = false;
-	  break;
-        }
+      case 1:
+        loadVersionOne(doc, pathway + yaml_file);
+        break;
+      default:
+        ROS_ERROR("Version in YAML file did not match any known versions");
+        rtn = false;
+        break;
     }
+  }
   return rtn;
 }
 
@@ -192,9 +222,9 @@ void DepthCorrectionNodelet::loadVersionOne(const YAML::Node &doc, const std::st
   pcl::io::loadPCDFile(pcd_file, correction_cloud_);
 }
 
-void DepthCorrectionNodelet::correctionVersionOne(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr &cloud)
+void DepthCorrectionNodelet::correctionVersionOne(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud)
 {
-  pcl::PointCloud<pcl::PointXYZRGB> corrected_cloud = *cloud;
+  pcl::PointCloud<pcl::PointXYZ> corrected_cloud = *cloud;
   if(correction_cloud_.points.size() == cloud->points.size())
   {
     for(int i = 0; i < corrected_cloud.points.size(); ++i)
@@ -214,8 +244,13 @@ void DepthCorrectionNodelet::correctionVersionOne(const pcl::PointCloud<pcl::Poi
       }
     }
   }
+  else
+  {
+    ROS_ERROR_STREAM_THROTTLE(30, "Depth correction cloud size and input point cloud size do not match.  Not performing depth correction");
+  }
 
-  pcl_pub_.publish(corrected_cloud);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr published_cloud = corrected_cloud.makeShared();
+  pcl_pub_.publish(published_cloud);
 }
 
 PLUGINLIB_DECLARE_CLASS(rgbd_depth_correction, DepthCorrectionNodelet, rgbd_depth_correction::DepthCorrectionNodelet, nodelet::Nodelet);

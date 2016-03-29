@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   target_finder
   tf
-  tf2_bullet
   tf_conversions
 )
 
@@ -47,10 +46,6 @@ find_library(
   PATHS ${yaml_cpp_LIBRARY_DIRS}
 )
 
-#message("yaml_cpp_INCLUDE_DIRS: ${yaml_cpp_INCLUDE_DIRS}")
-#message("yaml_cpp_INCLUDE_DIR: ${yaml_cpp_INCLUDE_DIR}")
-#message("yaml_cpp_LIBRARY: ${yaml_cpp_LIBRARY}")
-
 
 catkin_package(
   CATKIN_DEPENDS
@@ -68,7 +63,6 @@ catkin_package(
     std_srvs
     target_finder
     tf
-    tf2_bullet
     tf_conversions
   DEPENDS
     Boost

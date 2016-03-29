@@ -197,6 +197,7 @@ private:
   geometry_msgs::Pose target_initial_pose_;  /**< @brief The initial pose guess of the calibration target for the target finder service */
 
   boost::mutex data_lock_; /**< @brief Lock for data subscription */
+  sensor_msgs::Image last_image_;
   pcl::PointCloud<pcl::PointXYZ> last_cloud_;  /**< @brief The last point cloud received */
   pcl::PointCloud<pcl::PointXYZ> correction_cloud_;  /**< @brief The point cloud containing the depth correction values */
   std::vector< pcl::PointCloud<pcl::PointXYZ>, Eigen::aligned_allocator<pcl::PointCloud<pcl::PointXYZ> > > saved_clouds_;
@@ -231,6 +232,7 @@ private:
      */
   bool findAveragePlane(std::vector<double> &plane_eq, geometry_msgs::Pose& target_pose);
 
+  bool findAveragePointCloud(pcl::PointCloud<pcl::PointXYZ>& final_cloud);
 };
 
 #endif // DEPTH_CALIBRATION_H

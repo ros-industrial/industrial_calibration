@@ -125,7 +125,7 @@ bool DepthCalibrator::calibrateCameraDepth(std_srvs::Empty::Request &request, st
   {
     if( !(saved_clouds_[0].points.size() == correction_cloud_.points.size()) )
     {
-      ROS_ERROR("Point cloud pixel depth correction cloud size (%d) not the same size as saved cloud size (%d). Aborting depth calibration.",
+      ROS_ERROR("Point cloud pixel depth correction cloud size (%lu) not the same size as saved cloud size (%lu). Aborting depth calibration.",
                 correction_cloud_.points.size(), saved_clouds_[0].points.size());
       return false;
     }
@@ -199,7 +199,7 @@ bool DepthCalibrator::findAveragePointCloud(pcl::PointCloud<pcl::PointXYZ>& fina
         final_cloud = last_cloud_;
         if(ros_cloud_header.stamp > new_time)
         {
-          ROS_INFO("Got point cloud %d of %d", (temp_clouds.size() + 1), num_point_clouds_ );
+          ROS_INFO("Got point cloud %lu of %d", (temp_clouds.size() + 1), num_point_clouds_ );
           temp_clouds.push_back(last_cloud_);
           break;
         }
