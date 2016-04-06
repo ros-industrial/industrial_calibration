@@ -5,12 +5,12 @@
 
   
   <include file="$(find openni2_launch)/launch/openni2.launch" >
-    <arg name="publish_tf" value="false" />
+    <arg name="publish_tf" value="true" />
     <arg name="camera" value="camera" />
     <arg name="depth_registration" default="true" />
     <!--arg name="device_id" value="3@1"/-->
-    <arg name="rgb_camera_info_url"   value="file://$(find rgbd_depth_correction)/yaml/kinect_rgb_PS1080_PrimeSense.yaml" />
-    <arg name="depth_camera_info_url" value="file://$(find rgbd_depth_correction)/yaml/kinect_depth_PS1080_PrimeSense.yaml" />
+    <arg name="rgb_camera_info_url"   value="file://$(find rgbd_depth_correction)/yaml/$(arg file)_rgb.yaml" />
+    <arg name="depth_camera_info_url" value="file://$(find rgbd_depth_correction)/yaml/$(arg file)_ir.yaml" />
   </include>
 
 
@@ -19,15 +19,12 @@
     <!-- Be sure to use RGB projection matrix parameters here after performing intrinsic calibration -->
     <rosparam>
       image_topic: "/camera/rgb/image_rect_color"
+      camera_name: "/camera/rgb"
       target_type: 2
       target_rows: 5
       target_cols: 5
       target_circle_dia: 0.05
       target_spacing: 0.07
-      focal_length_x: 535.023742675781
-      focal_length_y: 538.773559570312
-      center_x: 305.118641972633
-      center_y: 237.842615398564
     </rosparam>
   </node>
 

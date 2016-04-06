@@ -15,12 +15,4 @@ static_cameras:
     transform_interface: ros_camera_housing_cti
     camera_housing_frame: kinect_link
     camera_mounting_frame: world
-    focal_length_x: 535.023742675781
-    focal_length_y: 538.773559570312
-    center_x: 305.118641972633
-    center_y: 237.842615398564
-    distortion_k1: 0.0312416956535038
-    distortion_k2: -0.107823303127134
-    distortion_k3: 0.00265513777560983
-    distortion_p1: -0.00630814330712653
-    distortion_p2: 0.00
+    

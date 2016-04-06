@@ -56,7 +56,8 @@ DepthCalibrator::DepthCalibrator(ros::NodeHandle& nh)
     save_data_ = true;
   }
 
-  store_point_cloud_ = false;
+  std_dev_error_ = 0.1;
+  depth_error_threshold_ = 0.2;
 
   double x,y,z,w;
 
@@ -77,6 +78,8 @@ DepthCalibrator::DepthCalibrator(ros::NodeHandle& nh)
   target_initial_pose_.orientation.y = y;
   target_initial_pose_.orientation.z = z;
   target_initial_pose_.orientation.w = w;
+  ROS_WARN("found target at xyz: (%.2f, %.2f, %.2f) wxyz: (%.2f, %.2f, %.2f, %.2f)", target_initial_pose_.position.x, target_initial_pose_.position.y, target_initial_pose_.position.z,
+           target_initial_pose_.orientation.w, target_initial_pose_.orientation.x, target_initial_pose_.orientation.y, target_initial_pose_.orientation.z);
 
   pnh.param<int>("num_views", num_views_, 30);
   pnh.param<int>("num_attempts", num_attempts_, 10);
@@ -123,7 +126,7 @@ bool DepthCalibrator::calibrateCameraDepth(std_srvs::Empty::Request &request, st
   {
     if( !(saved_clouds_[0].points.size() == correction_cloud_.points.size()) )
     {
-      ROS_ERROR("Point cloud pixel depth correction cloud size (%d) not the same size as saved cloud size (%d). Aborting depth calibration.",
+      ROS_ERROR("Point cloud pixel depth correction cloud size (%lu) not the same size as saved cloud size (%lu). Aborting depth calibration.",
                 correction_cloud_.points.size(), saved_clouds_[0].points.size());
       return false;
     }
@@ -144,7 +147,7 @@ bool DepthCalibrator::calibrateCameraDepth(std_srvs::Empty::Request &request, st
   {
     for(int j = 0; j < saved_clouds_.size(); ++j)
     {
-      if(isnan(saved_clouds_[j].points.at(i).x) )
+      if(isnan(saved_clouds_[j].points.at(i).x) || saved_clouds_[j].points.at(i).z == 0)
       {
         continue;
       }
@@ -178,19 +181,8 @@ bool DepthCalibrator::calibrateCameraDepth(std_srvs::Empty::Request &request, st
   saved_images_.clear();
 }
 
-bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
+bool DepthCalibrator::findAveragePointCloud(pcl::PointCloud<pcl::PointXYZ>& final_cloud)
 {
-  // Find the target location
-  std::vector<double> plane_eq;
-  geometry_msgs::Pose target_pose;
-  ROS_INFO("Attempting to find target average pose");
-  if(!findAveragePlane(plane_eq, target_pose))
-  {
-    ROS_ERROR("Failed to get target pose.  Aborting depth calibration");
-    return false;
-  }
-  ROS_INFO("Target average pose found");
-
   // Store point clouds until the number of point clouds desired is reached, break if no new data is received after 1 second
   int rate = 100;
   std::vector< pcl::PointCloud<pcl::PointXYZ>, Eigen::aligned_allocator<pcl::PointCloud<pcl::PointXYZ> > > temp_clouds;
@@ -199,16 +191,16 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
   {
     ros::Time new_time = ros::Time::now();
     int count = 0;
-    while(count < rate)
+    while(count < rate )
     {
       {
         boost::lock_guard<boost::mutex> lock(data_lock_);
         std_msgs::Header ros_cloud_header;
         pcl_conversions::fromPCL(last_cloud_.header, ros_cloud_header);
-
+        final_cloud = last_cloud_;
         if(ros_cloud_header.stamp > new_time)
         {
-          ROS_INFO("Got point cloud %d of %d", (temp_clouds.size() + 1), num_point_clouds_ );
+          ROS_INFO("Got point cloud %lu of %d", (temp_clouds.size() + 1), num_point_clouds_ );
           temp_clouds.push_back(last_cloud_);
           break;
         }
@@ -225,10 +217,7 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
     }
   }
 
-  correction_cloud_.points.clear();
-  correction_cloud_.header = last_cloud_.header;
-  correction_cloud_.width = last_cloud_.width;
-  correction_cloud_.height = last_cloud_.height;
+  final_cloud.points.clear();
 
   // Calculate average depth error for all pixels
   for(int i = 0; i < temp_clouds[0].points.size(); ++i)
@@ -240,7 +229,7 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
     x = y = z = 0.0;
     for(int j = 0; j < temp_clouds.size(); ++j)
     {
-      if(isnan(temp_clouds[j].points.at(i).x))
+      if(isnan(temp_clouds[j].points.at(i).x) || temp_clouds[j].points.at(i).z == 0)
       {
         continue;
       }
@@ -257,16 +246,10 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
       y = y / double(count);
       z = z / double(count);
 
-      // calculated (ideal) depth using plane equation (ax + by + cz + d = 0)
-      double ideal_depth = (-plane_eq[3] - plane_eq[0]*x - plane_eq[1]*y) / plane_eq[2];
-
-      // depth correction value is error between calculated depth and average depth for the given pixel
-      double error = (ideal_depth - z);
-
       pt.x = x;
       pt.y = y;
-      pt.z = error;
-      correction_cloud_.points.push_back(pt);
+      pt.z = z;
+      final_cloud.points.push_back(pt);
     }
     else
     {
@@ -274,6 +257,73 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
       pt.x = NAN;
       pt.y = NAN;
       pt.z = NAN;
+      final_cloud.points.push_back(pt);
+    }
+  }
+  ROS_WARN("done getting average cloud");
+  return true;
+}
+
+bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
+{
+  // Find the target location
+  std::vector<double> plane_eq;
+  geometry_msgs::Pose target_pose;
+  ROS_INFO("Attempting to find target average pose");
+  if(!findAveragePlane(plane_eq, target_pose))
+  {
+    ROS_ERROR("Failed to get target pose.  Aborting depth calibration");
+    return false;
+  }
+  ROS_INFO("Target average pose found");
+
+  // Get average point cloud
+  pcl::PointCloud<pcl::PointXYZ> avg_cloud;
+  if(!findAveragePointCloud(avg_cloud))
+  {
+    ROS_ERROR("Failed to get average point cloud.  Aborting depth calibration");
+    return false;
+  }
+
+  ROS_WARN("correction cloud");
+  // Calculate the correction cloud depth values
+  correction_cloud_.points.clear();
+  correction_cloud_.header = avg_cloud.header;
+  correction_cloud_.width = avg_cloud.width;
+  correction_cloud_.height = avg_cloud.height;
+  for(int j = 0; j < avg_cloud.points.size(); ++j)
+  {
+
+    if(isnan(avg_cloud.points.at(j).x) || avg_cloud.points.at(j).z == 0)
+    {
+      pcl::PointXYZ pt;
+      pt.x = NAN;
+      pt.y = NAN;
+      pt.z = NAN;
+      correction_cloud_.points.push_back(pt);
+      continue;
+    }
+    // calculated (ideal) depth using plane equation (ax + by + cz + d = 0)
+    double ideal_depth = (-plane_eq[3] - plane_eq[0]*avg_cloud.points.at(j).x - plane_eq[1]*avg_cloud.points.at(j).y) / plane_eq[2];
+
+    // depth correction value is error between calculated depth and average depth for the given pixel
+    double error = (ideal_depth - avg_cloud.points.at(j).z);
+
+    if(fabs(error) > depth_error_threshold_)
+    {
+      ROS_WARN("depth error for pixel %d is too great (%.3f), setting to NAN", j, error);
+      pcl::PointXYZ pt;
+      pt.x = NAN;
+      pt.y = NAN;
+      pt.z = NAN;
+      correction_cloud_.points.push_back(pt);
+    }
+    else
+    {
+      pcl::PointXYZ pt;
+      pt.x = avg_cloud.points.at(j).x;
+      pt.y = avg_cloud.points.at(j).y;
+      pt.z = error;
       correction_cloud_.points.push_back(pt);
     }
   }
@@ -362,9 +412,41 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
 
 bool DepthCalibrator::setStoreCloud(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
-  boost::lock_guard<boost::mutex> lock(data_lock_);
-  store_point_cloud_ = true;
+  geometry_msgs::Pose target_pose;
 
+  try
+  {
+    std::vector<double> plane_eq;
+    if(!findAveragePlane(plane_eq, target_pose))
+    {
+      ROS_ERROR("Failed to get target pose.  Not storing depth data");
+      return false;
+    }
+
+    pcl::PointCloud<pcl::PointXYZ> avg_cloud;
+    if(!findAveragePointCloud(avg_cloud))
+    {
+      ROS_ERROR("Failed to get average point cloud.  Not storing depth data");
+      return false;
+    }
+    else
+    {
+      plane_equations_.push_back(plane_eq);
+      saved_target_poses_.push_back(target_pose);
+      avg_cloud.is_dense = false;
+      saved_clouds_.push_back(avg_cloud);
+      cv_bridge::CvImagePtr bridge = cv_bridge::toCvCopy(last_image_, sensor_msgs::image_encodings::BGR8);
+      saved_images_.push_back(bridge->image);
+
+      ROS_INFO("Point cloud and image successfully collected");
+    }
+
+
+  }
+  catch(...)
+  {
+    ROS_ERROR("Error attempting to store point cloud");
+  }
   return true;
 }
 
@@ -373,47 +455,17 @@ void DepthCalibrator::updateInputData(const sensor_msgs::PointCloud2ConstPtr& cl
   boost::lock_guard<boost::mutex> lock(data_lock_);
 
   sensor_msgs::PointCloud2 temp_cloud;
-  geometry_msgs::Pose target_pose;
+  last_image_ = *image;
   temp_cloud = *cloud;
   temp_cloud.is_dense = false;
   pcl::fromROSMsg(temp_cloud, last_cloud_);
-
-  if(store_point_cloud_)
-  {
-    ROS_INFO("Attempting to find target average pose for point cloud and image collection");
-    store_point_cloud_ = false;
-
-    try
-    {
-      std::vector<double> plane_eq;
-      if(!findAveragePlane(plane_eq, target_pose))
-      {
-        ROS_ERROR("Failed to get target pose.  Aborting depth calibration");
-        return;
-      }
-      plane_equations_.push_back(plane_eq);
-      saved_target_poses_.push_back(target_pose);
-
-      last_cloud_.is_dense = false;
-      saved_clouds_.push_back(last_cloud_);
-
-      cv_bridge::CvImagePtr bridge = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
-      saved_images_.push_back(bridge->image);
-
-      ROS_INFO("Point cloud and image successfully collected");
-
-    }
-    catch(...)
-    {
-      ROS_ERROR("Error attempting to store point cloud");
-    }
-  }
 }
 
 bool DepthCalibrator::findAveragePlane(std::vector<double>& plane_eq, geometry_msgs::Pose& target_pose)
 {
   bool rtn = false;
 
+  plane_eq.clear();
   geometry_msgs::Pose temp_pose;
   std::vector<double> a, b, c, d;
   int error = 0;
@@ -422,12 +474,13 @@ bool DepthCalibrator::findAveragePlane(std::vector<double>& plane_eq, geometry_m
   while(a.size() < num_views_ && error < num_attempts_)
   {
 
-    if(!findTarget(1.0, temp_pose))
+    if(!findTarget(10.0, temp_pose))
     {
       ++error;
       continue;
     }
-
+    ROS_WARN("found target at xyz: (%.2f, %.2f, %.2f) wxyz: (%.2f, %.2f, %.2f, %.2f)", temp_pose.position.x, temp_pose.position.y, temp_pose.position.z,
+             temp_pose.orientation.w, temp_pose.orientation.x, temp_pose.orientation.y, temp_pose.orientation.z);
     //Create plane equation from target pose
     tf::Transform transform;
     tf::poseMsgToTF(temp_pose, transform);
@@ -449,8 +502,8 @@ bool DepthCalibrator::findAveragePlane(std::vector<double>& plane_eq, geometry_m
   if(error < num_attempts_)
   {
     // calculate the average plane equation parameters
-    double avg_a, avg_b, avg_c, avg_d;
-    avg_a = avg_b = avg_c = avg_d = 0;
+    double avg_a, avg_b, avg_c, avg_d, std_a, std_b, std_c, std_d;
+    avg_a = avg_b = avg_c = avg_d = std_a = std_b = std_c = std_d = 0;
     for(int i = 0; i < a.size(); ++i)
     {
       avg_a += a[i];
@@ -463,12 +516,31 @@ bool DepthCalibrator::findAveragePlane(std::vector<double>& plane_eq, geometry_m
     avg_c = avg_c / c.size();
     avg_d = avg_d / d.size();
 
-    plane_eq.push_back(avg_a);
-    plane_eq.push_back(avg_b);
-    plane_eq.push_back(avg_c);
-    plane_eq.push_back(avg_d);
+    for(int i = 0; i < a.size(); ++i)
+    {
+      std_a += pow(a[i] - avg_a, 2.0);
+      std_b += pow(b[i] - avg_b, 2.0);
+      std_c += pow(c[i] - avg_c, 2.0);
+      std_d += pow(d[i] - avg_d, 2.0);
+    }
+    std_a = sqrt(std_a/ (a.size()-1));
+    std_b = sqrt(std_a/ (a.size()-1));
+    std_c = sqrt(std_a/ (a.size()-1));
+    std_d = sqrt(std_a/ (a.size()-1));
 
-    rtn = true;
+    // If standard deviation is too large, return an error
+    if(std_a < std_dev_error_ && std_b < std_dev_error_ && std_c < std_dev_error_ && std_d < std_dev_error_)
+    {
+      plane_eq.push_back(avg_a);
+      plane_eq.push_back(avg_b);
+      plane_eq.push_back(avg_c);
+      plane_eq.push_back(avg_d);
+      rtn = true;
+    }
+    else
+    {
+      ROS_ERROR("Standard deviation of target pose is too large (possible target motion)");
+    }
   }
   else
   {

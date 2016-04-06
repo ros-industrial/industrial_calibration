@@ -188,7 +188,6 @@ private:
   ros::ServiceServer calibrate_pixel_depth_; /**< @brief Service to calculate pixel depth error */
   ros::ServiceServer set_store_cloud_; /**< @brief Service to set and store next point cloud available */
 
-  bool store_point_cloud_;  /**< @brief Flag to determine if point cloud should be stored */
   int num_views_;  /**< @brief Number of times to find the calibration target to get average pose */
   int num_attempts_;  /**< @brief Number of attempts allowed for finding calibration target before failing */
   int num_point_clouds_;  /**< @brief Number of point clouds to save and check when performing pixel depth error calculations */
@@ -196,7 +195,10 @@ private:
   std::string filepath_;  /**< @brief Pathway to the location to save calibration files */
   geometry_msgs::Pose target_initial_pose_;  /**< @brief The initial pose guess of the calibration target for the target finder service */
 
+  double std_dev_error_;  /**< @brief The standard deviation error allowed for finding the target pose */
+  double depth_error_threshold_; /**< @brief The depth error allowed for calculating the pixel depth error map */
   boost::mutex data_lock_; /**< @brief Lock for data subscription */
+  sensor_msgs::Image last_image_;  /**< @brief The last color image received */
   pcl::PointCloud<pcl::PointXYZ> last_cloud_;  /**< @brief The last point cloud received */
   pcl::PointCloud<pcl::PointXYZ> correction_cloud_;  /**< @brief The point cloud containing the depth correction values */
   std::vector< pcl::PointCloud<pcl::PointXYZ>, Eigen::aligned_allocator<pcl::PointCloud<pcl::PointXYZ> > > saved_clouds_;
@@ -231,6 +233,7 @@ private:
      */
   bool findAveragePlane(std::vector<double> &plane_eq, geometry_msgs::Pose& target_pose);
 
+  bool findAveragePointCloud(pcl::PointCloud<pcl::PointXYZ>& final_cloud);
 };
 
 #endif // DEPTH_CALIBRATION_H

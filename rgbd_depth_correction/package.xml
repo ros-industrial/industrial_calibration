@@ -30,7 +30,6 @@
   <build_depend>sensor_msgs</build_depend>
   <build_depend>std_srvs</build_depend>
   <build_depend>target_finder</build_depend>
-  <build_depend>tf2_bullet</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>tf_conversions</build_depend>
   <build_depend>target_finder</build_depend>
@@ -55,7 +54,6 @@
   <run_depend>sensor_msgs</run_depend>
   <run_depend>std_srvs</run_depend>
   <run_depend>target_finder</run_depend>
-  <run_depend>tf2_bullet</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>tf_conversions</run_depend>
   <run_depend>yaml-cpp</run_depend>

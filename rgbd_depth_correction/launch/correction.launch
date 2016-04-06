@@ -10,8 +10,8 @@
     <arg name="camera" value="$(arg camera)" />
     <arg name="depth_registration" default="true" />
     <!-- arg name="device_id" value="3@1"/ -->
-    <arg name="rgb_camera_info_url"   value="file://$(find rgbd_depth_correction)/yaml/kinect_rgb_PS1080_PrimeSense.yaml" />
-    <arg name="depth_camera_info_url" value="file://$(find rgbd_depth_correction)/yaml/kinect_depth_PS1080_PrimeSense.yaml" />
+    <arg name="rgb_camera_info_url"   value="file://$(find rgbd_depth_correction)/yaml/$(arg file)_rgb.yaml" />
+    <arg name="depth_camera_info_url" value="file://$(find rgbd_depth_correction)/yaml/$(arg file)_ir.yaml" />
   </include>
 
   <node pkg="nodelet" type="nodelet" name="rgbd_depth_correction" args="load rgbd_depth_correction/DepthCorrectionNodelet $(arg camera)/$(arg camera)_nodelet_manager no-bond" output="screen">
@@ -37,7 +37,6 @@
      camera_file: "camera_scene_cameras.yaml"
      target_file: "calibration_target_7x5_double_sized.yaml"
      cal_job_file: "camera_scene_caljob.yaml"
-     store_results_file_name: "camera_scene_transforms.launch"
    </rosparam>
   </node>
 
