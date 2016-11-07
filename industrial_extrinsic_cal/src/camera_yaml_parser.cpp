@@ -18,7 +18,6 @@ using std::ifstream;
 using std::string;
 using std::vector;
 using boost::shared_ptr;
-using boost::make_shared;
 using YAML::Node;
 
 namespace industrial_extrinsic_cal {
@@ -97,7 +96,7 @@ namespace industrial_extrinsic_cal {
       if(!parseInt(node, "image_width", temp_parameters.width)) ROS_ERROR("Can't read image_width");
     
       // create a shared camera and a shared transform interface
-      temp_camera = make_shared<Camera>(temp_name, temp_parameters, false);
+      temp_camera = boost::make_shared<Camera>(temp_name, temp_parameters, false);
       temp_camera->trigger_ = parseTrigger(node, trigger_name);
       shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, camera_optical_frame, pose);
       temp_camera->setTransformInterface(temp_ti);// install the transform interface 
@@ -108,7 +107,7 @@ namespace industrial_extrinsic_cal {
       else{
 	temp_camera->pullTransform();
       }
-      temp_camera->camera_observer_ = make_shared<ROSCameraObserver>(temp_topic);
+      temp_camera->camera_observer_ = boost::make_shared<ROSCameraObserver>(temp_topic);
     }
     catch (YAML::ParserException& e){
       ROS_INFO_STREAM("Failed to read in moving cameras from yaml file ");
@@ -135,16 +134,16 @@ namespace industrial_extrinsic_cal {
     std::string trig_action_msg;
     // handle all the different trigger cases
     if(name == string("NO_WAIT_TRIGGER")){
-      temp_trigger = make_shared<NoWaitTrigger>();
+      temp_trigger = boost::make_shared<NoWaitTrigger>();
     }
     else if(name == string("ROS_PARAM_TRIGGER")){
       if(!parseString(node, "trig_param", trig_param)) ROS_ERROR("Can't read trig_param");
-      temp_trigger = make_shared<ROSParamTrigger>(trig_param);
+      temp_trigger = boost::make_shared<ROSParamTrigger>(trig_param);
     }
     else if(name == string("ROS_ACTION_TRIGGER")){
       if(!parseString(node, "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
       if(!parseString(node, "trig_action_msg", trig_action_msg)) ROS_ERROR("Can't read trig_action_msg");
-      temp_trigger = make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
+      temp_trigger = boost::make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
     }
     else if(name == string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER")){
       if(!parseString(node, "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
@@ -153,14 +152,14 @@ namespace industrial_extrinsic_cal {
       if(joint_values.size()<0){
 	ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
       }
-      temp_trigger = make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
+      temp_trigger = boost::make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
     }
     else if(name == string("ROS_ROBOT_POSE_ACTION_TRIGGER")){
       const YAML::Node& trig_node = parseNode(node,"trigger_parameters");
       if(!parseString(trig_node[0], "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
       Pose6d pose;
       parsePose(trig_node, pose);
-      temp_trigger = make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
+      temp_trigger = boost::make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
     }
     else if(name == string("ROS_CAMERA_OBSERVER_TRIGGER")){
       const YAML::Node& trig_node = parseNode(node,"trigger_parameters");
@@ -175,7 +174,7 @@ namespace industrial_extrinsic_cal {
       if(!parseInt(trig_node[0], "roi_max_x", roi.x_max)) ROS_ERROR("Can't read roi_max_x");
       if(!parseInt(trig_node[0], "roi_min_y", roi.y_min)) ROS_ERROR("Can't read roi_min_y");
       if(!parseInt(trig_node[0], "roi_max_y", roi.y_max)) ROS_ERROR("Can't read roi_max_y");
-      temp_trigger = make_shared<ROSCameraObserverTrigger>(service_name, instructions, image_topic, roi);
+      temp_trigger = boost::make_shared<ROSCameraObserverTrigger>(service_name, instructions, image_topic, roi);
     }
     else{
       ROS_ERROR("No scene trigger of type %s", name.c_str());
@@ -189,25 +188,25 @@ namespace industrial_extrinsic_cal {
     std::string camera_housing_frame;
     std::string camera_mounting_frame;
     if(name == std::string("ros_lti")){ // this option makes no sense for a camera
-      temp_ti = make_shared<ROSListenerTransInterface>(frame);
+      temp_ti = boost::make_shared<ROSListenerTransInterface>(frame);
     }
     else if(name == std::string("ros_bti")){ // this option makes no sense for a camera
-      temp_ti = make_shared<ROSBroadcastTransInterface>(frame);
+      temp_ti = boost::make_shared<ROSBroadcastTransInterface>(frame);
     }
     else if(name == std::string("ros_camera_lti")){ 
-      temp_ti = make_shared<ROSCameraListenerTransInterface>(frame);
+      temp_ti = boost::make_shared<ROSCameraListenerTransInterface>(frame);
     }
     else if(name == std::string("ros_camera_bti")){ 
-      temp_ti = make_shared<ROSCameraBroadcastTransInterface>(frame);
+      temp_ti = boost::make_shared<ROSCameraBroadcastTransInterface>(frame);
     }
     else if(name == std::string("ros_camera_housing_lti")){ 
       if(!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
-      temp_ti = make_shared<ROSCameraHousingListenerTInterface>(frame,camera_housing_frame);
+      temp_ti = boost::make_shared<ROSCameraHousingListenerTInterface>(frame,camera_housing_frame);
     }
     else if(name == std::string("ros_camera_housing_bti")){ 
       if(!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
       if(!parseString(node, "camera_mounting_frame", camera_mounting_frame)) ROS_ERROR("Can't read camera_mounting_frame");
-      temp_ti = make_shared<ROSCameraHousingBroadcastTInterface>(frame, 
+      temp_ti = boost::make_shared<ROSCameraHousingBroadcastTInterface>(frame,
 								 camera_housing_frame,
 								 camera_mounting_frame,
 								 pose);
@@ -215,24 +214,24 @@ namespace industrial_extrinsic_cal {
     else if(name == std::string("ros_camera_housing_cti")){ 
       if(!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
       if(!parseString(node, "camera_mounting_frame", camera_mounting_frame)) ROS_ERROR("Can't read camera_mounting_frame");
-      temp_ti = make_shared<ROSCameraHousingCalTInterface>(frame, 
+      temp_ti = boost::make_shared<ROSCameraHousingCalTInterface>(frame,
 							   camera_housing_frame,
 							   camera_mounting_frame);
     }
     else if(name == std::string("ros_scti")){ 
       if(!parseString(node, "parent_frame", camera_mounting_frame)) ROS_ERROR("Can't read parent_frame");
-      temp_ti = make_shared<ROSSimpleCalTInterface>(frame,  camera_mounting_frame);
+      temp_ti = boost::make_shared<ROSSimpleCalTInterface>(frame,  camera_mounting_frame);
     }
     else if(name == std::string("ros_camera_scti")){ 
       if(!parseString(node, "parent_frame", camera_mounting_frame)) ROS_ERROR("Can't read parent_frame");
-      temp_ti = make_shared<ROSSimpleCameraCalTInterface>(frame,  camera_mounting_frame);
+      temp_ti = boost::make_shared<ROSSimpleCameraCalTInterface>(frame,  camera_mounting_frame);
     }
     else if(name == std::string("default_ti")){
-      temp_ti = make_shared<DefaultTransformInterface>();
+      temp_ti = boost::make_shared<DefaultTransformInterface>();
     }
     else{
       ROS_ERROR("Unimplemented Transform Interface: %s",name.c_str());
-      temp_ti = make_shared<DefaultTransformInterface>();
+      temp_ti = boost::make_shared<DefaultTransformInterface>();
     }
     return(temp_ti);
   }
