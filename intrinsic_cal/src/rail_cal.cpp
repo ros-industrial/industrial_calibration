@@ -159,7 +159,7 @@ RailCalService::RailCalService(ros::NodeHandle nh)
   bool is_moving = true;
   camera_ =  make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
   camera_->trigger_ = make_shared<NoWaitTrigger>();
-  camera_->camera_observer_ = make_shared<ROSCameraObserver>(image_topic_, camera_name_);
+  camera_->camera_observer_ = boost::make_shared<ROSCameraObserver>(image_topic_, camera_name_);
   if(!camera_->camera_observer_->pullCameraInfo(camera_->camera_parameters_.focal_length_x,
                                            camera_->camera_parameters_.focal_length_y,
                                            camera_->camera_parameters_.center_x,

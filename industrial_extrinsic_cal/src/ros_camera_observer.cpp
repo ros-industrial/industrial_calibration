@@ -103,7 +103,9 @@ namespace industrial_extrinsic_cal
     circle_detector_ptr_ = new cv::CircleDetector(circle_params);
   }
   else{
-    circle_detector_ptr_ = new cv::SimpleBlobDetector(simple_blob_params);
+    // FIXME Not available in OpenCV3? What is it's new name?
+    //circle_detector_ptr_ = new cv::SimpleBlobDetector(simple_blob_params);
+    circle_detector_ptr_ = new cv::CircleDetector(circle_params);
   }
 
 }
