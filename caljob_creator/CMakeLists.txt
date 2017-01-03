@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(caljob_creator)
+add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
@@ -10,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
-find_package(OpenCV 2 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 
 catkin_package(
