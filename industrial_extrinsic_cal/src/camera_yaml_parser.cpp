@@ -18,7 +18,6 @@ using std::ifstream;
 using std::string;
 using std::vector;
 using boost::shared_ptr;
-using boost::make_shared;
 using YAML::Node;
 
 namespace industrial_extrinsic_cal {
