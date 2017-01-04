@@ -51,6 +51,7 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/core.hpp"
 
+using std::vector;
 
 namespace cv {
 class CV_EXPORTS_W CircleDetector : public FeatureDetector

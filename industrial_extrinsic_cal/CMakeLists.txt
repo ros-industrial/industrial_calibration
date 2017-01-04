@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(industrial_extrinsic_cal)
+add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   actionlib
@@ -25,7 +26,7 @@ find_package(Boost REQUIRED)
 find_package(Ceres REQUIRED)
 message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
-find_package(OpenCV 2 REQUIRED)
+find_package(OpenCV REQUIRED)
 message("-- Found OpenCV version ${OpenCV_VERSION}: ${OpenCV_INCLUDE_DIRS}")
 
 find_package(PkgConfig REQUIRED)

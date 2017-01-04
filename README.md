@@ -1,6 +1,9 @@
 industrial_calibration
 ======================
 
+:warning: EXPERIMENTAL KINETIC-DEVEL branch :warning:
+===
+
 Contains libraries/algorithms for calibration industrial systems
 
 # Travis CI
