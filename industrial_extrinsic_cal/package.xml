@@ -7,6 +7,7 @@
   </description>
   <author email="clewis@swri.org">Chris Lewis</author>
   <maintainer email="clewis@swri.org">Chris Lewis</maintainer>
+  <maintainer email="Austin.Deric@gmail.com">AustinDeric</maintainer>
   <license>Apache2.0</license>
 
   <url type="website">http://wiki.ros.org/industrial_extrinsic_cal</url>
@@ -16,47 +17,34 @@
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>pkg-config</buildtool_depend>
 
-  <build_depend>actionlib</build_depend>
-  <build_depend>actionlib_msgs</build_depend>
-  <build_depend>boost</build_depend>
-  <build_depend>cv_bridge</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>image_transport</build_depend>
-  <build_depend>message_generation</build_depend>
-  <build_depend>moveit_ros_planning_interface</build_depend>
-  <build_depend>rosconsole</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>roslib</build_depend>
-  <build_depend>roslint</build_depend>
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>std_srvs</build_depend>
-  <build_depend>tf</build_depend>
-  <build_depend>tf_conversions</build_depend>
-  <build_depend>yaml-cpp</build_depend>
+  <depend>actionlib</depend>
+  <depend>actionlib_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>geometry_msgs</depend>
+  <depend>image_transport</depend>
+  <depend>moveit_ros_planning_interface</depend>
+  <depend>rosconsole</depend>
+  <depend>roscpp</depend>
+  <depend>roslib</depend>
+  <depend>roslint</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf</depend>
+  <depend>tf_conversions</depend>
+  <depend>yaml-cpp</depend>
+  <depend>ceres-solver</depend>
 
-  <run_depend>actionlib</run_depend>
-  <run_depend>actionlib_msgs</run_depend>
-  <run_depend>cv_bridge</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>image_transport</run_depend>
-  <run_depend>image_view</run_depend>
-  <run_depend>message_runtime</run_depend>
-  <run_depend>moveit_ros_planning_interface</run_depend>
-  <run_depend>nodelet</run_depend>
-  <run_depend>openni2_launch</run_depend>
-  <run_depend>robot_state_publisher</run_depend>
-  <run_depend>rosconsole</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>roslib</run_depend>
-  <run_depend>roslint</run_depend>
-  <run_depend>rviz</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>std_msgs</run_depend>
-  <run_depend>std_srvs</run_depend>
-  <run_depend>tf</run_depend>
-  <run_depend>tf_conversions</run_depend>
-  <run_depend>yaml-cpp</run_depend>
+  <build_depend>boost</build_depend>
+  <build_depend>message_generation</build_depend>
+
+  <exec_depend>image_view</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>nodelet</exec_depend>
+  <exec_depend>openni2_launch</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz</exec_depend>
 
   <test_depend>rosunit</test_depend>
+
 </package>
