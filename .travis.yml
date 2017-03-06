@@ -1,26 +1,23 @@
-sudo: required
-dist: trusty
-language: generic
-
+sudo: required 
+dist: xenial 
+language: generic 
 compiler:
   - gcc
-
 notifications:
   email:
-    on_failure: never
-
+    on_success: change
+    on_failure: always
 env:
+  global:
+    - ROS_DISTRO=kinetic
+    - UPSTREAM_WORKSPACE=file
+    - ROSINSTALL_FILENAME=industral_calibration.rosinstall
+    - NOT_TEST_INSTALL=true
   matrix:
-    - USE_DEB=true
-      ROS_DISTRO="kinetic"
-      NOT_TEST_BUILD=true
-      NOT_TEST_INSTALL=true
-
-
+    - ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
+    - ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
 install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
-
-script:
-  - source .travis_ceres.sh
+script: 
   - source .ci_config/travis.sh
 
