@@ -884,13 +884,9 @@ namespace industrial_extrinsic_cal
     return(true);
   } // end computeCovariance
 
-  bool CalibrationJob::store()
+  bool CalibrationJob::store(std::string filePath)
   {
-    std::string path = ros::package::getPath("industrial_extrinsic_cal");
-    std::string file_path = "/launch/target_to_camera_optical_transform_publisher.launch";
-    std::string filepath = path+file_path;
-
-    bool rnt =  ceres_blocks_.writeAllStaticTransforms(filepath);
+    bool rnt =  ceres_blocks_.writeAllStaticTransforms(filePath);
     bool rtn = true;
     return rtn;
   }

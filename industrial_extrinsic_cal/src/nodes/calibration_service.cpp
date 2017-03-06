@@ -50,13 +50,17 @@ public:
     priv_nh.getParam("cal_job_file", caljob_file);
     priv_nh.getParam("post_proc_on", post_proc_on);
     priv_nh.getParam("observation_data_file", observation_data_file);
+    if(!priv_nh.getParam("results_file", results_file_)){
+      results_file_ = yaml_file_path + "/results.txt";
+    }
     ROS_INFO("yaml_file_path: %s",yaml_file_path.c_str());
     ROS_INFO("camera_file: %s",camera_file.c_str());
     ROS_INFO("target_file: %s",target_file.c_str());
     ROS_INFO("cal_job_file: %s",caljob_file.c_str());
+    ROS_INFO("results_file: %s",results_file_.c_str());
     
     cal_job_ = new industrial_extrinsic_cal::CalibrationJob(yaml_file_path + camera_file,
-							    yaml_file_path +  target_file,
+							    yaml_file_path + target_file,
 							    yaml_file_path + caljob_file);
   
     if(post_proc_on) cal_job_->postProcessingOn(observation_data_file);
@@ -81,6 +85,7 @@ private:
   bool calibrated_;
   industrial_extrinsic_cal::CalibrationJob * cal_job_;
   CalibrationActionServer action_server_;
+  std::string results_file_;
 };
 
 bool CalibrationServiceNode::covarianceCallback(industrial_extrinsic_cal::covariance::Request & req, industrial_extrinsic_cal::covariance::Response & res)
@@ -121,7 +126,7 @@ bool CalibrationServiceNode::callback(industrial_extrinsic_cal::calibrate::Reque
 		      cal_job_->finalCostPerObservation());
       if(cal_job_->finalCostPerObservation() <= req.allowable_cost_per_observation){
 	calibrated_ = true;
-	if (!cal_job_->store())
+	if (!cal_job_->store(results_file_))
 	  {
 	    ROS_ERROR_STREAM(" Trouble storing calibration job optimization results ");
 	  }
