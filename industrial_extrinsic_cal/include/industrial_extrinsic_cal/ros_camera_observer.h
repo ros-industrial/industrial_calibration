@@ -308,6 +308,9 @@ namespace industrial_extrinsic_cal
     bool white_blobs_;
     ros::ServiceClient client_;    
     sensor_msgs::SetCameraInfo srv_;
+    ros::NodeHandle *rnh_;
+    dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig> *server_;
+    
   };
 
   
