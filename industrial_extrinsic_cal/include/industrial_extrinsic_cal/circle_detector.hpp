@@ -91,6 +91,8 @@ public:
   virtual void read( const FileNode& fn );
   virtual void write( FileStorage& fs ) const;
 
+  Params params;
+
 protected:
   struct CV_EXPORTS Center
   {
@@ -102,7 +104,7 @@ protected:
   virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask=Mat() ) const;
   virtual void findCircles(const Mat &image, const Mat &binaryImage, vector<Center> &centers) const;
 
-  Params params;
+
 };
 }
 #endif

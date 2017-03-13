@@ -107,7 +107,7 @@ namespace industrial_extrinsic_cal {
       else{
 	temp_camera->pullTransform();
       }
-      temp_camera->camera_observer_ = boost::make_shared<ROSCameraObserver>(temp_topic);
+      temp_camera->camera_observer_ = boost::make_shared<ROSCameraObserver>(temp_topic, temp_name);
     }
     catch (YAML::ParserException& e){
       ROS_INFO_STREAM("Failed to read in moving cameras from yaml file ");
