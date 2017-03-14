@@ -210,7 +210,7 @@ namespace industrial_extrinsic_cal
     /**
      *  @brief circle_detector_ptr_ is a custom blob detector which localizes circles better than simple blob detection
      */
-    cv::CircleDetector  *circle_detector_ptr_;
+    cv::Ptr<cv::CircleDetector>  circle_detector_ptr_;
 
     /**
      *  @brief blob_detector_ptr_ is a simple blob detector

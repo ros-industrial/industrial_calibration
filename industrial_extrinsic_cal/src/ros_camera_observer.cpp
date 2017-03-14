@@ -41,55 +41,27 @@ namespace industrial_extrinsic_cal
   pnh.getParam("store_observation_images", store_observation_images_);
   pnh.getParam("load_observation_images", load_observation_images_);
 
-  // set up and create the detector using the parameters
+  // set up blob/circle detectors parameters are dynamic
   cv::SimpleBlobDetector::Params simple_blob_params;
   if(!pnh.getParam("white_blobs", white_blobs_)){
     white_blobs_ = false;
   }
-  if(white_blobs_){
-    simple_blob_params.minThreshold = 40;
-    simple_blob_params.maxThreshold = 60;
-    simple_blob_params.thresholdStep = 5;
-    simple_blob_params.minArea = 100;
-    simple_blob_params.minConvexity = 0.3;
-    simple_blob_params.maxConvexity = 0.3;//circularity ($\frac4*\pi*Area* perimeter$) .
-    simple_blob_params.minInertiaRatio = 0.01;
-    simple_blob_params.maxInertiaRatio = 0.01;
-    simple_blob_params.minArea = 30.0; //float
-    simple_blob_params.maxArea = 8000.0;
-    simple_blob_params.maxConvexity = 10;
-    simple_blob_params.filterByColor = false;
-    simple_blob_params.blobColor = (uchar) 200; // 255=light 0=dark blobs
-    simple_blob_params.filterByCircularity = true;
-    simple_blob_params.minCircularity= 0.8; // float
-    simple_blob_params.maxCircularity= 1.0; //float
-    simple_blob_params.minDistBetweenBlobs = 10; // float
-    simple_blob_params.minRepeatability = (size_t) 128; // don't know what it means
-  }
-  
   if(!pnh.getParam("use_circle_detector", use_circle_detector_)){
     use_circle_detector_ = false;
-    ROS_WARN("Not using circle detector");
   }
 
-  if(use_circle_detector_){
-    CircleDetector::Params circle_params;
-    circle_detector_ptr_ = new cv::CircleDetector(circle_params);
+  circle_detector_ptr_ = cv::CircleDetector::create();
+  blob_detector_ptr_ = cv::SimpleBlobDetector::create(simple_blob_params);
 
-    ROS_WARN("Using circle detector");
-     // dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig> server;
-    std::string recon_node_name = "~/" + camera_name;
-    rnh_ = new ros::NodeHandle(recon_node_name.c_str());
-    server_ = new dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig> (*rnh_);
+  std::string recon_node_name = "~/" + camera_name;
+  rnh_ = new ros::NodeHandle(recon_node_name.c_str());
+  server_ = new dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig> (*rnh_);
 
-    dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>::CallbackType f;
+  dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>::CallbackType f;
 
-    f = boost::bind(&ROSCameraObserver::dynReConfCallBack, this, _1, _2);
-    server_->setCallback(f);
-  }
-  else{
-    blob_detector_ptr_ = cv::SimpleBlobDetector::create(simple_blob_params);
-  }
+  f = boost::bind(&ROSCameraObserver::dynReConfCallBack, this, _1, _2);
+  server_->setCallback(f);
+
 
 }
 
@@ -199,6 +171,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
       if (sym_circle_) // symetric circle grid
       {
         ROS_DEBUG_STREAM("Finding Circles in grid, symmetric...");
+
         if(use_circle_detector_){
           successful_find = cv::findCirclesGrid(image_roi_, pattern_size, observation_pts_,
               cv::CALIB_CB_SYMMETRIC_GRID, circle_detector_ptr_);
@@ -828,47 +801,69 @@ bool  ROSCameraObserver::pullCameraInfo(double &fx, double &fy,
   return(true);
 }
 
-void  ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig &config, uint32_t level) {
-  ROS_INFO("Reconfigure Request: area:%s circ:%s minArea:%d maxArea:%d minThresh:%d maxThresh:%d minCirc:%f maxCirc:%f, minDist:%f", 
-	   config.filter_by_area?"True":"False",
-	   config.filter_by_circularity?"True":"False",
-	   config.min_area,
-	   config.max_area,
-	   config.min_threshold,
-	   config.max_threshold,
-	   config.min_circularity,
-           config.max_circularity,
-           config.min_distance);
-    // set up the circle detector
+void  ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig &config, uint32_t level)
+{
+  CircleDetector::Params circle_params;
+    circle_params.thresholdStep = 10;
+    circle_params.minThreshold = config.min_threshold;
+    circle_params.maxThreshold = config.max_threshold;
+    circle_params.minRepeatability = 2;
+    circle_params.minDistBetweenCircles = config.min_distance;
+    circle_params.minRadiusDiff = 10;
 
-    CircleDetector::Params *circle_params = & circle_detector_ptr_->params;
-    circle_params->thresholdStep = 10;
-    circle_params->minThreshold = config.min_threshold;
-    circle_params->maxThreshold = config.max_threshold;
-    circle_params->minRepeatability = 2;
-    circle_params->minDistBetweenCircles = config.min_distance;
-    circle_params->minRadiusDiff = 10;
+    circle_params.filterByColor = true;
+    if(white_blobs_)circle_params.circleColor = 200;
+    if(!white_blobs_)circle_params.circleColor = 0;
+  
+    circle_params.filterByArea = config.filter_by_area;
+    circle_params.minArea = config.min_area;
+    circle_params.maxArea = config.max_area;
+  
+    circle_params.filterByCircularity = config.filter_by_circularity;
+    circle_params.minCircularity = config.min_circularity;
+    circle_params.maxCircularity = config.max_circularity;
+  
+    circle_params.filterByInertia = false;
+    circle_params.minInertiaRatio = 0.1f;
+    circle_params.maxInertiaRatio = std::numeric_limits<float>::max();
+  
+    circle_params.filterByConvexity = false;
+    circle_params.minConvexity = 0.95f;
+    circle_params.maxConvexity = std::numeric_limits<float>::max();
 
-    circle_params->filterByColor = false;
-    circle_params->circleColor = 0;
+    circle_detector_ptr_ = cv::CircleDetector::create(circle_params);
+
+    cv::SimpleBlobDetector::Params blob_params;
+    blob_params.thresholdStep = 10;
+    blob_params.minThreshold = config.min_threshold;
+    blob_params.maxThreshold = config.max_threshold;
+    blob_params.minRepeatability = 2;
+    blob_params.minDistBetweenBlobs = config.min_distance;
+
+    blob_params.filterByColor = true;
+    if(white_blobs_)blob_params.blobColor = 200;
+    if(!white_blobs_)blob_params.blobColor = 0;
   
-    circle_params->filterByArea = config.filter_by_area;
-    circle_params->minArea = config.min_area;
-    circle_params->maxArea = config.max_area;
+    blob_params.filterByArea = config.filter_by_area;
+    blob_params.minArea = config.min_area;
+    blob_params.maxArea = config.max_area;
   
-    circle_params->filterByCircularity = config.filter_by_circularity;
-    circle_params->minCircularity = config.min_circularity;
-    circle_params->maxCircularity = config.max_circularity;
+    blob_params.filterByCircularity = config.filter_by_circularity;
+    blob_params.minCircularity = config.min_circularity;
+    blob_params.maxCircularity = config.max_circularity;
   
-    circle_params->filterByInertia = false;
-    circle_params->minInertiaRatio = 0.1f;
-    circle_params->maxInertiaRatio = std::numeric_limits<float>::max();
+    blob_params.filterByInertia = false;
+    blob_params.minInertiaRatio = 0.1f;
+    blob_params.maxInertiaRatio = std::numeric_limits<float>::max();
   
-    circle_params->filterByConvexity = false;
-    circle_params->minConvexity = 0.95f;
-    circle_params->maxConvexity = std::numeric_limits<float>::max();
+    blob_params.filterByConvexity = false;
+    blob_params.minConvexity = 0.95f;
+    blob_params.maxConvexity = std::numeric_limits<float>::max();
 
 
+    blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
+
+  
 }
     
   
