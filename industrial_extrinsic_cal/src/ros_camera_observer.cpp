@@ -41,32 +41,11 @@ namespace industrial_extrinsic_cal
   pnh.getParam("store_observation_images", store_observation_images_);
   pnh.getParam("load_observation_images", load_observation_images_);
 
-  // set up and create the detector using the parameters
+  // set up blob/circle detectors parameters are dynamic
   cv::SimpleBlobDetector::Params simple_blob_params;
   if(!pnh.getParam("white_blobs", white_blobs_)){
     white_blobs_ = false;
   }
-  if(white_blobs_){
-    simple_blob_params.minThreshold = 40;
-    simple_blob_params.maxThreshold = 60;
-    simple_blob_params.thresholdStep = 5;
-    simple_blob_params.minArea = 100;
-    simple_blob_params.minConvexity = 0.3;
-    simple_blob_params.maxConvexity = 0.3;//circularity ($\frac4*\pi*Area* perimeter$) .
-    simple_blob_params.minInertiaRatio = 0.01;
-    simple_blob_params.maxInertiaRatio = 0.01;
-    simple_blob_params.minArea = 30.0; //float
-    simple_blob_params.maxArea = 8000.0;
-    simple_blob_params.maxConvexity = 10;
-    simple_blob_params.filterByColor = false;
-    simple_blob_params.blobColor = (uchar) 200; // 255=light 0=dark blobs
-    simple_blob_params.filterByCircularity = true;
-    simple_blob_params.minCircularity= 0.8; // float
-    simple_blob_params.maxCircularity= 1.0; //float
-    simple_blob_params.minDistBetweenBlobs = 10; // float
-    simple_blob_params.minRepeatability = (size_t) 128; // don't know what it means
-  }
-  
   if(!pnh.getParam("use_circle_detector", use_circle_detector_)){
     use_circle_detector_ = false;
   }
@@ -833,7 +812,8 @@ void  ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid
     circle_params.minRadiusDiff = 10;
 
     circle_params.filterByColor = true;
-    circle_params.circleColor = 0;
+    if(white_blobs_)circle_params.circleColor = 200;
+    if(!white_blobs_)circle_params.circleColor = 0;
   
     circle_params.filterByArea = config.filter_by_area;
     circle_params.minArea = config.min_area;
@@ -859,10 +839,10 @@ void  ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid
     blob_params.maxThreshold = config.max_threshold;
     blob_params.minRepeatability = 2;
     blob_params.minDistBetweenBlobs = config.min_distance;
-    //    blob_params.minRadiusDiff = 10;
 
     blob_params.filterByColor = true;
-    blob_params.blobColor = 0;
+    if(white_blobs_)blob_params.blobColor = 200;
+    if(!white_blobs_)blob_params.blobColor = 0;
   
     blob_params.filterByArea = config.filter_by_area;
     blob_params.minArea = config.min_area;
