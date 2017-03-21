@@ -51,7 +51,7 @@ public:
     priv_nh.getParam("post_proc_on", post_proc_on);
     priv_nh.getParam("observation_data_file", observation_data_file);
     if(!priv_nh.getParam("results_file", results_file_)){
-      results_file_ = yaml_file_path + "/results.txt";
+      results_file_ = yaml_file_path + "results.launch";
     }
     ROS_INFO("yaml_file_path: %s",yaml_file_path.c_str());
     ROS_INFO("camera_file: %s",camera_file.c_str());
