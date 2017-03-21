@@ -48,7 +48,6 @@ namespace industrial_extrinsic_cal
   }
   if(!pnh.getParam("use_circle_detector", use_circle_detector_)){
     use_circle_detector_ = false;
-    ROS_WARN("Not using circle detector");
   }
 
   circle_detector_ptr_ = cv::CircleDetector::create();
@@ -860,6 +859,8 @@ void  ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid
     blob_params.filterByConvexity = false;
     blob_params.minConvexity = 0.95f;
     blob_params.maxConvexity = std::numeric_limits<float>::max();
+
+    blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
 
 
     blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
