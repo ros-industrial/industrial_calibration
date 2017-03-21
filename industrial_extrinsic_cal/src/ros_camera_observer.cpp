@@ -48,10 +48,12 @@ namespace industrial_extrinsic_cal
   }
   if(!pnh.getParam("use_circle_detector", use_circle_detector_)){
     use_circle_detector_ = false;
+    ROS_WARN("Not using circle detector");
   }
 
   circle_detector_ptr_ = cv::CircleDetector::create();
   blob_detector_ptr_ = cv::SimpleBlobDetector::create(simple_blob_params);
+
 
   std::string recon_node_name = "~/" + camera_name;
   rnh_ = new ros::NodeHandle(recon_node_name.c_str());
@@ -61,7 +63,6 @@ namespace industrial_extrinsic_cal
 
   f = boost::bind(&ROSCameraObserver::dynReConfCallBack, this, _1, _2);
   server_->setCallback(f);
-
 
 }
 
@@ -862,8 +863,6 @@ void  ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid
 
 
     blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
-
-  
 }
     
   
