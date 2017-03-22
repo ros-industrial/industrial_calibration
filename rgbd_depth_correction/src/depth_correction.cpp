@@ -229,7 +229,7 @@ void DepthCorrectionNodelet::correctionVersionOne(const pcl::PointCloud<pcl::Poi
   {
     for(int i = 0; i < corrected_cloud.points.size(); ++i)
     {
-      if(isnan(corrected_cloud.points.at(i).x) || isnan(correction_cloud_.points.at(i).z))
+      if(std::isnan(corrected_cloud.points.at(i).x) || std::isnan(correction_cloud_.points.at(i).z))
       {
         continue;
       }

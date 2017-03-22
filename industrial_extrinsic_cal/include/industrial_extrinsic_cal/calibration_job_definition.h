@@ -87,9 +87,10 @@ public:
   bool load();
 
   /** @brief stores calibration job as 3 files
+   * @param filePath is the complete path and name of the file inwhich to save the transform data
    * @return true if successful
    */
-  bool store();
+  bool store(std::string filePath);
 
   /** @brief shows the current poses of all cameras and targets
    * @return true if successful

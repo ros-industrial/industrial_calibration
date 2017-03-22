@@ -147,7 +147,7 @@ bool DepthCalibrator::calibrateCameraDepth(std_srvs::Empty::Request &request, st
   {
     for(int j = 0; j < saved_clouds_.size(); ++j)
     {
-      if(isnan(saved_clouds_[j].points.at(i).x) || saved_clouds_[j].points.at(i).z == 0)
+      if(std::isnan(saved_clouds_[j].points.at(i).x) || saved_clouds_[j].points.at(i).z == 0)
       {
         continue;
       }
@@ -229,7 +229,7 @@ bool DepthCalibrator::findAveragePointCloud(pcl::PointCloud<pcl::PointXYZ>& fina
     x = y = z = 0.0;
     for(int j = 0; j < temp_clouds.size(); ++j)
     {
-      if(isnan(temp_clouds[j].points.at(i).x) || temp_clouds[j].points.at(i).z == 0)
+      if(std::isnan(temp_clouds[j].points.at(i).x) || temp_clouds[j].points.at(i).z == 0)
       {
         continue;
       }
@@ -294,7 +294,7 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
   for(int j = 0; j < avg_cloud.points.size(); ++j)
   {
 
-    if(isnan(avg_cloud.points.at(j).x) || avg_cloud.points.at(j).z == 0)
+    if(std::isnan(avg_cloud.points.at(j).x) || avg_cloud.points.at(j).z == 0)
     {
       pcl::PointXYZ pt;
       pt.x = NAN;
@@ -340,7 +340,7 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
 
 
       // If value is NaN, find average of neighbors
-      if(isnan(correction_cloud_.points.at(i).x))
+      if(std::isnan(correction_cloud_.points.at(i).x))
       {
 
         ++num_nan;
@@ -350,7 +350,7 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
 
         if((i+1) % (correction_cloud_.width) > 0 || i == 0) // add point to the right except when at the far right side
         {
-          if(isnan(correction_cloud_.points.at(i+1).z) == 0)
+          if(std::isnan(correction_cloud_.points.at(i+1).z) == 0)
           {
             val += correction_cloud_.points.at(i+1).z;
             ++count;
@@ -359,7 +359,7 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
 
         if(i % correction_cloud_.width > 0 ) // add point to the left except when at the far left side
         {
-          if(isnan(correction_cloud_.points.at(i-1).z) == 0)
+          if(std::isnan(correction_cloud_.points.at(i-1).z) == 0)
           {
             val += correction_cloud_.points.at(i-1).z;
             ++count;
@@ -368,7 +368,7 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
 
         if(i > (correction_cloud_.width - 1) ) // add point to the top except when at the top row
         {
-          if(isnan(correction_cloud_.points.at(i-correction_cloud_.width).z) == 0)
+          if(std::isnan(correction_cloud_.points.at(i-correction_cloud_.width).z) == 0)
           {
             val += correction_cloud_.points.at(i-correction_cloud_.width).z;
             ++count;
@@ -377,7 +377,7 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request &reques
 
         if((i+1) < correction_cloud_.height * correction_cloud_.width - correction_cloud_.width ) // add point to the bottom except when at the bottom row
         {
-          if(isnan(correction_cloud_.points.at(i+correction_cloud_.width).z) == 0)
+          if(std::isnan(correction_cloud_.points.at(i+correction_cloud_.width).z) == 0)
           {
             val += correction_cloud_.points.at(i+correction_cloud_.width).z;
             ++count;

@@ -453,6 +453,9 @@ bool CeresBlocks::writeAllStaticTransforms(string filePath)
       return false;
     }//end if writing to file
   outputFile << "<launch>\n";
+  outputFile << "# this file might be empty\n";
+  outputFile << "# It might contain static transform publishers that were updated through calibration\n";
+  outputFile << "# Often, transform interfaces use some other mechanism to update themselves\n";
   outputFile.close();
   
   bool rtn = true;
