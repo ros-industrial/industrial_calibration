@@ -22,6 +22,8 @@
 #include <industrial_extrinsic_cal/camera_observer.hpp>
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.h> 
+#include <dynamic_reconfigure/server.h>
+#include <industrial_extrinsic_cal/circle_grid_finderConfig.h>
 
 #include <iostream>
 #include <sstream>
@@ -41,7 +43,7 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/SetCameraInfo.h>
 #include <geometry_msgs/PointStamped.h>
-
+#include <industrial_extrinsic_cal/circle_detector.hpp>
 
 /**
  *  @brief enumerator containing three options for the type of pattern to detect
@@ -208,7 +210,12 @@ namespace industrial_extrinsic_cal
     /**
      *  @brief circle_detector_ptr_ is a custom blob detector which localizes circles better than simple blob detection
      */
-    cv::Ptr<cv::FeatureDetector> circle_detector_ptr_;
+    cv::Ptr<cv::CircleDetector>  circle_detector_ptr_;
+
+    /**
+     *  @brief blob_detector_ptr_ is a simple blob detector
+     */
+    cv::Ptr<cv::FeatureDetector> blob_detector_ptr_;
 
     /**
      *  @brief new_image_collected, set after the trigger is done
@@ -291,15 +298,23 @@ namespace industrial_extrinsic_cal
     bool  pullCameraInfo(double &fx, double &fy,	 double &cx,  double &cy,  double &k1,	 double &k2, double &k3,  double &p1,	 double &p2,
                          int &width, int &height);
 
+    void dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig &config, uint32_t level);
+    
   private:
+
     int image_number_; /**< a counter of images recieved */
     cv::Mat last_raw_image_; /**< the image last received */
     bool use_circle_detector_;
     bool white_blobs_;
     ros::ServiceClient client_;    
     sensor_msgs::SetCameraInfo srv_;
+    ros::NodeHandle *rnh_;
+    dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig> *server_;
+    
   };
 
+  
 } //end industrial_extrinsic_cal namespace
+
 
 #endif /* ROS_CAMERA_OBSERVER_H_ */

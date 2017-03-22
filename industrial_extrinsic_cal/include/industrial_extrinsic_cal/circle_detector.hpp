@@ -86,23 +86,9 @@ public:
       void write( FileStorage& fs ) const;
   };
 
-  CV_WRAP CircleDetector(const CircleDetector::Params &parameters = CircleDetector::Params());
+  CV_WRAP static Ptr<CircleDetector>
+    create(const CircleDetector::Params &parameters = CircleDetector::Params());
 
-  virtual void read( const FileNode& fn );
-  virtual void write( FileStorage& fs ) const;
-
-protected:
-  struct CV_EXPORTS Center
-  {
-      Point2d location;
-      double radius;
-      double confidence;
-  };
-
-  virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask=Mat() ) const;
-  virtual void findCircles(const Mat &image, const Mat &binaryImage, vector<Center> &centers) const;
-
-  Params params;
 };
 }
 #endif
