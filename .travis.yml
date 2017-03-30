@@ -11,7 +11,7 @@ env:
   global:
     - ROS_DISTRO=kinetic
     - UPSTREAM_WORKSPACE=file
-    - ROSINSTALL_FILENAME=industral_calibration.rosinstall
+    - ROSINSTALL_FILENAME=industrial_calibration.rosinstall
     - NOT_TEST_INSTALL=true
   matrix:
     - ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
