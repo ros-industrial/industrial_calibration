@@ -43,26 +43,26 @@ namespace industrial_extrinsic_cal
 
   // set up the circle detector
   CircleDetector::Params circle_params;
-  circle_params.thresholdStep = 10;
-  circle_params.minThreshold = 50;
-  circle_params.maxThreshold = 220;
-  circle_params.minRepeatability = 2;
-  circle_params.minDistBetweenCircles = 2.0;
-  circle_params.minRadiusDiff = 10;
+  circle_params.thresholdStep = 5;
+  circle_params.minThreshold = 120;
+  circle_params.maxThreshold = 250;
+  circle_params.minRepeatability = 5;
+  circle_params.minDistBetweenCircles = 10.0;
+  circle_params.minRadiusDiff = 5.0;
 
   circle_params.filterByColor = false;
   circle_params.circleColor = 0;
   
-  circle_params.filterByArea = false;
-  circle_params.minArea = 25;
+  circle_params.filterByArea = true;
+  circle_params.minArea = 30;
   circle_params.maxArea = 5000;
   
   circle_params.filterByCircularity = false;
   circle_params.minCircularity = 0.8f;
   circle_params.maxCircularity = std::numeric_limits<float>::max();
   
-  circle_params.filterByInertia = false;
-  circle_params.minInertiaRatio = 0.1f;
+  circle_params.filterByInertia = true;
+  circle_params.minInertiaRatio = 0.8f;
   circle_params.maxInertiaRatio = std::numeric_limits<float>::max();
   
   circle_params.filterByConvexity = false;
@@ -181,7 +181,6 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   bool successful_find = false;
   bool flipped_successful_find = false;
 
-
   if (input_bridge_->image.cols < input_roi_.width || input_bridge_->image.rows < input_roi_.height)
   {
     ROS_ERROR("ROI too big for image size ( image = %d by %d roi= %d %d )", 
@@ -263,7 +262,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
         if(use_circle_detector_){
           ROS_DEBUG("using circle_detector, to find %dx%d modified circle grid", pattern_rows_, pattern_cols_);
           successful_find = cv::findCirclesGrid(image_roi_, pattern_size, centers,
-            cv::CALIB_CB_SYMMETRIC_GRID, circle_detector_ptr_);
+						cv::CALIB_CB_SYMMETRIC_GRID, circle_detector_ptr_);
           if(!successful_find)
           {
             successful_find = cv::findCirclesGrid(image_roi_, pattern_size_flipped, centers,

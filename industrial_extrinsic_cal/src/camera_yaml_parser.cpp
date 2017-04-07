@@ -64,12 +64,12 @@ namespace industrial_extrinsic_cal {
   {
     shared_ptr<Camera> temp_camera;
     try{
-      string temp_name, temp_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame, parent_frame;
+      string camera_name, image_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame, parent_frame;
       string trigger_name, transform_interface;
       CameraParameters temp_parameters;
-      if(!parseString(node, "camera_name", temp_name)) ROS_ERROR("Can't read camera_name");
+      if(!parseString(node, "camera_name", camera_name)) ROS_ERROR("Can't read camera_name");
       if(!parseString(node, "trigger", trigger_name)) ROS_ERROR("Can't read trigger");
-      if(!parseString(node, "image_topic", temp_topic)) ROS_ERROR("Can't read image_topic");
+      if(!parseString(node, "image_topic", image_topic)) ROS_ERROR("Can't read image_topic");
       if(!parseString(node, "camera_optical_frame", camera_optical_frame)) ROS_ERROR("Can't read camera_optical_frame");
       if(!parseString(node, "transform_interface", transform_interface)) ROS_ERROR("Can't read transform_interface");
 
@@ -96,7 +96,7 @@ namespace industrial_extrinsic_cal {
       if(!parseInt(node, "image_width", temp_parameters.width)) ROS_ERROR("Can't read image_width");
     
       // create a shared camera and a shared transform interface
-      temp_camera = boost::make_shared<Camera>(temp_name, temp_parameters, false);
+      temp_camera = boost::make_shared<Camera>(camera_name, temp_parameters, false);
       temp_camera->trigger_ = parseTrigger(node, trigger_name);
       shared_ptr<TransformInterface>  temp_ti = parseTransformInterface(node, transform_interface, camera_optical_frame, pose);
       temp_camera->setTransformInterface(temp_ti);// install the transform interface 
@@ -107,7 +107,7 @@ namespace industrial_extrinsic_cal {
       else{
 	temp_camera->pullTransform();
       }
-      temp_camera->camera_observer_ = boost::make_shared<ROSCameraObserver>(temp_topic);
+      temp_camera->camera_observer_ = boost::make_shared<ROSCameraObserver>(image_topic, camera_name);
     }
     catch (YAML::ParserException& e){
       ROS_INFO_STREAM("Failed to read in moving cameras from yaml file ");
