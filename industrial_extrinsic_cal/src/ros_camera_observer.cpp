@@ -48,14 +48,14 @@ namespace industrial_extrinsic_cal
   circle_params.maxThreshold = 250;
   circle_params.minRepeatability = 5;
   circle_params.minDistBetweenCircles = 10.0;
-  circle_params.minRadiusDiff = 5.0;
+  circle_params.minRadiusDiff = 20.0;
 
   circle_params.filterByColor = false;
   circle_params.circleColor = 0;
   
   circle_params.filterByArea = true;
   circle_params.minArea = 30;
-  circle_params.maxArea = 5000;
+  circle_params.maxArea = 8000;
   
   circle_params.filterByCircularity = false;
   circle_params.minCircularity = 0.8f;
@@ -781,58 +781,59 @@ bool ROSCameraObserver::pushCameraInfo(double &fx,
 					 double &p1,
 					 double &p2)
 {
-  if(camera_name_.empty()){
-    ROS_ERROR("camera name is not set, cannot pull camera info from topic");
-    return(false);
-  }
-  std::string camera_info_topic = camera_name_ + "/camera_info";
-  const sensor_msgs::CameraInfoConstPtr& info_msg = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic);
-  if(info_msg->K[0]  ==0){
-    ROS_ERROR("camera info msg not correct");
-    return(false);
-  }
-  k1 = info_msg->D[0];
-  k2 = info_msg->D[1];
-  p1 = info_msg->D[2];
-  p2 = info_msg->D[3];
-  k3 = info_msg->D[4];
-  fx = info_msg->K[0];
-  cx = info_msg->K[2];
-  fy = info_msg->K[4];
-  cy = info_msg->K[5];
-  return(true);
+  int height,width;
+  return(pullCameraInfo(fx,fy,cx,cy,k1,k2,k3,p1,p2,width,height));
 }
 
 bool  ROSCameraObserver::pullCameraInfo(double &fx, double &fy,
            double &cx, double &cy, double &k1, double &k2, double &k3,
            double &p1, double &p2, int &width, int &height)
 {
+  bool rtn = true;
   if(camera_name_.empty()){
     ROS_ERROR("camera name is not set, cannot pull camera info from topic");
-    return(false);
+    rtn = false;
   }
   std::string camera_info_topic = "/" + camera_name_ + "/camera_info";
-  const sensor_msgs::CameraInfoConstPtr& info_msg = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic, ros::Duration(10.0));
+  const sensor_msgs::CameraInfoConstPtr& info_msg =
+    ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic, ros::Duration(3.0));
+
   if(info_msg == NULL)
   {
     ROS_ERROR("camera info message not available for camera %s on topic %s", camera_name_.c_str(), camera_info_topic.c_str());
-    return(false);
+    rtn = false;
   }
-  if(info_msg->K[0]  ==0){
+  else  if(info_msg->K[0]  ==0){
     ROS_ERROR("camera info message not correct for camera %s on topic %s", camera_name_.c_str(), camera_info_topic.c_str());
-    return(false);
+    rtn = false;
   }
-  k1 = info_msg->D[0];
-  k2 = info_msg->D[1];
-  p1 = info_msg->D[2];
-  p2 = info_msg->D[3];
-  k3 = info_msg->D[4];
-  fx = info_msg->K[0];
-  cx = info_msg->K[2];
-  fy = info_msg->K[4];
-  cy = info_msg->K[5];
-  width = info_msg->width;
-  height = info_msg->height;
-  return(true);
+  if(rtn == false){
+    ROS_ERROR("All intrinsics and image height and width are set to -1, YOUR RESULTS MAY BE GARBAGE");
+    fx = -1;
+    fy = -1;
+    cx = -1;
+    cy = -1;
+    k1 = -1;
+    k2 = -1;
+    k3 = -1;
+    p1 = -1;
+    p2 = -1;
+    height = -1;
+    width = -1;
+  }
+  else{
+    k1 = info_msg->D[0];
+    k2 = info_msg->D[1];
+    p1 = info_msg->D[2];
+    p2 = info_msg->D[3];
+    k3 = info_msg->D[4];
+    fx = info_msg->K[0];
+    cx = info_msg->K[2];
+    fy = info_msg->K[4];
+    cy = info_msg->K[5];
+    width = info_msg->width;
+    height = info_msg->height;
+  }
+  return(rtn);
 }
 } //industrial_extrinsic_cal
