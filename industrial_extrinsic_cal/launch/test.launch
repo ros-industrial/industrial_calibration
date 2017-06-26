@@ -1,0 +1,30 @@
+<launch>
+
+  <include  file="$(find industrial_extrinsic_cal)/launch/basler_camera.launch">
+          <arg name="camera_number" value="1"/>
+          <arg name="camera_id" value="21511083"/>
+          <arg name="view_cameras" value="true"/>
+          <arg name="acquisition_rate" value="2.0"/>
+  </include> 
+
+  <node pkg="industrial_extrinsic_cal" type="inkTest" name="InkTest" output="screen">
+     <param name="image_topic" value="/Basler1/image_rect"/>
+     <param name="image_height" value="1080"/>
+     <param name="image_width" value="1920"/>
+     <param name="image_roi_minx" value="700"/>
+     <param name="image_roi_maxx" value="1300"/>
+     <param name="image_roi_miny" value="1"/>
+     <param name="image_roi_maxy" value="200"/>
+     <param name="kernel_size" value="7"/>
+     <param name="scale" value="11"/>
+     <param name="template1" value="$(find industrial_extrinsic_cal)/templates/t1.jpeg"/>
+     <param name="template2" value="$(find industrial_extrinsic_cal)/templates/t2.jpeg"/>
+     <param name="template3" value="$(find industrial_extrinsic_cal)/templates/t3.jpeg"/>
+     <param name="template4" value="$(find industrial_extrinsic_cal)/templates/t4.jpeg"/>
+  </node>
+
+  <node pkg="image_view" type="image_view" name="Laplace_view" >
+   <remap from="image" to="test/laplace_image"/>
+  </node>
+
+</launch>

@@ -47,7 +47,7 @@
      <node pkg="intrinsic_cal" type="rail_ical" name="rail_intrinsic_calibration" output="screen" >
           <!--param name="image_topic" value="/o3d3xx/camera/amplitude" /-->
           <param name="image_topic" value="/camera/image_raw" />
-          <param name="camera_name" value="Basler$(arg camera_number)" />
+          <param name="camera_name" value="camera" />
           <param name="target_rows" value="20" />
           <param name="target_cols" value="33" />
           <param name="target_circle_dia" value="0.0135" />

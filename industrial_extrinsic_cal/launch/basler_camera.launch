@@ -17,7 +17,7 @@
     <param name="TriggerMode" value="Off" />
     <param name="TriggerSource" value="Line1" />
     <param name="PixelFormat" value="Mono8"/>
-    <param name="url" value="file://$(find nist_cal)/camera_info/Basler$(arg camera_number).yaml"/>
+    <param name="url" value="file://$(find  ind_cal_multi_camera)/camera_info/Basler$(arg camera_id).yaml"/>
   </node>
 
   <!-- Basler camera node   use with old driver 

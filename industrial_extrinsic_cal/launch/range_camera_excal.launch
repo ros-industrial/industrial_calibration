@@ -8,7 +8,7 @@
    <!-- IFM camera node -->
    <include file="$(find industrial_extrinsic_cal)/launch/ifm.launch" >
       <arg name="nn" value="ifm1"/>
-      <arg name="ip" value="192.168.0.69"/>
+      <arg name="ip" value="192.168.33.69"/>
     </include>
 
   <!--node pkg="tf" type="static_transform_publisher" 

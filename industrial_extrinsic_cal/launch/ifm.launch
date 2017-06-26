@@ -3,7 +3,7 @@
   <!-- Command-line arguments -->
   <arg name="ns" default="o3d3xx"/>
   <arg name="nn" default="camera"/>
-  <arg name="ip" default="192.168.33.69"/>
+  <arg name="ip" default="192.168.0.69"/>
   <arg name="xmlrpc_port" default="80"/>
   <arg name="password" default=""/>
   <arg name="schema_mask" default="15"/>
