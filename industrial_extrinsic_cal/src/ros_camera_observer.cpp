@@ -20,12 +20,11 @@
 #include <industrial_extrinsic_cal/circle_detector.hpp>
 #include <image_transport/image_transport.h> 
 
-
 using cv::CircleDetector;
 namespace industrial_extrinsic_cal
 {
 
-  ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic, const std::string &camera_name) :
+ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic, const std::string &camera_name) :
   sym_circle_(true), pattern_(pattern_options::Chessboard), pattern_rows_(0), pattern_cols_(0), new_image_collected_(false), 
   store_observation_images_(false), load_observation_images_(false), image_directory_(""), image_number_(0), 
   camera_name_(camera_name)
@@ -62,7 +61,6 @@ namespace industrial_extrinsic_cal
 
   f = boost::bind(&ROSCameraObserver::dynReConfCallBack, this, _1, _2);
   server_->setCallback(f);
-
 }
 
 bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost_function cost_type)
@@ -133,6 +131,7 @@ void ROSCameraObserver::clearObservations()
   camera_obs_.clear();
   new_image_collected_ = false;
 }
+
 int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 {
   bool successful_find = false;
@@ -231,18 +230,24 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
         }
         else{
           ROS_DEBUG("using simple_blob_detector, to find %dx%d modified grid", pattern_rows_, pattern_cols_);
-          successful_find = cv::findCirclesGrid(image_roi_, pattern_size, centers, cv::CALIB_CB_SYMMETRIC_GRID);
+          successful_find = cv::findCirclesGrid(
+                  image_roi_, pattern_size, centers,
+                  cv::CALIB_CB_SYMMETRIC_GRID,
+                  blob_detector_ptr_);
           if(!successful_find)
           {
-            successful_find = cv::findCirclesGrid(image_roi_, pattern_size_flipped, centers, cv::CALIB_CB_SYMMETRIC_GRID);
+            successful_find = cv::findCirclesGrid(
+                    image_roi_, pattern_size_flipped, centers,
+                    cv::CALIB_CB_SYMMETRIC_GRID,
+                    blob_detector_ptr_);
             flipped_successful_find = successful_find;
           }
         }
         if(!successful_find){
-          ROS_ERROR("couldn't find %dx%d modified circle target in %s, found only %d pts",
+          ROS_ERROR("couldn't find %dx%d modified circle target in %s, found only %zu pts",
             pattern_rows_, pattern_cols_,
             image_topic_.c_str(),
-           (int) observation_pts_.size());
+            centers.size());
         }
         else{
           // Note, this is the same method called in the beginning of findCirclesGrid, unfortunately, they don't return their keypoints
@@ -299,7 +304,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
           //       ......   This is a simple picture of the grid with the largest circle indicated by the letter o
           //       o....
           if(start_last_row_size >start_1st_row_size && start_last_row_size > end_1st_row_size && start_last_row_size > end_last_row_size){
-            ROS_DEBUG("large circle in start of last row");
+            ROS_DEBUG("large circle at start of last row");
             large_point.x = centers[start_last_row].x;
             large_point.y = centers[start_last_row].y;
             if(usual_ordering){ // right side up, no rotation, order is natural, starting from upper left, reads like book
@@ -311,13 +316,13 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
                 observation_pts_.push_back(centers[r*temp_cols +c]);
                 }
               }
-            } // end unsual ordering
+            } // end unusual ordering
           }// end largest circle at start
           // largest circle at end of 1st row
           //       .....o
           //       ......
           else if( end_1st_row_size > end_last_row_size && end_1st_row_size > start_last_row_size && end_1st_row_size > start_1st_row_size){
-            ROS_DEBUG("large at end of 1st row");
+            ROS_DEBUG("large circle at end of 1st row");
             large_point.x = centers[end_1st_row].x;
             large_point.y = centers[end_1st_row].y;
             if(usual_ordering){ // reversed points
@@ -338,7 +343,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
           //       ......
           //       ....o
           else if( end_last_row_size > start_last_row_size && end_last_row_size > end_1st_row_size && end_last_row_size > start_1st_row_size){
-            ROS_DEBUG("large end of last row");
+            ROS_DEBUG("large circle at end of last row");
             large_point.x = centers[end_last_row].x;
             large_point.y = centers[end_last_row].y;
 
@@ -363,7 +368,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
               //       o.....
               //       .......
               else if(start_1st_row_size > end_last_row_size && start_1st_row_size > end_1st_row_size && start_1st_row_size > start_last_row_size){
-                ROS_DEBUG("large at start of 1st row");
+                ROS_DEBUG("large circle at start of 1st row");
                 large_point.x = centers[start_1st_row].x;
                 large_point.y = centers[start_1st_row].y;
                 if(usual_ordering){ // 9 19 29 ... 99, 8 18 ... 98,
@@ -612,23 +617,23 @@ void ROSCameraObserver::triggerCamera()
     if(loaded_color_image.data && loaded_mono_image.data){
       ROS_DEBUG("Loaded it");
     }
+    image_number_++;
   }
   else{
     ROS_DEBUG("rosCameraObserver, waiting for image from topic %s",image_topic_.c_str());
     bool done=false;
     while(!done){
-      sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
+      sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_, ros::Duration(5.0));
+      if (! recent_image)
+      {
+        ROS_ERROR("No image acquired on topic '%s'", image_topic_.c_str());
+        break;
+      }
       
       ROS_DEBUG("captured image in trigger");
       try
       {
-        if(recent_image->encoding == "mono16"){  // asus and kinect ir images are mono16, bridge mishandles conversion to mono8
-          input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono16");
-          input_bridge_->image.convertTo(input_bridge_->image, CV_8UC1, 1.0, 0.0);
-        }
-        else{
-          input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
-        }
+        input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
         output_bridge_ = cv_bridge::toCvCopy(recent_image, "bgr8");
         last_raw_image_ = output_bridge_->image.clone();
         out_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
@@ -653,8 +658,9 @@ void ROSCameraObserver::triggerCamera()
 	  ROS_WARN_STREAM("cv_bridge exception: "<<ex.what());
 	}
     }
+    if (done)
+      image_number_++;
   }
-  image_number_++;
 }
 
 bool ROSCameraObserver::observationsDone()
@@ -865,6 +871,5 @@ void  ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid
 
     blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
 }
-    
-  
+
 } //industrial_extrinsic_cal
