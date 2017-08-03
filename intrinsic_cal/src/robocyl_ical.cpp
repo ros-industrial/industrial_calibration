@@ -187,6 +187,7 @@ RobocylCalService::RobocylCalService(ros::NodeHandle nh)
   camera_ =  make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
   camera_->trigger_ = make_shared<NoWaitTrigger>();
   camera_->camera_observer_ = make_shared<ROSCameraObserver>(image_topic_, camera_name_);
+  sleep(15); // wait for camera to come up or else this will fail
   if(!camera_->camera_observer_->pullCameraInfo(camera_->camera_parameters_.focal_length_x,
                                            camera_->camera_parameters_.focal_length_y,
                                            camera_->camera_parameters_.center_x,
@@ -279,9 +280,9 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
     double rail_position = i*camera_spacing_;
     ROS_ERROR("moving to %lf",rail_position);
     mm_request.meters = rail_position;
-    move_client_.call(mm_request, mm_response);
+    move_client_.call(mm_request, mm_response); // this call blocks until camera is moved
     // wait for camera to be moved
-    ros::Duration(0.2).sleep();
+    //    ros::Duration(0.2).sleep();
 
     // gather next image
     camera_->camera_observer_->clearTargets();
@@ -303,12 +304,12 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
       double image_x = camera_observations[i].image_loc_x;
       double image_y = camera_observations[i].image_loc_y;
       Point3d point = target_->pts_[i]; // assume correct ordering from camera observer
-      cost_function[i] = industrial_extrinsic_cal::RailICal::Create(image_x, image_y, rail_position, point);
+      cost_function[i] = industrial_extrinsic_cal::RailICal::Create(image_x, image_y, -rail_position, point);
       problem.AddResidualBlock(cost_function[i], NULL ,
              camera_->camera_parameters_.pb_intrinsics,
              target_->pose_.pb_pose);
       double residual[2];
-      industrial_extrinsic_cal::RailICal RC(image_x, image_y, rail_position, point);
+      industrial_extrinsic_cal::RailICal RC(image_x, image_y, -rail_position, point);
     } // for each observation at this camera_location
   }// for each camera_location
 
