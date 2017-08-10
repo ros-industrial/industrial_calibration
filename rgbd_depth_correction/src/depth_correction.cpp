@@ -29,7 +29,6 @@
 #include <nodelet/nodelet.h>
 
 #include <industrial_extrinsic_cal/yaml_utils.h>
-#include <openni2_camera/GetSerial.h>
 
 
 namespace rgbd_depth_correction{
@@ -103,9 +102,6 @@ public:
     ros::NodeHandle nh = getMTNodeHandle();
     ros::NodeHandle priv_nh = getMTPrivateNodeHandle();
 
-    ros::ServiceClient get_serial_no = nh.serviceClient<openni2_camera::GetSerial>("get_serial");
-    openni2_camera::GetSerial msg;
-
     std::string filename, filepath;
 
     if(!priv_nh.getParam("filepath", filepath))
@@ -119,22 +115,9 @@ public:
     {
       ROS_INFO("Using provided camera file name argument '%s' for depth correction", filename.c_str());
     }
-    else if(get_serial_no.waitForExistence(ros::Duration(30.0)))
-    {
-      if(get_serial_no.call(msg.request, msg.response))
-      {
-        filename = msg.response.serial;
-        ROS_INFO("Using camera serial number '%s' from camera driver service for depth correction", filename.c_str());
-      }
-      else
-      {
-        ROS_ERROR("Camera get serial number service not available.  Closing depth correction node.");
-        return;
-      }
-    }
     else
     {
-      ROS_ERROR("Cannot open configuration files because argument 'filename' not provided and camera 'get_serial' service not available. Closing depth correction node.");
+      ROS_ERROR("Cannot open configuration files because parameter 'filename' not provided. Closing depth correction node.");
       return;
     }
 
