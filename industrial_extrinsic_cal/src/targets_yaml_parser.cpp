@@ -37,11 +37,14 @@ namespace industrial_extrinsic_cal {
       targets.clear();
       int n_static =0;
       const YAML::Node& target_parameters = parseNode(target_doc, "static_targets");
-      for (unsigned int i = 0; i < target_parameters.size(); i++){
-	shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
-	temp_target->is_moving_ = false;
-	targets.push_back(temp_target);
-	n_static++;
+      if(target_parameters)
+      {
+        for (unsigned int i = 0; i < target_parameters.size(); i++){
+        shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
+        temp_target->is_moving_ = false;
+        targets.push_back(temp_target);
+        n_static++;
+        }
       }
 
 
@@ -49,11 +52,14 @@ namespace industrial_extrinsic_cal {
       // read in all moving targets
       int n_moving=0;
       const YAML::Node& target_parameters2 = parseNode(target_doc, "moving_targets");
-      for (unsigned int i = 0; i < target_parameters2.size(); i++){
-	shared_ptr<Target> temp_target = parseSingleTarget(target_parameters2[i]);
-	temp_target->is_moving_ = true;
-	targets.push_back(temp_target);
-	n_moving++;
+      if(target_parameters2)
+      {
+        for (unsigned int i = 0; i < target_parameters2.size(); i++){
+          shared_ptr<Target> temp_target = parseSingleTarget(target_parameters2[i]);
+          temp_target->is_moving_ = true;
+          targets.push_back(temp_target);
+          n_moving++;
+        }
       }
 
       ROS_INFO_STREAM((int) targets.size() << " targets " << n_static << " static " << n_moving << " moving");
