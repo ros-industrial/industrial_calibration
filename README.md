@@ -8,7 +8,18 @@ Contains libraries/algorithms for calibration industrial systems
 
 # Travis CI
 
-[![Travis-CI](https://api.travis-ci.org/ros-industrial/industrial_calibration.svg?branch=indigo-devel)](https://travis-ci.org/ros-industrial/industrial_calibration/branches) 
+[![Travis-CI](https://api.travis-ci.org/ros-industrial/industrial_calibration.svg?branch=indigo-devel)](https://travis-ci.org/ros-industrial/industrial_calibration/branches)
+
+# Requires
+# install ceres-solver(Note, there might be a .deb that works)
+#    follow instructions on http://ceres-solver.org/installation.html#linux
+
+# install openni2
+sudo apt-get install ros-kinetic-openni2-camera
+sudo apt-get install ros-kinetic-openni2-launch
+
+# install moveit
+sudo apt-get install ros-kinetic-moveit
 
 # Build
 Requires [wstool](http://wiki.ros.org/wstool)
