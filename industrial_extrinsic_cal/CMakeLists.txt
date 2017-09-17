@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(industrial_extrinsic_cal)
+add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   actionlib
@@ -18,8 +19,12 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf
   tf_conversions
+<<<<<<< HEAD
   pcl_ros
   pcl_conversions
+=======
+  dynamic_reconfigure
+>>>>>>> kinetic-devel
 )
 
 find_package(Boost REQUIRED)
@@ -27,8 +32,11 @@ find_package(Boost REQUIRED)
 find_package(Ceres REQUIRED)
 message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
-find_package(OpenCV 2 REQUIRED)
+find_package(OpenCV REQUIRED)
 message("-- Found OpenCV version ${OpenCV_VERSION}: ${OpenCV_INCLUDE_DIRS}")
+
+
+
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(yaml_cpp REQUIRED yaml-cpp)
@@ -82,6 +90,10 @@ generate_messages(
     geometry_msgs
     sensor_msgs
     std_msgs
+)
+
+generate_dynamic_reconfigure_options(
+  cfg/circle_grid_finder.cfg
 )
 
 
@@ -143,7 +155,8 @@ add_library(
   src/target.cpp
   src/targets_yaml_parser.cpp
 )
-add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
+
 target_link_libraries(
   industrial_extrinsic_cal
 
@@ -157,7 +170,6 @@ target_link_libraries(
 # targets: other nodes
 add_executable(camera_observer_scene_trigger    src/nodes/camera_observer_scene_trigger.cpp)
 add_executable(manual_calt_adjust               src/nodes/manual_calt_adjuster.cpp)
-add_executable(mono_ex_cal                      src/nodes/mono_ex_cal.cpp)
 add_executable(mutable_joint_state_publisher    src/nodes/mutable_joint_state_publisher.cpp)
 add_executable(nist_analysis                    src/nodes/nist_analysis.cpp)
 add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
@@ -178,7 +190,6 @@ add_dependencies(inkTest                  ${catkin_EXPORTED_TARGETS} ${industria
 
 target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY} ${CERES_LIBRARIES})
 target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES})
-target_link_libraries(mono_ex_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY})
 target_link_libraries(nist_analysis industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES})
@@ -194,7 +205,6 @@ install(
     camera_observer_scene_trigger
     industrial_extrinsic_cal
     manual_calt_adjust
-    mono_ex_cal
     mutable_joint_state_publisher
     nist_analysis
     ros_robot_trigger_action_service

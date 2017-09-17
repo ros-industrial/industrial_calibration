@@ -36,6 +36,7 @@
 
 using std::string;
 using boost::shared_ptr;
+using boost::make_shared;
 using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solver;

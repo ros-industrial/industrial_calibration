@@ -20,12 +20,11 @@
 #include <industrial_extrinsic_cal/circle_detector.hpp>
 #include <image_transport/image_transport.h> 
 
-
 using cv::CircleDetector;
 namespace industrial_extrinsic_cal
 {
 
-  ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic, const std::string &camera_name) :
+ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic, const std::string &camera_name) :
   sym_circle_(true), pattern_(pattern_options::Chessboard), pattern_rows_(0), pattern_cols_(0), new_image_collected_(false), 
   store_observation_images_(false), load_observation_images_(false), image_directory_(""), image_number_(0), 
   camera_name_(camera_name)
@@ -41,71 +40,28 @@ namespace industrial_extrinsic_cal
   pnh.getParam("store_observation_images", store_observation_images_);
   pnh.getParam("load_observation_images", load_observation_images_);
 
-  // set up the circle detector
-  CircleDetector::Params circle_params;
-  circle_params.thresholdStep = 5;
-  circle_params.minThreshold = 120;
-  circle_params.maxThreshold = 250;
-  circle_params.minRepeatability = 5;
-  circle_params.minDistBetweenCircles = 10.0;
-  circle_params.minRadiusDiff = 20.0;
+  // set up blob/circle detectors parameters are dynamic
 
-  circle_params.filterByColor = false;
-  circle_params.circleColor = 0;
-  
-  circle_params.filterByArea = true;
-  circle_params.minArea = 30;
-  circle_params.maxArea = 8000;
-  
-  circle_params.filterByCircularity = false;
-  circle_params.minCircularity = 0.8f;
-  circle_params.maxCircularity = std::numeric_limits<float>::max();
-  
-  circle_params.filterByInertia = true;
-  circle_params.minInertiaRatio = 0.8f;
-  circle_params.maxInertiaRatio = std::numeric_limits<float>::max();
-  
-  circle_params.filterByConvexity = false;
-  circle_params.minConvexity = 0.95f;
-  circle_params.maxConvexity = std::numeric_limits<float>::max();
-
-  // set up and create the detector using the parameters
   cv::SimpleBlobDetector::Params simple_blob_params;
   if(!pnh.getParam("white_blobs", white_blobs_)){
     white_blobs_ = false;
   }
-  if(white_blobs_){
-    simple_blob_params.minThreshold = 40;
-    simple_blob_params.maxThreshold = 60;
-    simple_blob_params.thresholdStep = 5;
-    simple_blob_params.minArea = 100;
-    simple_blob_params.minConvexity = 0.3;
-    simple_blob_params.maxConvexity = 0.3;//circularity ($\frac4*\pi*Area* perimeter$) .
-    simple_blob_params.minInertiaRatio = 0.01;
-    simple_blob_params.maxInertiaRatio = 0.01;
-    simple_blob_params.minArea = 30.0; //float
-    simple_blob_params.maxArea = 8000.0;
-    simple_blob_params.maxConvexity = 10;
-    simple_blob_params.filterByColor = false;
-    simple_blob_params.blobColor = (uchar) 200; // 255=light 0=dark blobs
-    simple_blob_params.filterByCircularity = true;
-    simple_blob_params.minCircularity= 0.8; // float
-    simple_blob_params.maxCircularity= 1.0; //float
-    simple_blob_params.minDistBetweenBlobs = 10; // float
-    simple_blob_params.minRepeatability = (size_t) 128; // don't know what it means
-  }
-  
   if(!pnh.getParam("use_circle_detector", use_circle_detector_)){
     use_circle_detector_ = false;
   }
 
-  if(use_circle_detector_){
-    circle_detector_ptr_ = new cv::CircleDetector(circle_params);
-  }
-  else{
-    circle_detector_ptr_ = new cv::SimpleBlobDetector(simple_blob_params);
-  }
+  circle_detector_ptr_ = cv::CircleDetector::create();
+  blob_detector_ptr_ = cv::SimpleBlobDetector::create(simple_blob_params);
 
+
+  std::string recon_node_name = "~/" + camera_name;
+  rnh_ = new ros::NodeHandle(recon_node_name.c_str());
+  server_ = new dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig> (*rnh_);
+
+  dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>::CallbackType f;
+
+  f = boost::bind(&ROSCameraObserver::dynReConfCallBack, this, _1, _2);
+  server_->setCallback(f);
 }
 
 bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi &roi, Cost_function cost_type)
@@ -176,6 +132,7 @@ void ROSCameraObserver::clearObservations()
   camera_obs_.clear();
   new_image_collected_ = false;
 }
+
 int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
 {
   bool successful_find = false;
@@ -213,6 +170,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
       if (sym_circle_) // symetric circle grid
       {
         ROS_DEBUG_STREAM("Finding Circles in grid, symmetric...");
+
         if(use_circle_detector_){
           successful_find = cv::findCirclesGrid(image_roi_, pattern_size, observation_pts_,
               cv::CALIB_CB_SYMMETRIC_GRID, circle_detector_ptr_);
@@ -272,25 +230,34 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
         }
         else{
           ROS_DEBUG("using simple_blob_detector, to find %dx%d modified grid", pattern_rows_, pattern_cols_);
-          successful_find = cv::findCirclesGrid(image_roi_, pattern_size, centers, cv::CALIB_CB_SYMMETRIC_GRID);
+          successful_find = cv::findCirclesGrid(
+                  image_roi_, pattern_size, centers,
+                  cv::CALIB_CB_SYMMETRIC_GRID,
+                  blob_detector_ptr_);
           if(!successful_find)
           {
-            successful_find = cv::findCirclesGrid(image_roi_, pattern_size_flipped, centers, cv::CALIB_CB_SYMMETRIC_GRID);
+            successful_find = cv::findCirclesGrid(
+                    image_roi_, pattern_size_flipped, centers,
+                    cv::CALIB_CB_SYMMETRIC_GRID,
+                    blob_detector_ptr_);
             flipped_successful_find = successful_find;
           }
         }
         if(!successful_find){
-          ROS_ERROR("couldn't find %dx%d modified circle target in %s, found only %d pts",
+          ROS_ERROR("couldn't find %dx%d modified circle target in %s, found only %zu pts",
             pattern_rows_, pattern_cols_,
             image_topic_.c_str(),
-           (int) observation_pts_.size());
+            centers.size());
         }
         else{
           // Note, this is the same method called in the beginning of findCirclesGrid, unfortunately, they don't return their keypoints
           // Should OpenCV change their method, the keypoint locations may not match, this has a risk of failing with
           // updates to OpenCV
           std::vector<cv::KeyPoint> keypoints;
-          circle_detector_ptr_->detect(image_roi_, keypoints);
+
+          if(use_circle_detector_)circle_detector_ptr_->detect(image_roi_, keypoints);
+          if(!use_circle_detector_)blob_detector_ptr_->detect(image_roi_, keypoints);
+
           ROS_DEBUG("found %d keypoints", (int) keypoints.size());
 
           // if a flipped pattern is found, flip the rows/columns
@@ -337,7 +304,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
           //       ......   This is a simple picture of the grid with the largest circle indicated by the letter o
           //       o....
           if(start_last_row_size >start_1st_row_size && start_last_row_size > end_1st_row_size && start_last_row_size > end_last_row_size){
-            ROS_DEBUG("large circle in start of last row");
+            ROS_DEBUG("large circle at start of last row");
             large_point.x = centers[start_last_row].x;
             large_point.y = centers[start_last_row].y;
             if(usual_ordering){ // right side up, no rotation, order is natural, starting from upper left, reads like book
@@ -349,13 +316,13 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
                 observation_pts_.push_back(centers[r*temp_cols +c]);
                 }
               }
-            } // end unsual ordering
+            } // end unusual ordering
           }// end largest circle at start
           // largest circle at end of 1st row
           //       .....o
           //       ......
           else if( end_1st_row_size > end_last_row_size && end_1st_row_size > start_last_row_size && end_1st_row_size > start_1st_row_size){
-            ROS_DEBUG("large at end of 1st row");
+            ROS_DEBUG("large circle at end of 1st row");
             large_point.x = centers[end_1st_row].x;
             large_point.y = centers[end_1st_row].y;
             if(usual_ordering){ // reversed points
@@ -376,7 +343,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
           //       ......
           //       ....o
           else if( end_last_row_size > start_last_row_size && end_last_row_size > end_1st_row_size && end_last_row_size > start_1st_row_size){
-            ROS_DEBUG("large end of last row");
+            ROS_DEBUG("large circle at end of last row");
             large_point.x = centers[end_last_row].x;
             large_point.y = centers[end_last_row].y;
 
@@ -401,7 +368,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
               //       o.....
               //       .......
               else if(start_1st_row_size > end_last_row_size && start_1st_row_size > end_1st_row_size && start_1st_row_size > start_last_row_size){
-                ROS_DEBUG("large at start of 1st row");
+                ROS_DEBUG("large circle at start of 1st row");
                 large_point.x = centers[start_1st_row].x;
                 large_point.y = centers[start_1st_row].y;
                 if(usual_ordering){ // 9 19 29 ... 99, 8 18 ... 98,
@@ -502,7 +469,8 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
         dilate( green_binary_image, green_binary_image, dilation_element);
         std::vector<cv::Point2f> centers;
         std::vector<cv::KeyPoint> keypoints;
-        circle_detector_ptr_->detect(red_binary_image, keypoints);
+        if(!use_circle_detector_)blob_detector_ptr_->detect(red_binary_image, keypoints);
+        if( use_circle_detector_)circle_detector_ptr_->detect(red_binary_image, keypoints);
         ROS_ERROR("Red keypoints: %d", (int) keypoints.size());
         if(keypoints.size() == 1 ){
             observation_pts_.push_back(keypoints[0].pt);
@@ -512,7 +480,8 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
         else{
           ROS_ERROR("found %d red blobs, expected one", (int) keypoints.size());
         }
-        circle_detector_ptr_->detect(green_binary_image, keypoints);
+        if(!use_circle_detector_)blob_detector_ptr_->detect(green_binary_image, keypoints);
+        if( use_circle_detector_)circle_detector_ptr_->detect(green_binary_image, keypoints);
         ROS_ERROR("Green keypoints: %d",(int)keypoints.size());
         if(keypoints.size() == 1){
             observation_pts_.push_back(keypoints[0].pt);
@@ -520,7 +489,8 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
         else{
           ROS_ERROR("found %d green blobs, expected one", (int) keypoints.size());
         }
-        circle_detector_ptr_->detect(yellow_binary_image, keypoints);
+        if(!use_circle_detector_)blob_detector_ptr_->detect(yellow_binary_image, keypoints);
+        if( use_circle_detector_)circle_detector_ptr_->detect(yellow_binary_image, keypoints);
         ROS_ERROR("Blue keypoints: %d", (int)keypoints.size());
         if(keypoints.size() == 1){
             observation_pts_.push_back(keypoints[0].pt);
@@ -647,23 +617,23 @@ void ROSCameraObserver::triggerCamera()
     if(loaded_color_image.data && loaded_mono_image.data){
       ROS_DEBUG("Loaded it");
     }
+    image_number_++;
   }
   else{
     ROS_DEBUG("rosCameraObserver, waiting for image from topic %s",image_topic_.c_str());
     bool done=false;
     while(!done){
-      sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_);
+      sensor_msgs::ImageConstPtr recent_image = ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_, ros::Duration(5.0));
+      if (! recent_image)
+      {
+        ROS_ERROR("No image acquired on topic '%s'", image_topic_.c_str());
+        break;
+      }
       
       ROS_DEBUG("captured image in trigger");
       try
       {
-        if(recent_image->encoding == "mono16"){  // asus and kinect ir images are mono16, bridge mishandles conversion to mono8
-          input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono16");
-          input_bridge_->image.convertTo(input_bridge_->image, CV_8UC1, 1.0, 0.0);
-        }
-        else{
-          input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
-        }
+        input_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
         output_bridge_ = cv_bridge::toCvCopy(recent_image, "bgr8");
         last_raw_image_ = output_bridge_->image.clone();
         out_bridge_ = cv_bridge::toCvCopy(recent_image, "mono8");
@@ -688,8 +658,9 @@ void ROSCameraObserver::triggerCamera()
 	  ROS_WARN_STREAM("cv_bridge exception: "<<ex.what());
 	}
     }
+    if (done)
+      image_number_++;
   }
-  image_number_++;
 }
 
 bool ROSCameraObserver::observationsDone()
@@ -836,4 +807,70 @@ bool  ROSCameraObserver::pullCameraInfo(double &fx, double &fy,
   }
   return(rtn);
 }
+
+void  ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig &config, uint32_t level)
+{
+  CircleDetector::Params circle_params;
+    circle_params.thresholdStep = 10;
+    circle_params.minThreshold = config.min_threshold;
+    circle_params.maxThreshold = config.max_threshold;
+    circle_params.minRepeatability = 2;
+    circle_params.minDistBetweenCircles = config.min_distance;
+    circle_params.minRadiusDiff = 10;
+
+    circle_params.filterByColor = true;
+    if(white_blobs_)circle_params.circleColor = 200;
+    if(!white_blobs_)circle_params.circleColor = 0;
+  
+    circle_params.filterByArea = config.filter_by_area;
+    circle_params.minArea = config.min_area;
+    circle_params.maxArea = config.max_area;
+  
+    circle_params.filterByCircularity = config.filter_by_circularity;
+    circle_params.minCircularity = config.min_circularity;
+    circle_params.maxCircularity = config.max_circularity;
+  
+    circle_params.filterByInertia = false;
+    circle_params.minInertiaRatio = 0.1f;
+    circle_params.maxInertiaRatio = std::numeric_limits<float>::max();
+  
+    circle_params.filterByConvexity = false;
+    circle_params.minConvexity = 0.95f;
+    circle_params.maxConvexity = std::numeric_limits<float>::max();
+
+    circle_detector_ptr_ = cv::CircleDetector::create(circle_params);
+
+    cv::SimpleBlobDetector::Params blob_params;
+    blob_params.thresholdStep = 10;
+    blob_params.minThreshold = config.min_threshold;
+    blob_params.maxThreshold = config.max_threshold;
+    blob_params.minRepeatability = 2;
+    blob_params.minDistBetweenBlobs = config.min_distance;
+
+    blob_params.filterByColor = true;
+    if(white_blobs_)blob_params.blobColor = 200;
+    if(!white_blobs_)blob_params.blobColor = 0;
+  
+    blob_params.filterByArea = config.filter_by_area;
+    blob_params.minArea = config.min_area;
+    blob_params.maxArea = config.max_area;
+  
+    blob_params.filterByCircularity = config.filter_by_circularity;
+    blob_params.minCircularity = config.min_circularity;
+    blob_params.maxCircularity = config.max_circularity;
+  
+    blob_params.filterByInertia = false;
+    blob_params.minInertiaRatio = 0.1f;
+    blob_params.maxInertiaRatio = std::numeric_limits<float>::max();
+  
+    blob_params.filterByConvexity = false;
+    blob_params.minConvexity = 0.95f;
+    blob_params.maxConvexity = std::numeric_limits<float>::max();
+
+    blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
+
+
+    blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
+}
+
 } //industrial_extrinsic_cal
