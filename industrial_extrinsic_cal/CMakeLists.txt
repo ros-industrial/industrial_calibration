@@ -32,6 +32,7 @@ find_package(Ceres REQUIRED)
 message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
 find_package(OpenCV REQUIRED)
+
 message("-- Found OpenCV version ${OpenCV_VERSION}: ${OpenCV_INCLUDE_DIRS}")
 
 
@@ -123,6 +124,7 @@ catkin_package(
   DEPENDS
     Boost
     CERES
+    EIGEN3
 )
 
 
@@ -131,10 +133,10 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${yaml_cpp_INCLUDE_DIR}
 )
-
 
 # target: main library
 add_library(
