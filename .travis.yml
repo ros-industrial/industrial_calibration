@@ -30,5 +30,4 @@ install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
 
 script:
-  - source .travis_ceres.sh
   - source .ci_config/travis.sh
