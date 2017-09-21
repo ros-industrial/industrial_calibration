@@ -19,12 +19,9 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf
   tf_conversions
-<<<<<<< HEAD
   pcl_ros
   pcl_conversions
-=======
   dynamic_reconfigure
->>>>>>> kinetic-devel
 )
 
 find_package(Boost REQUIRED)

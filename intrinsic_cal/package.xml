@@ -26,25 +26,7 @@
   <depend>ceres-solver</depend>
 
   <build_depend>message_generation</build_depend>
-  <build_depend>rosconsole</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>roslib</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>std_srvs</build_depend>
   <build_depend>robo_cylinder</build_depend>
-
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>image_view</run_depend>
-  <run_depend>industrial_extrinsic_cal</run_depend>
-  <run_depend>message_runtime</run_depend>
-  <run_depend>nodelet</run_depend>
-  <run_depend>rosconsole</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>roslib</run_depend>
-  <run_depend>rviz</run_depend>
-  <run_depend>std_msgs</run_depend>
-  <run_depend>std_srvs</run_depend>
-  <run_depend>robo_cylinder</run_depend>
 
   <exec_depend>image_view</exec_depend>
   <exec_depend>message_runtime</exec_depend>

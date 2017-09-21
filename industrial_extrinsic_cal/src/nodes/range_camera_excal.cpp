@@ -151,7 +151,7 @@ action_server_(nh_,"run_calibration",boost::bind(&RangeExCalService::actionCallb
   industrial_extrinsic_cal::CameraParameters temp_parameters;
   temp_parameters.height = image_height_;
   temp_parameters.width = image_width_;
-  camera_ = make_shared<industrial_extrinsic_cal::Camera>(camera_name_, temp_parameters, false);
+  camera_ = shared_ptr<industrial_extrinsic_cal::Camera>(new industrial_extrinsic_cal::Camera(camera_name_, temp_parameters, false));
   // use the same service type as ususal for calibration, no need to create a new one
   range_excal_server_ =nh.advertiseService(service_name.c_str(), &RangeExCalService::executeCallBack, this);
   action_server_.start();
@@ -177,13 +177,13 @@ bool RangeExCalService::executeCallBack( industrial_extrinsic_cal::calibrate::Re
 
   // set initial conditions to something that should converge when looking more or less straight at a target
   shared_ptr<industrial_extrinsic_cal::TransformInterface>  temp_ti = 
-    make_shared<industrial_extrinsic_cal::ROSSimpleCameraCalTInterface>(camera_frame_,  camera_mounting_frame_);
+    shared_ptr<industrial_extrinsic_cal::ROSSimpleCameraCalTInterface>(new industrial_extrinsic_cal::ROSSimpleCameraCalTInterface(camera_frame_,  camera_mounting_frame_));
   std::string ref_frame("dummy");
   temp_ti->setReferenceFrame(ref_frame);
   camera_->setTransformInterface(temp_ti);
   camera_->pullTransform();
 
-  camera_->camera_observer_ = make_shared<ROSCameraObserver>(image_topic_, camera_name_);
+  camera_->camera_observer_ = shared_ptr<ROSCameraObserver>(new ROSCameraObserver(image_topic_, camera_name_));
   camera_->camera_observer_->clearObservations();
   camera_->camera_observer_->clearTargets();
 

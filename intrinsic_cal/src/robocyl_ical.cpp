@@ -44,7 +44,6 @@
 
 using std::string;
 using boost::shared_ptr;
-using boost::make_shared;
 using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solver;
@@ -184,9 +183,9 @@ RobocylCalService::RobocylCalService(ros::NodeHandle nh)
   }
 
   bool is_moving = true;
-  camera_ =  make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
-  camera_->trigger_ = make_shared<NoWaitTrigger>();
-  camera_->camera_observer_ = make_shared<ROSCameraObserver>(image_topic_, camera_name_);
+  camera_ =  shared_ptr<industrial_extrinsic_cal::Camera>(new industrial_extrinsic_cal::Camera("my_camera", camera_parameters_, is_moving));
+  camera_->trigger_ = shared_ptr<NoWaitTrigger>(new NoWaitTrigger());
+  camera_->camera_observer_ = shared_ptr<ROSCameraObserver>(new ROSCameraObserver(image_topic_, camera_name_));
   sleep(15); // wait for camera to come up or else this will fail
   if(!camera_->camera_observer_->pullCameraInfo(camera_->camera_parameters_.focal_length_x,
                                            camera_->camera_parameters_.focal_length_y,
@@ -266,10 +265,9 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
   roi.y_max = image_height_;
 
   industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::CameraReprjErrorWithDistortion;
-  Problem problem; // note, a new problem gets created each time execute is called, so old observation data is not re-used.
+  Problem problem;
 
   // set initial conditions,
-  // Need to use setQuaternion because setBasis does not work for some rotations (results in flipped yaw values and negative focal lengths)
   target_->pose_.setQuaternion(qx_, qy_, qz_, qw_);
   target_->pose_.setOrigin(0.011, 0.05, D0_);
   target_->pose_.show("initial target pose");
@@ -278,11 +276,9 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
   pnh.setParam("camera_ready", camera_ready);
   for(int i=0; i<num_camera_locations_; i++){
     double rail_position = i*camera_spacing_;
-    ROS_ERROR("moving to %lf",rail_position);
+    ROS_INFO("moving to %lf",rail_position);
     mm_request.meters = rail_position;
     move_client_.call(mm_request, mm_response); // this call blocks until camera is moved
-    // wait for camera to be moved
-    //    ros::Duration(0.2).sleep();
 
     // gather next image
     camera_->camera_observer_->clearTargets();
@@ -298,7 +294,7 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
     }
     
     // add a new cost to the problem for each observation
-    CostFunction* cost_function[num_observations]; // not sure I need a new cost function each time, but this just uses memory
+    CostFunction* cost_function[num_observations];
     total_observations += num_observations;
     for(int i=0; i<num_observations; i++){
       double image_x = camera_observations[i].image_loc_x;
@@ -372,7 +368,7 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
 
 void RobocylCalService::initMCircleTarget(int rows, int cols, double circle_dia, double spacing)
 {
-  target_ =  make_shared<industrial_extrinsic_cal::Target>();
+  target_ =  shared_ptr<industrial_extrinsic_cal::Target>(new industrial_extrinsic_cal::Target());
   target_->is_moving_ = true;
   target_->target_name_ = "modified_circle_target";
   target_->target_frame_ = "target_frame";

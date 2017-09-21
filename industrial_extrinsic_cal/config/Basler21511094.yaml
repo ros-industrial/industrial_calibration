@@ -1,0 +1,20 @@
+image_width: 1920
+image_height: 1080
+camera_name: Cam4
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [2842.152065230675, 0, 920.91196427773, 0, 2839.714917384135, 516.8552062611545, 0, 0, 1]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [-0.0271741191733914, -3.551659227806504, -0.002642630816295111, 0.004983995473932737, 26.02579570384752]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [2842.152065230675, 0, 920.91196427773, 0, 0, 2839.714917384135, 516.8552062611545, 0, 0, 0, 1, 0]
