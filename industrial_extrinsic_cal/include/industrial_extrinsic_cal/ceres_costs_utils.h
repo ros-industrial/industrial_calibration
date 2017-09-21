@@ -53,6 +53,8 @@ namespace industrial_extrinsic_cal
       LinkCameraCircleTargetReprjErrorPK,
       FixedCircleTargetCameraReprjErrorPK,
       RailICal,
+      RailICal3,
+      DistortedCameraFinder,
       RailICalNoDistortion,
       RangeSensorExtrinsicCal,
       NullCostType

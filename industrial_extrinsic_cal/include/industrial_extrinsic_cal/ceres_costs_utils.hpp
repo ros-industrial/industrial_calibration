@@ -674,6 +674,7 @@ namespace industrial_extrinsic_cal
     double cy_; /*!< known optical center of camera in y */
   };
 
+
   class TriangulationError
   {
   public:
@@ -2399,6 +2400,71 @@ namespace industrial_extrinsic_cal
     double oy_; /** observed y location of object in image */
     Point3d rail_position_; /** location of camera along rail */
     Point3d point_; /** point expressed in target coordinates */
+  };
+  class DistortedCameraFinder
+  {
+  public:
+    DistortedCameraFinder(double ob_x, double ob_y, double fx, double fy,
+                     double cx, double cy, double k1, double k2, double k3, double p1, double p2,
+                          Point3d point) :
+        ox_(ob_x), oy_(ob_y), fx_(fx), fy_(fy), cx_(cx), cy_(cy),
+        k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2),
+        point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(const T* const c_p1, /** extrinsic parameters */
+                    T* residual) const
+    {
+      const T *camera_aa(&c_p1[0]);
+      const T *camera_tx(&c_p1[3]);
+      T camera_point[3]; /** point in camera coordinates */
+
+      /** transform point into camera coordinates */
+      transformPoint3d(camera_aa, camera_tx, point_, camera_point);
+
+      /** compute project point into image plane and compute residual */
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      T k1 = T(k1_);
+      T k2 = T(k2_);
+      T k3 = T(k3_);
+      T p1 = T(p1_);
+      T p2 = T(p2_);
+      cameraPntResidualDist(camera_point, fx, fy, cx, cy, ox, oy, k1, k2, k3, p1, p2, residual);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y, 
+				       const double fx, const double fy, 
+				       const double cx, const double cy,
+                                       const double k1, const double k2, const double k3,
+                                       const double p1, const double p2,
+                                       Point3d point)
+    {
+      return (new ceres::AutoDiffCostFunction<DistortedCameraFinder, 2, 6>(
+          new DistortedCameraFinder(o_x, o_y, fx, fy, cx, cy, k1, k2, k3, p1, p2, point)));
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double fx_; /*!< known focal length of camera in x */
+    double fy_; /*!< known focal length of camera in y */
+    double cx_; /*!< known optical center of camera in x */
+    double cy_; /*!< known optical center of camera in y */
+    double k1_; /*!< known radial distorition k1 */
+    double k2_; /*!< known radial distorition k2 */
+    double k3_; /*!< known radial distorition k3 */
+    double p1_; /*!< known decentering distorition p1 */
+    double p2_; /*!< known decentering distorition p2 */
+    Point3d point_; /*!< known location of point in target coordinates */
   };
 
   class  RailICalNoDistortion

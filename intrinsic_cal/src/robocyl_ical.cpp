@@ -63,6 +63,7 @@ public:
   RobocylCalService(ros::NodeHandle nh);
   ~RobocylCalService()  {  } ;
   bool executeCallBack( intrinsic_cal::rail_ical_run::Request &req, intrinsic_cal::rail_ical_run::Response &res);
+  bool MoveAndReportPose(double rail_position, Pose6d &P);
   void  initMCircleTarget(int rows, int cols, double circle_dia, double spacing);
   void cameraCallback(const sensor_msgs::Image& image);
 
@@ -94,6 +95,7 @@ private:
   double D0_;
   double qx_, qy_, qz_, qw_;
   CameraParameters camera_parameters_;
+  double allowable_cost_per_observation_;
 };
 
 RobocylCalService::RobocylCalService(ros::NodeHandle nh)
@@ -101,6 +103,7 @@ RobocylCalService::RobocylCalService(ros::NodeHandle nh)
   
   nh_ = nh;
   ros::NodeHandle pnh("~");
+  allowable_cost_per_observation_ = 1.0;
 
   if(!pnh.getParam( "image_topic", image_topic_)){
     ROS_ERROR("Must set param:  image_topic");
@@ -234,6 +237,7 @@ void RobocylCalService::cameraCallback(const sensor_msgs::Image &image)
 
 bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req, intrinsic_cal::rail_ical_run::Response &res)
 {
+  allowable_cost_per_observation_ = req.allowable_cost_per_observation;
   ros::NodeHandle nh;
   CameraObservations camera_observations;
   robo_cylinder::MoveMeters::Request mm_request; /**< request when transform is part of a mutable set */
@@ -257,6 +261,26 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
   power_client_.call(pio_request, pio_response);
   home_client_.call(hc_request, hc_response);
 
+  Pose6d P1,P2;
+  MoveAndReportPose(0.0,P1);
+  MoveAndReportPose((num_camera_locations_-1)*camera_spacing_,P2);
+  Point3d mv; // motion vector
+  mv.x = P1.x-P2.x;
+  mv.y = P1.y-P2.y;
+  mv.z = P1.z-P2.z;
+
+  double magnitude = sqrt(mv.x*mv.x + mv.y*mv.y + mv.z*mv.z);
+  if(magnitude>0.0){
+    mv.x = mv.x/magnitude;
+    mv.y = mv.y/magnitude;
+    mv.z = mv.z/magnitude;
+  }
+  else{
+    mv.x = 0;
+    mv.y = 0;
+    mv.z = 1;
+  }
+  
   // set the roi to the whole image
   Roi roi;
   roi.x_min = 0;
@@ -275,9 +299,14 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
   bool camera_ready = false;
   pnh.setParam("camera_ready", camera_ready);
   for(int i=0; i<num_camera_locations_; i++){
-    double rail_position = i*camera_spacing_;
-    ROS_INFO("moving to %lf",rail_position);
-    mm_request.meters = rail_position;
+    double Dist = i*camera_spacing_;
+    Point3d rail_position;
+    rail_position.x = Dist*mv.x;
+    rail_position.y = Dist*mv.y;
+    rail_position.z = Dist*mv.z;
+        
+    ROS_INFO("moving to %lf",Dist);
+    mm_request.meters = Dist;
     move_client_.call(mm_request, mm_response); // this call blocks until camera is moved
 
     // gather next image
@@ -300,12 +329,10 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
       double image_x = camera_observations[i].image_loc_x;
       double image_y = camera_observations[i].image_loc_y;
       Point3d point = target_->pts_[i]; // assume correct ordering from camera observer
-      cost_function[i] = industrial_extrinsic_cal::RailICal::Create(image_x, image_y, -rail_position, point);
+      cost_function[i] = industrial_extrinsic_cal::RailICal3::Create(image_x, image_y, rail_position, point);
       problem.AddResidualBlock(cost_function[i], NULL ,
              camera_->camera_parameters_.pb_intrinsics,
              target_->pose_.pb_pose);
-      double residual[2];
-      industrial_extrinsic_cal::RailICal RC(image_x, image_y, -rail_position, point);
     } // for each observation at this camera_location
   }// for each camera_location
 
@@ -363,6 +390,104 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
       ROS_ERROR("allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
       return(false);
     }
+  }
+}
+
+bool RobocylCalService::MoveAndReportPose(double rail_position, Pose6d &P)
+{
+  ros::NodeHandle nh;
+  CameraObservations camera_observations;
+  robo_cylinder::MoveMeters::Request mm_request; /**< request when transform is part of a mutable set */
+  robo_cylinder::MoveMeters::Response mm_response; /**< request when transform is part of a mutable set */
+  int num_observations;
+  int total_observations=0;
+  double fx,fy,cx,cy;
+  double k1,k2,k3,p1,p2;
+
+  fx = camera_->camera_parameters_.focal_length_x;
+  fy = camera_->camera_parameters_.focal_length_y;
+  cx = camera_->camera_parameters_.center_x;
+  cy = camera_->camera_parameters_.center_y;
+  k1 = camera_->camera_parameters_.distortion_k1;
+  k2 = camera_->camera_parameters_.distortion_k2;
+  k3 = camera_->camera_parameters_.distortion_k3;
+  p1 = camera_->camera_parameters_.distortion_p1;
+  p2 = camera_->camera_parameters_.distortion_p2;;
+
+  camera_->camera_observer_->clearObservations();
+  camera_->camera_observer_->clearTargets();
+
+  // set the roi to the whole image
+  Roi roi;
+  roi.x_min = 0;
+  roi.y_min = 0;
+  roi.x_max = image_width_;
+  roi.y_max = image_height_;
+  industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::DistortedCameraFinder;
+  Problem problem;
+  Pose6d pose;
+
+  // set initial conditions,
+  pose.setQuaternion(qx_, qy_, qz_, qw_);
+  pose.setOrigin(0.011, 0.05, D0_+rail_position);
+
+  // Move camera into position
+  ROS_INFO("moving to %lf",rail_position);
+  mm_request.meters = rail_position;
+  move_client_.call(mm_request, mm_response);
+  
+  // gather next image
+  camera_->camera_observer_->clearTargets();
+  camera_->camera_observer_->clearObservations();
+  camera_->camera_observer_->addTarget(target_, roi, cost_type);
+  camera_->camera_observer_->triggerCamera();
+  while (!camera_->camera_observer_->observationsDone()) ;
+  camera_->camera_observer_->getObservations(camera_observations);
+  ROS_INFO("Found %d observations",(int) camera_observations.size());
+  num_observations = (int) camera_observations.size();
+  if(num_observations != target_rows_* target_cols_){
+    ROS_ERROR("Target Locator could not find target %d", num_observations);
+    P = pose;
+    return(false);
+  }
+  
+  // add a new cost to the problem for each observation
+  CostFunction* cost_function[num_observations];
+  total_observations += num_observations;
+  for(int i=0; i<num_observations; i++){
+    double image_x = camera_observations[i].image_loc_x;
+    double image_y = camera_observations[i].image_loc_y;
+    Point3d point = target_->pts_[i]; // assume correct ordering from camera observer
+    cost_function[i] =  industrial_extrinsic_cal::DistortedCameraFinder::Create(image_x, image_y, fx, fy, cx, cy, k1, k2, k3, p1, p2, point);
+    problem.AddResidualBlock(cost_function[i], NULL, pose.pb_pose);
+  } 
+
+  // set up and solve the problem
+  Solver::Options options;
+  Solver::Summary summary;
+  options.linear_solver_type = ceres::DENSE_SCHUR;
+  options.minimizer_progress_to_stdout = true;
+  options.max_num_iterations = 2000;
+  ceres::Solve(options, &problem, &summary);
+  if(summary.termination_type != ceres::NO_CONVERGENCE){
+    double initial_cost = summary.initial_cost/total_observations;
+    double final_cost = summary.final_cost/total_observations;
+    if(final_cost <= allowable_cost_per_observation_){
+      ROS_INFO("Found Pose, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
+      target_->pose_.show("target_pose");
+      P = pose;
+      return true;
+    }
+    else{
+      ROS_ERROR("finding pose: allowable cost exceeded %f > %f", final_cost, allowable_cost_per_observation_);
+      P = pose;
+      return(false);
+    }
+  }
+  else{
+    ROS_ERROR("finding pose: No Convergence");
+    P = pose;
+    return(false);
   }
 }
 
