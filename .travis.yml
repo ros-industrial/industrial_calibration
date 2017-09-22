@@ -21,10 +21,13 @@ env:
       ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
       NOT_TEST_BUILD=true
       NOT_TEST_INSTALL=true
-
+    - ROS_DISTRO="indigo"
+      PRERELEASE=true
+matrix:
+  allow_failures:
+    - env: ROS_DISTRO="indigo" PRERELEASE=true
 install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
 
 script:
-  - source .travis_ceres.sh
   - source .ci_config/travis.sh
