@@ -107,6 +107,8 @@ catkin_package(
     std_srvs
     tf
     tf_conversions
+    pcl_ros
+    pcl_conversions
   DEPENDS
     Boost
     CERES
