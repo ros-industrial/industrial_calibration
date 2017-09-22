@@ -10,6 +10,8 @@ notifications:
     on_failure: never
 
 env:
+  global:
+    - BEFORE_SCRIPT=.travis_ceres.sh
   matrix:
     - USE_DEB=true
       ROS_DISTRO="indigo"
@@ -29,5 +31,4 @@ install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
 
 script:
-  - source .travis_ceres.sh
-  - source .ci_config/travis.sh
+  - .ci_config/travis.sh
