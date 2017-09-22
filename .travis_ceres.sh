@@ -1,14 +1,11 @@
 #!/bin/sh
 #http://ceres-solver.org/
 
-# Dependency for Ceres
-sudo apt-get -qq install -y libeigen3-dev
-
 # Save current directory
 dir=`pwd`
 cd ..
 
-# glfags
+# gflags
 wget https://github.com/gflags/gflags/archive/v2.1.2.zip
 unzip v2.1.2.zip > /dev/null
 rm v2.1.2.zip
