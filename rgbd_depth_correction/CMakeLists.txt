@@ -8,7 +8,6 @@ find_package(catkin REQUIRED COMPONENTS
   industrial_extrinsic_cal
   message_filters
   nodelet
-  openni2_camera
   pcl_conversions
   pcl_msgs
   pcl_ros
