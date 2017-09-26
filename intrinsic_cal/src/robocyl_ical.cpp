@@ -180,8 +180,15 @@ RobocylCalService::RobocylCalService(ros::NodeHandle nh)
 
   if(!use_quaternion)
   {
-    qx_ = 1.0;
-    qy_ = qz_ = qw_ = 0.0;
+    tf::Matrix3x3 m;
+    m[0][0] = 1; m[0][1] =   0; m[0][2] = 0;
+    m[1][0] = 0; m[1][1] = -1.; m[1][2] = 0;
+    m[2][0] = 0; m[2][1] =   0; m[2][2] = -1;
+    Pose6d Ptemp;
+    Ptemp.setBasis(m);
+    Ptemp.setOrigin(-0.1, -0.1, D0_);
+    Ptemp.getQuaternion(qx_, qy_, qz_, qw_);
+    Ptemp.show("initial pose");
     ROS_WARN("parameters qx, qy, qz, and qw not provided, using default values of (%.2f, %.2f, %.2f, %.2f)", qx_, qy_, qz_, qw_);
   }
 
@@ -474,7 +481,7 @@ bool RobocylCalService::MoveAndReportPose(double rail_position, Pose6d &P)
     double final_cost = summary.final_cost/total_observations;
     if(final_cost <= allowable_cost_per_observation_){
       ROS_INFO("Found Pose, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
-      target_->pose_.show("target_pose");
+      pose.show("Returned Pose");
       P = pose;
       return true;
     }
