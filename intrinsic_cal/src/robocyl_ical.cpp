@@ -271,11 +271,17 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
   Pose6d P1,P2;
   MoveAndReportPose(0.0,P1);
   MoveAndReportPose((num_camera_locations_-1)*camera_spacing_,P2);
-  Point3d mv; // motion vector
-  mv.x = P1.x-P2.x;
-  mv.y = P1.y-P2.y;
-  mv.z = P1.z-P2.z;
+  Point3d tv; // motion vector from targets point of view
+  tv.x = P1.x-P2.x;
+  tv.y = P1.y-P2.y;
+  tv.z = P1.z-P2.z;
 
+  Point3d mv; // motion vector from camera's point of view
+  tf::Matrix3x3 R = P1.getBasis(R); 
+  mv.x = R[0][0]*tv.x + R[0][1]*tv.y + R[0][2]*tv.z;
+  mv.y = R[1][0]*tv.x + R[1][1]*tv.y + R[1][2]*tv.z;
+  mv.z = R[2][0]*tv.x + R[2][1]*tv.y + R[2][2]*tv.z;
+  
   double magnitude = sqrt(mv.x*mv.x + mv.y*mv.y + mv.z*mv.z);
   if(magnitude>0.0){
     mv.x = mv.x/magnitude;
