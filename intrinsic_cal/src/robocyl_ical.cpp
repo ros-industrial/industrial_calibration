@@ -268,31 +268,15 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
   power_client_.call(pio_request, pio_response);
   home_client_.call(hc_request, hc_response);
 
-  Pose6d P1,P2;
-  MoveAndReportPose(0.0,P1);
-  MoveAndReportPose((num_camera_locations_-1)*camera_spacing_,P2);
-  Point3d tv; // motion vector from targets point of view
-  tv.x = P1.x-P2.x;
-  tv.y = P1.y-P2.y;
-  tv.z = P1.z-P2.z;
-
-  Point3d mv; // motion vector from camera's point of view
-  tf::Matrix3x3 R = P1.getBasis(R); 
-  mv.x = R[0][0]*tv.x + R[0][1]*tv.y + R[0][2]*tv.z;
-  mv.y = R[1][0]*tv.x + R[1][1]*tv.y + R[1][2]*tv.z;
-  mv.z = R[2][0]*tv.x + R[2][1]*tv.y + R[2][2]*tv.z;
-  
-  double magnitude = sqrt(mv.x*mv.x + mv.y*mv.y + mv.z*mv.z);
-  if(magnitude>0.0){
-    mv.x = mv.x/magnitude;
-    mv.y = mv.y/magnitude;
-    mv.z = mv.z/magnitude;
-  }
-  else{
-    mv.x = 0;
-    mv.y = 0;
-    mv.z = 1;
-  }
+  Pose6d TtoC1, TtoC2; // transforms points in target frame into either Camera1 or Camera2 frames
+  Pose6d C1toT, C2toT; // transforms points in camera1,2 frames into Target Frame
+  Pose6d C2toC1; // transform points in camera2 frame into camera1 frame 
+  MoveAndReportPose(0.0,TtoC1);
+  MoveAndReportPose((num_camera_locations_-1)*camera_spacing_,TtoC2);
+  C2toT = TtoC2.getInverse(); // this transform points in C2 frame into Target frame
+  C2toC1 = TtoC1*C2toT; // this transforms points in C2 frame into Target then into C1 frame as one multiply
+  tf::Vector3 mv = C2toC1.getOrigin(); // the origin is the vector in C1 coordinates
+  mv.normalize();
   
   // set the roi to the whole image
   Roi roi;
@@ -314,9 +298,9 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
   for(int i=0; i<num_camera_locations_; i++){
     double Dist = i*camera_spacing_;
     Point3d rail_position;
-    rail_position.x = Dist*mv.x;
-    rail_position.y = Dist*mv.y;
-    rail_position.z = Dist*mv.z;
+    rail_position.x = Dist*mv.getX();
+    rail_position.y = Dist*mv.getY();
+    rail_position.z = Dist*mv.getZ();
         
     ROS_INFO("moving to %lf",Dist);
     mm_request.meters = Dist;
