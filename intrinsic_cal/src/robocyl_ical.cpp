@@ -341,7 +341,7 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
     for(int i=0; i<num_observations; i++){
       double image_x = camera_observations[i].image_loc_x;
       double image_y = camera_observations[i].image_loc_y;
-      Point3d point = target_->pts_[i]; // assume correct ordering from camera observer
+      Point3d point = target_->pts_[camera_observations[i].point_id]; // don't assume ordering from camera observer
       cost_function[i] = industrial_extrinsic_cal::RailICal3::Create(image_x, image_y, rail_position, point);
       problem.AddResidualBlock(cost_function[i], NULL ,
              camera_->camera_parameters_.pb_intrinsics,
@@ -470,7 +470,7 @@ bool RobocylCalService::MoveAndReportPose(double rail_position, Pose6d &P)
   for(int i=0; i<num_observations; i++){
     double image_x = camera_observations[i].image_loc_x;
     double image_y = camera_observations[i].image_loc_y;
-    Point3d point = target_->pts_[i]; // assume correct ordering from camera observer
+    Point3d point = target_->pts_[camera_observations[i].point_id]; // don't assume ordering from camera observer
     cost_function[i] =  industrial_extrinsic_cal::DistortedCameraFinder::Create(image_x, image_y, fx, fy, cx, cy, k1, k2, k3, p1, p2, point);
     problem.AddResidualBlock(cost_function[i], NULL, pose.pb_pose);
   } 
