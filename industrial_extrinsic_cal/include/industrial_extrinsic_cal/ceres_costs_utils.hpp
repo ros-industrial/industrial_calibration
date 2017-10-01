@@ -2436,7 +2436,7 @@ namespace industrial_extrinsic_cal
       T k3 = T(k3_);
       T p1 = T(p1_);
       T p2 = T(p2_);
-      cameraPntResidualDist(camera_point, fx, fy, cx, cy, ox, oy, k1, k2, k3, p1, p2, residual);
+      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
       return true;
     } /** end of operator() */
