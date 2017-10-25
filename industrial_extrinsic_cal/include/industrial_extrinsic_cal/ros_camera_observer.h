@@ -233,6 +233,11 @@ namespace industrial_extrinsic_cal
     bool load_observation_images_;
 
     /**
+     *  @brief Flag to indicate if the image used in pattern detection should be normalized.
+     */
+    bool normalize_calibration_image_;
+
+    /**
      *  @brief image_directory_ place to save images
      */
     std::string image_directory_;
