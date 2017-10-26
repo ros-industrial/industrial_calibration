@@ -94,17 +94,25 @@ namespace industrial_extrinsic_cal {
 	temp_parameters.position[1] = pose.y;
 	temp_parameters.position[2] = pose.z;
       }
-      if(!parseDouble(node, "focal_length_x", temp_parameters.focal_length_x)) ROS_ERROR("Can't read focal_length_x");
-      if(!parseDouble(node, "focal_length_y", temp_parameters.focal_length_y)) ROS_ERROR("Can't read focal_length_y");
-      if(!parseDouble(node, "center_x", temp_parameters.center_x)) ROS_ERROR("Can't read center_x");
-      if(!parseDouble(node, "center_y", temp_parameters.center_y)) ROS_ERROR("Can't read center_y");
-      if(!parseDouble(node, "distortion_k1", temp_parameters.distortion_k1)) ROS_ERROR("Can't read distortion_k1");
-      if(!parseDouble(node, "distortion_k2", temp_parameters.distortion_k2)) ROS_ERROR("Can't read distortion_k2");
-      if(!parseDouble(node, "distortion_k3", temp_parameters.distortion_k3)) ROS_ERROR("Can't read distortion_k2");
-      if(!parseDouble(node, "distortion_p1", temp_parameters.distortion_p1)) ROS_ERROR("Can't read distortion_p1");
-      if(!parseDouble(node, "distortion_p2", temp_parameters.distortion_p2)) ROS_ERROR("Can't read distortion_p2");
-      if(!parseInt(node, "image_height", temp_parameters.height)) ROS_ERROR("Can't read image_height");
-      if(!parseInt(node, "image_width", temp_parameters.width)) ROS_ERROR("Can't read image_width");
+      ROSCameraObserver camera_observer(temp_topic, temp_name);
+      if(!camera_observer.pullCameraInfo(temp_parameters.focal_length_x, temp_parameters.focal_length_y, temp_parameters.center_x,
+                                         temp_parameters.center_y, temp_parameters.distortion_k1, temp_parameters.distortion_k2,
+                                         temp_parameters.distortion_k3, temp_parameters.distortion_p1, temp_parameters.distortion_p2,
+                                         temp_parameters.width, temp_parameters.height))
+      {
+        ROS_WARN("Could not get camera info from topic, attempting to parse parameters from yaml file.");
+        if(!parseDouble(node, "focal_length_x", temp_parameters.focal_length_x)) ROS_ERROR("Can't read focal_length_x");
+        if(!parseDouble(node, "focal_length_y", temp_parameters.focal_length_y)) ROS_ERROR("Can't read focal_length_y");
+        if(!parseDouble(node, "center_x", temp_parameters.center_x)) ROS_ERROR("Can't read center_x");
+        if(!parseDouble(node, "center_y", temp_parameters.center_y)) ROS_ERROR("Can't read center_y");
+        if(!parseDouble(node, "distortion_k1", temp_parameters.distortion_k1)) ROS_ERROR("Can't read distortion_k1");
+        if(!parseDouble(node, "distortion_k2", temp_parameters.distortion_k2)) ROS_ERROR("Can't read distortion_k2");
+        if(!parseDouble(node, "distortion_k3", temp_parameters.distortion_k3)) ROS_ERROR("Can't read distortion_k2");
+        if(!parseDouble(node, "distortion_p1", temp_parameters.distortion_p1)) ROS_ERROR("Can't read distortion_p1");
+        if(!parseDouble(node, "distortion_p2", temp_parameters.distortion_p2)) ROS_ERROR("Can't read distortion_p2");
+        if(!parseInt(node, "image_height", temp_parameters.height)) ROS_ERROR("Can't read image_height");
+        if(!parseInt(node, "image_width", temp_parameters.width)) ROS_ERROR("Can't read image_width");
+      }
     
       // create a shared camera and a shared transform interface
       temp_camera = boost::make_shared<Camera>(temp_name, temp_parameters, false);
