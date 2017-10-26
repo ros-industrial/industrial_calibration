@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   roslib
   std_msgs
   std_srvs
+  robo_cylinder
 )
 
 find_package(Ceres REQUIRED)
@@ -50,15 +51,17 @@ include_directories(
   ${CERES_INCLUDE_DIRS}
 )
 
-
 add_executable(rail_ical src/rail_cal.cpp)
+add_executable(robocyl_ical src/robocyl_ical.cpp)
 add_dependencies(rail_ical ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(robocyl_ical ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(rail_ical ${catkin_LIBRARIES} ${CERES_LIBRARIES})
-
+target_link_libraries(robocyl_ical ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 
 install(
   TARGETS
     rail_ical
+    robocyl_ical
   RUNTIME DESTINATION
     ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

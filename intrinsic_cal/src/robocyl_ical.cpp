@@ -30,12 +30,21 @@
 #include <industrial_extrinsic_cal/ceres_costs_utils.h> 
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp> 
 #include <intrinsic_cal/rail_ical_run.h>
+#include <intrinsic_cal/rail_ical_run.h>
+#include <intrinsic_cal/rail_ical_run.h>
+#include <robo_cylinder/HomeCmd.h>
+#include <robo_cylinder/MoveMeters.h>
+#include <robo_cylinder/MovePulses.h>
+#include <robo_cylinder/PowerIO.h>
+#include <robo_cylinder/StatusUpdate.h>
+#include <robo_cylinder/VelAcc.h>
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
 #include "ceres/types.h"
 
 using std::string;
 using boost::shared_ptr;
+using boost::make_shared;
 using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solver;
@@ -49,11 +58,11 @@ using industrial_extrinsic_cal::Camera;
 using industrial_extrinsic_cal::CameraParameters;
 using industrial_extrinsic_cal::NoWaitTrigger;
 
-class RailCalService 
+class RobocylCalService 
 {
 public:
-  RailCalService(ros::NodeHandle nh);
-  ~RailCalService()  {  } ;
+  RobocylCalService(ros::NodeHandle nh);
+  ~RobocylCalService()  {  } ;
   bool executeCallBack( intrinsic_cal::rail_ical_run::Request &req, intrinsic_cal::rail_ical_run::Response &res);
   void  initMCircleTarget(int rows, int cols, double circle_dia, double spacing);
   void cameraCallback(const sensor_msgs::Image& image);
@@ -63,6 +72,9 @@ private:
   ros::ServiceServer rail_cal_server_;
   ros::Subscriber rgb_sub_;
   ros::Publisher rgb_pub_;
+  ros::ServiceClient move_client_; /**< a client for calling the service to move the robo-cylinder to a new location */
+  ros::ServiceClient power_client_; /**< a client for calling the service to turn on the robo-cylinder */
+  ros::ServiceClient home_client_; /**< a client for calling the service to move robo-cylinder to its home position */
   shared_ptr<Target> target_;
   shared_ptr<Camera> camera_;
   double focal_length_x_;
@@ -85,7 +97,7 @@ private:
   CameraParameters camera_parameters_;
 };
 
-RailCalService::RailCalService(ros::NodeHandle nh)
+RobocylCalService::RobocylCalService(ros::NodeHandle nh)
 {
   
   nh_ = nh;
@@ -143,9 +155,25 @@ RailCalService::RailCalService(ros::NodeHandle nh)
       }
     }
   }
+  string move_client_name("/move_meters");
+  if(!pnh.getParam( "move_client", move_client_name)){
+    ROS_WARN("move_client = %s", move_client_name.c_str());
+  }
+  string power_client_name("/power_io");
+  if(!pnh.getParam( "power_client", power_client_name)){
+    ROS_WARN("power_client = %s", power_client_name.c_str());
+  }
+  string home_client_name("/home");
+  if(!pnh.getParam( "home_client", home_client_name)){
+    ROS_WARN("home_client = %s", home_client_name.c_str());
+  }
+
+  move_client_  = nh.serviceClient<robo_cylinder::MoveMeters>(move_client_name);
+  power_client_  = nh.serviceClient<robo_cylinder::PowerIO>(power_client_name);
+  home_client_  = nh.serviceClient<robo_cylinder::HomeCmd>(home_client_name);
 
   u_int32_t queue_size = 5;
-  rgb_sub_ = nh_.subscribe("color_image", queue_size, &RailCalService::cameraCallback, this);
+  rgb_sub_ = nh_.subscribe("color_image", queue_size, &RobocylCalService::cameraCallback, this);
   rgb_pub_ = nh_.advertise<sensor_msgs::Image>("color_image_center", 1);
 
   if(!use_quaternion)
@@ -156,9 +184,9 @@ RailCalService::RailCalService(ros::NodeHandle nh)
   }
 
   bool is_moving = true;
-  camera_ =  boost::make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
-  camera_->trigger_ = boost::make_shared<NoWaitTrigger>();
-  camera_->camera_observer_ = boost::make_shared<ROSCameraObserver>(image_topic_, camera_name_);
+  camera_ =  make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
+  camera_->trigger_ = make_shared<NoWaitTrigger>();
+  camera_->camera_observer_ = make_shared<ROSCameraObserver>(image_topic_, camera_name_);
   if(!camera_->camera_observer_->pullCameraInfo(camera_->camera_parameters_.focal_length_x,
                                            camera_->camera_parameters_.focal_length_y,
                                            camera_->camera_parameters_.center_x,
@@ -169,18 +197,10 @@ RailCalService::RailCalService(ros::NodeHandle nh)
                                            camera_->camera_parameters_.distortion_p1,
                                            camera_->camera_parameters_.distortion_p2,
                                            image_width_, image_height_))
-    {
-      ROS_ERROR("Couldn't get camera information for %s from topic %s, using defaults.", camera_name_.c_str(), image_topic_.c_str());
-      camera_->camera_parameters_.focal_length_x = 1500.0;
-      camera_->camera_parameters_.focal_length_y  = 1500.0;
-      camera_->camera_parameters_.center_x = 800.0;
-      camera_->camera_parameters_.center_y = 600.0;
-      camera_->camera_parameters_.distortion_k1 = 0.0;
-      camera_->camera_parameters_.distortion_k2 = 0.0;
-      camera_->camera_parameters_.distortion_k3 = 0.0;
-      camera_->camera_parameters_.distortion_p1 = 0.0;
-      camera_->camera_parameters_.distortion_p2 = 0.0;
-    }
+  {
+    ROS_FATAL("Could not get camera information for %s from topic %s. Shutting down node.", camera_name_.c_str(), image_topic_.c_str());
+    ros::shutdown();
+  }
 
   ROS_INFO("initial camera info focal:%f %f center:%f %f  radial:%f %f %f tang: %f %f",
             camera_->camera_parameters_.focal_length_x,
@@ -194,16 +214,16 @@ RailCalService::RailCalService(ros::NodeHandle nh)
             camera_->camera_parameters_.distortion_p2);
             
   initMCircleTarget(target_rows_, target_cols_, circle_diameter_, circle_spacing_);
-  rail_cal_server_ = nh_.advertiseService( "RailCalService", &RailCalService::executeCallBack, this);
+ 
+  rail_cal_server_ = nh_.advertiseService( "RobocylCalService", &RobocylCalService::executeCallBack, this);
 }
 
-void RailCalService::cameraCallback(const sensor_msgs::Image &image)
+void RobocylCalService::cameraCallback(const sensor_msgs::Image &image)
 {
   cv_bridge::CvImagePtr bridge = cv_bridge::toCvCopy(image, image.encoding);
 
   cv::Mat mod_img = bridge->image;
-  //mod_img *= 12 ;
-  cv::circle(mod_img, cv::Point2d(image.width / 2.0, image.height / 2.0), image.width / 30.0, cv::Scalar(175,0,0), image.width / 40.0);
+  cv::circle(mod_img, cv::Point2d(image.width / 2.0, image.height / 2.0), 4, cv::Scalar(255,0,0), 2);
   bridge->image = mod_img;
 
   sensor_msgs::Image out_img;
@@ -212,10 +232,17 @@ void RailCalService::cameraCallback(const sensor_msgs::Image &image)
 
 }
 
-bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req, intrinsic_cal::rail_ical_run::Response &res)
+bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req, intrinsic_cal::rail_ical_run::Response &res)
 {
   ros::NodeHandle nh;
   CameraObservations camera_observations;
+  robo_cylinder::MoveMeters::Request mm_request; /**< request when transform is part of a mutable set */
+  robo_cylinder::MoveMeters::Response mm_response; /**< request when transform is part of a mutable set */
+  robo_cylinder::PowerIO::Request pio_request; /**< request when transform is part of a mutable set */
+  robo_cylinder::PowerIO::Response pio_response; /**< request when transform is part of a mutable set */
+  robo_cylinder::HomeCmd::Request hc_request; /**< request when transform is part of a mutable set */
+  robo_cylinder::HomeCmd::Response hc_response; /**< request when transform is part of a mutable set */
+
   int num_observations ;
   int total_observations=0;
   double rxry[2]; // pitch and yaw of camera relative to rail
@@ -224,6 +251,11 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
 
   camera_->camera_observer_->clearObservations();
   camera_->camera_observer_->clearTargets();
+
+  // turn power on to robo-cylinder, and move it home
+  pio_request.io = 1;
+  power_client_.call(pio_request, pio_response);
+  home_client_.call(hc_request, hc_response);
 
   // set the roi to the whole image
   Roi roi;
@@ -245,17 +277,12 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
   pnh.setParam("camera_ready", camera_ready);
   for(int i=0; i<num_camera_locations_; i++){
     double rail_position = i*camera_spacing_;
-    ROS_WARN("Move Camera to location %d which should be %lf meters from start. Then set camera_ready", i, i*camera_spacing_);
-
+    ROS_ERROR("moving to %lf",rail_position);
+    mm_request.meters = rail_position;
+    move_client_.call(mm_request, mm_response);
     // wait for camera to be moved
-    camera_ready = false;
-    pnh.setParam("camera_ready", camera_ready);
-    while(camera_ready == false){
-      if(!pnh.getParam("camera_ready", camera_ready)){
-        ROS_ERROR_THROTTLE(1, "parameter camera_ready does not exists");
-        ros::Duration(0.25).sleep();
-      }
-    }
+    ros::Duration(0.2).sleep();
+
     // gather next image
     camera_->camera_observer_->clearTargets();
     camera_->camera_observer_->clearObservations();
@@ -276,7 +303,6 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
       double image_x = camera_observations[i].image_loc_x;
       double image_y = camera_observations[i].image_loc_y;
       Point3d point = target_->pts_[i]; // assume correct ordering from camera observer
-      //cost_function[i] = industrial_extrinsic_cal::RailICalNoDistortion::Create(image_x, image_y, rail_position, point);
       cost_function[i] = industrial_extrinsic_cal::RailICal::Create(image_x, image_y, rail_position, point);
       problem.AddResidualBlock(cost_function[i], NULL ,
              camera_->camera_parameters_.pb_intrinsics,
@@ -343,9 +369,9 @@ bool RailCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &req
   }
 }
 
-void RailCalService::initMCircleTarget(int rows, int cols, double circle_dia, double spacing)
+void RobocylCalService::initMCircleTarget(int rows, int cols, double circle_dia, double spacing)
 {
-  target_ =  boost::make_shared<industrial_extrinsic_cal::Target>();
+  target_ =  make_shared<industrial_extrinsic_cal::Target>();
   target_->is_moving_ = true;
   target_->target_name_ = "modified_circle_target";
   target_->target_frame_ = "target_frame";
@@ -372,7 +398,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "rail_cal_service");
   ros::NodeHandle node_handle;
-  RailCalService rail_cal(node_handle);
+  RobocylCalService rail_cal(node_handle);
   ros::spin();
   ros::waitForShutdown();
   return 0;

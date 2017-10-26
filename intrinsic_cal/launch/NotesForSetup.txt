@@ -1,0 +1,29 @@
+1. To set up the robocylinder, one usually has to at least home it using their software. Unfortunately, this software runs on an old computer. Find that old computer, connect the usb-to-serial adaptor, figure out what com-port it shows up as, start the PC Interface Software for RC&E-Con. and run a home command. 
+
+2. Move the usb-to-serial adaptor to the linux station you are using to calibrate.
+3. Change the permissions on the ttyUSB0 port or similar using 'sudo chmod oug+rwx /dev/ttyUSB0'
+4. Make sure your camera node is using a camera_publisher complete with the mechanism for saving intrinsic parameters once they have been updated. Most camera nodes to this, but some do not. One can still calibrate, but the output has to be put somewhere. ROS convention is that the camera node maintains the intrinsic file.
+
+The railical method requries several nodes and nodelets. Here is a list and their function:
+
+package: intelligent_actuator/robo_cylinder
+   launch file: robo_cylinder.launch 
+   node: car_link_broadcaster    # this just allows rviz to display the location of the rail's car
+   node: robo_control  #provides services to power up, home, and move the robo_cylinder stage to varius locations
+                                 # note, that this node needs some work. Often the cylinder is told to move but does not. It needs to
+                                 # verify that the move is done by monitoring the location
+package: industrial_calibration/intrinsic_cal
+      launch file: robocyl_ical.launch
+      node:  B1_view # (just image_view to display the raw camera image
+      node: Basler1 # publishes the camera image, and provides services for updating the intrinsic parameters
+      node: image_proc_nodelet1  # does image rectification , debayering etc using the current intrinsic parameters
+      node: observation_view   # just image_view to display the observation results
+      node: rectify1                  # not sure what this does
+      node: robocyl_intrinsic_calibration # master node that orchestates the process
+
+Lots of things are now done through manual service calls.
+1.  rosservice call /RobocylCalService "allowable_cost_per_observation: 0.25" 
+2. you may want to manualy move the robocylinder 
+       rosservice call /home_service
+       rosservice call /power_io 1
+       rosservice call /move_meters 0.5

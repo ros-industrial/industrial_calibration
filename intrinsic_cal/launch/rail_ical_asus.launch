@@ -45,12 +45,12 @@
           <param name="image_topic" value="$(arg asus_camera_name)/rgb/image_raw" unless="$(arg ir)"/>
           <remap from="color_image" to="/$(arg asus_camera_name)/rgb/image_raw" unless="$(arg ir)"/>
 
-          <param name="target_rows" value="7" />
-          <param name="target_cols" value="5" />
-          <param name="target_circle_dia" value="0.05" />
-          <param name="target_spacing" value="0.07" />
-          <param name="num_camera_locations" value="24" />
-          <param name="camera_spacing" value="0.10" />
+          <param name="target_rows" value="20" />
+          <param name="target_cols" value="33" />
+          <param name="target_circle_dia" value="0.0063" />
+          <param name="target_spacing" value="0.025393" />
+          <param name="num_camera_locations" value="8" />
+          <param name="camera_spacing" value="0.050" />
           <param name="target_to_rail_distance" value="0.406" />
      </node>
 

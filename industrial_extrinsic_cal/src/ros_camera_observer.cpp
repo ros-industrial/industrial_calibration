@@ -43,26 +43,26 @@ namespace industrial_extrinsic_cal
 
   // set up the circle detector
   CircleDetector::Params circle_params;
-  circle_params.thresholdStep = 10;
-  circle_params.minThreshold = 50;
-  circle_params.maxThreshold = 220;
-  circle_params.minRepeatability = 2;
-  circle_params.minDistBetweenCircles = 2.0;
-  circle_params.minRadiusDiff = 10;
+  circle_params.thresholdStep = 5;
+  circle_params.minThreshold = 120;
+  circle_params.maxThreshold = 250;
+  circle_params.minRepeatability = 5;
+  circle_params.minDistBetweenCircles = 10.0;
+  circle_params.minRadiusDiff = 20.0;
 
   circle_params.filterByColor = false;
   circle_params.circleColor = 0;
   
-  circle_params.filterByArea = false;
-  circle_params.minArea = 25;
-  circle_params.maxArea = 5000;
+  circle_params.filterByArea = true;
+  circle_params.minArea = 30;
+  circle_params.maxArea = 8000;
   
   circle_params.filterByCircularity = false;
   circle_params.minCircularity = 0.8f;
   circle_params.maxCircularity = std::numeric_limits<float>::max();
   
-  circle_params.filterByInertia = false;
-  circle_params.minInertiaRatio = 0.1f;
+  circle_params.filterByInertia = true;
+  circle_params.minInertiaRatio = 0.8f;
   circle_params.maxInertiaRatio = std::numeric_limits<float>::max();
   
   circle_params.filterByConvexity = false;
@@ -181,7 +181,6 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   bool successful_find = false;
   bool flipped_successful_find = false;
 
-
   if (input_bridge_->image.cols < input_roi_.width || input_bridge_->image.rows < input_roi_.height)
   {
     ROS_ERROR("ROI too big for image size ( image = %d by %d roi= %d %d )", 
@@ -263,7 +262,7 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
         if(use_circle_detector_){
           ROS_DEBUG("using circle_detector, to find %dx%d modified circle grid", pattern_rows_, pattern_cols_);
           successful_find = cv::findCirclesGrid(image_roi_, pattern_size, centers,
-            cv::CALIB_CB_SYMMETRIC_GRID, circle_detector_ptr_);
+						cv::CALIB_CB_SYMMETRIC_GRID, circle_detector_ptr_);
           if(!successful_find)
           {
             successful_find = cv::findCirclesGrid(image_roi_, pattern_size_flipped, centers,
@@ -782,58 +781,59 @@ bool ROSCameraObserver::pushCameraInfo(double &fx,
 					 double &p1,
 					 double &p2)
 {
-  if(camera_name_.empty()){
-    ROS_ERROR("camera name is not set, cannot pull camera info from topic");
-    return(false);
-  }
-  std::string camera_info_topic = camera_name_ + "/camera_info";
-  const sensor_msgs::CameraInfoConstPtr& info_msg = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic);
-  if(info_msg->K[0]  ==0){
-    ROS_ERROR("camera info msg not correct");
-    return(false);
-  }
-  k1 = info_msg->D[0];
-  k2 = info_msg->D[1];
-  p1 = info_msg->D[2];
-  p2 = info_msg->D[3];
-  k3 = info_msg->D[4];
-  fx = info_msg->K[0];
-  cx = info_msg->K[2];
-  fy = info_msg->K[4];
-  cy = info_msg->K[5];
-  return(true);
+  int height,width;
+  return(pullCameraInfo(fx,fy,cx,cy,k1,k2,k3,p1,p2,width,height));
 }
 
 bool  ROSCameraObserver::pullCameraInfo(double &fx, double &fy,
            double &cx, double &cy, double &k1, double &k2, double &k3,
            double &p1, double &p2, int &width, int &height)
 {
+  bool rtn = true;
   if(camera_name_.empty()){
     ROS_ERROR("camera name is not set, cannot pull camera info from topic");
-    return(false);
+    rtn = false;
   }
   std::string camera_info_topic = "/" + camera_name_ + "/camera_info";
-  const sensor_msgs::CameraInfoConstPtr& info_msg = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic, ros::Duration(10.0));
+  const sensor_msgs::CameraInfoConstPtr& info_msg =
+    ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic, ros::Duration(3.0));
+
   if(info_msg == NULL)
   {
     ROS_ERROR("camera info message not available for camera %s on topic %s", camera_name_.c_str(), camera_info_topic.c_str());
-    return(false);
+    rtn = false;
   }
-  if(info_msg->K[0]  ==0){
+  else  if(info_msg->K[0]  ==0){
     ROS_ERROR("camera info message not correct for camera %s on topic %s", camera_name_.c_str(), camera_info_topic.c_str());
-    return(false);
+    rtn = false;
   }
-  k1 = info_msg->D[0];
-  k2 = info_msg->D[1];
-  p1 = info_msg->D[2];
-  p2 = info_msg->D[3];
-  k3 = info_msg->D[4];
-  fx = info_msg->K[0];
-  cx = info_msg->K[2];
-  fy = info_msg->K[4];
-  cy = info_msg->K[5];
-  width = info_msg->width;
-  height = info_msg->height;
-  return(true);
+  if(rtn == false){
+    ROS_ERROR("All intrinsics and image height and width are set to -1, YOUR RESULTS MAY BE GARBAGE");
+    fx = -1;
+    fy = -1;
+    cx = -1;
+    cy = -1;
+    k1 = -1;
+    k2 = -1;
+    k3 = -1;
+    p1 = -1;
+    p2 = -1;
+    height = -1;
+    width = -1;
+  }
+  else{
+    k1 = info_msg->D[0];
+    k2 = info_msg->D[1];
+    p1 = info_msg->D[2];
+    p2 = info_msg->D[3];
+    k3 = info_msg->D[4];
+    fx = info_msg->K[0];
+    cx = info_msg->K[2];
+    fy = info_msg->K[4];
+    cy = info_msg->K[5];
+    width = info_msg->width;
+    height = info_msg->height;
+  }
+  return(rtn);
 }
 } //industrial_extrinsic_cal

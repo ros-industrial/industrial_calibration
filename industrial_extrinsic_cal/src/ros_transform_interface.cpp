@@ -436,7 +436,8 @@ namespace industrial_extrinsic_cal
     get_client_    = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
     set_client_    = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
     store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
-
+    
+    get_request_.joint_names.clear();
     get_request_.joint_names.push_back(transform_frame+"_x_joint");
     get_request_.joint_names.push_back(transform_frame+"_y_joint");
     get_request_.joint_names.push_back(transform_frame+"_z_joint");
@@ -517,12 +518,19 @@ namespace industrial_extrinsic_cal
     transform_frame_               = transform_frame;
     parent_frame_                     = parent_frame; 
     ref_frame_initialized_         = false;    // still need to initialize ref_frame_
-    nh_ = new ros::NodeHandle;
+    nh_ = new ros::NodeHandle();
 
     get_client_    = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
     set_client_    = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
     store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
 
+    std::string get_service_name = get_client_.getService();
+    std::string set_service_name = set_client_.getService();
+    std::string store_service_name = store_client_.getService();
+    while(!get_client_.exists()){
+      sleep(1);
+      ROS_ERROR("Waiting for client %s", get_service_name.c_str());
+    }
     get_request_.joint_names.push_back(transform_frame+"_x_joint");
     get_request_.joint_names.push_back(transform_frame+"_y_joint");
     get_request_.joint_names.push_back(transform_frame+"_z_joint");
@@ -537,13 +545,16 @@ namespace industrial_extrinsic_cal
     set_request_.joint_names.push_back(transform_frame+"_pitch_joint");
     set_request_.joint_names.push_back(transform_frame+"_roll_joint");
 
-    if(get_client_.call(get_request_,get_response_)){
-      for(int i=0;i<(int) get_response_.joint_values.size();i++){
-	joint_values_.push_back(get_response_.joint_values[i]);
+    if(!get_client_.call(get_request_,get_response_)){
+      ROS_ERROR("Error with get_client, check these names");
+      for(int i=0; i<get_request_.joint_names.size();i++){
+	ROS_ERROR("name requested: %s", get_request_.joint_names[i].c_str());
       }
     }
     else{
-      ROS_ERROR("get_client_ returned false");
+      for(int i=0;i<(int) get_response_.joint_values.size();i++){
+	joint_values_.push_back(get_response_.joint_values[i]);
+      }
     }
 
   }				
@@ -581,8 +592,12 @@ namespace industrial_extrinsic_cal
     set_request_.joint_values.push_back(ez);
     set_request_.joint_values.push_back(ey);
     set_request_.joint_values.push_back(ex);
-    set_client_.call(set_request_,set_response_);
-
+    if(!set_client_.call(set_request_,set_response_)){
+      ROS_ERROR("Push Transform Failed");
+    }
+    else{
+      ROS_INFO("pose = %f %f %f %f %f %f", ipose.x, ipose.y, ipose.z, ez, ey, ex);
+    }
     return(true);
   }
 

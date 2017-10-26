@@ -2350,5 +2350,109 @@ namespace industrial_extrinsic_cal
     Point3d point_; /** point expressed in target coordinates */
   };
 
+  class  RailICalNoDistortion
+  {
+  public:
+    RailICalNoDistortion(double ob_x, double ob_y, double rail_position, Point3d point) :
+      ox_(ob_x), oy_(ob_y), rail_position_(rail_position), point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(	    const T* const c_p1,  /**intrinsics [4] */
+            const T* const c_p2,  /**target_pose [6] */
+            T* residual) const
+    {
+      T fx, fy, cx, cy;      // extract intrinsics
+      extractCameraIntrinsics(c_p1, fx, fy, cx, cy);
+      const T *target_aa(& c_p2[0]); // extract target's angle axis
+      const T *target_tx(& c_p2[3]); // extract target's position
+
+      /** transform point into camera frame */
+      T camera_point[3]; /** point in camera coordinates */
+      transformPoint3d(target_aa, target_tx, point_, camera_point);
+      camera_point[2] = camera_point[2] + T(rail_position_); // transform to camera's location along rail
+
+      /** compute project point into image plane and compute residual */
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y,
+                       const double rail_position,
+                       Point3d point)
+    {
+      return (new ceres::AutoDiffCostFunction<RailICal, 2, 4, 6>
+          (
+           new RailICal(o_x, o_y, rail_position, point)
+           )
+          );
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double rail_position_; /** location of camera along rail */
+    Point3d point_; /** point expressed in target coordinates */
+  };
+  /* @brief rangeSensorExtrinsic This cost function is to be used for extrinsic calibration of a 3D camera. 
+   * This is used when the focal lenghts, optical center and distortion parameters used to get the 3D data
+   * are not available. Instead, we have the point cloud and an intensity image. We use the intensity
+   * image to find the centers of the cirlces of the calibration target and then assume that the same index 
+   * in the point cloud corresponds to the x,y,z location of this point.
+   * This assumption is probably erroneous because rectification of the intensity image is usually performed 
+   * prior to generation of the point cloud. 
+   * Solving extrinsic cal for a range sensor is equivalent to the inner computation of ICP where correspondence
+   * is perfectly known. There exists an analytic solution. 
+   */ 
+  class  RangeSensorExtrinsicCal
+  {
+  public:
+    RangeSensorExtrinsicCal(double ob_x, double ob_y, double ob_z, Point3d point) :
+      ox_(ob_x), oy_(ob_y), oz_(ob_z),
+      point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(	    const T* const c_p1,  /**extriniscs [6] */
+		    T* residual) const
+    {
+      const T *camera_aa(& c_p1[0]); // extract camera's angle axis
+      const T *camera_tx(& c_p1[3]); // extract camera's position
+
+      /** transform point into camera frame */
+      T camera_point[3]; /** point in camera coordinates */
+      transformPoint3d(camera_aa, camera_tx, point_, camera_point);
+
+      /** compute residual */
+      residual[0] = camera_point[0] - T(ox_);
+      residual[1] = camera_point[1] - T(oy_);
+      residual[2] = camera_point[2] - T(oz_);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y,  const double o_z,
+				       Point3d point)
+    {
+      return (new ceres::AutoDiffCostFunction<RangeSensorExtrinsicCal, 3, 6>
+	      (
+	       new RangeSensorExtrinsicCal(o_x, o_y, o_z, point)
+	       )
+	      );
+    }
+    double ox_; /** observed x location of object in 3D data */
+    double oy_; /** observed y location of object in 3D data */
+    double oz_; /** observed z location of object in 3D data */
+    Point3d point_; /** point expressed in target coordinates */
+  };
+
+
 } // end of namespace
 #endif

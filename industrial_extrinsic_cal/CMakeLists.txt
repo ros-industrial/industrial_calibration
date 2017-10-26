@@ -18,6 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf
   tf_conversions
+  pcl_ros
+  pcl_conversions
 )
 
 find_package(Boost REQUIRED)
@@ -107,6 +109,8 @@ catkin_package(
     std_srvs
     tf
     tf_conversions
+    pcl_ros
+    pcl_conversions
   DEPENDS
     Boost
     CERES
@@ -164,12 +168,16 @@ add_executable(nist_analysis                    src/nodes/nist_analysis.cpp)
 add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
 add_executable(service_node                     src/nodes/calibration_service.cpp)
 add_executable(trigger_service                  src/nodes/ros_scene_trigger_server.cpp)
+add_executable(range_excal                  src/nodes/range_camera_excal.cpp)
+add_executable(rangeNmono                  src/nodes/rangeNmono_excal.cpp)
 
 add_dependencies(camera_observer_scene_trigger    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(mutable_joint_state_publisher    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(ros_robot_trigger_action_service ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(service_node                     ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(trigger_service                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+add_dependencies(range_excal                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+add_dependencies(rangeNmono                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 
 target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY} ${CERES_LIBRARIES})
 target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES})
@@ -180,7 +188,8 @@ target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
 #target_link_libraries(test_obs industrial_extrinsic_cal ${yaml_cpp_LIBRARY} ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(trigger_service ${catkin_LIBRARIES})
-
+target_link_libraries(range_excal industrial_extrinsic_cal ${CERES_LIBRARIES})
+target_link_libraries(rangeNmono industrial_extrinsic_cal ${CERES_LIBRARIES})
 
 install(
   TARGETS
@@ -193,6 +202,8 @@ install(
     ros_robot_trigger_action_service
     service_node
     trigger_service
+    range_excal
+    rangeNmono
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
