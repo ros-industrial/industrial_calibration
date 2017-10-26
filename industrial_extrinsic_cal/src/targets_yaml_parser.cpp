@@ -62,6 +62,11 @@ namespace industrial_extrinsic_cal {
         }
       }
 
+      if(targets.size() == 0)
+      {
+        ROS_ERROR_STREAM("No valid targets found in file " << target_file.c_str());
+        return false;
+      }
       ROS_INFO_STREAM((int) targets.size() << " targets " << n_static << " static " << n_moving << " moving");
     }
     catch (YAML::ParserException& e){

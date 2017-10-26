@@ -58,6 +58,11 @@ namespace industrial_extrinsic_cal {
         }
       }
 
+      if(cameras.size() == 0)
+      {
+        ROS_ERROR_STREAM("No valid cameras found in file " << cameras_input_file.c_str());
+        return false;
+      }
       ROS_INFO_STREAM((int) cameras.size() << " cameras " <<n_static <<" static " << n_moving << " moving");
     }
     catch (YAML::ParserException& e){
