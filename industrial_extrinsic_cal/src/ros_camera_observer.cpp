@@ -25,8 +25,14 @@ namespace industrial_extrinsic_cal
 {
 
 ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic, const std::string &camera_name) :
-  sym_circle_(true), pattern_(pattern_options::Chessboard), pattern_rows_(0), pattern_cols_(0), new_image_collected_(false), 
-  store_observation_images_(false), load_observation_images_(false), image_directory_(""), image_number_(0), 
+  sym_circle_(true),
+  pattern_(pattern_options::Chessboard), pattern_rows_(0), pattern_cols_(0),
+  new_image_collected_(false),
+  store_observation_images_(false),
+  load_observation_images_(false),
+  normalize_calibration_image_(false),
+  image_directory_(""),
+  image_number_(0),
   camera_name_(camera_name)
 {
   image_topic_ = camera_topic;  
@@ -39,6 +45,7 @@ ROSCameraObserver::ROSCameraObserver(const std::string &camera_topic, const std:
   pnh.getParam("image_directory", image_directory_);
   pnh.getParam("store_observation_images", store_observation_images_);
   pnh.getParam("load_observation_images", load_observation_images_);
+  pnh.getParam("normalize_calibration_image", normalize_calibration_image_);
 
   // set up blob/circle detectors parameters are dynamic
   cv::SimpleBlobDetector::Params simple_blob_params;
@@ -147,6 +154,16 @@ int ROSCameraObserver::getObservations(CameraObservations &cam_obs)
   ROS_DEBUG("roi size = %d %d", input_roi_.height, input_roi_.width);
   ROS_DEBUG("image size = %d %d", input_bridge_->image.rows, input_bridge_->image.cols);
   image_roi_ = input_bridge_->image(input_roi_);
+
+  //Do a min/max normalization for maximum contrast
+  //input_bridge_ is known to be a mono8 image (max = 255)
+  if (normalize_calibration_image_)
+  {
+    cv::Mat norm_img = image_roi_.clone();
+    cv::normalize(image_roi_, norm_img, 0, 255, cv::NORM_MINMAX);
+    image_roi_ = norm_img;
+  }
+
   ROS_DEBUG("image_roi_ size = %d %d", image_roi_.rows, image_roi_.cols);
   observation_pts_.clear();
   std::vector<cv::KeyPoint> key_points;
