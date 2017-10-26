@@ -29,29 +29,40 @@ namespace industrial_extrinsic_cal {
     try{
       Node camera_doc;
       if(!yamlNodeFromFileName(cameras_input_file, camera_doc)){
-	ROS_ERROR("Can't parse yaml file %s",cameras_input_file.c_str());
+        ROS_ERROR("Can't parse yaml file %s",cameras_input_file.c_str());
       }
       cameras.clear();
 
       // read in all static cameras
       int n_static=0;
       const YAML::Node& camera_parameters = parseNode(camera_doc, "static_cameras");
-      for (unsigned int i = 0; i < camera_parameters.size(); i++){
-	shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
-	cameras.push_back(temp_camera);
-	n_static++;
+      if(camera_parameters)
+      {
+        for (unsigned int i = 0; i < camera_parameters.size(); i++){
+          shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
+          cameras.push_back(temp_camera);
+          n_static++;
+        }
       }
 
       // read in all moving cameras
       int n_moving=0;
       const YAML::Node& camera_parameters2 = parseNode(camera_doc, "moving_cameras");
-      for (unsigned int i = 0; i < camera_parameters2.size(); i++){
-	shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters2[i]);
-	temp_camera->is_moving_ = true;
-	cameras.push_back(temp_camera);
-	  n_moving++;
+      if(camera_parameters2)
+      {
+        for (unsigned int i = 0; i < camera_parameters2.size(); i++){
+          shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters2[i]);
+          temp_camera->is_moving_ = true;
+          cameras.push_back(temp_camera);
+          n_moving++;
+        }
       }
 
+      if(cameras.size() == 0)
+      {
+        ROS_ERROR_STREAM("No valid cameras found in file " << cameras_input_file.c_str());
+        return false;
+      }
       ROS_INFO_STREAM((int) cameras.size() << " cameras " <<n_static <<" static " << n_moving << " moving");
     }
     catch (YAML::ParserException& e){
