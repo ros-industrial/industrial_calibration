@@ -28,8 +28,6 @@
 
 namespace industrial_extrinsic_cal
 {
-
-
 /*! \brief a command to take a set of observations from a group of cameras upon a trigger event */
 class ObservationScene
 {
@@ -37,8 +35,7 @@ public:
   /*! \brief Constructor,
    *   \param Trigger the type of trigger to initiate this observation
    */
-  ObservationScene(boost::shared_ptr<Trigger> trigger, int scene_id) :
-      scene_id_(scene_id)
+  ObservationScene(boost::shared_ptr< Trigger > trigger, int scene_id) : scene_id_(scene_id)
   {
     trigger_ = trigger;
   };
@@ -49,7 +46,6 @@ public:
     observation_command_list_.clear();
     cameras_in_scene_.clear();
   };
-
 
   /*! \brief  Clears all observations from the command */
   void clear();
@@ -65,7 +61,7 @@ public:
    * \brief Adds a camera to the scene
    * @param cameras_in_scene
    */
-  void addCameraToScene(boost::shared_ptr<Camera> cameras_in_scene);
+  void addCameraToScene(boost::shared_ptr< Camera > cameras_in_scene);
 
   /*!
    * \brief will populate the observation_command_list_
@@ -74,7 +70,8 @@ public:
    * @param roi the region of interest for this observation command
    * @param cost_type type of cost function to build with this observation
    */
-  void populateObsCmdList(boost::shared_ptr<Camera> camera, boost::shared_ptr<Target> target, Roi roi, Cost_function cost_type);
+  void populateObsCmdList(boost::shared_ptr< Camera > camera, boost::shared_ptr< Target > target, Roi roi,
+                          Cost_function cost_type);
 
   /*! \brief gets the id of this scene */
   int get_id()
@@ -82,9 +79,8 @@ public:
     return (scene_id_);
   };
 
-
   /*! \brief gets the trigger of this scene */
-  boost::shared_ptr<Trigger> get_trigger()
+  boost::shared_ptr< Trigger > get_trigger()
   {
     return (trigger_);
   };
@@ -102,20 +98,20 @@ public:
    * \brief set the trigger for this scene
    * @param trigger
    */
-  void setTrigger(boost::shared_ptr<Trigger>  trigger)
+  void setTrigger(boost::shared_ptr< Trigger > trigger)
   {
     trigger_ = trigger;
   };
 
-  std::vector<ObservationCmd> observation_command_list_; /*!< list of observations for a scene */
-  std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scene */
+  std::vector< ObservationCmd > observation_command_list_;      /*!< list of observations for a scene */
+  std::vector< boost::shared_ptr< Camera > > cameras_in_scene_; /*!< list of cameras in this scene */
 
 private:
-  boost::shared_ptr<Trigger>  trigger_; /*!< event to trigger the observations in this command */
-  int scene_id_; /*!< unique identifier of this scene */
+  boost::shared_ptr< Trigger > trigger_; /*!< event to trigger the observations in this command */
+  int scene_id_;                         /*!< unique identifier of this scene */
 };
 // end of class ObservationScene
 
-}//end namespace industrial_extrinsic_cal
+}  // end namespace industrial_extrinsic_cal
 
 #endif /* OBSERVATION_SCENE_H_ */

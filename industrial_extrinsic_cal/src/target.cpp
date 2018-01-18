@@ -19,25 +19,24 @@
 
 namespace industrial_extrinsic_cal
 {
-
-  void Target::pushTransform()
-  {
-    transform_interface_->pushTransform(pose_);
-  }
-  void Target::pullTransform()
-  {
-    pose_ = transform_interface_->pullTransform();
-  }
-  void Target::setTransformInterface(boost::shared_ptr<TransformInterface> transform_interface)
-  {
-    transform_interface_ = transform_interface;
-  }
-  boost::shared_ptr<TransformInterface> Target::getTransformInterface()
-  {
-    return(transform_interface_);
-  }
-  void Target::setTIReferenceFrame(std::string ref_frame)
-  {
-    transform_interface_->setReferenceFrame(ref_frame);
-  }
-}// end of namespace
+void Target::pushTransform()
+{
+  transform_interface_->pushTransform(pose_);
+}
+void Target::pullTransform()
+{
+  pose_ = transform_interface_->pullTransform();
+}
+void Target::setTransformInterface(boost::shared_ptr< TransformInterface > transform_interface)
+{
+  transform_interface_ = transform_interface;
+}
+boost::shared_ptr< TransformInterface > Target::getTransformInterface()
+{
+  return (transform_interface_);
+}
+void Target::setTIReferenceFrame(std::string ref_frame)
+{
+  transform_interface_->setReferenceFrame(ref_frame);
+}
+}  // end of namespace

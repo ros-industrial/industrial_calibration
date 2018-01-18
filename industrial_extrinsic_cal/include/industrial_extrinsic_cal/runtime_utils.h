@@ -37,18 +37,15 @@ namespace industrial_extrinsic_cal
 class ROSRuntimeUtils
 {
 public:
-
   /**
    * @brief constructor
    */
-  ROSRuntimeUtils()
-  {  };
+  ROSRuntimeUtils(){};
 
   /**
    * @brief Default destructor
    */
-  ~ROSRuntimeUtils()
-  {
+  ~ROSRuntimeUtils(){
 
   };
 
@@ -57,15 +54,15 @@ public:
    * @param optimized_input
    * @return Tranform to be published/broadcasted
    */
-  tf::Transform pblockToPose(industrial_extrinsic_cal::P_BLOCK &optimized_input);
-  tf::Transform pblockToPose2(industrial_extrinsic_cal::P_BLOCK &optimized_input);
+  tf::Transform pblockToPose(industrial_extrinsic_cal::P_BLOCK& optimized_input);
+  tf::Transform pblockToPose2(industrial_extrinsic_cal::P_BLOCK& optimized_input);
   /**
    * @brief saved final calibrated transforms as launch file
    * @param package_name directory to package path
    * @param file_name name to save under package path
    * @return true if tf's successfully written to file
    */
-  bool store_tf_broadcasters(std::string &package_name, std::string &file_name);
+  bool store_tf_broadcasters(std::string& package_name, std::string& file_name);
   /**
    * @brief file containing camera definition parameters
    */
@@ -85,63 +82,61 @@ public:
   /**
    *  @brief name frame for target points
    */
-  std::vector<std::string> target_frame_;
+  std::vector< std::string > target_frame_;
   /**
    *  @brief name of camera frame in which observations were made
    */
-  std::vector<std::string> camera_optical_frame_;
+  std::vector< std::string > camera_optical_frame_;
   /**
    *  @brief name of camera frame which links camera optical frame to reference frame
    */
-  std::vector<std::string> camera_intermediate_frame_;
+  std::vector< std::string > camera_intermediate_frame_;
 
-  //CalJob specific
+  // CalJob specific
   /**
    *  @brief set of initial extrinsics of camera(s)
    */
-  std::vector<industrial_extrinsic_cal::P_BLOCK> initial_extrinsics_;
+  std::vector< industrial_extrinsic_cal::P_BLOCK > initial_extrinsics_;
   /**
    *  @brief set of calibrated extrinsics of camera(s)
    */
-  std::vector<industrial_extrinsic_cal::P_BLOCK> calibrated_extrinsics_;
+  std::vector< industrial_extrinsic_cal::P_BLOCK > calibrated_extrinsics_;
   /**
    *  @brief set of calibrated extrinsics of target(s)
    */
-  std::vector<industrial_extrinsic_cal::P_BLOCK> target_poses_;
+  std::vector< industrial_extrinsic_cal::P_BLOCK > target_poses_;
 
-
-  //TF specific
+  // TF specific
   /**
    *  @brief set of initial transform of camera(s)
    */
-  std::vector<tf::Transform> initial_transforms_;
+  std::vector< tf::Transform > initial_transforms_;
   /**
    *  @brief set of resultant calibrated transform of camera(s)
    */
-  std::vector<tf::Transform> calibrated_transforms_;
+  std::vector< tf::Transform > calibrated_transforms_;
   /**
    *  @brief set of transforms of from camera intermediate to camera optical frames
    */
-  std::vector<tf::StampedTransform> camera_internal_transforms_;
+  std::vector< tf::StampedTransform > camera_internal_transforms_;
   /**
    *  @brief set of transforms of from camera intermediate to camera optical frames
    */
-  std::vector<tf::StampedTransform> points_to_world_transforms_;
+  std::vector< tf::StampedTransform > points_to_world_transforms_;
   /**
    *  @brief set target transforms
    */
-  std::vector<tf::Transform> target_transforms_;
+  std::vector< tf::Transform > target_transforms_;
   /**
    *  @brief set of broadcasters for transform of camera(s) and target(s)
    */
-  std::vector<tf::TransformBroadcaster> broadcasters_;
+  std::vector< tf::TransformBroadcaster > broadcasters_;
   /**
    *  @brief set of listeners for transform from camera intermediate to camera optical frames
    */
   tf::TransformListener listener_;
-
 };
 
-} //end industrial_extrinsic_cal namespace
+}  // end industrial_extrinsic_cal namespace
 
 #endif /* RUNTIME_UTILS_H_ */
