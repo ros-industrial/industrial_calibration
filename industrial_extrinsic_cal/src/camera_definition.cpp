@@ -16,12 +16,10 @@
  * limitations under the License.
  */
 
-
 #include <industrial_extrinsic_cal/camera_definition.h>
 
 namespace industrial_extrinsic_cal
 {
-
 using std::string;
 using boost::shared_ptr;
 using ceres::CostFunction;
@@ -31,8 +29,8 @@ Camera::Camera()
   is_moving_ = false;
 }
 
-Camera::Camera(string name, CameraParameters camera_parameters, bool is_moving) :
-    camera_name_(name), camera_parameters_(camera_parameters), is_moving_(is_moving)
+Camera::Camera(string name, CameraParameters camera_parameters, bool is_moving)
+  : camera_name_(name), camera_parameters_(camera_parameters), is_moving_(is_moving)
 {
 }
 
@@ -47,7 +45,8 @@ bool Camera::isMoving()
 void Camera::pushTransform()
 {
   Pose6d pose;
-  pose.setAngleAxis(camera_parameters_.angle_axis[0], camera_parameters_.angle_axis[1], camera_parameters_.angle_axis[2]);
+  pose.setAngleAxis(camera_parameters_.angle_axis[0], camera_parameters_.angle_axis[1],
+                    camera_parameters_.angle_axis[2]);
   pose.setOrigin(camera_parameters_.position[0], camera_parameters_.position[1], camera_parameters_.position[2]);
   transform_interface_->pushTransform(pose);
 }
@@ -57,32 +56,30 @@ void Camera::pullTransform()
   camera_parameters_.angle_axis[0] = pose.ax;
   camera_parameters_.angle_axis[1] = pose.ay;
   camera_parameters_.angle_axis[2] = pose.az;
-  camera_parameters_.position[0]    = pose.x;
-  camera_parameters_.position[1]    = pose.y;
-  camera_parameters_.position[2]    = pose.z;
+  camera_parameters_.position[0] = pose.x;
+  camera_parameters_.position[1] = pose.y;
+  camera_parameters_.position[2] = pose.z;
 }
-void Camera::setTransformInterface(boost::shared_ptr<TransformInterface> transform_interface)
+void Camera::setTransformInterface(boost::shared_ptr< TransformInterface > transform_interface)
 {
   transform_interface_ = transform_interface;
 }
-boost::shared_ptr<TransformInterface> Camera::getTransformInterface()
+boost::shared_ptr< TransformInterface > Camera::getTransformInterface()
 {
-  return(transform_interface_);
+  return (transform_interface_);
 }
-void Camera::setTIReferenceFrame(std::string & ref_frame)
+void Camera::setTIReferenceFrame(std::string& ref_frame)
 {
   transform_interface_->setReferenceFrame(ref_frame);
 }
 
-int Camera::getObservations(CameraObservations &camera_observations)
+int Camera::getObservations(CameraObservations& camera_observations)
 {
   camera_observations.clear();
   camera_observer_->getObservations(camera_observations);
-  for(int i=0; i<(int) camera_observations.size(); i++){// Add last pulled frame to observation's intermediate frame
-    camera_observations[i].intermediate_frame =  transform_interface_->getIntermediateFrame();
+  for (int i = 0; i < (int)camera_observations.size(); i++)
+  {  // Add last pulled frame to observation's intermediate frame
+    camera_observations[i].intermediate_frame = transform_interface_->getIntermediateFrame();
   }
 }
-}//end namespace industrial_extrinsic_cal
-
-
-
+}  // end namespace industrial_extrinsic_cal

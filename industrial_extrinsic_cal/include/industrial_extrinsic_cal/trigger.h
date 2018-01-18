@@ -21,30 +21,31 @@
 
 namespace industrial_extrinsic_cal
 {
-
 /*! @brief what kind of trigger initiates the collection of data for this scene */
 class Trigger
 { /** Trigger */
- public:
-    /*! \brief Constructor,
-     */
-  Trigger() { };
+public:
+  /*! \brief Constructor,
+   */
+  Trigger(){};
 
-    /*! \brief Destructor
-     */
+  /*! \brief Destructor
+   */
   virtual ~Trigger(){};
 
-    /*! \brief Initiates and waits for trigger to finish
-     */
-    virtual bool waitForTrigger()=0;
-
-} ;
-
- class NoWaitTrigger: public Trigger
-{
-  bool waitForTrigger(){return(true);}; // don't wait
+  /*! \brief Initiates and waits for trigger to finish
+   */
+  virtual bool waitForTrigger() = 0;
 };
 
-}// end of namespace
+class NoWaitTrigger : public Trigger
+{
+  bool waitForTrigger()
+  {
+    return (true);
+  };  // don't wait
+};
 
-#endif 
+}  // end of namespace
+
+#endif
