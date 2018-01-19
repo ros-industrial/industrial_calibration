@@ -17,21 +17,21 @@ namespace industrial_extrinsic_cal
  *   @param node, the yaml node
  *   @return a shared pointer to camera parsed
  **/
-boost::shared_ptr< Camera > parseSingleCamera(const YAML::Node& node);
+boost::shared_ptr<Camera> parseSingleCamera(const YAML::Node& node);
 /** @brief parses a transform interface
  *   @param node, the yaml node
  *   @param frame, the frame that the transform interface refers to
  *   @param pose, the initial value of the pose
  *   @return a shared pointer to transform interface parsed
  **/
-boost::shared_ptr< TransformInterface > parseTransformInterface(const YAML::Node& node, std::string& name,
-                                                                std::string& frame, Pose6d& pose);
+boost::shared_ptr<TransformInterface> parseTransformInterface(const YAML::Node& node, std::string& name,
+                                                              std::string& frame, Pose6d& pose);
 /** @brief parses a trigger
  *   @param node, the yaml node
  *   @param name name of trigger
  *   @return shared pointer to the trigger parsed
  **/
-boost::shared_ptr< Trigger > parseTrigger(const YAML::Node& node, std::string& name);
+boost::shared_ptr<Trigger> parseTrigger(const YAML::Node& node, std::string& name);
 /** @brief parses a Pose6d
  *   @param node, the yaml node
  *   @param pose as 6dof pose from parsed position and angle axis parameters xyz,wx,wy,wz
@@ -43,7 +43,7 @@ bool parsePose(const YAML::Node& node, Pose6d& pose);
  *   @param returned vector of shared pointers to cameras
  *   @return true if successful
  **/
-bool parseCameras(std::string& cameras_input_file, std::vector< boost::shared_ptr< Camera > >& cameras);
+bool parseCameras(std::string& cameras_input_file, std::vector<boost::shared_ptr<Camera> >& cameras);
 
 }  // end industrial_extrinsic_cal namespace
 

@@ -30,8 +30,8 @@ protected:
   ros::NodeHandle nh_;
 
 public:
-  typedef actionlib::SimpleActionServer< industrial_extrinsic_cal::robot_joint_values_triggerAction > JointValuesServer;
-  typedef actionlib::SimpleActionServer< industrial_extrinsic_cal::robot_pose_triggerAction > PoseServer;
+  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_joint_values_triggerAction> JointValuesServer;
+  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_pose_triggerAction> PoseServer;
 
   ServersNode(std::string name)
     : joint_value_server_(nh_, name + "_joint_values", boost::bind(&ServersNode::jointValueCallBack, this, _1), false)
@@ -54,10 +54,10 @@ public:
   void jointValueCallBack(const industrial_extrinsic_cal::robot_joint_values_triggerGoalConstPtr& goal)
   {
     // TODO send both values and names and make sure they match. This is critical or else robots will crash into stuff
-    std::vector< double > group_variable_values;
+    std::vector<double> group_variable_values;
     moveit::core::RobotStatePtr current_state = move_group_->getCurrentState();
     double* joint_value = current_state->getVariablePositions();
-    std::vector< std::string > var_names = current_state->getVariableNames();
+    std::vector<std::string> var_names = current_state->getVariableNames();
     if (var_names.size() == 7)
     {
       ROS_INFO("%d variables %s %s %s %s %s %s %s", (int)var_names.size(), var_names[0].c_str(), var_names[1].c_str(),
@@ -100,7 +100,7 @@ public:
               current_pose.pose.position.y, current_pose.pose.position.z, current_pose.pose.orientation.x,
               current_pose.pose.orientation.y, current_pose.pose.orientation.z, current_pose.pose.orientation.w);
     geometry_msgs::Pose target_pose;
-    std::vector< geometry_msgs::Pose > poses;
+    std::vector<geometry_msgs::Pose> poses;
     target_pose.position.x = goal->pose.position.x;
     target_pose.position.y = goal->pose.position.y;
     target_pose.position.z = goal->pose.position.z;

@@ -22,7 +22,7 @@ using YAML::Node;
 
 namespace industrial_extrinsic_cal
 {
-bool parseCameras(std::string& cameras_input_file, vector< shared_ptr< Camera > >& cameras)
+bool parseCameras(std::string& cameras_input_file, vector<shared_ptr<Camera> >& cameras)
 {
   Node camera_doc;
   bool rtn = true;
@@ -42,7 +42,7 @@ bool parseCameras(std::string& cameras_input_file, vector< shared_ptr< Camera > 
     {
       for (unsigned int i = 0; i < camera_parameters.size(); i++)
       {
-        shared_ptr< Camera > temp_camera = parseSingleCamera(camera_parameters[i]);
+        shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters[i]);
         cameras.push_back(temp_camera);
         n_static++;
       }
@@ -55,7 +55,7 @@ bool parseCameras(std::string& cameras_input_file, vector< shared_ptr< Camera > 
     {
       for (unsigned int i = 0; i < camera_parameters2.size(); i++)
       {
-        shared_ptr< Camera > temp_camera = parseSingleCamera(camera_parameters2[i]);
+        shared_ptr<Camera> temp_camera = parseSingleCamera(camera_parameters2[i]);
         temp_camera->is_moving_ = true;
         cameras.push_back(temp_camera);
         n_moving++;
@@ -76,9 +76,9 @@ bool parseCameras(std::string& cameras_input_file, vector< shared_ptr< Camera > 
   }
   return (rtn);
 }
-shared_ptr< Camera > parseSingleCamera(const Node& node)
+shared_ptr<Camera> parseSingleCamera(const Node& node)
 {
-  shared_ptr< Camera > temp_camera;
+  shared_ptr<Camera> temp_camera;
   try
   {
     string temp_name, temp_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame, parent_frame;
@@ -123,9 +123,9 @@ shared_ptr< Camera > parseSingleCamera(const Node& node)
     }
 
     // create a shared camera and a shared transform interface
-    temp_camera = boost::make_shared< Camera >(temp_name, temp_parameters, false);
+    temp_camera = boost::make_shared<Camera>(temp_name, temp_parameters, false);
     temp_camera->trigger_ = parseTrigger(node, trigger_name);
-    shared_ptr< TransformInterface > temp_ti =
+    shared_ptr<TransformInterface> temp_ti =
         parseTransformInterface(node, transform_interface, camera_optical_frame, pose);
     temp_camera->setTransformInterface(temp_ti);  // install the transform interface
     if (transform_available)
@@ -137,7 +137,7 @@ shared_ptr< Camera > parseSingleCamera(const Node& node)
     {
       temp_camera->pullTransform();
     }
-    temp_camera->camera_observer_ = boost::make_shared< ROSCameraObserver >(temp_topic, temp_name);
+    temp_camera->camera_observer_ = boost::make_shared<ROSCameraObserver>(temp_topic, temp_name);
   }
   catch (YAML::ParserException& e)
   {
@@ -157,38 +157,38 @@ shared_ptr< Camera > parseSingleCamera(const Node& node)
   return (temp_camera);
 }
 
-shared_ptr< Trigger > parseTrigger(const Node& node, string& name)
+shared_ptr<Trigger> parseTrigger(const Node& node, string& name)
 {
-  shared_ptr< Trigger > temp_trigger;
+  shared_ptr<Trigger> temp_trigger;
   std::string trig_param;
   std::string trig_action_server;
   std::string trig_action_msg;
   // handle all the different trigger cases
   if (name == string("NO_WAIT_TRIGGER"))
   {
-    temp_trigger = boost::make_shared< NoWaitTrigger >();
+    temp_trigger = boost::make_shared<NoWaitTrigger>();
   }
   else if (name == string("ROS_PARAM_TRIGGER"))
   {
     if (!parseString(node, "trig_param", trig_param)) ROS_ERROR("Can't read trig_param");
-    temp_trigger = boost::make_shared< ROSParamTrigger >(trig_param);
+    temp_trigger = boost::make_shared<ROSParamTrigger>(trig_param);
   }
   else if (name == string("ROS_ACTION_TRIGGER"))
   {
     if (!parseString(node, "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
     if (!parseString(node, "trig_action_msg", trig_action_msg)) ROS_ERROR("Can't read trig_action_msg");
-    temp_trigger = boost::make_shared< ROSActionServerTrigger >(trig_action_server, trig_action_msg);
+    temp_trigger = boost::make_shared<ROSActionServerTrigger>(trig_action_server, trig_action_msg);
   }
   else if (name == string("ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER"))
   {
     if (!parseString(node, "trig_action_server", trig_action_server)) ROS_ERROR("Can't read trig_action_server");
-    std::vector< double > joint_values;
+    std::vector<double> joint_values;
     if (!parseVectorD(node, "joint_values", joint_values)) ROS_ERROR("Can't read joint_values");
     if (joint_values.size() < 0)
     {
       ROS_ERROR("Couldn't read joint_values for ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER");
     }
-    temp_trigger = boost::make_shared< ROSRobotJointValuesActionServerTrigger >(trig_action_server, joint_values);
+    temp_trigger = boost::make_shared<ROSRobotJointValuesActionServerTrigger>(trig_action_server, joint_values);
   }
   else if (name == string("ROS_ROBOT_POSE_ACTION_TRIGGER"))
   {
@@ -197,7 +197,7 @@ shared_ptr< Trigger > parseTrigger(const Node& node, string& name)
       ROS_ERROR("Can't read trig_action_server");
     Pose6d pose;
     parsePose(trig_node, pose);
-    temp_trigger = boost::make_shared< ROSRobotPoseActionServerTrigger >(trig_action_server, pose);
+    temp_trigger = boost::make_shared<ROSRobotPoseActionServerTrigger>(trig_action_server, pose);
   }
   else if (name == string("ROS_CAMERA_OBSERVER_TRIGGER"))
   {
@@ -213,7 +213,7 @@ shared_ptr< Trigger > parseTrigger(const Node& node, string& name)
     if (!parseInt(trig_node[0], "roi_max_x", roi.x_max)) ROS_ERROR("Can't read roi_max_x");
     if (!parseInt(trig_node[0], "roi_min_y", roi.y_min)) ROS_ERROR("Can't read roi_min_y");
     if (!parseInt(trig_node[0], "roi_max_y", roi.y_max)) ROS_ERROR("Can't read roi_max_y");
-    temp_trigger = boost::make_shared< ROSCameraObserverTrigger >(service_name, instructions, image_topic, roi);
+    temp_trigger = boost::make_shared<ROSCameraObserverTrigger>(service_name, instructions, image_topic, roi);
   }
   else
   {
@@ -222,66 +222,66 @@ shared_ptr< Trigger > parseTrigger(const Node& node, string& name)
   return (temp_trigger);
 }
 
-shared_ptr< TransformInterface > parseTransformInterface(const Node& node, std::string& name, std::string& frame,
-                                                         Pose6d& pose)
+shared_ptr<TransformInterface> parseTransformInterface(const Node& node, std::string& name, std::string& frame,
+                                                       Pose6d& pose)
 {
-  shared_ptr< TransformInterface > temp_ti;
+  shared_ptr<TransformInterface> temp_ti;
   std::string camera_housing_frame;
   std::string camera_mounting_frame;
   if (name == std::string("ros_lti"))
   {  // this option makes no sense for a camera
-    temp_ti = boost::make_shared< ROSListenerTransInterface >(frame);
+    temp_ti = boost::make_shared<ROSListenerTransInterface>(frame);
   }
   else if (name == std::string("ros_bti"))
   {  // this option makes no sense for a camera
-    temp_ti = boost::make_shared< ROSBroadcastTransInterface >(frame);
+    temp_ti = boost::make_shared<ROSBroadcastTransInterface>(frame);
   }
   else if (name == std::string("ros_camera_lti"))
   {
-    temp_ti = boost::make_shared< ROSCameraListenerTransInterface >(frame);
+    temp_ti = boost::make_shared<ROSCameraListenerTransInterface>(frame);
   }
   else if (name == std::string("ros_camera_bti"))
   {
-    temp_ti = boost::make_shared< ROSCameraBroadcastTransInterface >(frame);
+    temp_ti = boost::make_shared<ROSCameraBroadcastTransInterface>(frame);
   }
   else if (name == std::string("ros_camera_housing_lti"))
   {
     if (!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
-    temp_ti = boost::make_shared< ROSCameraHousingListenerTInterface >(frame, camera_housing_frame);
+    temp_ti = boost::make_shared<ROSCameraHousingListenerTInterface>(frame, camera_housing_frame);
   }
   else if (name == std::string("ros_camera_housing_bti"))
   {
     if (!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
     if (!parseString(node, "camera_mounting_frame", camera_mounting_frame))
       ROS_ERROR("Can't read camera_mounting_frame");
-    temp_ti = boost::make_shared< ROSCameraHousingBroadcastTInterface >(frame, camera_housing_frame,
-                                                                        camera_mounting_frame, pose);
+    temp_ti = boost::make_shared<ROSCameraHousingBroadcastTInterface>(frame, camera_housing_frame,
+                                                                      camera_mounting_frame, pose);
   }
   else if (name == std::string("ros_camera_housing_cti"))
   {
     if (!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
     if (!parseString(node, "camera_mounting_frame", camera_mounting_frame))
       ROS_ERROR("Can't read camera_mounting_frame");
-    temp_ti = boost::make_shared< ROSCameraHousingCalTInterface >(frame, camera_housing_frame, camera_mounting_frame);
+    temp_ti = boost::make_shared<ROSCameraHousingCalTInterface>(frame, camera_housing_frame, camera_mounting_frame);
   }
   else if (name == std::string("ros_scti"))
   {
     if (!parseString(node, "parent_frame", camera_mounting_frame)) ROS_ERROR("Can't read parent_frame");
-    temp_ti = boost::make_shared< ROSSimpleCalTInterface >(frame, camera_mounting_frame);
+    temp_ti = boost::make_shared<ROSSimpleCalTInterface>(frame, camera_mounting_frame);
   }
   else if (name == std::string("ros_camera_scti"))
   {
     if (!parseString(node, "parent_frame", camera_mounting_frame)) ROS_ERROR("Can't read parent_frame");
-    temp_ti = boost::make_shared< ROSSimpleCameraCalTInterface >(frame, camera_mounting_frame);
+    temp_ti = boost::make_shared<ROSSimpleCameraCalTInterface>(frame, camera_mounting_frame);
   }
   else if (name == std::string("default_ti"))
   {
-    temp_ti = boost::make_shared< DefaultTransformInterface >();
+    temp_ti = boost::make_shared<DefaultTransformInterface>();
   }
   else
   {
     ROS_ERROR("Unimplemented Transform Interface: %s", name.c_str());
-    temp_ti = boost::make_shared< DefaultTransformInterface >();
+    temp_ti = boost::make_shared<DefaultTransformInterface>();
   }
   return (temp_ti);
 }
@@ -289,7 +289,7 @@ shared_ptr< TransformInterface > parseTransformInterface(const Node& node, std::
 bool parsePose(const Node& node, Pose6d& pose)
 {
   bool rtn = true;
-  std::vector< double > temp_values;
+  std::vector<double> temp_values;
   if (parseVectorD(node, "xyz_quat_pose", temp_values))
   {
     if (temp_values.size() == 7)

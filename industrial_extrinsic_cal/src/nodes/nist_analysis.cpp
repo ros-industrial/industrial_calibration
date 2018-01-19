@@ -45,7 +45,7 @@ using industrial_extrinsic_cal::Cost_function;
 typedef boost::minstd_rand base_gen_type;
 base_gen_type gen(42);
 boost::normal_distribution<> normal_dist(0, 1);  // zero mean unit variance
-boost::variate_generator< base_gen_type&, boost::normal_distribution<> > randn(gen, normal_dist);
+boost::variate_generator<base_gen_type&, boost::normal_distribution<> > randn(gen, normal_dist);
 
 typedef struct observation
 {
@@ -57,7 +57,7 @@ typedef struct scene
 {
   int scene_id;
   Pose6d target_pose;
-  std::vector< std::string > camera_names;
+  std::vector<std::string> camera_names;
 } Scene;
 
 /*! Brief defines a camera with extra structures to maintain statistics */
@@ -66,7 +66,7 @@ class CameraWithHistory : public Camera
 public:
   int height;
   int width;
-  vector< Pose6d > pose_history;
+  vector<Pose6d> pose_history;
   double pose_position_mean_error;
   double pose_position_sigma;
   double pose_orientation_mean_error;
@@ -80,9 +80,9 @@ class Point3dWithHistory
 {
 public:
   Point3d point;
-  vector< double > x_history;
-  vector< double > y_history;
-  vector< double > z_history;
+  vector<double> x_history;
+  vector<double> y_history;
+  vector<double> z_history;
   double mean_x;
   double mean_y;
   double mean_z;
@@ -98,36 +98,36 @@ void printAATasH(double x, double y, double z, double tx, double ty, double tz);
 void printAATasHI(double x, double y, double z, double tx, double ty, double tz);
 void printAAasEuler(double x, double y, double z);
 void printCamera(CameraWithHistory C, string words);
-void computeObservations(vector< CameraWithHistory >& cameras, vector< Point3dWithHistory >& points, double noise,
-                         double max_dist, vector< ObservationDataPoint >& observations);
-void perturbCameras(vector< CameraWithHistory >& cameras, double position_noise, double degrees_noise);
-void perturbPoints(vector< Point3dWithHistory >& points, double position_noise);
+void computeObservations(vector<CameraWithHistory>& cameras, vector<Point3dWithHistory>& points, double noise,
+                         double max_dist, vector<ObservationDataPoint>& observations);
+void perturbCameras(vector<CameraWithHistory>& cameras, double position_noise, double degrees_noise);
+void perturbPoints(vector<Point3dWithHistory>& points, double position_noise);
 void perturbPose(Pose6d& pose, double position_noise, double degree_noise);
-void independentlyPerturbCameras(vector< CameraWithHistory >& cameras);
-void copyCamerasWoHistory(vector< CameraWithHistory >& original_cameras, vector< CameraWithHistory >& cameras);
-void copyPoints(vector< Point3dWithHistory >& original_points, vector< Point3dWithHistory >& points);
-void addPoseToHistory(vector< CameraWithHistory >& cameras, vector< CameraWithHistory >& original_cameras);
-void computeHistoricPoseStatistics(vector< CameraWithHistory >& cameras);
-void addPointsToHistory(vector< Point3dWithHistory >& points, vector< Point3dWithHistory >& original_points);
-void computeHistoricPointStatistics(vector< Point3dWithHistory >& points);
-void compareCameras(vector< CameraWithHistory >& C1, vector< CameraWithHistory >& C2);
-void compareObservations(vector< ObservationDataPoint >& O1, vector< ObservationDataPoint >& O2);
-bool parseScenes(std::string& scene_file_name, std::vector< Scene >& scenes);
-void showScenes(vector< Scene >& scenes);
-void addTargetPoints(int rows, int cols, double spacing, vector< Point3dWithHistory >& points, Pose6d& target_pose);
-void computeObservationsFromScenes(vector< Scene >& scenes,  // pose of target, and which cameras observed it
-                                   vector< CameraWithHistory >& cameras,  // list of cameras
+void independentlyPerturbCameras(vector<CameraWithHistory>& cameras);
+void copyCamerasWoHistory(vector<CameraWithHistory>& original_cameras, vector<CameraWithHistory>& cameras);
+void copyPoints(vector<Point3dWithHistory>& original_points, vector<Point3dWithHistory>& points);
+void addPoseToHistory(vector<CameraWithHistory>& cameras, vector<CameraWithHistory>& original_cameras);
+void computeHistoricPoseStatistics(vector<CameraWithHistory>& cameras);
+void addPointsToHistory(vector<Point3dWithHistory>& points, vector<Point3dWithHistory>& original_points);
+void computeHistoricPointStatistics(vector<Point3dWithHistory>& points);
+void compareCameras(vector<CameraWithHistory>& C1, vector<CameraWithHistory>& C2);
+void compareObservations(vector<ObservationDataPoint>& O1, vector<ObservationDataPoint>& O2);
+bool parseScenes(std::string& scene_file_name, std::vector<Scene>& scenes);
+void showScenes(vector<Scene>& scenes);
+void addTargetPoints(int rows, int cols, double spacing, vector<Point3dWithHistory>& points, Pose6d& target_pose);
+void computeObservationsFromScenes(vector<Scene>& scenes,               // pose of target, and which cameras observed it
+                                   vector<CameraWithHistory>& cameras,  // list of cameras
                                    double target_pos_noise,  // perturb position of target by this amount then compute
                                    double target_degree_noise,  // peturb orientation of target by this amount then
                                                                 // compute
                                    double image_noise,          // amount of noise to add to each observation
-                                   vector< ObservationDataPoint >& observations,  // returned data
-                                   vector< Point3dWithHistory >& points);         // returned target points
+                                   vector<ObservationDataPoint>& observations,  // returned data
+                                   vector<Point3dWithHistory>& points);         // returned target points
 ObservationDataPoint predictObservationOfPoint(CameraWithHistory& C, Point3dWithHistory& P, Pose6d& target_pose,
                                                int scene_id, int point_id, double image_noise,
                                                bool& results_within_image);
-void computeObservationsOfPoints(vector< CameraWithHistory >& cameras, vector< Point3dWithHistory >& points,
-                                 Pose6d& target_pose, int scene_id, vector< ObservationDataPoint >& observations,
+void computeObservationsOfPoints(vector<CameraWithHistory>& cameras, vector<Point3dWithHistory>& points,
+                                 Pose6d& target_pose, int scene_id, vector<ObservationDataPoint>& observations,
                                  double camera_position_noise = 0.0, double camera_degree_noise = 0.0,
                                  double image_noise = 0.0);
 
@@ -135,20 +135,20 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "nist_analysis");
 
-  vector< Point3d > original_points_nh;                // original as read in, no history
-  vector< Point3dWithHistory > original_points;        // working copy of original points
-  vector< shared_ptr< Camera > > original_cameras_sp;  // cameras with given poses
-  vector< CameraWithHistory > original_cameras;        // cameras with given poses
+  vector<Point3d> original_points_nh;               // original as read in, no history
+  vector<Point3dWithHistory> original_points;       // working copy of original points
+  vector<shared_ptr<Camera> > original_cameras_sp;  // cameras with given poses
+  vector<CameraWithHistory> original_cameras;       // cameras with given poses
 
-  vector< Point3dWithHistory > points;                 // working copy of original points
-  vector< Point3d > original_field_points_nh;          // test points for accuracy estimation
-  vector< Point3dWithHistory > original_field_points;  // test points for accuracy estimation
-  vector< Point3dWithHistory > field_points;           // working copy of original field points
+  vector<Point3dWithHistory> points;                 // working copy of original points
+  vector<Point3d> original_field_points_nh;          // test points for accuracy estimation
+  vector<Point3dWithHistory> original_field_points;  // test points for accuracy estimation
+  vector<Point3dWithHistory> field_points;           // working copy of original field points
 
-  vector< CameraWithHistory > cameras;                         // working copy of original cameras
-  vector< ObservationDataPoint > original_observations;        // noisless observations of original points
-  vector< ObservationDataPoint > original_field_observations;  // noisless observations field points
-  vector< ObservationDataPoint > observations;                 // working observations
+  vector<CameraWithHistory> cameras;                         // working copy of original cameras
+  vector<ObservationDataPoint> original_observations;        // noisless observations of original points
+  vector<ObservationDataPoint> original_field_observations;  // noisless observations field points
+  vector<ObservationDataPoint> observations;                 // working observations
 
   // TODO use a parameter file for these, or make them arguments
   // hard coded constants
@@ -185,7 +185,7 @@ int main(int argc, char** argv)
   // copy each into a history capable version
   // NOTE: pullTransform() is called which installs the results from extrinsic calibration in the camera data
   std::string ref_frame("world");
-  BOOST_FOREACH (shared_ptr< Camera >& current_camera, original_cameras_sp)
+  BOOST_FOREACH (shared_ptr<Camera>& current_camera, original_cameras_sp)
   {
     CameraWithHistory temp_camera;
     temp_camera.setTransformInterface(current_camera->getTransformInterface());
@@ -205,7 +205,7 @@ int main(int argc, char** argv)
   // parse the scenes.
   // This is the output from the extrinsic calibration script
   // every scene has an id, a location of the target, and a list of cameras that observed the target
-  std::vector< Scene > scenes;
+  std::vector<Scene> scenes;
   parseScenes(scene_file_name, scenes);
   if (SHOW_DEBUG) showScenes(scenes);
 
@@ -542,8 +542,8 @@ void printCamera(CameraWithHistory C, string words)
   printf("cx = %8.3lf cy = %8.3lf\n", C.camera_parameters_.center_x, C.camera_parameters_.center_y);
 }
 
-void computeObservations(vector< CameraWithHistory >& cameras, vector< Point3dWithHistory >& points, double noise,
-                         double max_dist, vector< ObservationDataPoint >& observations)
+void computeObservations(vector<CameraWithHistory>& cameras, vector<Point3dWithHistory>& points, double noise,
+                         double max_dist, vector<ObservationDataPoint>& observations)
 {
   double pnoise = noise / sqrt(1.58085);  // magic number found by trial and error
   int n_observations = 0;
@@ -606,7 +606,7 @@ void computeObservations(vector< CameraWithHistory >& cameras, vector< Point3dWi
   }        // end for each camera
 }  // end compute observations
 
-void perturbCameras(vector< CameraWithHistory >& cameras, double position_noise, double degrees_noise)
+void perturbCameras(vector<CameraWithHistory>& cameras, double position_noise, double degrees_noise)
 {
   double pos_noise = position_noise / sqrt(2.274625);
   double radian_noise = degrees_noise * 3.1415 / (180.0 * sqrt(2.58047));
@@ -621,7 +621,7 @@ void perturbCameras(vector< CameraWithHistory >& cameras, double position_noise,
   }
 }
 
-void perturbPoints(vector< Point3dWithHistory >& points, double position_noise)
+void perturbPoints(vector<Point3dWithHistory>& points, double position_noise)
 {
   double pos_noise = position_noise / sqrt(2.274625);
   BOOST_FOREACH (Point3dWithHistory& P, points)
@@ -632,7 +632,7 @@ void perturbPoints(vector< Point3dWithHistory >& points, double position_noise)
   }
 }
 
-void independentlyPerturbCameras(vector< CameraWithHistory >& cameras)
+void independentlyPerturbCameras(vector<CameraWithHistory>& cameras)
 {
   BOOST_FOREACH (CameraWithHistory& C, cameras)
   {
@@ -647,7 +647,7 @@ void independentlyPerturbCameras(vector< CameraWithHistory >& cameras)
   }
 }
 
-void copyCamerasWoHistory(vector< CameraWithHistory >& original_cameras, vector< CameraWithHistory >& cameras)
+void copyCamerasWoHistory(vector<CameraWithHistory>& original_cameras, vector<CameraWithHistory>& cameras)
 {
   cameras.clear();
   BOOST_FOREACH (CameraWithHistory& C, original_cameras)
@@ -659,7 +659,7 @@ void copyCamerasWoHistory(vector< CameraWithHistory >& original_cameras, vector<
   }
 }
 
-void copyPoints(vector< Point3dWithHistory >& original_points, vector< Point3dWithHistory >& points)
+void copyPoints(vector<Point3dWithHistory>& original_points, vector<Point3dWithHistory>& points)
 {
   points.clear();
   BOOST_FOREACH (Point3dWithHistory& P, original_points)
@@ -668,7 +668,7 @@ void copyPoints(vector< Point3dWithHistory >& original_points, vector< Point3dWi
   }
 }
 
-void addPoseToHistory(vector< CameraWithHistory >& cameras, vector< CameraWithHistory >& original_cameras)
+void addPoseToHistory(vector<CameraWithHistory>& cameras, vector<CameraWithHistory>& original_cameras)
 {
   if (cameras.size() != original_cameras.size()) ROS_ERROR_STREAM("number of cameras in vectors do not match");
 
@@ -685,7 +685,7 @@ void addPoseToHistory(vector< CameraWithHistory >& cameras, vector< CameraWithHi
   }
 }
 
-void computeHistoricPoseStatistics(vector< CameraWithHistory >& cameras)
+void computeHistoricPoseStatistics(vector<CameraWithHistory>& cameras)
 {
   // calculate statistics of test case
   double mean_x, mean_y, mean_z, mean_ax, mean_ay, mean_az;
@@ -760,7 +760,7 @@ void computeHistoricPoseStatistics(vector< CameraWithHistory >& cameras)
   }  // end for each camera
 }
 
-void computeHistoricPointStatistics(vector< Point3dWithHistory >& points)
+void computeHistoricPointStatistics(vector<Point3dWithHistory>& points)
 {
   // calculate statistics of test case
   double mean_x, mean_y, mean_z;
@@ -827,7 +827,7 @@ void computeHistoricPointStatistics(vector< Point3dWithHistory >& points)
   }  // end for each point
 }
 
-void compareCameras(vector< CameraWithHistory >& C1, vector< CameraWithHistory >& C2)
+void compareCameras(vector<CameraWithHistory>& C1, vector<CameraWithHistory>& C2)
 {
   if (C1.size() != C2.size())
   {
@@ -883,7 +883,7 @@ void compareCameras(vector< CameraWithHistory >& C1, vector< CameraWithHistory >
            sigma_angle * 180 / 3.1415);
 }
 
-void compareObservations(vector< ObservationDataPoint >& O1, vector< ObservationDataPoint >& O2)
+void compareObservations(vector<ObservationDataPoint>& O1, vector<ObservationDataPoint>& O2)
 {
   if (O1.size() != O2.size())
   {
@@ -919,7 +919,7 @@ void compareObservations(vector< ObservationDataPoint >& O1, vector< Observation
   ROS_INFO("mean distance between observations = %9.5lf pixels sigma= %9.5lf ", mean_dist, sigma_dist);
 }
 
-void addPointsToHistory(vector< Point3dWithHistory >& points, vector< Point3dWithHistory >& original_points)
+void addPointsToHistory(vector<Point3dWithHistory>& points, vector<Point3dWithHistory>& original_points)
 {
   if (points.size() != original_points.size()) ROS_ERROR_STREAM("number of points in vectors do not match");
 
@@ -931,7 +931,7 @@ void addPointsToHistory(vector< Point3dWithHistory >& points, vector< Point3dWit
   }
 }
 
-bool parseScenes(std::string& scene_file_name, std::vector< Scene >& scenes)
+bool parseScenes(std::string& scene_file_name, std::vector<Scene>& scenes)
 {
   FILE* fp = fopen(scene_file_name.c_str(), "r");
   if (fp == NULL)
@@ -983,7 +983,7 @@ bool parseScenes(std::string& scene_file_name, std::vector< Scene >& scenes)
   return (true);
 }
 
-void show_scenes(vector< Scene >& scenes)
+void show_scenes(vector<Scene>& scenes)
 {
   BOOST_FOREACH (Scene S, scenes)
   {
@@ -1007,8 +1007,8 @@ void perturbPose(Pose6d& pose, double position_noise, double degree_noise)
   pose.ay += radian_noise * randn();
 }
 
-void computeObservationsOfPoints(vector< CameraWithHistory >& cameras, vector< Point3dWithHistory >& points,
-                                 Pose6d& target_pose, int scene_id, vector< ObservationDataPoint >& observations,
+void computeObservationsOfPoints(vector<CameraWithHistory>& cameras, vector<Point3dWithHistory>& points,
+                                 Pose6d& target_pose, int scene_id, vector<ObservationDataPoint>& observations,
                                  double camera_position_noise, double camera_degree_noise, double image_noise)
 
 {
@@ -1029,14 +1029,14 @@ void computeObservationsOfPoints(vector< CameraWithHistory >& cameras, vector< P
     }
   }
 }
-void computeObservationsFromScenes(vector< Scene >& scenes,  // pose of target, and which cameras observed it
-                                   vector< CameraWithHistory >& cameras,  // list of cameras
+void computeObservationsFromScenes(vector<Scene>& scenes,               // pose of target, and which cameras observed it
+                                   vector<CameraWithHistory>& cameras,  // list of cameras
                                    double target_pos_noise,  // perturb position of target by this amount then compute
                                    double target_degree_noise,  // peturb orientation of target by this amount then
                                                                 // compute
                                    double image_noise,          // amount of noise to add to each observation
-                                   vector< ObservationDataPoint >& observations,  // returned data
-                                   vector< Point3dWithHistory >& points)          // returned target points
+                                   vector<ObservationDataPoint>& observations,  // returned data
+                                   vector<Point3dWithHistory>& points)          // returned target points
 {
   observations.clear();
   BOOST_FOREACH (CameraWithHistory& C, cameras)
@@ -1126,7 +1126,7 @@ ObservationDataPoint predictObservationOfPoint(CameraWithHistory& C, Point3dWith
   return (obs);
 }
 
-void addTargetPoints(int rows, int cols, double spacing, vector< Point3dWithHistory >& points, Pose6d& target_pose)
+void addTargetPoints(int rows, int cols, double spacing, vector<Point3dWithHistory>& points, Pose6d& target_pose)
 {
   for (int i = 0; i < rows; i++)
   {

@@ -43,13 +43,13 @@ int main(int argc, char** argv)
   industrial_extrinsic_cal::store_mutable_joint_states::Response
       store_response; /**< response to store when  part of a mutable set */
 
-  get_client = nh.serviceClient< industrial_extrinsic_cal::get_mutable_joint_states >("get_mutable_joint_states");
-  set_client = nh.serviceClient< industrial_extrinsic_cal::set_mutable_joint_states >("set_mutable_joint_states");
-  store_client = nh.serviceClient< industrial_extrinsic_cal::store_mutable_joint_states >("store_mutable_joint_states");
+  get_client = nh.serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+  set_client = nh.serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
+  store_client = nh.serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
 
   std::string base_name;
   double delta_t, delta_d;
-  std::vector< double > joint_values;
+  std::vector<double> joint_values;
   if (argc == 4)
   {
     base_name = argv[1];

@@ -85,7 +85,7 @@ public:
    * @param cost_type type of cost function for observations of this target
    * @return true if successful, false if error in setting target or roi
    */
-  bool addTarget(boost::shared_ptr< Target > targ, Roi& roi, Cost_function cost_type);
+  bool addTarget(boost::shared_ptr<Target> targ, Roi& roi, Cost_function cost_type);
 
   /**
    * @brief remove all targets
@@ -159,12 +159,12 @@ private:
   /**
    *  @brief 2D values of corner/circle locations returned from cv methods
    */
-  std::vector< cv::Point2f > observation_pts_;
+  std::vector<cv::Point2f> observation_pts_;
 
   /**
    *  @brief private target which is initialized to input target
    */
-  boost::shared_ptr< Target > instance_target_;
+  boost::shared_ptr<Target> instance_target_;
 
   /**
    *  @brief private CameraObservations which are set at the end of getObservations and cleared
@@ -211,12 +211,12 @@ private:
   /**
    *  @brief circle_detector_ptr_ is a custom blob detector which localizes circles better than simple blob detection
    */
-  cv::Ptr< cv::CircleDetector > circle_detector_ptr_;
+  cv::Ptr<cv::CircleDetector> circle_detector_ptr_;
 
   /**
    *  @brief blob_detector_ptr_ is a simple blob detector
    */
-  cv::Ptr< cv::FeatureDetector > blob_detector_ptr_;
+  cv::Ptr<cv::FeatureDetector> blob_detector_ptr_;
 
   /**
    *  @brief new_image_collected, set after the trigger is done
@@ -322,7 +322,7 @@ private:
   ros::ServiceClient client_;
   sensor_msgs::SetCameraInfo srv_;
   ros::NodeHandle* rnh_;
-  dynamic_reconfigure::Server< industrial_extrinsic_cal::circle_grid_finderConfig >* server_;
+  dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>* server_;
 };
 
 }  // end industrial_extrinsic_cal namespace

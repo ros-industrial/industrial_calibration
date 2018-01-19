@@ -107,7 +107,7 @@ struct Camera_reprj_error
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  // extrinsic parameters
                   const T* c_p2,        // intrinsic parameters
                   const T* point,       // point being projected, yes this is has 3 parameters
@@ -171,7 +171,7 @@ struct Camera_reprj_error
   // the client code.
   static ceres::CostFunction* Create(const double o_x, const double o_y)
   {
-    return (new ceres::AutoDiffCostFunction< Camera_reprj_error, 2, 6, 9, 3 >(new Camera_reprj_error(o_x, o_y)));
+    return (new ceres::AutoDiffCostFunction<Camera_reprj_error, 2, 6, 9, 3>(new Camera_reprj_error(o_x, o_y)));
   }
   double Ox;  // observed x location of object in image
   double Oy;  // observed y location of object in image
@@ -245,7 +245,7 @@ int main(int argc, char** argv)
     printf("couldn't read num_points\n");
     exit(1);
   }
-  std::vector< point > Pts;
+  std::vector<point> Pts;
   for (int i = 0; i < num_points; i++)
   {
     point p;
@@ -268,7 +268,7 @@ int main(int argc, char** argv)
   {
     printf("WARNING, num_points NOT EQUAL to num_observations\n");
   }
-  std::vector< observation > Ob;
+  std::vector<observation> Ob;
   for (int i = 0; i < num_observations; i++)
   {
     if (fscanf(observations_fp, "%lf %lf", &o.x, &o.y) != 2)

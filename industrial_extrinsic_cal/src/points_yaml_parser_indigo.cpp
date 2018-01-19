@@ -15,7 +15,7 @@ using YAML::Node;
 
 namespace industrial_extrinsic_cal
 {
-void parsePoints(ifstream& points_input_file, vector< Point3d >& points)
+void parsePoints(ifstream& points_input_file, vector<Point3d>& points)
 {
   // parse points
   try
@@ -28,8 +28,8 @@ void parsePoints(ifstream& points_input_file, vector< Point3d >& points)
     for (int j = 0; j < points_node.size(); j++)
     {
       const YAML::Node pnt_node = points_node[j]("pnt");
-      vector< float > temp_pnt;
-      temp_pnt = t_node.at< vector< float > >();
+      vector<float> temp_pnt;
+      temp_pnt = t_node.at<vector<float> >();
       Point3d temp_pnt3d;
       temp_pnt3d.x = temp_pnt[0];
       temp_pnt3d.y = temp_pnt[1];

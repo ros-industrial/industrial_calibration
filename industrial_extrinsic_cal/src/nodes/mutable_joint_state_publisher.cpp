@@ -49,7 +49,7 @@ MutableJointStatePublisher::MutableJointStatePublisher(ros::NodeHandle nh) : nh_
 
   // advertise the topic for continious publication of all the mutable joint states
   int queue_size = 10;
-  joint_state_pub_ = nh_.advertise< sensor_msgs::JointState >("mutable_joint_states", queue_size);
+  joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("mutable_joint_states", queue_size);
   if (!joint_state_pub_)
   {
     ROS_ERROR("ADVERTISE DID NOT RETURN A VALID PUBLISHER");
@@ -111,7 +111,7 @@ bool MutableJointStatePublisher::storeCallBack(industrial_extrinsic_cal::store_m
   std::ofstream fout(new_file_name.c_str());
   YAML::Emitter yaml_emitter;
   yaml_emitter << YAML::BeginMap;
-  for (std::map< std::string, double >::iterator it = joints_.begin(); it != joints_.end(); ++it)
+  for (std::map<std::string, double>::iterator it = joints_.begin(); it != joints_.end(); ++it)
   {
     yaml_emitter << YAML::Key << it->first.c_str() << YAML::Value << it->second;
     ROS_INFO("mutable joint %s has value %lf", it->first.c_str(), it->second);
@@ -153,7 +153,7 @@ bool MutableJointStatePublisher::loadFromYamlFile()
   if (joints_.size() == 0) ROS_ERROR("mutable_joint_state_publisher has no joints");
 
   // output so we know they have been read in correctly
-  for (std::map< std::string, double >::iterator it = joints_.begin(); it != joints_.end(); ++it)
+  for (std::map<std::string, double>::iterator it = joints_.begin(); it != joints_.end(); ++it)
   {
     ROS_INFO("mutable joint %s has value %lf", it->first.c_str(), it->second);
   }
@@ -169,7 +169,7 @@ bool MutableJointStatePublisher::publishJointStates()
   joint_states.position.clear();
   joint_states.velocity.clear();
   joint_states.effort.clear();
-  for (std::map< string, double >::iterator it = joints_.begin(); it != joints_.end(); ++it)
+  for (std::map<string, double>::iterator it = joints_.begin(); it != joints_.end(); ++it)
   {
     joint_states.name.push_back(it->first);
     joint_states.position.push_back(it->second);

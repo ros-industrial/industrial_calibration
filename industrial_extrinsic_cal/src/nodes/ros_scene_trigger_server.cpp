@@ -22,7 +22,7 @@
 #include <actionlib/server/simple_action_server.h>
 #include <industrial_extrinsic_cal/manual_triggerAction.h>
 
-typedef actionlib::SimpleActionServer< industrial_extrinsic_cal::manual_triggerAction > Server;
+typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::manual_triggerAction> Server;
 
 void execute(const industrial_extrinsic_cal::manual_triggerGoalConstPtr& goal, Server* as)
 {

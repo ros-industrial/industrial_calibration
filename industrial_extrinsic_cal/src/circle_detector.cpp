@@ -94,8 +94,8 @@ protected:
     double confidence;
   };
 
-  virtual void detect(InputArray image, std::vector< KeyPoint >& keypoints, InputArray mask = noArray());
-  virtual void findCircles(InputArray image, InputArray binaryImage, std::vector< Center >& centers) const;
+  virtual void detect(InputArray image, std::vector<KeyPoint>& keypoints, InputArray mask = noArray());
+  virtual void findCircles(InputArray image, InputArray binaryImage, std::vector<Center>& centers) const;
 
   Params params;
 };
@@ -121,15 +121,15 @@ CircleDetector::Params::Params()
 
   filterByCircularity = false;
   minCircularity = 0.8f;
-  maxCircularity = std::numeric_limits< float >::max();
+  maxCircularity = std::numeric_limits<float>::max();
 
   filterByInertia = true;
   minInertiaRatio = 0.1f;
-  maxInertiaRatio = std::numeric_limits< float >::max();
+  maxInertiaRatio = std::numeric_limits<float>::max();
 
   filterByConvexity = true;
   minConvexity = 0.95f;
-  maxConvexity = std::numeric_limits< float >::max();
+  maxConvexity = std::numeric_limits<float>::max();
 }
 
 void CircleDetector::Params::read(const cv::FileNode& fn)
@@ -205,7 +205,7 @@ void CircleDetectorImpl::write(cv::FileStorage& fs) const
   params.write(fs);
 }
 
-void CircleDetectorImpl::findCircles(InputArray _image, InputArray _binaryImage, std::vector< Center >& centers) const
+void CircleDetectorImpl::findCircles(InputArray _image, InputArray _binaryImage, std::vector<Center>& centers) const
 {
   //  CV_INSTRUMENT_REGION()
 
@@ -215,7 +215,7 @@ void CircleDetectorImpl::findCircles(InputArray _image, InputArray _binaryImage,
   (void)image;
   centers.clear();
 
-  vector< vector< Point > > contours;
+  vector<vector<Point> > contours;
   Mat tmpBinaryImage = binaryImage.clone();
   findContours(tmpBinaryImage, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
 
@@ -269,7 +269,7 @@ void CircleDetectorImpl::findCircles(InputArray _image, InputArray _binaryImage,
 
     if (params.filterByConvexity)
     {
-      vector< Point > hull;
+      vector<Point> hull;
       convexHull(Mat(contours[contourIdx]), hull);
       double area = contourArea(Mat(contours[contourIdx]));
       double hullArea = contourArea(Mat(hull));
@@ -288,8 +288,7 @@ void CircleDetectorImpl::findCircles(InputArray _image, InputArray _binaryImage,
     // one more filter by color of central pixel
     if (params.filterByColor)
     {
-      if (binaryImage.at< uchar >(cvRound(center.location.y), cvRound(center.location.x)) != params.circleColor)
-        continue;
+      if (binaryImage.at<uchar>(cvRound(center.location.y), cvRound(center.location.x)) != params.circleColor) continue;
     }
 
     // compute circle radius
@@ -316,7 +315,7 @@ void CircleDetectorImpl::findCircles(InputArray _image, InputArray _binaryImage,
 #endif
 }
 
-void CircleDetectorImpl::detect(InputArray _image, std::vector< KeyPoint >& keypoints, InputArray mask)
+void CircleDetectorImpl::detect(InputArray _image, std::vector<KeyPoint>& keypoints, InputArray mask)
 {
   Mat image = _image.getMat();
 
@@ -330,7 +329,7 @@ void CircleDetectorImpl::detect(InputArray _image, std::vector< KeyPoint >& keyp
   else
     grayscaleImage = image;
 
-  vector< vector< Center > > centers;
+  vector<vector<Center> > centers;
   for (double thresh = params.minThreshold; thresh < params.maxThreshold; thresh += params.thresholdStep)
   {
     Mat binarizedImage;
@@ -341,9 +340,9 @@ void CircleDetectorImpl::detect(InputArray _image, std::vector< KeyPoint >& keyp
 //    cvtColor( binarizedImage, keypointsImage, CV_GRAY2RGB );
 #endif
 
-    vector< Center > curCenters;
+    vector<Center> curCenters;
     findCircles(grayscaleImage, binarizedImage, curCenters);
-    vector< vector< Center > > newCenters;
+    vector<vector<Center> > newCenters;
     for (size_t i = 0; i < curCenters.size(); i++)
     {
 #ifdef DEBUG_CIRCLE_DETECTOR
@@ -355,7 +354,7 @@ void CircleDetectorImpl::detect(InputArray _image, std::vector< KeyPoint >& keyp
       {
         double dist = norm(centers[j][centers[j].size() / 2].location - curCenters[i].location);
         //				isNew = dist >= params.minDistBetweenCircles && dist >= centers[j][ centers[j].size() / 2 ].radius &&
-        //dist >= curCenters[i].radius;
+        // dist >= curCenters[i].radius;
         double rad_diff = fabs(centers[j][centers[j].size() / 2].radius - curCenters[i].radius);
         isNew = dist >= params.minDistBetweenCircles || rad_diff >= params.minRadiusDiff;
         if (!isNew)
@@ -375,7 +374,7 @@ void CircleDetectorImpl::detect(InputArray _image, std::vector< KeyPoint >& keyp
       }
       if (isNew)
       {
-        newCenters.push_back(vector< Center >(1, curCenters[i]));
+        newCenters.push_back(vector<Center>(1, curCenters[i]));
         // centers.push_back(vector<Center> (1, curCenters[i]));
       }
     }
@@ -415,9 +414,9 @@ void CircleDetectorImpl::detect(InputArray _image, std::vector< KeyPoint >& keyp
 #endif
 }
 
-Ptr< CircleDetector > CircleDetector::create(const CircleDetector::Params& params)
+Ptr<CircleDetector> CircleDetector::create(const CircleDetector::Params& params)
 {
-  return makePtr< CircleDetectorImpl >(params);
+  return makePtr<CircleDetectorImpl>(params);
 }
 
 }  // end  namespace cv

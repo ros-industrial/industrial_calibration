@@ -28,17 +28,17 @@ namespace industrial_extrinsic_cal
 /*! \brief An observation is the x,y image location of a target's point in an image*/
 typedef struct
 {
-  boost::shared_ptr< Target > target; /**< pointer to target who's point is observed */
-  int point_id;                       /**< point's id in target's point array */
-  double image_loc_x;                 /**< target point was found at image location x */
-  double image_loc_y;                 /**< target point image location y */
-  Cost_function cost_type;            /**< type of cost associated with this observation */
+  boost::shared_ptr<Target> target; /**< pointer to target who's point is observed */
+  int point_id;                     /**< point's id in target's point array */
+  double image_loc_x;               /**< target point was found at image location x */
+  double image_loc_y;               /**< target point image location y */
+  Cost_function cost_type;          /**< type of cost associated with this observation */
   Pose6d
       intermediate_frame; /**< sometimes one needs the transform from ref_frame to the frame of extrinics for camera */
 } Observation;
 
 /*! \brief A vector of observations made by a single camera of posibly multiple targets */
-typedef std::vector< Observation > CameraObservations;
+typedef std::vector<Observation> CameraObservations;
 
 /** @brief A camera observer is an object which given a set of targets and regions of interest, it provides observations
  *              of those targets. A camera obsever is configured with targets, then triggered, once observations are
@@ -54,7 +54,7 @@ public:
   /** @brief add a target to look for */
   /** @param targ a target to look for */
   /** @param roi Region of interest for target */
-  virtual bool addTarget(boost::shared_ptr< Target > targ, Roi& roi, Cost_function cost_type) = 0;
+  virtual bool addTarget(boost::shared_ptr<Target> targ, Roi& roi, Cost_function cost_type) = 0;
 
   /** @brief remove all targets */
   virtual void clearTargets() = 0;

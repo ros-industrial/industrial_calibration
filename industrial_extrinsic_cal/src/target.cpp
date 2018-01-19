@@ -27,11 +27,11 @@ void Target::pullTransform()
 {
   pose_ = transform_interface_->pullTransform();
 }
-void Target::setTransformInterface(boost::shared_ptr< TransformInterface > transform_interface)
+void Target::setTransformInterface(boost::shared_ptr<TransformInterface> transform_interface)
 {
   transform_interface_ = transform_interface;
 }
-boost::shared_ptr< TransformInterface > Target::getTransformInterface()
+boost::shared_ptr<TransformInterface> Target::getTransformInterface()
 {
   return (transform_interface_);
 }

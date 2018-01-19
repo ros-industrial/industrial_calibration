@@ -38,7 +38,7 @@ TabWidth:        2
 UseTab:          Never
 IndentFunctionDeclarationAfterType: false
 SpacesInParentheses: false
-SpacesInAngles:  true
+SpacesInAngles:  false
 SpaceInEmptyParentheses: false
 SpacesInCStyleCastParentheses: false
 SpaceAfterControlStatementKeyword: true

@@ -48,8 +48,8 @@ public:
     }
     ROS_INFO("C1 service = %s", c1_cs.c_str());
     ROS_INFO("C2 service = %s", c2_cs.c_str());
-    c1_client_ = nh_.serviceClient< target_finder::target_locater >(c1_cs.c_str());
-    c2_client_ = nh_.serviceClient< target_finder::target_locater >(c2_cs.c_str());
+    c1_client_ = nh_.serviceClient<target_finder::target_locater>(c1_cs.c_str());
+    c2_client_ = nh_.serviceClient<target_finder::target_locater>(c2_cs.c_str());
 
     if (!pnh.getParam("c1_roi_width", c1_roi_width_))
     {

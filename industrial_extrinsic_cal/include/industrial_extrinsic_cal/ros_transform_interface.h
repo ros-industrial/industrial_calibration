@@ -391,8 +391,8 @@ private:
                                          transform */
   ros::ServiceClient
       store_client_; /**< a client for calling the service to store the joint values associated with the transform */
-  std::vector< std::string > joint_names_;                                  /**< names of joints  */
-  std::vector< double > joint_values_;                                      /**< values of joints  */
+  std::vector<std::string> joint_names_;                                    /**< names of joints  */
+  std::vector<double> joint_values_;                                        /**< values of joints  */
   industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_; /**< request when transform is part of a
                                                                                mutable set */
   industrial_extrinsic_cal::get_mutable_joint_states::Response
@@ -464,8 +464,8 @@ private:
                                      transform */
   ros::ServiceClient
       store_client_; /**< a client for calling the service to store the joint values associated with the transform */
-  std::vector< std::string > joint_names_; /**< names of joints  */
-  std::vector< double > joint_values_;     /**< values of joints  */
+  std::vector<std::string> joint_names_; /**< names of joints  */
+  std::vector<double> joint_values_;     /**< values of joints  */
   industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_;
   industrial_extrinsic_cal::get_mutable_joint_states::Response get_response_;
   industrial_extrinsic_cal::set_mutable_joint_states::Request set_request_;
@@ -531,8 +531,8 @@ private:
                                      transform */
   ros::ServiceClient
       store_client_; /**< a client for calling the service to store the joint values associated with the transform */
-  std::vector< std::string > joint_names_; /**< names of joints  */
-  std::vector< double > joint_values_;     /**< values of joints  */
+  std::vector<std::string> joint_names_; /**< names of joints  */
+  std::vector<double> joint_values_;     /**< values of joints  */
   industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_;
   industrial_extrinsic_cal::get_mutable_joint_states::Response get_response_;
   industrial_extrinsic_cal::set_mutable_joint_states::Request set_request_;

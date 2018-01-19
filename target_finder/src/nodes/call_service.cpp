@@ -34,7 +34,7 @@ class callService
 public:
   callService(ros::NodeHandle nh) : nh_(nh)
   {
-    client_ = nh_.serviceClient< target_finder::target_locater >("TargetLocateService");
+    client_ = nh_.serviceClient<target_finder::target_locater>("TargetLocateService");
     ros::NodeHandle pnh("~");
     if (!pnh.getParam("roi_width", roi_width_))
     {

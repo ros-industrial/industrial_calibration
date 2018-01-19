@@ -137,7 +137,7 @@ public:
    *    @param variables a list of cameras and targets
    *    @param covariance_file_name name of file to store the resulting matrix in
    */
-  bool computeCovariance(std::vector< CovarianceVariableRequest >& variables, std::string& covariance_file_name);
+  bool computeCovariance(std::vector<CovarianceVariableRequest>& variables, std::string& covariance_file_name);
 
   /** @brief set the flag to save observation data to a file indicated for post processing
    *    @param post_proc_file_name the name of the file to put the post processing data
@@ -154,7 +154,7 @@ public:
   };
 
   /*@brief get pointer to list of scenes*/
-  std::vector< ObservationScene >* getScenes()
+  std::vector<ObservationScene>* getScenes()
   {
     return &scene_list_;
   };
@@ -211,8 +211,8 @@ protected:
    *  @param target a pointer to the target
    *  @return true if successful
    */
-  bool addObservationToCurrentScene(boost::shared_ptr< ROSCameraObserver > camera_observer,
-                                    boost::shared_ptr< Target > target);
+  bool addObservationToCurrentScene(boost::shared_ptr<ROSCameraObserver> camera_observer,
+                                    boost::shared_ptr<Target> target);
 
   /** @brief removes all cameras and targets from current scene
    *  @return true if successful
@@ -223,7 +223,7 @@ protected:
    *  @param trig the trigger type to use for this scene
    *  @return true if successful
    */
-  bool appendNewScene(boost::shared_ptr< Trigger > trig);
+  bool appendNewScene(boost::shared_ptr<Trigger> trig);
 
   /** @brief each camera and each target have a transform interface, push the current values to the interface */
   void pushTransforms();
@@ -234,13 +234,13 @@ protected:
   void pullTransforms(int scene_id);
 
 private:
-  std::vector< ObservationDataPointList > observation_data_point_list_; /*!< a list of observation data points */
-  std::vector< ObservationScene > scene_list_; /*!< contains list of scenes which define the job */
-  std::string camera_def_file_name_;           /*!< this file describes all cameras in job */
-  std::string target_def_file_name_;           /*!< this file describes all targets in job */
-  std::string caljob_def_file_name_;           /*!< this file describes all observations in job */
-  int current_scene_;                          /*!< id of current scene under review or construction */
-  CeresBlocks ceres_blocks_;                   /*!< This structure maintains the parameter sets for ceres */
+  std::vector<ObservationDataPointList> observation_data_point_list_; /*!< a list of observation data points */
+  std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
+  std::string camera_def_file_name_;         /*!< this file describes all cameras in job */
+  std::string target_def_file_name_;         /*!< this file describes all targets in job */
+  std::string caljob_def_file_name_;         /*!< this file describes all observations in job */
+  int current_scene_;                        /*!< id of current scene under review or construction */
+  CeresBlocks ceres_blocks_;                 /*!< This structure maintains the parameter sets for ceres */
   ceres::Problem* problem_;              /*!< this is the object used to define the optimization problem for ceres */
   ceres::Solver::Summary ceres_summary_; /*!< object for displaying solver results */
   int total_observations_;               /*< number of observations/cost elements in problem */

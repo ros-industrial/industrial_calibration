@@ -63,7 +63,7 @@ inline bool parseBool(const YAML::Node& node, char const* var_name, bool& var_va
   return false;
 }
 
-inline bool parseVectorD(const YAML::Node& node, char const* var_name, std::vector< double >& var_value)
+inline bool parseVectorD(const YAML::Node& node, char const* var_name, std::vector<double>& var_value)
 {
   if (node.FindValue(var_name))
   {

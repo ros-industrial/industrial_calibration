@@ -86,11 +86,11 @@ Observation projectPoint(CameraParameters C, Point3d P)
 }
 
 // GLOBAL VARIABLES FOR TESTING
-std::vector< Point3d > created_points;
+std::vector<Point3d> created_points;
 double aa[3];  // angle axis known/set
 double p[3];   // point rotated known/set
-std::vector< Point3d > transformed_points;
-std::vector< Observation > observations;
+std::vector<Point3d> transformed_points;
+std::vector<Observation> observations;
 CameraParameters C;
 
 TEST(IndustrialExtrinsicCalCeresSuite, rotationProduct)

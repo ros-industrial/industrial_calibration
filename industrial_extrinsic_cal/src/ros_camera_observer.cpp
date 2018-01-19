@@ -37,10 +37,10 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   , camera_name_(camera_name)
 {
   image_topic_ = camera_topic;
-  results_pub_ = nh_.advertise< sensor_msgs::Image >("observer_results_image", 100);
-  debug_pub_ = nh_.advertise< sensor_msgs::Image >("observer_raw_image", 100);
+  results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
+  debug_pub_ = nh_.advertise<sensor_msgs::Image>("observer_raw_image", 100);
   std::string set_camera_info_service = camera_name_ + "/set_camera_info";
-  client_ = nh_.serviceClient< sensor_msgs::SetCameraInfo >(set_camera_info_service);
+  client_ = nh_.serviceClient<sensor_msgs::SetCameraInfo>(set_camera_info_service);
 
   ros::NodeHandle pnh("~");
   pnh.getParam("image_directory", image_directory_);
@@ -64,15 +64,15 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
 
   std::string recon_node_name = "~/" + camera_name;
   rnh_ = new ros::NodeHandle(recon_node_name.c_str());
-  server_ = new dynamic_reconfigure::Server< industrial_extrinsic_cal::circle_grid_finderConfig >(*rnh_);
+  server_ = new dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>(*rnh_);
 
-  dynamic_reconfigure::Server< industrial_extrinsic_cal::circle_grid_finderConfig >::CallbackType f;
+  dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>::CallbackType f;
 
   f = boost::bind(&ROSCameraObserver::dynReConfCallBack, this, _1, _2);
   server_->setCallback(f);
 }
 
-bool ROSCameraObserver::addTarget(boost::shared_ptr< Target > targ, Roi& roi, Cost_function cost_type)
+bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi& roi, Cost_function cost_type)
 {
   // TODO make a list of targets so that the camera may make more than one set of observations at a time
   // This was what was inteneded by the interface definition, I'm not sure why the first implementation didn't do it.
@@ -168,7 +168,7 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
 
   ROS_DEBUG("image_roi_ size = %d %d", image_roi_.rows, image_roi_.cols);
   observation_pts_.clear();
-  std::vector< cv::KeyPoint > key_points;
+  std::vector<cv::KeyPoint> key_points;
   ROS_DEBUG("Pattern type %d, rows %d, cols %d", pattern_, pattern_rows_, pattern_cols_);
 
   cv::Point large_point;
@@ -246,7 +246,7 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
     case pattern_options::ModifiedCircleGrid:
     {  // contain the scope of automatic variables
       // modified circle grids have one circle at the origin which is 1.5 times larger in diameter than the rest
-      std::vector< cv::Point2f > centers;
+      std::vector<cv::Point2f> centers;
       if (use_circle_detector_)
       {
         ROS_DEBUG("using circle_detector, to find %dx%d modified circle grid", pattern_rows_, pattern_cols_);
@@ -286,7 +286,7 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
         // their keypoints
         // Should OpenCV change their method, the keypoint locations may not match, this has a risk of failing with
         // updates to OpenCV
-        std::vector< cv::KeyPoint > keypoints;
+        std::vector<cv::KeyPoint> keypoints;
 
         if (use_circle_detector_) circle_detector_ptr_->detect(image_roi_, keypoints);
         if (!use_circle_detector_) blob_detector_ptr_->detect(image_roi_, keypoints);
@@ -534,8 +534,8 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
       dilate(red_binary_image, red_binary_image, dilation_element);
       dilate(yellow_binary_image, yellow_binary_image, dilation_element);
       dilate(green_binary_image, green_binary_image, dilation_element);
-      std::vector< cv::Point2f > centers;
-      std::vector< cv::KeyPoint > keypoints;
+      std::vector<cv::Point2f> centers;
+      std::vector<cv::KeyPoint> keypoints;
       if (!use_circle_detector_) blob_detector_ptr_->detect(red_binary_image, keypoints);
       if (use_circle_detector_) circle_detector_ptr_->detect(red_binary_image, keypoints);
       ROS_ERROR("Red keypoints: %d", (int)keypoints.size());
@@ -716,7 +716,7 @@ void ROSCameraObserver::triggerCamera()
     while (!done)
     {
       sensor_msgs::ImageConstPtr recent_image =
-          ros::topic::waitForMessage< sensor_msgs::Image >(image_topic_, ros::Duration(5.0));
+          ros::topic::waitForMessage<sensor_msgs::Image>(image_topic_, ros::Duration(5.0));
       if (!recent_image)
       {
         ROS_ERROR("No image acquired on topic '%s'", image_topic_.c_str());
@@ -772,7 +772,7 @@ bool ROSCameraObserver::pushCameraInfo(double& fx, double& fy, double& cx, doubl
   // must pull to get all the header information that we don't compute
   std::string camera_info_topic = camera_name_ + "/camera_info";
   const sensor_msgs::CameraInfoConstPtr& info_msg =
-      ros::topic::waitForMessage< sensor_msgs::CameraInfo >(camera_info_topic);
+      ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic);
   srv_.request.camera_info.distortion_model = info_msg->distortion_model;
   srv_.request.camera_info.header = info_msg->header;
   srv_.request.camera_info.height = info_msg->height;
@@ -841,7 +841,7 @@ bool ROSCameraObserver::pullCameraInfo(double& fx, double& fy, double& cx, doubl
   std::string camera_info_topic = topic + "/camera_info";
 
   const sensor_msgs::CameraInfoConstPtr& info_msg =
-      ros::topic::waitForMessage< sensor_msgs::CameraInfo >(camera_info_topic);
+      ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic);
   if (info_msg->K[0] == 0)
   {
     ROS_ERROR("camera info msg not correct");
@@ -869,7 +869,7 @@ bool ROSCameraObserver::pullCameraInfo(double& fx, double& fy, double& cx, doubl
   }
   std::string camera_info_topic = "/" + camera_name_ + "/camera_info";
   const sensor_msgs::CameraInfoConstPtr& info_msg =
-      ros::topic::waitForMessage< sensor_msgs::CameraInfo >(camera_info_topic, ros::Duration(10.0));
+      ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_topic, ros::Duration(10.0));
   if (info_msg == NULL)
   {
     ROS_ERROR("camera info message not available for camera %s on topic %s", camera_name_.c_str(),
@@ -920,11 +920,11 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
 
   circle_params.filterByInertia = false;
   circle_params.minInertiaRatio = 0.1f;
-  circle_params.maxInertiaRatio = std::numeric_limits< float >::max();
+  circle_params.maxInertiaRatio = std::numeric_limits<float>::max();
 
   circle_params.filterByConvexity = false;
   circle_params.minConvexity = 0.95f;
-  circle_params.maxConvexity = std::numeric_limits< float >::max();
+  circle_params.maxConvexity = std::numeric_limits<float>::max();
 
   circle_detector_ptr_ = cv::CircleDetector::create(circle_params);
 
@@ -949,11 +949,11 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
 
   blob_params.filterByInertia = false;
   blob_params.minInertiaRatio = 0.1f;
-  blob_params.maxInertiaRatio = std::numeric_limits< float >::max();
+  blob_params.maxInertiaRatio = std::numeric_limits<float>::max();
 
   blob_params.filterByConvexity = false;
   blob_params.minConvexity = 0.95f;
-  blob_params.maxConvexity = std::numeric_limits< float >::max();
+  blob_params.maxConvexity = std::numeric_limits<float>::max();
 
   blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
 

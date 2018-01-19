@@ -91,8 +91,7 @@ bool CameraObserverTrigger::executeCallBack(industrial_extrinsic_cal::camera_obs
   industrial_extrinsic_cal::ROSCameraObserver camera_observer(req.image_topic);
   camera_observer.clearObservations();
   camera_observer.clearTargets();
-  boost::shared_ptr< industrial_extrinsic_cal::Target > target =
-      boost::make_shared< industrial_extrinsic_cal::Target >();
+  boost::shared_ptr<industrial_extrinsic_cal::Target> target = boost::make_shared<industrial_extrinsic_cal::Target>();
   target->target_name_ = "junk";
   target->target_frame_ = "whocares";
   target->target_type_ = target_type_;
