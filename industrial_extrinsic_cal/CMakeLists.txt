@@ -229,17 +229,17 @@ install(
 )
 
 
-if (CATKIN_ENABLE_TESTING)
-  catkin_add_gtest(utest_inds_cal test/utest.cpp)
+#if (CATKIN_ENABLE_TESTING)
+#  catkin_add_gtest(utest_inds_cal test/utest.cpp)
 
-  target_link_libraries(
-    utest_inds_cal
+#  target_link_libraries(
+#    utest_inds_cal
 
-    industrial_extrinsic_cal
-    ${catkin_LIBRARIES}
-    ${CERES_LIBRARIES}
-  )
-endif()
+#    industrial_extrinsic_cal
+#    ${catkin_LIBRARIES}
+#    ${CERES_LIBRARIES}
+#  )
+#endif()
 
 
 ## ROSlint checks

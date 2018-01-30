@@ -20,25 +20,16 @@
 
 namespace industrial_extrinsic_cal
 {
-
-
-ObservationDataPointList::ObservationDataPointList()
-{
-}
-;
+ObservationDataPointList::ObservationDataPointList(){};
 
 ObservationDataPointList::~ObservationDataPointList()
 {
-      items_.clear();
+  items_.clear();
 }
-
 
 void ObservationDataPointList::addObservationPoint(ObservationDataPoint new_data_point)
 {
   items_.push_back(new_data_point);
 }
 
-}//end namespace industrial_extrinsic_cal
-
-
-
+}  // end namespace industrial_extrinsic_cal

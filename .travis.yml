@@ -15,7 +15,6 @@ env:
     - NOT_TEST_INSTALL=true
   matrix:
     - ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
-    - ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
 install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
 script: 
