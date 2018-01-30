@@ -31,7 +31,7 @@ public:
    *    @param point  point being viewd described in target frame that is being seen [3]
    *    @output resid the error between the observation and the reprojected values given the parameters
    */
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, const T* const c_p2, const T* const c_p3, const T* const point, T* resid) const;
 
   /**  @brief Factory to hide the construction of the CostFunction object from the client code
@@ -41,7 +41,7 @@ public:
    */
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia)
   {
-    return (new ceres::AutoDiffCostFunction< CircleTargetCameraReprjErrorOLD, 2, 6, 6, 9, 3 >(
+    return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorOLD, 2, 6, 6, 9, 3>(
         new CircleTargetCameraReprjErrorOLD(o_x, o_y, c_dia)));
   }
 
@@ -52,7 +52,7 @@ private:
 };
 
 // member function definitions
-template < typename T >
+template <typename T>
 bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorOLD::operator()(const T* const c_p1, const T* const c_p2,
                                                                            const T* const c_p3, const T* const point,
                                                                            T* resid) const
@@ -226,7 +226,7 @@ public:
    *    @param point  point being viewd described in target frame that is being seen [3]
    *    @output resid the error between the observation and the reprojected values given the parameters
    */
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /**< extrinsic parameters [6]*/
                   const T* const c_p2,  /**< 6Dof transform of target into world frame [6]*/
                   const T* const point, /**< point described in target frame that is being seen [3]*/
@@ -244,7 +244,7 @@ public:
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, const double fx,
                                      const double fy, const double cx, const double cy)
   {
-    return (new ceres::AutoDiffCostFunction< CircleTargetCameraReprjErrorNoDistortionOLD, 2, 6, 6, 3 >(
+    return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorNoDistortionOLD, 2, 6, 6, 3>(
         new CircleTargetCameraReprjErrorNoDistortionOLD(o_x, o_y, c_dia, fx, fy, cx, cy)));
   }
 
@@ -259,7 +259,7 @@ private:
 };
 
 // member function definitions
-template < typename T >
+template <typename T>
 bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDistortionOLD::
 operator()(const T* const c_p1, const T* const c_p2, const T* const point, T* resid) const
 {
@@ -409,7 +409,7 @@ public:
    *    @param c_p2  6Dof transform of target into world frame [6]
    *    @output resid the error between the observation and the reprojected values given the parameters
    */
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /**< extrinsic parameters [6]*/
                   const T* const c_p2, /**< 6Dof transform of target into world frame [6]*/
                   T* resid) const;
@@ -430,7 +430,7 @@ public:
                                      const double fy, const double cx, const double cy, const double point_x,
                                      const double point_y, const double point_z)
   {
-    return (new ceres::AutoDiffCostFunction< CircleTargetCameraReprjErrorNoDFixedPointOLD, 2, 6, 6 >(
+    return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorNoDFixedPointOLD, 2, 6, 6>(
         new CircleTargetCameraReprjErrorNoDFixedPointOLD(o_x, o_y, c_dia, fx, fy, cx, cy, point_x, point_y, point_z)));
   }
 
@@ -446,7 +446,7 @@ private:
 };
 
 // member function definitions
-template < typename T >
+template <typename T>
 bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDFixedPointOLD::operator()(const T* const c_p1,
                                                                                         const T* const c_p2,
                                                                                         T* resid) const

@@ -63,7 +63,7 @@ private:
   std::string parameter_name_;
 };
 
-typedef actionlib::SimpleActionClient< industrial_extrinsic_cal::manual_triggerAction > ManualClient;
+typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::manual_triggerAction> ManualClient;
 
 class ROSActionServerTrigger : public Trigger
 {
@@ -108,7 +108,7 @@ private:
   std::string action_message_; /**< message sent to action server, often displayed by that server */
 };
 
-typedef actionlib::SimpleActionClient< industrial_extrinsic_cal::robot_joint_values_triggerAction >
+typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_joint_values_triggerAction>
     RobotJointValuesClient;
 
 class ROSRobotJointValuesActionServerTrigger : public Trigger
@@ -118,7 +118,7 @@ public:
    *  @param server name , name of server
    *  @param joint_values, vector of joint values describing the pose of the robot for the trigger
    */
-  ROSRobotJointValuesActionServerTrigger(const std::string& server_name, const std::vector< double >& joint_values)
+  ROSRobotJointValuesActionServerTrigger(const std::string& server_name, const std::vector<double>& joint_values)
   {
     server_name_ = server_name;
     joint_values_.clear();
@@ -162,12 +162,12 @@ public:
 
 private:
   RobotJointValuesClient* client_;
-  ros::NodeHandle nh_;                 /**< node handle */
-  std::string server_name_;            /**< name of server */
-  std::vector< double > joint_values_; /**< joint values */
+  ros::NodeHandle nh_;               /**< node handle */
+  std::string server_name_;          /**< name of server */
+  std::vector<double> joint_values_; /**< joint values */
 };
 
-typedef actionlib::SimpleActionClient< industrial_extrinsic_cal::robot_pose_triggerAction > Robot_Pose_Client;
+typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_pose_triggerAction> Robot_Pose_Client;
 
 class ROSRobotPoseActionServerTrigger : public Trigger
 {
@@ -216,10 +216,10 @@ public:
 
 private:
   Robot_Pose_Client* client_;
-  ros::NodeHandle nh_;                 /**< node handle */
-  std::string server_name_;            /**< name of server */
-  geometry_msgs::Pose pose_;           /**< pose of robot */
-  std::vector< double > joint_values_; /**< joint values */
+  ros::NodeHandle nh_;               /**< node handle */
+  std::string server_name_;          /**< name of server */
+  geometry_msgs::Pose pose_;         /**< pose of robot */
+  std::vector<double> joint_values_; /**< joint values */
 };
 
 class ROSCameraObserverTrigger : public Trigger
@@ -238,7 +238,7 @@ public:
     service_name_ = service_name;
     instructions_ = instructions;
     image_topic_ = image_topic;
-    client_ = nh_->serviceClient< industrial_extrinsic_cal::camera_observer_trigger >(service_name_.c_str());
+    client_ = nh_->serviceClient<industrial_extrinsic_cal::camera_observer_trigger>(service_name_.c_str());
     roi_ = roi;
   };
 

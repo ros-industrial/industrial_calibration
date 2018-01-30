@@ -15,7 +15,7 @@ using YAML::Node;
 
 namespace industrial_extrinsic_cal
 {
-bool parsePoints(std::string& points_input_file, vector< Point3d >& points)
+bool parsePoints(std::string& points_input_file, vector<Point3d>& points)
 {
   // parse points
   bool return_value = true;
@@ -31,7 +31,7 @@ bool parsePoints(std::string& points_input_file, vector< Point3d >& points)
     const YAML::Node& points_node = parseNode(points_doc, "points");
     for (int j = 0; j < points_node.size(); j++)
     {
-      vector< double > temp_pnt;
+      vector<double> temp_pnt;
       parseVectorD(points_node[j], "pnt", temp_pnt);
       Point3d temp_pnt3d;
       temp_pnt3d.x = temp_pnt[0];

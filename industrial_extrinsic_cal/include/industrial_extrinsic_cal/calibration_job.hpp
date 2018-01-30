@@ -50,8 +50,8 @@ public:
    static cameras get but one set of pose parameters
    */
   bool is_moving();
-  boost::shared_ptr< DummyCameraObserver > camera_observer_; /*!< processes images, does CameraObservations */
-  CameraParameters camera_parameters_;                       /*!< The intrinsic and extrinsic parameters */
+  boost::shared_ptr<DummyCameraObserver> camera_observer_; /*!< processes images, does CameraObservations */
+  CameraParameters camera_parameters_;                     /*!< The intrinsic and extrinsic parameters */
   //    ::std::ostream& operator<<(::std::ostream& os, const Camera& C){ return os<< "TODO";};
 
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
@@ -74,8 +74,8 @@ typedef struct
 /*! @brief unique observation command */
 typedef struct
 {
-  boost::shared_ptr< Camera > camera;
-  boost::shared_ptr< Target > target;
+  boost::shared_ptr<Camera> camera;
+  boost::shared_ptr<Target> target;
   Roi roi;
 } ObservationCmd;
 
@@ -116,8 +116,8 @@ public:
     return (trigger_);
   };
 
-  std::vector< ObservationCmd > observation_command_list_;      /*!< list of observations for a scene */
-  std::vector< boost::shared_ptr< Camera > > cameras_in_scene_; /*!< list of cameras in this scened */
+  std::vector<ObservationCmd> observation_command_list_;     /*!< list of observations for a scene */
+  std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scened */
 
 private:
   Trigger trigger_; /*!< event to trigger the observations in this command */
@@ -129,15 +129,15 @@ private:
 /*! \brief moving cameras need a new pose with each scene in which they are used */
 typedef struct MovingCamera
 {
-  boost::shared_ptr< Camera > cam;  // must hold a copy of the camera extrinsic parameters
-  int scene_id;                     // but copy of intrinsics may be and unused duplicate
+  boost::shared_ptr<Camera> cam;  // must hold a copy of the camera extrinsic parameters
+  int scene_id;                   // but copy of intrinsics may be and unused duplicate
 } MovingCamera;
 
 /*! \brief moving  need a new pose with each scene in which they are used */
 typedef struct MovingTarget
 {
-  boost::shared_ptr< Target > targ;  // must hold a copy of the target pose parameters,
-  int scene_id;                      // but point parameters may be unused duplicates
+  boost::shared_ptr<Target> targ;  // must hold a copy of the target pose parameters,
+  int scene_id;                    // but point parameters may be unused duplicates
 } MovingTarget;
 
 class ObservationDataPoint
@@ -200,7 +200,7 @@ public:
 
   void addObservationPoint(ObservationDataPoint new_data_point);
 
-  std::vector< ObservationDataPoint > items;
+  std::vector<ObservationDataPoint> items;
 };
 
 /** \brief These blocks of data hold the ceres parameters upon which the optimizaition proceeds
@@ -224,27 +224,27 @@ public:
    *  \param camera_to_add this is the camera added to the list
    *  \return true on success
    */
-  bool addStaticCamera(boost::shared_ptr< Camera > camera_to_add);
+  bool addStaticCamera(boost::shared_ptr<Camera> camera_to_add);
 
   /*! \brief adds a static target to job's list of static targets
    *  \param target_to_add this is the target added to the list
    *  \return true on success
    */
-  bool addStaticTarget(boost::shared_ptr< Target > target_to_add);
+  bool addStaticTarget(boost::shared_ptr<Target> target_to_add);
 
   /*! \brief adds a moving camera to job's list of cameras
    *  \param camera_to_add this is the camera added to the list
    *  \param scene_id the scene's id, only one camera of given name existe in each scene
    *  \return true on success
    */
-  bool addMovingCamera(boost::shared_ptr< Camera > camera_to_add, int scene_id);
+  bool addMovingCamera(boost::shared_ptr<Camera> camera_to_add, int scene_id);
 
   /*! \brief adds a static target to job's list of static targets
    *  \param target_to_add this is the target added to the list
    *  \param scene_id the scene's id, only one target of given name exist in each scene
    *  \return true on success
    */
-  bool addMovingTarget(boost::shared_ptr< Target > target_to_add, int scene_id);
+  bool addMovingTarget(boost::shared_ptr<Target> target_to_add, int scene_id);
 
   /*! @brief gets a pointer to the intrinsic parameters of a static camera
    *  @param camera_name the camera's name
@@ -314,10 +314,10 @@ public:
   P_BLOCK getMovingTargetPointParameterBlock(std::string target_name, int pnt_id);
 
   // private:
-  std::vector< boost::shared_ptr< Camera > > static_cameras_;       /*!< all non-moving cameras in job */
-  std::vector< boost::shared_ptr< MovingCamera > > moving_cameras_; /*! only one camera of a given name per scene */
-  std::vector< boost::shared_ptr< Target > > static_targets_;       /*!< all non-moving targets in job */
-  std::vector< boost::shared_ptr< MovingTarget > > moving_targets_; /*! only one target of a given name per scene */
+  std::vector<boost::shared_ptr<Camera> > static_cameras_;       /*!< all non-moving cameras in job */
+  std::vector<boost::shared_ptr<MovingCamera> > moving_cameras_; /*! only one camera of a given name per scene */
+  std::vector<boost::shared_ptr<Target> > static_targets_;       /*!< all non-moving targets in job */
+  std::vector<boost::shared_ptr<MovingTarget> > moving_targets_; /*! only one target of a given name per scene */
 };
 
 /*! @brief defines and exececutes the calibration script */
@@ -393,8 +393,8 @@ public:
    *  @param target a pointer to the target
    *  @return true if sucessful
    */
-  bool addObservationToCurrentScene(boost::shared_ptr< DummyCameraObserver > camera_observer,
-                                    boost::shared_ptr< Target > target);
+  bool addObservationToCurrentScene(boost::shared_ptr<DummyCameraObserver> camera_observer,
+                                    boost::shared_ptr<Target> target);
 
   /** @brief removes all cameras and targets from current scene
    *  @return true if sucessful
@@ -411,14 +411,14 @@ public:
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 private:
-  std::string camera_def_file_name_;                    /*!< this file describes all cameras in job */
-  std::string target_def_file_name_;                    /*!< this file describes all targets in job */
-  std::string caljob_def_file_name_;                    /*!< this file describes all observations in job */
-  std::vector< ObservationScene > scene_list_;          /*!< contains list of scenes which define the job */
-  int current_scene_;                                   /*!< id of current scene under review or construction */
-  std::vector< DummyCameraObserver > camera_observers_; /*!< interface to images from cameras */
-  std::vector< Target > defined_target_set_;            /*!< TODO Not sure if I'll use this one */
-  CeresBlocks ceres_blocks_;                            /*!< This structure maintains the parameter sets for ceres */
+  std::string camera_def_file_name_;                  /*!< this file describes all cameras in job */
+  std::string target_def_file_name_;                  /*!< this file describes all targets in job */
+  std::string caljob_def_file_name_;                  /*!< this file describes all observations in job */
+  std::vector<ObservationScene> scene_list_;          /*!< contains list of scenes which define the job */
+  int current_scene_;                                 /*!< id of current scene under review or construction */
+  std::vector<DummyCameraObserver> camera_observers_; /*!< interface to images from cameras */
+  std::vector<Target> defined_target_set_;            /*!< TODO Not sure if I'll use this one */
+  CeresBlocks ceres_blocks_;                          /*!< This structure maintains the parameter sets for ceres */
   ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
 };
 

@@ -21,9 +21,9 @@ using YAML::Node;
 namespace industrial_extrinsic_cal
 {
 // prototypes
-int parse_target_points(const Node& node, std::vector< Point3d > points);
+int parse_target_points(const Node& node, std::vector<Point3d> points);
 
-void parse_targets(ifstream& targets_input_file, vector< boost::shared_ptr< Target > >& targets)
+void parse_targets(ifstream& targets_input_file, vector<boost::shared_ptr<Target> >& targets)
 {
   try
   {
@@ -35,7 +35,7 @@ void parse_targets(ifstream& targets_input_file, vector< boost::shared_ptr< Targ
     ROS_INFO_STREAM("Found " << target_parameters.size() << " static targets ");
     for (unsigned int i = 0; i < target_parameters.size(); i++)
     {
-      shared_ptr< Target > temp_target = parse_single_target(target_parameters[i]);
+      shared_ptr<Target> temp_target = parse_single_target(target_parameters[i]);
       targets.push_back(temp_target);
     }
 
@@ -44,7 +44,7 @@ void parse_targets(ifstream& targets_input_file, vector< boost::shared_ptr< Targ
     ROS_INFO_STREAM("Found " << target_parameters.size() << " moving targets ");
     for (unsigned int i = 0; i < target_parameters.size(); i++)
     {
-      shared_ptr< Target > temp_target = parse_single_target(target_parameters[i]);
+      shared_ptr<Target> temp_target = parse_single_target(target_parameters[i]);
       temp_target->is_moving_ = true;
       targets.push_back(temp_target);
     }
@@ -56,33 +56,33 @@ void parse_targets(ifstream& targets_input_file, vector< boost::shared_ptr< Targ
   ROS_INFO_STREAM("Successfully read in " << (int)targets.size() << " targets");
 }  // end of parse_targets
 
-shared_ptr< Target > parse_single_target(const Node& node)
+shared_ptr<Target> parse_single_target(const Node& node)
 {
-  shared_ptr< Target > temp_target = make_shared< Target >();
-  shared_ptr< TransformInterface > temp_ti;
+  shared_ptr<Target> temp_target = make_shared<Target>();
+  shared_ptr<TransformInterface> temp_ti;
   try
   {
-    temp_target->target_name_ = node["target_name"].at< std::string >();
-    temp_target->target_frame_ = node["target_frame"].at< std::string >();
-    temp_target->target_type_ = node["target_type"].at< std::string >();
+    temp_target->target_name_ = node["target_name"].at<std::string>();
+    temp_target->target_frame_ = node["target_frame"].at<std::string>();
+    temp_target->target_type_ = node["target_type"].at<std::string>();
     switch (temp_target->target_type_)
     {
       case pattern_options::Chessboard:
-        temp_target->checker_board_parameters_.pattern_rows = node["target_rows"].at< int >();
-        temp_target->checker_board_parameters_.pattern_cols = node["target_cols"].at< int >();
+        temp_target->checker_board_parameters_.pattern_rows = node["target_rows"].at<int>();
+        temp_target->checker_board_parameters_.pattern_cols = node["target_cols"].at<int>();
         ROS_DEBUG_STREAM("TargetRows: " << temp_target->checker_board_parameters_.pattern_rows);
         break;
       case pattern_options::CircleGrid:
-        temp_target->circle_grid_parameters_.pattern_rows = node["target_rows"].at< int >();
-        temp_target->circle_grid_parameters_.pattern_cols = node["target_cols"].at< int >();
-        temp_target->circle_grid_parameters_.circle_diameter = ["circle_dia"].at< double >();
+        temp_target->circle_grid_parameters_.pattern_rows = node["target_rows"].at<int>();
+        temp_target->circle_grid_parameters_.pattern_cols = node["target_cols"].at<int>();
+        temp_target->circle_grid_parameters_.circle_diameter = ["circle_dia"].at<double>();
         temp_target->circle_grid_parameters_.is_symmetric = true;
         ROS_DEBUG_STREAM("TargetRows: " << temp_target->circle_grid_parameters_.pattern_rows);
         break;
       case pattern_options::ModifiedCircleGrid:
-        temp_target->circle_grid_parameters_.pattern_rows = node["target_rows"].at< int >();
-        temp_target->circle_grid_parameters_.pattern_cols = node["target_cols"].at< int >();
-        temp_target->circle_grid_parameters_.circle_diameter = ["circle_dia"].at< double >();
+        temp_target->circle_grid_parameters_.pattern_rows = node["target_rows"].at<int>();
+        temp_target->circle_grid_parameters_.pattern_cols = node["target_cols"].at<int>();
+        temp_target->circle_grid_parameters_.circle_diameter = ["circle_dia"].at<double>();
         temp_target->circle_grid_parameters_.is_symmetric = true;
         ROS_DEBUG_STREAM("TargetRows: " << temp_target->circle_grid_parameters_.pattern_rows);
         break;
@@ -95,12 +95,12 @@ shared_ptr< Target > parse_single_target(const Node& node)
     }  // end of target type
     temp_target->pose_ = parsePose(node);
     std::string transform_interface;
-    transform_interface = node["transform_interface"].at< std::string >();
-    shared_ptr< TransformInterface > temp_ti =
+    transform_interface = node["transform_interface"].at<std::string>();
+    shared_ptr<TransformInterface> temp_ti =
         parseTransformInterface(node, transform_interface, temp_target->target_frame_);
     temp_target->setTransformInterface(temp_ti);  // install the transform interface
 
-    temp_target->num_points_ = node["num_points"].at< int >();
+    temp_target->num_points_ = node["num_points"].at<int>();
     const Node points_node = node("points");
     int num_points = parse_target_points(points_node, temp_target->pts_);
     if (num_points != temp_target->num_points_)
@@ -125,15 +125,15 @@ shared_ptr< Target > parse_single_target(const Node& node)
   return (temp_target);
 }  // end parse_single_target
 
-int parse_target_points(const Node& node, std::vector< Point3d > points)
+int parse_target_points(const Node& node, std::vector<Point3d> points)
 {
   ROS_DEBUG_STREAM("FoundPoints: " << node.size());
   points.clear();
   for (int i = 0; i < (int)node.size(); i++)
   {
     const YAML::Node pnt_node = node[i]("pnt");
-    std::vector< float > temp_pnt;
-    temp_pnt = pnt_node.at< std::vector< double > >();
+    std::vector<float> temp_pnt;
+    temp_pnt = pnt_node.at<std::vector<double> >();
     Point3d temp_pnt3d;
     temp_pnt3d.x = temp_pnt[0];
     temp_pnt3d.y = temp_pnt[1];

@@ -51,34 +51,34 @@ public:
    *  \param camera_to_add this is the camera added to the list
    *  \return true on success
    */
-  bool addStaticCamera(boost::shared_ptr< Camera > camera_to_add);
+  bool addStaticCamera(boost::shared_ptr<Camera> camera_to_add);
 
   /*! \brief adds a static target to job's list of static targets
    *  \param target_to_add this is the target added to the list
    *  \return true on success
    */
-  bool addStaticTarget(boost::shared_ptr< Target > target_to_add);
+  bool addStaticTarget(boost::shared_ptr<Target> target_to_add);
 
   /*! \brief adds a moving camera to job's list of cameras
    *  \param camera_to_add this is the camera added to the list
    *  \param scene_id the scene's id, only one camera of given name exist in each scene
    *  \return true on success
    */
-  bool addMovingCamera(boost::shared_ptr< Camera > camera_to_add, int scene_id);
+  bool addMovingCamera(boost::shared_ptr<Camera> camera_to_add, int scene_id);
 
   /*! \brief adds a static target to job's list of static targets
    *  \param target_to_add this is the target added to the list
    *  \param scene_id the scene's id, only one target of given name exist in each scene
    *  \return true on success
    */
-  bool addMovingTarget(boost::shared_ptr< Target > target_to_add, int scene_id);
+  bool addMovingTarget(boost::shared_ptr<Target> target_to_add, int scene_id);
 
   /*! \brief grabs a camera from the camera list given the camera name
    *  \param camera_name is the name of the camera
    *  \param camera this is the camera from the list, either moving or static
    *  \return true on success
    */
-  const boost::shared_ptr< Camera > getCameraByName(const std::string& camera_name);
+  const boost::shared_ptr<Camera> getCameraByName(const std::string& camera_name);
 
   /*!
    * \brief grabs a target from the target list given the target name
@@ -87,7 +87,7 @@ public:
    * @param scene_id, when a target is moving, it has a separate object for each scene
    * @return shared pointer to target
    */
-  const boost::shared_ptr< Target > getTargetByName(const std::string& target_name, int scene_id = 0);
+  const boost::shared_ptr<Target> getTargetByName(const std::string& target_name, int scene_id = 0);
 
   /*! @brief gets a pointer to the intrinsic parameters of a static camera
    *  @param camera_name the camera's name
@@ -198,10 +198,10 @@ public:
     return (reference_frame_);
   };
 
-  std::vector< boost::shared_ptr< Camera > > static_cameras_;       /*!< all non-moving cameras in job */
-  std::vector< boost::shared_ptr< MovingCamera > > moving_cameras_; /*! only one camera of a given name per scene */
-  std::vector< boost::shared_ptr< Target > > static_targets_;       /*!< all non-moving targets in job */
-  std::vector< boost::shared_ptr< MovingTarget > > moving_targets_; /*! only one target of a given name per scene */
+  std::vector<boost::shared_ptr<Camera> > static_cameras_;       /*!< all non-moving cameras in job */
+  std::vector<boost::shared_ptr<MovingCamera> > moving_cameras_; /*! only one camera of a given name per scene */
+  std::vector<boost::shared_ptr<Target> > static_targets_;       /*!< all non-moving targets in job */
+  std::vector<boost::shared_ptr<MovingTarget> > moving_targets_; /*! only one target of a given name per scene */
   std::string reference_frame_; /*! name of reference frame, typically a ROS tf frame */
 
 };  // end class

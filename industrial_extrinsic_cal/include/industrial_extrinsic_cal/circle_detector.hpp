@@ -87,7 +87,7 @@ public:
     void write(FileStorage& fs) const;
   };
 
-  CV_WRAP static Ptr< CircleDetector > create(const CircleDetector::Params& parameters = CircleDetector::Params());
+  CV_WRAP static Ptr<CircleDetector> create(const CircleDetector::Params& parameters = CircleDetector::Params());
 };
 }
 #endif

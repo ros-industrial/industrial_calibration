@@ -76,7 +76,7 @@ public:
 private:
   bool loadFromYamlFile();
   std::string yaml_file_name_;
-  std::map< std::string, double > joints_;
+  std::map<std::string, double> joints_;
   ros::NodeHandle nh_;
   ros::Publisher joint_state_pub_;
   ros::ServiceServer get_server_;

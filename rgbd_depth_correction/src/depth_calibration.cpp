@@ -60,18 +60,18 @@ DepthCalibrator::DepthCalibrator(ros::NodeHandle& nh)
 
   double x, y, z, w;
 
-  pnh.param< double >("target_pos_x", x, 0.0);
-  pnh.param< double >("target_pos_y", y, 0.0);
-  pnh.param< double >("target_pos_z", z, 0.0);
+  pnh.param<double>("target_pos_x", x, 0.0);
+  pnh.param<double>("target_pos_y", y, 0.0);
+  pnh.param<double>("target_pos_z", z, 0.0);
 
   target_initial_pose_.position.x = x;
   target_initial_pose_.position.y = y;
   target_initial_pose_.position.z = z;
 
-  pnh.param< double >("target_orn_x", x, 0.0);
-  pnh.param< double >("target_orn_y", y, 0.0);
-  pnh.param< double >("target_orn_z", z, 0.0);
-  pnh.param< double >("target_orn_w", w, 1.0);
+  pnh.param<double>("target_orn_x", x, 0.0);
+  pnh.param<double>("target_orn_y", y, 0.0);
+  pnh.param<double>("target_orn_z", z, 0.0);
+  pnh.param<double>("target_orn_w", w, 1.0);
 
   target_initial_pose_.orientation.x = x;
   target_initial_pose_.orientation.y = y;
@@ -81,21 +81,21 @@ DepthCalibrator::DepthCalibrator(ros::NodeHandle& nh)
            target_initial_pose_.position.y, target_initial_pose_.position.z, target_initial_pose_.orientation.w,
            target_initial_pose_.orientation.x, target_initial_pose_.orientation.y, target_initial_pose_.orientation.z);
 
-  pnh.param< int >("num_views", num_views_, 30);
-  pnh.param< int >("num_attempts", num_attempts_, 10);
-  pnh.param< int >("point_cloud_history", num_point_clouds_, 30);
+  pnh.param<int>("num_views", num_views_, 30);
+  pnh.param<int>("num_attempts", num_attempts_, 10);
+  pnh.param<int>("point_cloud_history", num_point_clouds_, 30);
 
   // Create Subscribers and Services
   calibrate_depth_ = nh_.advertiseService("depth_calibration", &DepthCalibrator::calibrateCameraDepth, this);
   calibrate_pixel_depth_ =
       nh_.advertiseService("pixel_depth_calibration", &DepthCalibrator::calibrateCameraPixelDepth, this);
   set_store_cloud_ = nh_.advertiseService("store_cloud", &DepthCalibrator::setStoreCloud, this);
-  get_target_pose_ = nh.serviceClient< target_finder::target_locater >("TargetLocateService");
+  get_target_pose_ = nh.serviceClient<target_finder::target_locater>("TargetLocateService");
 
   this->point_cloud_sub_ =
-      boost::shared_ptr< PointCloudSubscriberType >(new PointCloudSubscriberType(nh, "depth_points", 1));
-  this->image_sub_ = boost::shared_ptr< ImageSubscriberType >(new ImageSubscriberType(nh, "image", 1));
-  synchronizer_ = boost::shared_ptr< SynchronizerType >(
+      boost::shared_ptr<PointCloudSubscriberType>(new PointCloudSubscriberType(nh, "depth_points", 1));
+  this->image_sub_ = boost::shared_ptr<ImageSubscriberType>(new ImageSubscriberType(nh, "image", 1));
+  synchronizer_ = boost::shared_ptr<SynchronizerType>(
       new SynchronizerType(PolicyType(10), *this->point_cloud_sub_, *this->image_sub_));
   synchronizer_->registerCallback(boost::bind(&DepthCalibrator::updateInputData, this, _1, _2));
 }
@@ -119,7 +119,7 @@ void DepthCalibrator::storeCalibration(const std::string& yaml_file, const doubl
 
 bool DepthCalibrator::calibrateCameraDepth(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
-  boost::lock_guard< boost::mutex > lock(data_lock_);
+  boost::lock_guard<boost::mutex> lock(data_lock_);
 
   if (saved_clouds_.size() > 0)
   {
@@ -151,7 +151,7 @@ bool DepthCalibrator::calibrateCameraDepth(std_srvs::Empty::Request& request, st
       {
         continue;
       }
-      std::vector< double > eq;
+      std::vector<double> eq;
       eq = plane_equations_[j];
       ceres::CostFunction* cost_function = DepthError::Create(
           eq[0], eq[1], eq[2], eq[3], correction_cloud_.points.at(i).z, saved_clouds_[j].points.at(i));
@@ -181,13 +181,12 @@ bool DepthCalibrator::calibrateCameraDepth(std_srvs::Empty::Request& request, st
   saved_images_.clear();
 }
 
-bool DepthCalibrator::findAveragePointCloud(pcl::PointCloud< pcl::PointXYZ >& final_cloud)
+bool DepthCalibrator::findAveragePointCloud(pcl::PointCloud<pcl::PointXYZ>& final_cloud)
 {
   // Store point clouds until the number of point clouds desired is reached, break if no new data is received after 1
   // second
   int rate = 100;
-  std::vector< pcl::PointCloud< pcl::PointXYZ >, Eigen::aligned_allocator< pcl::PointCloud< pcl::PointXYZ > > >
-      temp_clouds;
+  std::vector<pcl::PointCloud<pcl::PointXYZ>, Eigen::aligned_allocator<pcl::PointCloud<pcl::PointXYZ> > > temp_clouds;
   ros::Rate sleep_rate(rate);
   while (temp_clouds.size() < num_point_clouds_)
   {
@@ -196,7 +195,7 @@ bool DepthCalibrator::findAveragePointCloud(pcl::PointCloud< pcl::PointXYZ >& fi
     while (count < rate)
     {
       {
-        boost::lock_guard< boost::mutex > lock(data_lock_);
+        boost::lock_guard<boost::mutex> lock(data_lock_);
         std_msgs::Header ros_cloud_header;
         pcl_conversions::fromPCL(last_cloud_.header, ros_cloud_header);
         final_cloud = last_cloud_;
@@ -268,7 +267,7 @@ bool DepthCalibrator::findAveragePointCloud(pcl::PointCloud< pcl::PointXYZ >& fi
 bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
   // Find the target location
-  std::vector< double > plane_eq;
+  std::vector<double> plane_eq;
   geometry_msgs::Pose target_pose;
   ROS_INFO("Attempting to find target average pose");
   if (!findAveragePlane(plane_eq, target_pose))
@@ -279,7 +278,7 @@ bool DepthCalibrator::calibrateCameraPixelDepth(std_srvs::Empty::Request& reques
   ROS_INFO("Target average pose found");
 
   // Get average point cloud
-  pcl::PointCloud< pcl::PointXYZ > avg_cloud;
+  pcl::PointCloud<pcl::PointXYZ> avg_cloud;
   if (!findAveragePointCloud(avg_cloud))
   {
     ROS_ERROR("Failed to get average point cloud.  Aborting depth calibration");
@@ -416,14 +415,14 @@ bool DepthCalibrator::setStoreCloud(std_srvs::Empty::Request& request, std_srvs:
 
   try
   {
-    std::vector< double > plane_eq;
+    std::vector<double> plane_eq;
     if (!findAveragePlane(plane_eq, target_pose))
     {
       ROS_ERROR("Failed to get target pose.  Not storing depth data");
       return false;
     }
 
-    pcl::PointCloud< pcl::PointXYZ > avg_cloud;
+    pcl::PointCloud<pcl::PointXYZ> avg_cloud;
     if (!findAveragePointCloud(avg_cloud))
     {
       ROS_ERROR("Failed to get average point cloud.  Not storing depth data");
@@ -451,7 +450,7 @@ bool DepthCalibrator::setStoreCloud(std_srvs::Empty::Request& request, std_srvs:
 void DepthCalibrator::updateInputData(const sensor_msgs::PointCloud2ConstPtr& cloud,
                                       const sensor_msgs::ImageConstPtr& image)
 {
-  boost::lock_guard< boost::mutex > lock(data_lock_);
+  boost::lock_guard<boost::mutex> lock(data_lock_);
 
   sensor_msgs::PointCloud2 temp_cloud;
   last_image_ = *image;
@@ -460,13 +459,13 @@ void DepthCalibrator::updateInputData(const sensor_msgs::PointCloud2ConstPtr& cl
   pcl::fromROSMsg(temp_cloud, last_cloud_);
 }
 
-bool DepthCalibrator::findAveragePlane(std::vector< double >& plane_eq, geometry_msgs::Pose& target_pose)
+bool DepthCalibrator::findAveragePlane(std::vector<double>& plane_eq, geometry_msgs::Pose& target_pose)
 {
   bool rtn = false;
 
   plane_eq.clear();
   geometry_msgs::Pose temp_pose;
-  std::vector< double > a, b, c, d;
+  std::vector<double> a, b, c, d;
   int error = 0;
 
   // Find the target multiple times or until the error limit is reached

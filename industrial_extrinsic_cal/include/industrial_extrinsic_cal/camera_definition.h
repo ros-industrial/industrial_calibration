@@ -67,7 +67,7 @@ public:
    *  Transform interfaces allow hardware or simulation to provide or accept pose information
    *  depending on whether they are a broadcaster or a listener
    */
-  void setTransformInterface(boost::shared_ptr< TransformInterface > tranform_interface);
+  void setTransformInterface(boost::shared_ptr<TransformInterface> tranform_interface);
 
   /*! \brief set the reference frame for the tranform interface.
    *  Because transform interfaces need to get created when the camera or target is created, we often don't know
@@ -86,12 +86,12 @@ public:
    *  what the reference frame is for the interface until later, so we need to set it
    * TODO since we have a get and set, why is it public?
    */
-  boost::shared_ptr< TransformInterface > getTransformInterface();
-  boost::shared_ptr< CameraObserver > camera_observer_;         /*!< processes images, does CameraObservations */
-  boost::shared_ptr< Trigger > trigger_;                        /*!< pointer to the trigger mechanism for this camera*/
-  CameraParameters camera_parameters_;                          /*!< The intrinsic and extrinsic parameters */
-  std::string camera_name_;                                     /*!< string camera_name_ unique name of a camera */
-  boost::shared_ptr< TransformInterface > transform_interface_; /**< interface to transform, tf for example  */
+  boost::shared_ptr<TransformInterface> getTransformInterface();
+  boost::shared_ptr<CameraObserver> camera_observer_;         /*!< processes images, does CameraObservations */
+  boost::shared_ptr<Trigger> trigger_;                        /*!< pointer to the trigger mechanism for this camera*/
+  CameraParameters camera_parameters_;                        /*!< The intrinsic and extrinsic parameters */
+  std::string camera_name_;                                   /*!< string camera_name_ unique name of a camera */
+  boost::shared_ptr<TransformInterface> transform_interface_; /**< interface to transform, tf for example  */
   Pose6d intermediate_frame_; /**< Sometimes there is an intermediate transform from ref to origin of intrinsics */
   bool is_moving_;            /*!< bool is_moving_  false for static cameras */
 };
@@ -100,8 +100,8 @@ public:
 /*! @brief unique observation command */
 typedef struct
 {
-  boost::shared_ptr< Camera > camera;
-  boost::shared_ptr< Target > target;
+  boost::shared_ptr<Camera> camera;
+  boost::shared_ptr<Target> target;
   Roi roi;
   Cost_function cost_type;
 } ObservationCmd;
@@ -110,8 +110,8 @@ typedef struct
 /*! \brief moving cameras need a new pose with each scene in which they are used */
 typedef struct MovingCamera
 {
-  boost::shared_ptr< Camera > cam;  // must hold a copy of the camera extrinsic parameters
-  int scene_id;                     // but copy of intrinsics may be and unused duplicate
+  boost::shared_ptr<Camera> cam;  // must hold a copy of the camera extrinsic parameters
+  int scene_id;                   // but copy of intrinsics may be and unused duplicate
 } MovingCamera;
 
 }  // end namespace industrial_extrinsic_cal

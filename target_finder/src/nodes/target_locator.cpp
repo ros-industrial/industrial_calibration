@@ -55,7 +55,7 @@ public:
 private:
   ros::NodeHandle nh_;
   ros::ServiceServer target_locate_server_;
-  shared_ptr< Target > target_;
+  shared_ptr<Target> target_;
   string image_topic_;
   string camera_name_;
   int target_type_;
@@ -212,7 +212,7 @@ bool TargetLocatorService::executeCallBack(target_locater::Request& req, target_
 
 void TargetLocatorService::initMCircleTarget(int rows, int cols, double circle_dia, double spacing)
 {
-  target_ = make_shared< industrial_extrinsic_cal::Target >();
+  target_ = make_shared<industrial_extrinsic_cal::Target>();
   target_->is_moving_ = true;
   target_->target_name_ = "modified_circle_target";
   target_->target_frame_ = "target_frame";
@@ -239,7 +239,7 @@ void TargetLocatorService::initMCircleTarget(int rows, int cols, double circle_d
 
 void TargetLocatorService::initBallsTarget()
 {
-  target_ = make_shared< industrial_extrinsic_cal::Target >();
+  target_ = make_shared<industrial_extrinsic_cal::Target>();
   target_->target_name_ = "four_ball_target";
   target_->target_frame_ = "target_frame";
   target_->target_type_ = 4;

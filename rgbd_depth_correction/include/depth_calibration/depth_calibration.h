@@ -38,9 +38,9 @@
 
 #include "ceres/ceres.h"
 
-template < typename T >
+template <typename T>
 void calculateResidualError(T& a, T& b, T& c, T& d, T& dk, T pt[3], T dp[2], T& error);
-template < typename T >
+template <typename T>
 inline void calculateResidualError(T& a, T& b, T& c, T& d, T& dk, T pt[3], T dp[2], T& residual)
 {
   // depth correction amount
@@ -71,7 +71,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
 
   bool operator()(const T* const d_params, /** depth coefficients */
                   T* residual) const
@@ -101,7 +101,7 @@ public:
   static ceres::CostFunction* Create(const double a, const double b, const double c, const double d, const double dk,
                                      const pcl::PointXYZ pt)
   {
-    return (new ceres::AutoDiffCostFunction< DepthError, 1, 2 >(new DepthError(a, b, c, d, dk, pt)));
+    return (new ceres::AutoDiffCostFunction<DepthError, 1, 2>(new DepthError(a, b, c, d, dk, pt)));
   }
 
   double a_;         /** plane equation parameter a */
@@ -172,13 +172,13 @@ private:
   ros::NodeHandle nh_; /**< @brief ROS node handle */
   bool save_data_;     /**< @brief Flag to determine whether to save calibration results or not */
 
-  typedef message_filters::sync_policies::ApproximateTime< sensor_msgs::PointCloud2, sensor_msgs::Image > PolicyType;
-  typedef message_filters::Subscriber< sensor_msgs::PointCloud2 > PointCloudSubscriberType;
-  typedef message_filters::Subscriber< sensor_msgs::Image > ImageSubscriberType;
-  typedef message_filters::Synchronizer< PolicyType > SynchronizerType;
-  boost::shared_ptr< PointCloudSubscriberType > point_cloud_sub_; /**< @brief Point cloud subscriber */
-  boost::shared_ptr< ImageSubscriberType > image_sub_;            /**< @brief RGB image subscriber */
-  boost::shared_ptr< SynchronizerType > synchronizer_; /**< @brief Syncronizer for point cloud and image data */
+  typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2, sensor_msgs::Image> PolicyType;
+  typedef message_filters::Subscriber<sensor_msgs::PointCloud2> PointCloudSubscriberType;
+  typedef message_filters::Subscriber<sensor_msgs::Image> ImageSubscriberType;
+  typedef message_filters::Synchronizer<PolicyType> SynchronizerType;
+  boost::shared_ptr<PointCloudSubscriberType> point_cloud_sub_; /**< @brief Point cloud subscriber */
+  boost::shared_ptr<ImageSubscriberType> image_sub_;            /**< @brief RGB image subscriber */
+  boost::shared_ptr<SynchronizerType> synchronizer_; /**< @brief Syncronizer for point cloud and image data */
 
   ros::ServiceClient get_target_pose_;       /**< @brief Service to call target locator to get target pose */
   ros::ServiceServer calibrate_depth_;       /**< @brief Service to compute depth coefficients d1 and d2 */
@@ -191,25 +191,24 @@ private:
                             calculations */
   std::string filename_; /**< @brief Name of the calibration files to save */
   std::string filepath_; /**< @brief Pathway to the location to save calibration files */
-  geometry_msgs::Pose
-      target_initial_pose_; /**< @brief The initial pose guess of the calibration target for the target finder service
-                               */
+  geometry_msgs::Pose target_initial_pose_; /**< @brief The initial pose guess of the calibration target for the target
+                                             * finder service
+                                               */
 
   double std_dev_error_;          /**< @brief The standard deviation error allowed for finding the target pose */
   double depth_error_threshold_;  /**< @brief The depth error allowed for calculating the pixel depth error map */
   boost::mutex data_lock_;        /**< @brief Lock for data subscription */
   sensor_msgs::Image last_image_; /**< @brief The last color image received */
-  pcl::PointCloud< pcl::PointXYZ > last_cloud_; /**< @brief The last point cloud received */
-  pcl::PointCloud< pcl::PointXYZ >
-      correction_cloud_; /**< @brief The point cloud containing the depth correction values */
-  std::vector< pcl::PointCloud< pcl::PointXYZ >, Eigen::aligned_allocator< pcl::PointCloud< pcl::PointXYZ > > >
-      saved_clouds_;
+  pcl::PointCloud<pcl::PointXYZ> last_cloud_;       /**< @brief The last point cloud received */
+  pcl::PointCloud<pcl::PointXYZ> correction_cloud_; /**< @brief The point cloud containing the depth correction values
+                                                       */
+  std::vector<pcl::PointCloud<pcl::PointXYZ>, Eigen::aligned_allocator<pcl::PointCloud<pcl::PointXYZ> > > saved_clouds_;
   /**< @brief The vector of stored point clouds used to compute the distance coefficients */
-  std::vector< std::vector< double > >
-      plane_equations_;                 /**< @brief A vector of plane equations for each point cloud in saved_clouds_ */
-  std::vector< cv::Mat > saved_images_; /**< @brief A vector of rgb images for each point cloud in saved_clouds_ */
-  std::vector< geometry_msgs::Pose > saved_target_poses_; /**< @brief A vector of target poses for each point cloud in
-                                                             saved_clouds_ */
+  std::vector<std::vector<double> > plane_equations_; /**< @brief A vector of plane equations for each point cloud in
+                                                         saved_clouds_ */
+  std::vector<cv::Mat> saved_images_; /**< @brief A vector of rgb images for each point cloud in saved_clouds_ */
+  std::vector<geometry_msgs::Pose> saved_target_poses_; /**< @brief A vector of target poses for each point cloud in
+                                                           saved_clouds_ */
 
   /**
      * @brief Stores the calibration results in a YAML formated file
@@ -237,9 +236,9 @@ private:
      * @param[out] target_pose The pose of the target found from the last service call
      * @return True if the target was successfully found before the number of failures (num_attempts) was reached
      */
-  bool findAveragePlane(std::vector< double >& plane_eq, geometry_msgs::Pose& target_pose);
+  bool findAveragePlane(std::vector<double>& plane_eq, geometry_msgs::Pose& target_pose);
 
-  bool findAveragePointCloud(pcl::PointCloud< pcl::PointXYZ >& final_cloud);
+  bool findAveragePointCloud(pcl::PointCloud<pcl::PointXYZ>& final_cloud);
 };
 
 #endif  // DEPTH_CALIBRATION_H

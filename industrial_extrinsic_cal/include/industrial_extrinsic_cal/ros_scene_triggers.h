@@ -57,7 +57,7 @@ private:
   std::string parameter_name_;
 };
 
-typedef actionlib::SimpleActionClient< industrial_extrinsic_cal::manual_triggerAction > Client;
+typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::manual_triggerAction> Client;
 
 class ROSActionServerSceneTrigger : public SceneTrigger
 {

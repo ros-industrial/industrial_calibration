@@ -64,8 +64,8 @@ private:
   ros::ServiceServer rail_cal_server_;
   ros::Subscriber rgb_sub_;
   ros::Publisher rgb_pub_;
-  shared_ptr< Target > target_;
-  shared_ptr< Camera > camera_;
+  shared_ptr<Target> target_;
+  shared_ptr<Camera> camera_;
   double focal_length_x_;
   double focal_length_y_;
   double center_x_;
@@ -157,7 +157,7 @@ RailCalService::RailCalService(ros::NodeHandle nh)
 
   u_int32_t queue_size = 5;
   rgb_sub_ = nh_.subscribe("color_image", queue_size, &RailCalService::cameraCallback, this);
-  rgb_pub_ = nh_.advertise< sensor_msgs::Image >("color_image_center", 1);
+  rgb_pub_ = nh_.advertise<sensor_msgs::Image>("color_image_center", 1);
 
   if (!use_quaternion)
   {
@@ -168,9 +168,9 @@ RailCalService::RailCalService(ros::NodeHandle nh)
   }
 
   bool is_moving = true;
-  camera_ = boost::make_shared< industrial_extrinsic_cal::Camera >("my_camera", camera_parameters_, is_moving);
-  camera_->trigger_ = boost::make_shared< NoWaitTrigger >();
-  camera_->camera_observer_ = boost::make_shared< ROSCameraObserver >(image_topic_, camera_name_);
+  camera_ = boost::make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
+  camera_->trigger_ = boost::make_shared<NoWaitTrigger>();
+  camera_->camera_observer_ = boost::make_shared<ROSCameraObserver>(image_topic_, camera_name_);
   if (!camera_->camera_observer_->pullCameraInfo(
           camera_->camera_parameters_.focal_length_x, camera_->camera_parameters_.focal_length_y,
           camera_->camera_parameters_.center_x, camera_->camera_parameters_.center_y,
@@ -341,7 +341,7 @@ bool RailCalService::executeCallBack(intrinsic_cal::rail_ical_run::Request& req,
 
 void RailCalService::initMCircleTarget(int rows, int cols, double circle_dia, double spacing)
 {
-  target_ = boost::make_shared< industrial_extrinsic_cal::Target >();
+  target_ = boost::make_shared<industrial_extrinsic_cal::Target>();
   target_->is_moving_ = true;
   target_->target_name_ = "modified_circle_target";
   target_->target_frame_ = "target_frame";

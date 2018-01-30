@@ -78,7 +78,7 @@ int main(int argc, char** argv)
     ROS_ERROR("Must set param:  transform_interface");
   }
   // generate points
-  std::vector< Point3d > pts;
+  std::vector<Point3d> pts;
   pts.clear();
   for (int i = 0; i < rows; i++)
   {

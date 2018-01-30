@@ -38,9 +38,9 @@ private:
   bool use_depth_exp_; /**< @brief Flag to determine whether to use the depth coefficients or not */
   double d1_, d2_;     /**< @brief The depth coefficients */
 
-  int version_; /**< @brief The version number found in the YAML file */
-  pcl::PointCloud< pcl::PointXYZ >
-      correction_cloud_; /**< @brief The depth correction point cloud containing the depth correction values */
+  int version_;                                     /**< @brief The version number found in the YAML file */
+  pcl::PointCloud<pcl::PointXYZ> correction_cloud_; /**< @brief The depth correction point cloud containing the depth
+                                                       correction values */
 
   ros::Subscriber pcl_sub_; /**< @brief PCL point cloud subscriber */
   ros::Publisher pcl_pub_;  /**< @brief PCL point cloud publisher for the corrected point cloud */
@@ -52,7 +52,7 @@ private:
      *
      * @param[in] cloud Latest point cloud received
      */
-  void pointcloudCallback(const pcl::PointCloud< pcl::PointXYZ >::ConstPtr& cloud);
+  void pointcloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloud);
 
   /**
      * @brief Give a pathway and file name, reads the version number and loads the appropriate depth correction
@@ -78,7 +78,7 @@ private:
      *
      * @param[in] cloud The point cloud to be corrected and republished
      */
-  void correctionVersionOne(const pcl::PointCloud< pcl::PointXYZ >::ConstPtr& cloud);
+  void correctionVersionOne(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloud);
 
 public:
   /**
@@ -137,14 +137,14 @@ public:
 
     ROS_INFO("Done reading yaml file");
 
-    pcl_pub_ = nh.advertise< pcl::PointCloud< pcl::PointXYZ > >("out_cloud", 1);
+    pcl_pub_ = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("out_cloud", 1);
     pcl_sub_ = nh.subscribe("in_cloud", 1, &DepthCorrectionNodelet::pointcloudCallback, this);
 
     depth_change_ = nh.advertiseService("change_depth_factor", &DepthCorrectionNodelet::setEnableDepth, this);
   }
 };
 
-void DepthCorrectionNodelet::pointcloudCallback(const pcl::PointCloud< pcl::PointXYZ >::ConstPtr& cloud)
+void DepthCorrectionNodelet::pointcloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloud)
 {
   switch (version_)
   {
@@ -210,9 +210,9 @@ void DepthCorrectionNodelet::loadVersionOne(const YAML::Node& doc, const std::st
   pcl::io::loadPCDFile(pcd_file, correction_cloud_);
 }
 
-void DepthCorrectionNodelet::correctionVersionOne(const pcl::PointCloud< pcl::PointXYZ >::ConstPtr& cloud)
+void DepthCorrectionNodelet::correctionVersionOne(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloud)
 {
-  pcl::PointCloud< pcl::PointXYZ > corrected_cloud = *cloud;
+  pcl::PointCloud<pcl::PointXYZ> corrected_cloud = *cloud;
   if (correction_cloud_.points.size() == cloud->points.size())
   {
     for (int i = 0; i < corrected_cloud.points.size(); ++i)
@@ -239,7 +239,7 @@ void DepthCorrectionNodelet::correctionVersionOne(const pcl::PointCloud< pcl::Po
                                   "performing depth correction");
   }
 
-  pcl::PointCloud< pcl::PointXYZ >::Ptr published_cloud = corrected_cloud.makeShared();
+  pcl::PointCloud<pcl::PointXYZ>::Ptr published_cloud = corrected_cloud.makeShared();
   pcl_pub_.publish(published_cloud);
 }
 

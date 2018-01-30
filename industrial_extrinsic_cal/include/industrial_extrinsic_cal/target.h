@@ -40,10 +40,10 @@ public:
   void pullTransform();
 
   /*! \brief sets the transform interface */
-  void setTransformInterface(boost::shared_ptr< TransformInterface > tranform_interface);
+  void setTransformInterface(boost::shared_ptr<TransformInterface> tranform_interface);
 
   /*! \brief gets the transform interface, why we have this for a public member, I don't know*/
-  boost::shared_ptr< TransformInterface > getTransformInterface();
+  boost::shared_ptr<TransformInterface> getTransformInterface();
 
   /*! \brief sets the transform interface, reference frame*/
   void setTIReferenceFrame(std::string ref_frame);
@@ -57,22 +57,22 @@ public:
   };
 
   // TODO make many of these private with interfaces
-  Pose6d pose_;                /**< pose of target */
-  unsigned int num_points_;    /**< number of points in the point array */
-  std::vector< Point3d > pts_; /**< an array of points expressed relative to Pose p. */
-  bool is_moving_;             /**< observed in multiple locations or it fixed to ref frame */
-  std::string target_name_;    /**< Name of target */
-  std::string target_frame_;   /**< name of target's coordinate frame */
-  unsigned int target_type_;   /**< Type of target */
-  boost::shared_ptr< TransformInterface > transform_interface_; /**< interface to transform */
+  Pose6d pose_;              /**< pose of target */
+  unsigned int num_points_;  /**< number of points in the point array */
+  std::vector<Point3d> pts_; /**< an array of points expressed relative to Pose p. */
+  bool is_moving_;           /**< observed in multiple locations or it fixed to ref frame */
+  std::string target_name_;  /**< Name of target */
+  std::string target_frame_; /**< name of target's coordinate frame */
+  unsigned int target_type_; /**< Type of target */
+  boost::shared_ptr<TransformInterface> transform_interface_; /**< interface to transform */
 
 private:
 };
 /*! \brief moving  need a new pose with each scene in which they are used */
 typedef struct MovingTarget
 {
-  boost::shared_ptr< Target > targ_;  // must hold a copy of the target pose parameters,
-  int scene_id_;                      // but point parameters may be unused duplicates
+  boost::shared_ptr<Target> targ_;  // must hold a copy of the target pose parameters,
+  int scene_id_;                    // but point parameters may be unused duplicates
 } MovingTarget;
 
 }  // end of namespace

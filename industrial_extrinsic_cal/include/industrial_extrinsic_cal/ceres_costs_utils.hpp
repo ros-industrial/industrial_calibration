@@ -33,9 +33,9 @@ namespace industrial_extrinsic_cal
  *   @param R1 second rotation matrix in column major order
  *   @param R3 matrix product of R1*R2
  */
-template < typename T >
+template <typename T>
 void rotationProduct(const T R1[9], const T R2[9], T R3[9]);
-template < typename T >
+template <typename T>
 inline void rotationProduct(const T R1[9], const T R2[9], T R3[9])
 {
   // We assume that the rotation matrices are in column major order
@@ -66,9 +66,9 @@ inline void rotationProduct(const T R1[9], const T R2[9], T R3[9])
  *   @param p2 tangential distortion coefficient p2
  */
 
-template < typename T >
+template <typename T>
 void extractCameraIntrinsics(const T intrinsics[9], T& fx, T& fy, T& cx, T& cy, T& k1, T& k2, T& k3, T& p1, T& p2);
-template < typename T >
+template <typename T>
 inline void extractCameraIntrinsics(const T intrinsics[9], T& fx, T& fy, T& cx, T& cy, T& k1, T& k2, T& k3, T& p1,
                                     T& p2)
 {
@@ -92,9 +92,9 @@ inline void extractCameraIntrinsics(const T intrinsics[9], T& fx, T& fy, T& cx, 
  *   @param cy optical center in y
  */
 
-template < typename T >
+template <typename T>
 void extractCameraIntrinsics(const T intrinsics[4], T& fx, T& fy, T& cx, T& cy);
-template < typename T >
+template <typename T>
 inline void extractCameraIntrinsics(const T intrinsics[4], T& fx, T& fy, T& cx, T& cy)
 {
   fx = intrinsics[0]; /** focal length x */
@@ -112,9 +112,9 @@ inline void extractCameraIntrinsics(const T intrinsics[4], T& fx, T& fy, T& cx, 
  *   @param ay, angle axis y
  *   @param az, angle axis z
  */
-template < typename T >
+template <typename T>
 void extractCameraExtrinsics(const T extrinsics[6], T& x, T& y, T& z, T& ax, T& ay, T& az);
-template < typename T >
+template <typename T>
 inline void extractCameraExtrinsics(const T extrinsics[6], T& x, T& y, T& z, T& ax, T& ay, T& az)
 {
   ax = extrinsics[0]; /** angle axis x */
@@ -130,9 +130,9 @@ inline void extractCameraExtrinsics(const T extrinsics[6], T& x, T& y, T& z, T& 
  *  @param RI the output inverse rotation
  */
 
-template < typename T >
+template <typename T>
 void rotationInverse(const T R[9], const T RI[9]);
-template < typename T >
+template <typename T>
 inline void rotationInverse(const T R[9], T RI[9])
 {
   RI[0] = R[0];
@@ -153,9 +153,9 @@ inline void rotationInverse(const T R[9], T RI[9])
  *  @param t_point the transformed point
  */
 
-template < typename T >
+template <typename T>
 inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3], T t_point[3]);
-template < typename T >
+template <typename T>
 inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3], T t_point[3])
 {
   ceres::AngleAxisRotatePoint(angle_axis, point, t_point);
@@ -170,9 +170,9 @@ inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3
  *  @param t_point the transformed point
  */
 
-template < typename T >
+template <typename T>
 inline void poseTransformPoint(const Pose6d& pose, const T point[3], T t_point[3]);
-template < typename T >
+template <typename T>
 inline void poseTransformPoint(const Pose6d& pose, const T point[3], T t_point[3])
 {
   T angle_axis[3];
@@ -191,9 +191,9 @@ inline void poseTransformPoint(const Pose6d& pose, const T point[3], T t_point[3
  *  @param point the original point in a Point3d form
  *  @param t_point the transformed point
  */
-template < typename T >
+template <typename T>
 void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d& point, T t_point[3]);
-template < typename T >
+template <typename T>
 inline void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d& point, T t_point[3])
 {
   T point_[3];
@@ -210,9 +210,9 @@ inline void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d
  *  @param pose the input pose
  *  @param pose the output rotatation matrix
  */
-template < typename T >
+template <typename T>
 void poseRotationMatrix(const Pose6d& pose, T R[9]);
-template < typename T >
+template <typename T>
 inline void poseRotationMatrix(const Pose6d& pose, T R[9])
 {
   T angle_axis[3];
@@ -238,10 +238,10 @@ inline void poseRotationMatrix(const Pose6d& pose, T R[9])
  *  @param residual the output or difference between where the point should appear given the parameters, and where it
  * was observed
  */
-template < typename T >
+template <typename T>
 void cameraPntResidualDist(T point[3], T& k1, T& k2, T& k3, T& p1, T& p2, T& fx, T& fy, T& cx, T& cy, T& ox, T& oy,
                            T residual[2]);
-template < typename T >
+template <typename T>
 inline void cameraPntResidualDist(T point[3], T& k1, T& k2, T& k3, T& p1, T& p2, T& fx, T& fy, T& cx, T& cy, T& ox,
                                   T& oy, T residual[2])
 {
@@ -297,9 +297,9 @@ inline void cameraPntResidualDist(T point[3], T& k1, T& k2, T& k3, T& p1, T& p2,
  *  @param ox observation in x
  *  @param oy observation in y
  */
-template < typename T >
+template <typename T>
 void projectPntNoDistortion(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy);
-template < typename T >
+template <typename T>
 inline void projectPntNoDistortion(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy)
 {
   T xp1 = point[0];
@@ -344,10 +344,10 @@ inline void projectPntNoDistortion(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox
  *  @param residual the output or difference between where the point should appear given the parameters, and where it
  * was observed
  */
-template < typename T >
+template <typename T>
 void cameraCircResidualDist(T point[3], T& circle_diameter, T R_TtoC[9], T& k1, T& k2, T& k3, T& p1, T& p2, T& fx,
                             T& fy, T& cx, T& cy, T& ox, T& oy, T residual[2]);
-template < typename T >
+template <typename T>
 inline void cameraCircResidualDist(T point[3], T& circle_diameter, T R_TtoC[9], T& k1, T& k2, T& k3, T& p1, T& p2,
                                    T& fx, T& fy, T& cx, T& cy, T& ox, T& oy, T residual[2])
 {
@@ -461,10 +461,10 @@ inline void cameraCircResidualDist(T point[3], T& circle_diameter, T R_TtoC[9], 
  *  @param residual the output or difference between where the point should appear given the parameters, and where it
  * was observed
  */
-template < typename T >
+template <typename T>
 void cameraCircResidual(T point[3], T& circle_diameter, T R_TtoC[9], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy,
                         T residual[2]);
-template < typename T >
+template <typename T>
 inline void cameraCircResidual(T point[3], T& circle_diameter, T R_TtoC[9], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy,
                                T residual[2])
 {
@@ -557,9 +557,9 @@ inline void cameraCircResidual(T point[3], T& circle_diameter, T R_TtoC[9], T& f
  * was observed
  */
 
-template < typename T >
+template <typename T>
 void cameraPntResidual(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy, T residual[2]);
-template < typename T >
+template <typename T>
 inline void cameraPntResidual(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy, T residual[2])
 {
   T xp1 = point[0];
@@ -590,7 +590,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   const T* c_p2,       /** intrinsic parameters */
                   const T* point,      /** point being projected, has 3 parameters */
@@ -617,7 +617,7 @@ public:
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y)
   {
-    return (new ceres::AutoDiffCostFunction< CameraReprjErrorWithDistortion, 2, 6, 9, 3 >(
+    return (new ceres::AutoDiffCostFunction<CameraReprjErrorWithDistortion, 2, 6, 9, 3>(
         new CameraReprjErrorWithDistortion(o_x, o_y)));
   }
   double ox_; /** observed x location of object in image */
@@ -635,7 +635,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   const T* c_p2,       /** intrinsic parameters */
                   T* residual) const
@@ -661,7 +661,7 @@ public:
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction< CameraReprjErrorWithDistortionPK, 2, 6, 9 >(
+    return (new ceres::AutoDiffCostFunction<CameraReprjErrorWithDistortionPK, 2, 6, 9>(
         new CameraReprjErrorWithDistortionPK(o_x, o_y, point)));
   }
   double ox_;     /** observed x location of object in image */
@@ -679,7 +679,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   const T* point,      /** point being projected, yes this is has 3 parameters */
                   T* residual) const
@@ -708,8 +708,7 @@ public:
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double fx, const double fy,
                                      const double cx, const double cy)
   {
-    return (
-        new ceres::AutoDiffCostFunction< CameraReprjError, 2, 6, 3 >(new CameraReprjError(o_x, o_y, fx, fy, cx, cy)));
+    return (new ceres::AutoDiffCostFunction<CameraReprjError, 2, 6, 3>(new CameraReprjError(o_x, o_y, fx, fy, cx, cy)));
   }
   double ox_; /** observed x location of object in image */
   double oy_; /** observed y location of object in image */
@@ -727,7 +726,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* point, /** point being projected, yes this is has 3 parameters */
                   T* residual) const
   {
@@ -753,7 +752,7 @@ public:
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double fx, const double fy,
                                      const double cx, const double cy, const Pose6d camera_pose)
   {
-    return (new ceres::AutoDiffCostFunction< TriangulationError, 2, 3 >(
+    return (new ceres::AutoDiffCostFunction<TriangulationError, 2, 3>(
         new TriangulationError(o_x, o_y, fx, fy, cx, cy, camera_pose)));
   }
   double ox_;          /** observed x location of object in image */
@@ -775,7 +774,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   T* residual) const
   {
@@ -803,7 +802,7 @@ public:
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double fx, const double fy,
                                      const double cx, const double cy, const Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction< CameraReprjErrorPK, 2, 6 >(
+    return (new ceres::AutoDiffCostFunction<CameraReprjErrorPK, 2, 6>(
         new CameraReprjErrorPK(o_x, o_y, fx, fy, cx, cy, point)));
   }
   double ox_;     /** observed x location of object in image */
@@ -826,7 +825,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters */
                   const T* const c_p2,  /** 6Dof transform of target points into world frame */
                   const T* const point, /** point described in target frame */
@@ -862,7 +861,7 @@ public:
                                      const double cx, const double cy)
 
   {
-    return (new ceres::AutoDiffCostFunction< TargetCameraReprjError, 2, 6, 6, 3 >(
+    return (new ceres::AutoDiffCostFunction<TargetCameraReprjError, 2, 6, 6, 3>(
         new TargetCameraReprjError(o_x, o_y, fx, fy, cx, cy)));
   }
   double ox_; /** observed x location of object in image */
@@ -884,7 +883,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   const T* const c_p2, /** 6Dof transform of target points into world frame */
                   T* residual) const
@@ -918,7 +917,7 @@ public:
                                      const double cx, const double cy, const Point3d point)
 
   {
-    return (new ceres::AutoDiffCostFunction< TargetCameraReprjErrorPK, 2, 6, 6 >(
+    return (new ceres::AutoDiffCostFunction<TargetCameraReprjErrorPK, 2, 6, 6>(
         new TargetCameraReprjErrorPK(o_x, o_y, fx, fy, cx, cy, point)));
   }
   double ox_;     /** observed x location of object in image */
@@ -941,7 +940,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters */
                   const T* const c_p2,  /** 6Dof transform of target points into world frame */
                   const T* const point, /** point described in target frame that is being seen */
@@ -978,7 +977,7 @@ public:
                                      const double cx, const double cy, Pose6d pose)
 
   {
-    return (new ceres::AutoDiffCostFunction< LinkTargetCameraReprjError, 2, 6, 6, 3 >(
+    return (new ceres::AutoDiffCostFunction<LinkTargetCameraReprjError, 2, 6, 6, 3>(
         new LinkTargetCameraReprjError(ox, oy, fx, fy, cx, cy, pose)));
   }
   double ox_;        /** observed x location of object in image */
@@ -1002,7 +1001,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   const T* const c_p2, /** 6Dof transform of target points into world frame */
                   T* residual) const
@@ -1038,7 +1037,7 @@ public:
                                      const double cx, const double cy, Pose6d pose, Point3d point)
 
   {
-    return (new ceres::AutoDiffCostFunction< LinkTargetCameraReprjErrorPK, 2, 6, 6 >(
+    return (new ceres::AutoDiffCostFunction<LinkTargetCameraReprjErrorPK, 2, 6, 6>(
         new LinkTargetCameraReprjErrorPK(o_x, o_y, fx, fy, cx, cy, pose, point)));
   }
   double ox_;        /** observed x location of object in image */
@@ -1063,7 +1062,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   T* residual) const
   {
@@ -1097,7 +1096,7 @@ public:
                                      const double cx, const double cy, Pose6d target_pose, Point3d point)
 
   {
-    return (new ceres::AutoDiffCostFunction< PosedTargetCameraReprjErrorPK, 2, 6 >(
+    return (new ceres::AutoDiffCostFunction<PosedTargetCameraReprjErrorPK, 2, 6>(
         new PosedTargetCameraReprjErrorPK(o_x, o_y, fx, fy, cx, cy, target_pose, point)));
   }
   double ox_;          /** observed x location of object in image */
@@ -1122,7 +1121,7 @@ public:
     link_posei_ = link_pose_.getInverse();
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters */
                   const T* const c_p2,  /** 6Dof transform of target points into world frame */
                   const T* const point, /** point described in target frame that is being seen */
@@ -1159,7 +1158,7 @@ public:
                                      const double cx, const double cy, Pose6d pose)
 
   {
-    return (new ceres::AutoDiffCostFunction< LinkCameraTargetReprjError, 2, 6, 6, 3 >(
+    return (new ceres::AutoDiffCostFunction<LinkCameraTargetReprjError, 2, 6, 6, 3>(
         new LinkCameraTargetReprjError(ox, oy, fx, fy, cx, cy, pose)));
   }
   double ox_;         /*!< observed x location of object in image */
@@ -1185,7 +1184,7 @@ public:
     link_posei_ = link_pose_.getInverse();
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   const T* const c_p2, /** 6Dof transform of target points into world frame */
                   T* residual) const
@@ -1221,7 +1220,7 @@ public:
                                      const double cx, const double cy, Pose6d pose, Point3d pnt)
 
   {
-    return (new ceres::AutoDiffCostFunction< LinkCameraTargetReprjErrorPK, 2, 6, 6 >(
+    return (new ceres::AutoDiffCostFunction<LinkCameraTargetReprjErrorPK, 2, 6, 6>(
         new LinkCameraTargetReprjErrorPK(o_x, o_y, fx, fy, cx, cy, pose, pnt)));
   }
   double ox_;         /** observed x location of object in image */
@@ -1244,7 +1243,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters [6]*/
                   const T* const c_p2,  /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
                   const T* const point, /** point described in target frame that is being seen [3]*/
@@ -1276,7 +1275,7 @@ public:
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia)
   {
-    return (new ceres::AutoDiffCostFunction< CircleCameraReprjErrorWithDistortion, 2, 6, 9, 3 >(
+    return (new ceres::AutoDiffCostFunction<CircleCameraReprjErrorWithDistortion, 2, 6, 9, 3>(
         new CircleCameraReprjErrorWithDistortion(o_x, o_y, c_dia)));
   }
   double ox_;               /** observed x location of object in image */
@@ -1293,7 +1292,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   const T* const c_p2, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9] */
                   T* residual) const
@@ -1328,7 +1327,7 @@ public:
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction< CircleCameraReprjErrorWithDistortionPK, 2, 6, 9 >(
+    return (new ceres::AutoDiffCostFunction<CircleCameraReprjErrorWithDistortionPK, 2, 6, 9>(
         new CircleCameraReprjErrorWithDistortionPK(o_x, o_y, c_dia, point)));
   }
   double ox_;               /** observed x location of object in image */
@@ -1345,7 +1344,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters [6]*/
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
@@ -1379,7 +1378,7 @@ public:
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, const double fx,
                                      const double fy, const double cx, const double cy)
   {
-    return (new ceres::AutoDiffCostFunction< CircleCameraReprjError, 2, 6, 3 >(
+    return (new ceres::AutoDiffCostFunction<CircleCameraReprjError, 2, 6, 3>(
         new CircleCameraReprjError(o_x, o_y, c_dia, fx, fy, cx, cy)));
   }
   double ox_;              /** observed x location of object in image */
@@ -1400,7 +1399,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   T* residual) const
   {
@@ -1433,7 +1432,7 @@ public:
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, const double fx,
                                      const double fy, const double cx, const double cy, Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction< CircleCameraReprjErrorPK, 2, 6 >(
+    return (new ceres::AutoDiffCostFunction<CircleCameraReprjErrorPK, 2, 6>(
         new CircleCameraReprjErrorPK(o_x, o_y, c_dia, fx, fy, cx, cy, point)));
   }
   double ox_;               /** observed x location of object in image */
@@ -1454,7 +1453,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters [6]*/
                   const T* const c_p2,  /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
                   const T* const c_p3,  /** 6Dof transform of target into world frame [6]*/
@@ -1497,7 +1496,7 @@ public:
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia)
   {
-    return (new ceres::AutoDiffCostFunction< FixedCircleTargetCameraReprjErrorWithDistortion, 2, 6, 6, 9, 3 >(
+    return (new ceres::AutoDiffCostFunction<FixedCircleTargetCameraReprjErrorWithDistortion, 2, 6, 6, 9, 3>(
         new FixedCircleTargetCameraReprjErrorWithDistortion(o_x, o_y, c_dia)));
   }
   double ox_;               /** observed x location of object in image */
@@ -1513,7 +1512,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6]*/
                   const T* const c_p2, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
                   const T* const c_p3, /** 6Dof transform of target into world frame [6]*/
@@ -1555,7 +1554,7 @@ public:
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction< FixedCircleTargetCameraReprjErrorWithDistortionPK, 2, 6, 9, 3 >(
+    return (new ceres::AutoDiffCostFunction<FixedCircleTargetCameraReprjErrorWithDistortionPK, 2, 6, 9, 3>(
         new FixedCircleTargetCameraReprjErrorWithDistortionPK(o_x, o_y, c_dia, point)));
   }
   double ox_;              /** observed x location of object in image */
@@ -1572,7 +1571,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters [6]*/
                   const T* const c_p2,  /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9]*/
                   const T* const point, /** point described in target frame that is being seen [3]*/
@@ -1605,7 +1604,7 @@ public:
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia)
   {
-    return (new ceres::AutoDiffCostFunction< CircleTargetCameraReprjErrorWithDistortion, 2, 6, 9, 3 >(
+    return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorWithDistortion, 2, 6, 9, 3>(
         new CircleTargetCameraReprjErrorWithDistortion(o_x, o_y, c_dia)));
   }
   double ox_;               /** observed x location of object in image */
@@ -1623,7 +1622,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   const T* const c_p2, /** intrinsic parameters[9] */
                   T* residual) const
@@ -1659,7 +1658,7 @@ public:
   /** the client code. */
   static ceres::CostFunction* Create(const double& o_x, const double& o_y, const double& c_dia, Point3d& point)
   {
-    return (new ceres::AutoDiffCostFunction< SimpleCircleTargetCameraReprjErrorWithDistortionPK, 2, 6, 9 >(
+    return (new ceres::AutoDiffCostFunction<SimpleCircleTargetCameraReprjErrorWithDistortionPK, 2, 6, 9>(
         new SimpleCircleTargetCameraReprjErrorWithDistortionPK(o_x, o_y, c_dia, point)));
   }
   double ox_;               /** observed x location of object in image */
@@ -1677,7 +1676,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   const T* const c_p2, /** 6Dof transform of target into world frame [6] */
                   const T* const c_p3, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9] */
@@ -1719,7 +1718,7 @@ public:
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction< CircleTargetCameraReprjErrorWithDistortionPK, 2, 6, 6, 9 >(
+    return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorWithDistortionPK, 2, 6, 6, 9>(
         new CircleTargetCameraReprjErrorWithDistortionPK(o_x, o_y, c_dia, point)));
   }
   double ox_;               /** observed x location of object in image */
@@ -1736,7 +1735,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters [6]*/
                   const T* const c_p2,  /** 6Dof transform of target into world frame [6]*/
                   const T* const point, /** point described in target frame that is being seen [3]*/
@@ -1781,7 +1780,7 @@ public:
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, const double fx,
                                      const double fy, const double cx, const double cy)
   {
-    return (new ceres::AutoDiffCostFunction< CircleTargetCameraReprjError, 2, 6, 6, 3 >(
+    return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjError, 2, 6, 6, 3>(
         new CircleTargetCameraReprjError(o_x, o_y, c_dia, fx, fy, cx, cy)));
   }
   double ox_;               /** observed x location of object in image */
@@ -1802,7 +1801,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   const T* const c_p2, /** 6Dof transform of target into world frame [6] */
                   T* residual) const
@@ -1846,7 +1845,7 @@ public:
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, const double fx,
                                      const double fy, const double cx, const double cy, Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction< CircleTargetCameraReprjErrorPK, 2, 6, 6 >(
+    return (new ceres::AutoDiffCostFunction<CircleTargetCameraReprjErrorPK, 2, 6, 6>(
         new CircleTargetCameraReprjErrorPK(o_x, o_y, c_dia, fx, fy, cx, cy, point)));
   }
   double ox_;               /** observed x location of object in image */
@@ -1868,7 +1867,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters [6]*/
                   const T* const c_p2,  /** 6Dof transform of target into world frame [6]*/
                   const T* const point, /** point described in target frame that is being seen [3]*/
@@ -1919,7 +1918,7 @@ public:
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, const double fx,
                                      const double fy, const double cx, const double cy, const Pose6d pose)
   {
-    return (new ceres::AutoDiffCostFunction< LinkCircleTargetCameraReprjError, 2, 6, 6, 3 >(
+    return (new ceres::AutoDiffCostFunction<LinkCircleTargetCameraReprjError, 2, 6, 6, 3>(
         new LinkCircleTargetCameraReprjError(o_x, o_y, c_dia, fx, fy, cx, cy, pose)));
   }
   double ox_;              /** observed x location of object in image */
@@ -1949,7 +1948,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   const T* const c_p2, /** 6Dof transform of target into world frame [6] */
                   T* residual) const
@@ -2000,7 +1999,7 @@ public:
                                      const double fy, const double cx, const double cy, const Pose6d pose,
                                      Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction< LinkCircleTargetCameraReprjErrorPK, 2, 6, 6 >(
+    return (new ceres::AutoDiffCostFunction<LinkCircleTargetCameraReprjErrorPK, 2, 6, 6>(
         new LinkCircleTargetCameraReprjErrorPK(o_x, o_y, c_dia, fx, fy, cx, cy, pose, point)));
   }
   double ox_;               /** observed x location of object in image */
@@ -2024,7 +2023,7 @@ public:
     link_posei_ = link_pose_.getInverse();
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters [6]*/
                   const T* const c_p2,  /** 6Dof transform of target into world frame [6]*/
                   const T* const point, /** point described in target frame that is being seen [3]*/
@@ -2075,7 +2074,7 @@ public:
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double c_dia, double fx, double fy,
                                      double cx, double cy, const Pose6d pose)
   {
-    return (new ceres::AutoDiffCostFunction< LinkCameraCircleTargetReprjError, 2, 6, 6, 3 >(
+    return (new ceres::AutoDiffCostFunction<LinkCameraCircleTargetReprjError, 2, 6, 6, 3>(
         new LinkCameraCircleTargetReprjError(o_x, o_y, c_dia, fx, fy, cx, cy, pose)));
   }
   double ox_;              /** observed x location of object in image */
@@ -2182,7 +2181,7 @@ public:
     //      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
     cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy, residual);
   }
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   const T* const c_p2, /** 6Dof transform of target into world frame [6] */
                   T* residual) const
@@ -2234,7 +2233,7 @@ public:
                                      const double& fy, const double& cx, const double& cy, const Pose6d& pose,
                                      Point3d& point)
   {
-    return (new ceres::AutoDiffCostFunction< LinkCameraCircleTargetReprjErrorPK, 2, 6, 6 >(
+    return (new ceres::AutoDiffCostFunction<LinkCameraCircleTargetReprjErrorPK, 2, 6, 6>(
         new LinkCameraCircleTargetReprjErrorPK(o_x, o_y, c_dia, fx, fy, cx, cy, pose, point)));
   }
   double ox_;               /** observed x location of object in image */
@@ -2303,7 +2302,7 @@ public:
     double oy = oy_;
     cameraCircResidual(camera_point, circle_diameter, R_mount_to_target, fx, fy, cx, cy, ox, oy, resid);
   }
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   T* residual) const
   {
@@ -2349,7 +2348,7 @@ public:
                                      const double& fy, const double& cx, const double& cy, const Pose6d& target_pose,
                                      const Pose6d& camera_mounting_pose, Point3d& point)
   {
-    return (new ceres::AutoDiffCostFunction< FixedCircleTargetCameraReprjErrorPK, 2, 6 >(
+    return (new ceres::AutoDiffCostFunction<FixedCircleTargetCameraReprjErrorPK, 2, 6>(
         new FixedCircleTargetCameraReprjErrorPK(o_x, o_y, c_dia, fx, fy, cx, cy, target_pose, camera_mounting_pose,
                                                 point)));
   }
@@ -2374,7 +2373,7 @@ public:
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /**intrinsics [9] */
                   const T* const c_p2, /**target_pose [6] */
                   T* residual) const
@@ -2401,7 +2400,7 @@ public:
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y, const double rail_position, Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction< RailICal, 2, 9, 6 >(new RailICal(o_x, o_y, rail_position, point)));
+    return (new ceres::AutoDiffCostFunction<RailICal, 2, 9, 6>(new RailICal(o_x, o_y, rail_position, point)));
   }
   double ox_;            /** observed x location of object in image */
   double oy_;            /** observed y location of object in image */

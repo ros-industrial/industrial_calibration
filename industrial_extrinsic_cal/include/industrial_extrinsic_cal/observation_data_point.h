@@ -112,7 +112,7 @@ public:
   void addObservationPoint(ObservationDataPoint new_data_point);
 
   /** @brief vector of observations */
-  std::vector< ObservationDataPoint > items_;
+  std::vector<ObservationDataPoint> items_;
 };
 
 }  // end namespace industrial_extrinsic_cal

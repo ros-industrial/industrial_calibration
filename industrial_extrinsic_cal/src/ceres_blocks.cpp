@@ -101,7 +101,7 @@ void CeresBlocks::clearCamerasTargets()
 P_BLOCK CeresBlocks::getStaticCameraParameterBlockIntrinsics(string camera_name)
 {
   // static cameras should have unique name
-  BOOST_FOREACH (shared_ptr< Camera > camera, static_cameras_)
+  BOOST_FOREACH (shared_ptr<Camera> camera, static_cameras_)
   {
     if (camera_name == camera->camera_name_)
     {
@@ -116,7 +116,7 @@ P_BLOCK CeresBlocks::getMovingCameraParameterBlockIntrinsics(string camera_name)
   // we use the intrinsic parameters from the first time the camera appears in the list
   // subsequent cameras with this name also have intrinsic parameters, but these are
   // never used as parameter blocks, only their extrinsics are used
-  BOOST_FOREACH (shared_ptr< MovingCamera > moving_camera, moving_cameras_)
+  BOOST_FOREACH (shared_ptr<MovingCamera> moving_camera, moving_cameras_)
   {
     if (camera_name == moving_camera->cam->camera_name_)
     {
@@ -129,7 +129,7 @@ P_BLOCK CeresBlocks::getMovingCameraParameterBlockIntrinsics(string camera_name)
 P_BLOCK CeresBlocks::getStaticCameraParameterBlockExtrinsics(string camera_name)
 {
   // static cameras should have unique name
-  BOOST_FOREACH (shared_ptr< Camera > camera, static_cameras_)
+  BOOST_FOREACH (shared_ptr<Camera> camera, static_cameras_)
   {
     if (camera_name == camera->camera_name_)
     {
@@ -142,7 +142,7 @@ P_BLOCK CeresBlocks::getStaticCameraParameterBlockExtrinsics(string camera_name)
 }
 P_BLOCK CeresBlocks::getMovingCameraParameterBlockExtrinsics(string camera_name, int scene_id)
 {
-  BOOST_FOREACH (shared_ptr< MovingCamera > camera, moving_cameras_)
+  BOOST_FOREACH (shared_ptr<MovingCamera> camera, moving_cameras_)
   {
     if (camera_name == camera->cam->camera_name_ && scene_id == camera->scene_id)
     {
@@ -154,7 +154,7 @@ P_BLOCK CeresBlocks::getMovingCameraParameterBlockExtrinsics(string camera_name,
 }
 P_BLOCK CeresBlocks::getStaticTargetPoseParameterBlock(string target_name)
 {
-  BOOST_FOREACH (shared_ptr< Target > target, static_targets_)
+  BOOST_FOREACH (shared_ptr<Target> target, static_targets_)
   {
     if (target_name == target->target_name_)
     {
@@ -166,7 +166,7 @@ P_BLOCK CeresBlocks::getStaticTargetPoseParameterBlock(string target_name)
 }
 P_BLOCK CeresBlocks::getStaticTargetPointParameterBlock(string target_name, int point_id)
 {
-  BOOST_FOREACH (shared_ptr< Target > target, static_targets_)
+  BOOST_FOREACH (shared_ptr<Target> target, static_targets_)
   {
     if (target_name == target->target_name_)
     {
@@ -178,7 +178,7 @@ P_BLOCK CeresBlocks::getStaticTargetPointParameterBlock(string target_name, int 
 }
 P_BLOCK CeresBlocks::getMovingTargetPoseParameterBlock(string target_name, int scene_id)
 {
-  BOOST_FOREACH (shared_ptr< MovingTarget > moving_target, moving_targets_)
+  BOOST_FOREACH (shared_ptr<MovingTarget> moving_target, moving_targets_)
   {
     if (target_name == moving_target->targ_->target_name_ && scene_id == moving_target->scene_id_)
     {
@@ -192,7 +192,7 @@ P_BLOCK CeresBlocks::getMovingTargetPointParameterBlock(string target_name, int 
 {
   // note scene_id unnecessary here since regarless of scene th point's location relative to
   // the target frame does not change
-  BOOST_FOREACH (shared_ptr< MovingTarget > moving_target, moving_targets_)
+  BOOST_FOREACH (shared_ptr<MovingTarget> moving_target, moving_targets_)
   {
     if (target_name == moving_target->targ_->target_name_)
     {
@@ -203,9 +203,9 @@ P_BLOCK CeresBlocks::getMovingTargetPointParameterBlock(string target_name, int 
   return (NULL);
 }
 
-bool CeresBlocks::addStaticCamera(shared_ptr< Camera > camera_to_add)
+bool CeresBlocks::addStaticCamera(shared_ptr<Camera> camera_to_add)
 {
-  BOOST_FOREACH (shared_ptr< Camera > cam, static_cameras_)
+  BOOST_FOREACH (shared_ptr<Camera> cam, static_cameras_)
   {
     if (cam->camera_name_ == camera_to_add->camera_name_) return (false);  // camera already exists
   }
@@ -218,9 +218,9 @@ bool CeresBlocks::addStaticCamera(shared_ptr< Camera > camera_to_add)
   // ROS_INFO_STREAM("Camera added to static_cameras_");
   return (true);
 }
-bool CeresBlocks::addStaticTarget(shared_ptr< Target > target_to_add)
+bool CeresBlocks::addStaticTarget(shared_ptr<Target> target_to_add)
 {
-  BOOST_FOREACH (shared_ptr< Target > targ, static_targets_)
+  BOOST_FOREACH (shared_ptr<Target> targ, static_targets_)
   {
     if (targ->target_name_ == target_to_add->target_name_)
     {
@@ -236,20 +236,20 @@ bool CeresBlocks::addStaticTarget(shared_ptr< Target > target_to_add)
 
   return (true);
 }
-bool CeresBlocks::addMovingCamera(shared_ptr< Camera > camera_to_add, int scene_id)
+bool CeresBlocks::addMovingCamera(shared_ptr<Camera> camera_to_add, int scene_id)
 {
-  BOOST_FOREACH (shared_ptr< MovingCamera > cam, moving_cameras_)
+  BOOST_FOREACH (shared_ptr<MovingCamera> cam, moving_cameras_)
   {
     if (cam->cam->camera_name_ == camera_to_add->camera_name_ && cam->scene_id == scene_id)
       return (false);  // camera already exists
   }
 
   // this next line allocates the memory for a moving camera
-  shared_ptr< MovingCamera > temp_moving_camera = boost::make_shared< MovingCamera >();
+  shared_ptr<MovingCamera> temp_moving_camera = boost::make_shared<MovingCamera>();
 
   // this next line allocates the memory for the actual camera
-  shared_ptr< Camera > temp_camera =
-      boost::make_shared< Camera >(camera_to_add->camera_name_, camera_to_add->camera_parameters_, true);
+  shared_ptr<Camera> temp_camera =
+      boost::make_shared<Camera>(camera_to_add->camera_name_, camera_to_add->camera_parameters_, true);
 
   // set things not done by constructor using values from camera_to_add
   temp_camera->setTransformInterface(camera_to_add->getTransformInterface());
@@ -262,9 +262,9 @@ bool CeresBlocks::addMovingCamera(shared_ptr< Camera > camera_to_add, int scene_
   moving_cameras_.push_back(temp_moving_camera);
   return (true);
 }
-bool CeresBlocks::addMovingTarget(shared_ptr< Target > target_to_add, int scene_id)
+bool CeresBlocks::addMovingTarget(shared_ptr<Target> target_to_add, int scene_id)
 {
-  BOOST_FOREACH (shared_ptr< MovingTarget > targ, moving_targets_)
+  BOOST_FOREACH (shared_ptr<MovingTarget> targ, moving_targets_)
   {
     if (targ->targ_->target_name_ == target_to_add->target_name_ && targ->scene_id_ == scene_id)
     {
@@ -275,8 +275,8 @@ bool CeresBlocks::addMovingTarget(shared_ptr< Target > target_to_add, int scene_
 
   // deep copy of target into moving target TODO test to see if using * or contents of notation can avoid all this
   // direct copy
-  shared_ptr< MovingTarget > temp_moving_target = boost::make_shared< MovingTarget >();
-  temp_moving_target->targ_ = boost::make_shared< Target >();
+  shared_ptr<MovingTarget> temp_moving_target = boost::make_shared<MovingTarget>();
+  temp_moving_target->targ_ = boost::make_shared<Target>();
   temp_moving_target->targ_->pose_ = target_to_add->pose_;
   temp_moving_target->targ_->num_points_ = target_to_add->num_points_;
   temp_moving_target->targ_->pts_ = target_to_add->pts_;
@@ -298,7 +298,7 @@ bool CeresBlocks::addMovingTarget(shared_ptr< Target > target_to_add, int scene_
     temp_moving_target->targ_->ar_target_parameters_ = target_to_add->ar_target_parameters_;
   }
   temp_moving_target->targ_->setTransformInterface(target_to_add->getTransformInterface());
-  boost::shared_ptr< TransformInterface > the_interface = target_to_add->getTransformInterface();
+  boost::shared_ptr<TransformInterface> the_interface = target_to_add->getTransformInterface();
   if (the_interface->isRefFrameInitialized())
   {
     std::string ref_frame;
@@ -310,9 +310,9 @@ bool CeresBlocks::addMovingTarget(shared_ptr< Target > target_to_add, int scene_
   return (true);
 }
 
-const boost::shared_ptr< Camera > CeresBlocks::getCameraByName(const std::string& camera_name)
+const boost::shared_ptr<Camera> CeresBlocks::getCameraByName(const std::string& camera_name)
 {
-  boost::shared_ptr< Camera > cam = boost::make_shared< Camera >();
+  boost::shared_ptr<Camera> cam = boost::make_shared<Camera>();
   // ROS_INFO_STREAM("Found "<<static_cameras_.size() <<" static cameras");
   for (int i = 0; i < static_cameras_.size(); i++)
   {
@@ -339,12 +339,12 @@ const boost::shared_ptr< Camera > CeresBlocks::getCameraByName(const std::string
   // return true;
 }
 
-const boost::shared_ptr< Target > CeresBlocks::getTargetByName(const std::string& target_name, int scene_id)
+const boost::shared_ptr<Target> CeresBlocks::getTargetByName(const std::string& target_name, int scene_id)
 {
-  boost::shared_ptr< Target > target = boost::make_shared< Target >();
+  boost::shared_ptr<Target> target = boost::make_shared<Target>();
   bool found = false;
   // ROS_INFO_STREAM("Found "<<static_cameras_.size() <<" static cameras");
-  BOOST_FOREACH (shared_ptr< Target > targ, static_targets_)
+  BOOST_FOREACH (shared_ptr<Target> targ, static_targets_)
   {
     if (targ->target_name_ == target_name)
     {
@@ -354,7 +354,7 @@ const boost::shared_ptr< Target > CeresBlocks::getTargetByName(const std::string
     }
   }
   // ROS_INFO_STREAM("Found "<<moving_cameras_.size() <<" static cameras");
-  BOOST_FOREACH (shared_ptr< MovingTarget > mtarg, moving_targets_)
+  BOOST_FOREACH (shared_ptr<MovingTarget> mtarg, moving_targets_)
   {
     if (mtarg->targ_->target_name_ == target_name && mtarg->scene_id_ == scene_id)
     {
@@ -373,7 +373,7 @@ const boost::shared_ptr< Target > CeresBlocks::getTargetByName(const std::string
 void CeresBlocks::displayStaticCameras()
 {
   if (static_cameras_.size() != 0) ROS_INFO("Static Cameras");
-  BOOST_FOREACH (shared_ptr< Camera > cam, static_cameras_)
+  BOOST_FOREACH (shared_ptr<Camera> cam, static_cameras_)
   {
     Pose6d pose(cam->camera_parameters_.position[0], cam->camera_parameters_.position[1],
                 cam->camera_parameters_.position[2], cam->camera_parameters_.angle_axis[0],
@@ -392,7 +392,7 @@ void CeresBlocks::displayMovingCameras()
   double quat[4];
 
   if (moving_cameras_.size() != 0) ROS_INFO("Moving Cameras");
-  BOOST_FOREACH (shared_ptr< MovingCamera > mcam, moving_cameras_)
+  BOOST_FOREACH (shared_ptr<MovingCamera> mcam, moving_cameras_)
   {
     if (mcam->scene_id == 0)
     {
@@ -411,7 +411,7 @@ void CeresBlocks::displayStaticTargets()
   double R[9];
 
   if (static_targets_.size() != 0) ROS_INFO("Static Targets:");
-  BOOST_FOREACH (shared_ptr< Target > targ, static_targets_)
+  BOOST_FOREACH (shared_ptr<Target> targ, static_targets_)
   {
     showPose(targ->pose_, targ->target_name_);
   }
@@ -421,7 +421,7 @@ void CeresBlocks::displayMovingTargets()
   double R[9];
 
   if (moving_targets_.size() != 0) ROS_INFO("Moving Targets:");
-  BOOST_FOREACH (shared_ptr< MovingTarget > mtarg, moving_targets_)
+  BOOST_FOREACH (shared_ptr<MovingTarget> mtarg, moving_targets_)
   {
     if (mtarg->scene_id_ == 0)
     {  // only show first pose, not all
@@ -452,19 +452,19 @@ bool CeresBlocks::writeAllStaticTransforms(string filePath)
   outputFile.close();
 
   bool rtn = true;
-  BOOST_FOREACH (shared_ptr< Camera > cam, static_cameras_)
+  BOOST_FOREACH (shared_ptr<Camera> cam, static_cameras_)
   {
     rtn = cam->transform_interface_->store(filePath);
   }
-  BOOST_FOREACH (shared_ptr< MovingCamera > mcam, moving_cameras_)
+  BOOST_FOREACH (shared_ptr<MovingCamera> mcam, moving_cameras_)
   {
     rtn = mcam->cam->transform_interface_->store(filePath);
   }
-  BOOST_FOREACH (shared_ptr< Target > targ, static_targets_)
+  BOOST_FOREACH (shared_ptr<Target> targ, static_targets_)
   {
     rtn = targ->transform_interface_->store(filePath);
   }
-  BOOST_FOREACH (shared_ptr< MovingTarget > mtarg, moving_targets_)
+  BOOST_FOREACH (shared_ptr<MovingTarget> mtarg, moving_targets_)
   {
     rtn = mtarg->targ_->transform_interface_->store(filePath);
   }
@@ -489,11 +489,11 @@ bool CeresBlocks::writeAllStaticTransforms(string filePath)
 
 void CeresBlocks::pushTransforms()
 {
-  BOOST_FOREACH (shared_ptr< Camera > cam, static_cameras_)
+  BOOST_FOREACH (shared_ptr<Camera> cam, static_cameras_)
   {
     cam->pushTransform();
   }
-  BOOST_FOREACH (shared_ptr< MovingCamera > mcam, moving_cameras_)
+  BOOST_FOREACH (shared_ptr<MovingCamera> mcam, moving_cameras_)
   {
     if (mcam->scene_id == 0)
     {  // only push a moving camera's transform once, which is always scene 0
@@ -505,11 +505,11 @@ void CeresBlocks::pushTransforms()
       mcam->cam->pushTransform();
     }
   }
-  BOOST_FOREACH (shared_ptr< Target > targ, static_targets_)
+  BOOST_FOREACH (shared_ptr<Target> targ, static_targets_)
   {
     targ->pushTransform();
   }
-  BOOST_FOREACH (shared_ptr< MovingTarget > mtarg, moving_targets_)
+  BOOST_FOREACH (shared_ptr<MovingTarget> mtarg, moving_targets_)
   {
     if (mtarg->scene_id_ == 0)
     {  // only push a moving target once which is for the scene 0
@@ -519,22 +519,22 @@ void CeresBlocks::pushTransforms()
 }
 void CeresBlocks::pullTransforms(int scene_id)
 {
-  BOOST_FOREACH (shared_ptr< Camera > cam, static_cameras_)
+  BOOST_FOREACH (shared_ptr<Camera> cam, static_cameras_)
   {
     cam->pullTransform();
   }
-  BOOST_FOREACH (shared_ptr< MovingCamera > mcam, moving_cameras_)
+  BOOST_FOREACH (shared_ptr<MovingCamera> mcam, moving_cameras_)
   {
     if (mcam->scene_id == scene_id)
     {  // only pull transforms for cameras in current scene
       mcam->cam->pullTransform();
     }
   }
-  BOOST_FOREACH (shared_ptr< Target > targ, static_targets_)
+  BOOST_FOREACH (shared_ptr<Target> targ, static_targets_)
   {
     targ->pullTransform();
   }
-  BOOST_FOREACH (shared_ptr< MovingTarget > mtarg, moving_targets_)
+  BOOST_FOREACH (shared_ptr<MovingTarget> mtarg, moving_targets_)
   {
     if (mtarg->scene_id_ == scene_id)
     {  // only pull transforms for targets in current scene
@@ -545,19 +545,19 @@ void CeresBlocks::pullTransforms(int scene_id)
 void CeresBlocks::setReferenceFrame(std::string ref_frame)
 {
   reference_frame_ = ref_frame;
-  BOOST_FOREACH (shared_ptr< Camera > cam, static_cameras_)
+  BOOST_FOREACH (shared_ptr<Camera> cam, static_cameras_)
   {
     cam->setTIReferenceFrame(ref_frame);
   }
-  BOOST_FOREACH (shared_ptr< MovingCamera > mcam, moving_cameras_)
+  BOOST_FOREACH (shared_ptr<MovingCamera> mcam, moving_cameras_)
   {
     mcam->cam->setTIReferenceFrame(ref_frame);
   }
-  BOOST_FOREACH (shared_ptr< Target > targ, static_targets_)
+  BOOST_FOREACH (shared_ptr<Target> targ, static_targets_)
   {
     targ->setTIReferenceFrame(ref_frame);
   }
-  BOOST_FOREACH (shared_ptr< MovingTarget > mtarg, moving_targets_)
+  BOOST_FOREACH (shared_ptr<MovingTarget> mtarg, moving_targets_)
   {
     mtarg->targ_->setTIReferenceFrame(ref_frame);
   }

@@ -29,7 +29,7 @@ using industrial_extrinsic_cal::CovarianceVariableRequest;
 class CalibrationServiceNode
 {
 public:
-  typedef actionlib::SimpleActionServer< industrial_extrinsic_cal::calibrationAction > CalibrationActionServer;
+  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::calibrationAction> CalibrationActionServer;
 
   explicit CalibrationServiceNode(const ros::NodeHandle& nh)
     : nh_(nh)
@@ -95,7 +95,7 @@ private:
 bool CalibrationServiceNode::covarianceCallback(industrial_extrinsic_cal::covariance::Request& req,
                                                 industrial_extrinsic_cal::covariance::Response& res)
 {
-  std::vector< CovarianceVariableRequest > requests;
+  std::vector<CovarianceVariableRequest> requests;
   CovarianceVariableRequest request1, request2;
 
   request1.request_type = industrial_extrinsic_cal::intToCovRequest(req.request_type1);

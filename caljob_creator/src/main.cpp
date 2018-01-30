@@ -48,7 +48,7 @@ private:
     os << header;
   }
 
-  void write_joint_scene(std::ostream& os, const std::vector< double >& joints) const
+  void write_joint_scene(std::ostream& os, const std::vector<double>& joints) const
   {
     os << "-\n";
     os << "     trigger: ROS_ROBOT_JOINT_VALUES_ACTION_TRIGGER\n";
@@ -139,18 +139,18 @@ int main(int argc, char** argv)
   int image_height;
   int image_width;
   std::string camera_name;
-  nh.param< std::string >("image_topic", image_topic_name, "/kinect2/rgb_rect/image");
-  nh.param< int >("image_width", image_width, 640);
-  nh.param< int >("image_height", image_height, 480);
-  nh.param< std::string >("camera_name", camera_name, "basler1");
+  nh.param<std::string>("image_topic", image_topic_name, "/kinect2/rgb_rect/image");
+  nh.param<int>("image_width", image_width, 640);
+  nh.param<int>("image_height", image_height, 480);
+  nh.param<std::string>("camera_name", camera_name, "basler1");
   std::string output_file_name;
-  nh.param< std::string >("output_file", output_file_name, "caljob.yaml");
+  nh.param<std::string>("output_file", output_file_name, "caljob.yaml");
 
   std::string joints_topic_name;
-  nh.param< std::string >("joints_topic", joints_topic_name, "motoman/joint_states");
+  nh.param<std::string>("joints_topic", joints_topic_name, "motoman/joint_states");
 
   std::string motion_type;
-  nh.param< std::string >("motion_type", motion_type, "joint");
+  nh.param<std::string>("motion_type", motion_type, "joint");
 
   std::string to_frame("none");
   std::string from_frame("none");
@@ -206,7 +206,7 @@ int main(int argc, char** argv)
       ROS_INFO("Attempting to capture robot state");
       // get robot joint state
       sensor_msgs::JointStateConstPtr joints =
-          ros::topic::waitForMessage< sensor_msgs::JointState >(joints_topic_name, ros::Duration(1.0));
+          ros::topic::waitForMessage<sensor_msgs::JointState>(joints_topic_name, ros::Duration(1.0));
 
       // get robot pose state
       ros::Time now = ros::Time::now();

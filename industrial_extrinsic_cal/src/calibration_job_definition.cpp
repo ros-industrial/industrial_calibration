@@ -40,7 +40,7 @@ using industrial_extrinsic_cal::covariance_requests::CovarianceRequestType;
 namespace industrial_extrinsic_cal
 {
 /** @brief, a function used for debugging, and generating output for post processing */
-void writeObservationData(std::string file_name, std::vector< ObservationDataPointList > odl)
+void writeObservationData(std::string file_name, std::vector<ObservationDataPointList> odl)
 {
   FILE* fp = NULL;
   fp = fopen(file_name.c_str(), "w");
@@ -146,7 +146,7 @@ void CalibrationJob::postProcessingOff()
 bool CalibrationJob::loadCamera()
 {
   bool rtn = true;
-  std::vector< shared_ptr< Camera > > all_cameras;
+  std::vector<shared_ptr<Camera> > all_cameras;
   if (!parseCameras(camera_def_file_name_, all_cameras))
   {
     ROS_ERROR("failed to parse cameras from %s", camera_def_file_name_.c_str());
@@ -170,7 +170,7 @@ bool CalibrationJob::loadCamera()
 bool CalibrationJob::loadTarget()
 {
   bool rtn = true;
-  std::vector< shared_ptr< Target > > all_targets;
+  std::vector<shared_ptr<Target> > all_targets;
   if (!parseTargets(target_def_file_name_, all_targets))
   {
     ROS_ERROR("failed to parse targets from %s", target_def_file_name_.c_str());
@@ -237,7 +237,7 @@ bool CalibrationJob::runObservations()
     ROS_DEBUG_STREAM("Processing Scene " << scene_id + 1 << " of " << scene_list_.size());
     current_scene.get_trigger()->waitForTrigger();  // this indicates scene is ready to capture
     pullTransforms(scene_id);                       // gets transforms of targets and cameras from their interfaces
-    BOOST_FOREACH (shared_ptr< Camera > current_camera, current_scene.cameras_in_scene_)
+    BOOST_FOREACH (shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
     {  // clear camera of existing observations
 
       current_camera->camera_observer_->clearObservations();  // clear any recorded data
@@ -248,7 +248,7 @@ bool CalibrationJob::runObservations()
 
       o_command.camera->camera_observer_->addTarget(o_command.target, o_command.roi, o_command.cost_type);
     }
-    BOOST_FOREACH (shared_ptr< Camera > current_camera, current_scene.cameras_in_scene_)
+    BOOST_FOREACH (shared_ptr<Camera> current_camera, current_scene.cameras_in_scene_)
     {  // trigger the cameras
       current_camera->camera_observer_->triggerCamera();
     }
@@ -264,7 +264,7 @@ bool CalibrationJob::runObservations()
 
     // for each camera in scene get a list of observations, and add camera parameters to ceres_blocks
     ObservationDataPointList listpercamera;
-    BOOST_FOREACH (shared_ptr< Camera > camera, current_scene.cameras_in_scene_)
+    BOOST_FOREACH (shared_ptr<Camera> camera, current_scene.cameras_in_scene_)
     {
       // wait until observation is done
       while (!camera->camera_observer_->observationsDone())
@@ -692,7 +692,7 @@ bool CalibrationJob::runOptimization()
 
 }  // end runOptimization
 
-bool CalibrationJob::computeCovariance(std::vector< CovarianceVariableRequest >& variables,
+bool CalibrationJob::computeCovariance(std::vector<CovarianceVariableRequest>& variables,
                                        std::string& covariance_file_name)
 {
   FILE* fp;
@@ -701,10 +701,10 @@ bool CalibrationJob::computeCovariance(std::vector< CovarianceVariableRequest >&
     ceres::Covariance::Options covariance_options;
     covariance_options.algorithm_type = ceres::DENSE_SVD;
     ceres::Covariance covariance(covariance_options);
-    std::vector< const double* > covariance_blocks;
-    std::vector< int > block_sizes;
-    std::vector< std::string > block_names;
-    std::vector< std::pair< const double*, const double* > > covariance_pairs;
+    std::vector<const double*> covariance_blocks;
+    std::vector<int> block_sizes;
+    std::vector<std::string> block_names;
+    std::vector<std::pair<const double*, const double*> > covariance_pairs;
 
     BOOST_FOREACH (CovarianceVariableRequest req, variables)
     {

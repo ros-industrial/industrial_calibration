@@ -349,10 +349,10 @@ ROSCameraHousingCalTInterface::ROSCameraHousingCalTInterface(const string& trans
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
   nh_ = new ros::NodeHandle;
 
-  get_client_ = nh_->serviceClient< industrial_extrinsic_cal::get_mutable_joint_states >("get_mutable_joint_states");
-  set_client_ = nh_->serviceClient< industrial_extrinsic_cal::set_mutable_joint_states >("set_mutable_joint_states");
+  get_client_ = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+  set_client_ = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
   store_client_ =
-      nh_->serviceClient< industrial_extrinsic_cal::store_mutable_joint_states >("store_mutable_joint_states");
+      nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
 
   get_request_.joint_names.push_back(housing_frame + "_x_joint");
   get_request_.joint_names.push_back(housing_frame + "_y_joint");
@@ -462,10 +462,10 @@ ROSSimpleCalTInterface::ROSSimpleCalTInterface(const string& transform_frame, co
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
   nh_ = new ros::NodeHandle;
 
-  get_client_ = nh_->serviceClient< industrial_extrinsic_cal::get_mutable_joint_states >("get_mutable_joint_states");
-  set_client_ = nh_->serviceClient< industrial_extrinsic_cal::set_mutable_joint_states >("set_mutable_joint_states");
+  get_client_ = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+  set_client_ = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
   store_client_ =
-      nh_->serviceClient< industrial_extrinsic_cal::store_mutable_joint_states >("store_mutable_joint_states");
+      nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
 
   get_request_.joint_names.push_back(transform_frame + "_x_joint");
   get_request_.joint_names.push_back(transform_frame + "_y_joint");
@@ -552,10 +552,10 @@ ROSSimpleCameraCalTInterface::ROSSimpleCameraCalTInterface(const string& transfo
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
   nh_ = new ros::NodeHandle;
 
-  get_client_ = nh_->serviceClient< industrial_extrinsic_cal::get_mutable_joint_states >("get_mutable_joint_states");
-  set_client_ = nh_->serviceClient< industrial_extrinsic_cal::set_mutable_joint_states >("set_mutable_joint_states");
+  get_client_ = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+  set_client_ = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
   store_client_ =
-      nh_->serviceClient< industrial_extrinsic_cal::store_mutable_joint_states >("store_mutable_joint_states");
+      nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
 
   get_request_.joint_names.push_back(transform_frame + "_x_joint");
   get_request_.joint_names.push_back(transform_frame + "_y_joint");

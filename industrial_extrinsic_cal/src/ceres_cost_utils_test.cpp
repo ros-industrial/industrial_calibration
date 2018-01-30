@@ -72,7 +72,7 @@ struct CameraReprjErrorWithDistortion
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   const T* c_p2,       /** intrinsic parameters */
                   const T* point,      /** point being projected, yes this is has 3 parameters */
@@ -136,7 +136,7 @@ struct CameraReprjErrorWithDistortion
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y)
   {
-    return (new ceres::AutoDiffCostFunction< CameraReprjErrorWithDistortion, 2, 6, 9, 3 >(
+    return (new ceres::AutoDiffCostFunction<CameraReprjErrorWithDistortion, 2, 6, 9, 3>(
         new CameraReprjErrorWithDistortion(o_x, o_y)));
   }
   double ox_; /** observed x location of object in image */
@@ -149,7 +149,7 @@ struct CameraReprjErrorNoDistortion
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   const T* c_p2,       /** intrinsic parameters */
                   const T* point,      /** point being projected, yes this is has 3 parameters */
@@ -198,7 +198,7 @@ struct CameraReprjErrorNoDistortion
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y)
   {
-    return (new ceres::AutoDiffCostFunction< CameraReprjErrorNoDistortion, 2, 6, 4, 3 >(
+    return (new ceres::AutoDiffCostFunction<CameraReprjErrorNoDistortion, 2, 6, 4, 3>(
         new CameraReprjErrorNoDistortion(o_x, o_y)));
   }
   double ox_; /** observed x location of object in image */
@@ -215,7 +215,7 @@ struct TargetCameraReprjErrorNoDistortion
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters */
                   const T* const c_p2,  /** intrinsic parameters */
                   const T* const c_p3,  /** 6Dof transform of target points into world frame */
@@ -287,7 +287,7 @@ struct TargetCameraReprjErrorNoDistortion
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y)
   {
-    return (new ceres::AutoDiffCostFunction< TargetCameraReprjErrorNoDistortion, 2, 6, 4, 6, 3 >(
+    return (new ceres::AutoDiffCostFunction<TargetCameraReprjErrorNoDistortion, 2, 6, 4, 6, 3>(
         new CameraReprjError(o_x, o_y)));
   }
   double ox_; /** observed x location of object in image */
@@ -301,7 +301,7 @@ struct TargetCameraReprjErrorProjModelAsClassVars
   {
   }
 
-  template < typename T >
+  template <typename T>
   bool operator()(const T* const c_p1,  /** extrinsic parameters */
                   const T* const c_p2,  /** 6Dof transform of target points into world frame */
                   const T* const point, /** point described in target frame that is being seen */
@@ -373,7 +373,7 @@ struct TargetCameraReprjErrorProjModelAsClassVars
   /** the client code. */
   static ceres::CostFunction* Create(const double o_x, const double o_y, double fx, double fy, double cx, double cy)
   {
-    return (new ceres::AutoDiffCostFunction< TargetCameraReprjErrorProjModelAsClassVars, 2, 6, 6, 3 >(
+    return (new ceres::AutoDiffCostFunction<TargetCameraReprjErrorProjModelAsClassVars, 2, 6, 6, 3>(
         new CameraReprjError(o_x, o_y, fx, fy, cx, cy)));
   }
   double ox_;    /** observed x location of object in image */

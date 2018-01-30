@@ -21,9 +21,9 @@ using YAML::Node;
 namespace industrial_extrinsic_cal
 {
 // prototypes
-int parseTargetPoints(const Node& node, std::vector< Point3d >& points);
+int parseTargetPoints(const Node& node, std::vector<Point3d>& points);
 
-bool parseTargets(std::string& target_file, vector< boost::shared_ptr< Target > >& targets)
+bool parseTargets(std::string& target_file, vector<boost::shared_ptr<Target> >& targets)
 {
   bool rtn = true;
   Node target_doc;
@@ -42,7 +42,7 @@ bool parseTargets(std::string& target_file, vector< boost::shared_ptr< Target > 
     {
       for (unsigned int i = 0; i < target_parameters.size(); i++)
       {
-        shared_ptr< Target > temp_target = parseSingleTarget(target_parameters[i]);
+        shared_ptr<Target> temp_target = parseSingleTarget(target_parameters[i]);
         temp_target->is_moving_ = false;
         targets.push_back(temp_target);
         n_static++;
@@ -56,7 +56,7 @@ bool parseTargets(std::string& target_file, vector< boost::shared_ptr< Target > 
     {
       for (unsigned int i = 0; i < target_parameters2.size(); i++)
       {
-        shared_ptr< Target > temp_target = parseSingleTarget(target_parameters2[i]);
+        shared_ptr<Target> temp_target = parseSingleTarget(target_parameters2[i]);
         temp_target->is_moving_ = true;
         targets.push_back(temp_target);
         n_moving++;
@@ -78,10 +78,10 @@ bool parseTargets(std::string& target_file, vector< boost::shared_ptr< Target > 
   return (rtn);
 }
 
-shared_ptr< Target > parseSingleTarget(const Node& node)
+shared_ptr<Target> parseSingleTarget(const Node& node)
 {
-  shared_ptr< Target > temp_target = make_shared< Target >();
-  shared_ptr< TransformInterface > temp_ti;
+  shared_ptr<Target> temp_target = make_shared<Target>();
+  shared_ptr<TransformInterface> temp_ti;
   try
   {
     bool success = true;
@@ -140,7 +140,7 @@ shared_ptr< Target > parseSingleTarget(const Node& node)
     }
     else
     {
-      shared_ptr< TransformInterface > temp_ti =
+      shared_ptr<TransformInterface> temp_ti =
           parseTransformInterface(node, transform_interface, temp_target->target_frame_, pose);
       temp_target->setTransformInterface(temp_ti);  // install the transform interface
       if (transform_available)
@@ -178,12 +178,12 @@ shared_ptr< Target > parseSingleTarget(const Node& node)
   return (temp_target);
 }  // end parse_single_target
 
-int parseTargetPoints(const Node& node, std::vector< Point3d >& points)
+int parseTargetPoints(const Node& node, std::vector<Point3d>& points)
 {
   points.clear();
   for (int i = 0; i < (int)node.size(); i++)
   {
-    std::vector< double > temp_pnt;
+    std::vector<double> temp_pnt;
     parseVectorD(node[i], "pnt", temp_pnt);
     Point3d temp_pnt3d;
     temp_pnt3d.x = temp_pnt[0];

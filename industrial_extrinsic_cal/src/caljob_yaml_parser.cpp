@@ -24,7 +24,7 @@ using boost::shared_ptr;
 using boost::make_shared;
 using YAML::Node;
 
-bool parseCaljob(std::string& caljob_input_file, vector< ObservationScene >& scene_list, string& reference_frame,
+bool parseCaljob(std::string& caljob_input_file, vector<ObservationScene>& scene_list, string& reference_frame,
                  CeresBlocks& blocks)
 {
   bool rtn = true;
@@ -68,7 +68,7 @@ ObservationScene parseSingleScene(const Node& node, int scene_id, CeresBlocks& b
     // parse the scene trigger
     std::string trigger_name;
     if (!parseString(node, "trigger", trigger_name)) ROS_ERROR("no trigger in scene");
-    boost::shared_ptr< Trigger > temp_trigger = parseTrigger(node, trigger_name);
+    boost::shared_ptr<Trigger> temp_trigger = parseTrigger(node, trigger_name);
     temp_scene.setTrigger(temp_trigger);
 
     // parse the observations
@@ -79,8 +79,8 @@ ObservationScene parseSingleScene(const Node& node, int scene_id, CeresBlocks& b
       std::string target_name;
       std::string cost_type_string;
       Cost_function cost_type;
-      shared_ptr< Camera > temp_cam = make_shared< Camera >();
-      shared_ptr< Target > temp_targ = make_shared< Target >();
+      shared_ptr<Camera> temp_cam = make_shared<Camera>();
+      shared_ptr<Target> temp_targ = make_shared<Target>();
       Roi temp_roi;
       if (!parseString(observation_node[i], "camera", camera_name)) ROS_ERROR("no camera_name in observation");
       if (!parseString(observation_node[i], "target", target_name)) ROS_ERROR("no target in observation");

@@ -60,11 +60,11 @@ void Camera::pullTransform()
   camera_parameters_.position[1] = pose.y;
   camera_parameters_.position[2] = pose.z;
 }
-void Camera::setTransformInterface(boost::shared_ptr< TransformInterface > transform_interface)
+void Camera::setTransformInterface(boost::shared_ptr<TransformInterface> transform_interface)
 {
   transform_interface_ = transform_interface;
 }
-boost::shared_ptr< TransformInterface > Camera::getTransformInterface()
+boost::shared_ptr<TransformInterface> Camera::getTransformInterface()
 {
   return (transform_interface_);
 }

@@ -17,7 +17,7 @@ inline bool parseDouble(const YAML::Node& node, char const* var_name, double& va
 {
   if (node[var_name])
   {
-    var_value = node[var_name].as< double >();
+    var_value = node[var_name].as<double>();
     return true;
   }
   return false;
@@ -27,7 +27,7 @@ inline bool parseInt(const YAML::Node& node, char const* var_name, int& var_valu
 {
   if (node[var_name])
   {
-    var_value = node[var_name].as< int >();
+    var_value = node[var_name].as<int>();
     return true;
   }
   return false;
@@ -36,7 +36,7 @@ inline bool parseUInt(const YAML::Node& node, char const* var_name, unsigned int
 {
   if (node[var_name])
   {
-    var_value = node[var_name].as< unsigned int >();
+    var_value = node[var_name].as<unsigned int>();
     return true;
   }
   return false;
@@ -46,7 +46,7 @@ inline bool parseString(const YAML::Node& node, char const* var_name, std::strin
 {
   if (node[var_name])
   {
-    var_value = node[var_name].as< std::string >();
+    var_value = node[var_name].as<std::string>();
     return true;
   }
   return false;
@@ -62,7 +62,7 @@ inline bool parseBool(const YAML::Node& node, char const* var_name, bool& var_va
   return false;
 }
 
-inline bool parseVectorD(const YAML::Node& node, char const* var_name, std::vector< double >& var_value)
+inline bool parseVectorD(const YAML::Node& node, char const* var_name, std::vector<double>& var_value)
 {
   if (node[var_name])
   {
@@ -71,7 +71,7 @@ inline bool parseVectorD(const YAML::Node& node, char const* var_name, std::vect
     for (int i = 0; i < (int)n.size(); i++)
     {
       double value;
-      value = n[i].as< double >();
+      value = n[i].as<double>();
       var_value.push_back(value);
     }
     return true;
@@ -89,8 +89,8 @@ inline const YAML::Node parseNode(const YAML::Node& node, char const* var_name)
 }
 inline void parseKeyDValue(YAML::const_iterator& it, std::string& key, double& dvalue)
 {
-  key = it->first.as< std::string >();
-  dvalue = it->second.as< double >();
+  key = it->first.as<std::string>();
+  dvalue = it->second.as<double>();
 }
 
 inline bool yamlNodeFromFileName(std::string filename, YAML::Node& ynode)
