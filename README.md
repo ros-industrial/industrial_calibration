@@ -21,6 +21,13 @@ sudo apt-get install ros-kinetic-openni2-launch
 # install moveit
 sudo apt-get install ros-kinetic-moveit
 
+# Examples
+## Single Basler on a rail
+```
+roslaunch robocyl_ical.launch
+roslaunch robo_cylinder.launch
+rosservice call /RobocylCalService "allowable_cost_per_observation: 0.25"
+
 # Build
 Requires [wstool](http://wiki.ros.org/wstool)
 ```

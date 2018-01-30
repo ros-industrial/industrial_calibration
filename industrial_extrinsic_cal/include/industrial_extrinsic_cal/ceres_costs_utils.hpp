@@ -2408,5 +2408,225 @@ public:
   Point3d point_;        /** point expressed in target coordinates */
 };
 
-}  // end of namespace
+  class  RailICal3
+  {
+  public:
+    RailICal3(double ob_x, double ob_y, Point3d rail_position, Point3d point) :
+      ox_(ob_x), oy_(ob_y), rail_position_(rail_position), point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(	    const T* const c_p1,  /**intrinsics [9] */
+			    const T* const c_p2,  /**target_pose [6] */
+			    T* residual) const
+    {
+      T fx, fy, cx, cy, k1, k2, k3, p1, p2;      // extract intrinsics
+      extractCameraIntrinsics(c_p1, fx, fy, cx, cy, k1, k2, k3, p1, p2);
+      const T *target_aa(& c_p2[0]); // extract target's angle axis
+      const T *target_tx(& c_p2[3]); // extract target's position
+
+      /** transform point into camera frame */
+      T camera_point[3]; /** point in camera coordinates */
+      transformPoint3d(target_aa, target_tx, point_, camera_point);
+      camera_point[0] = camera_point[0] + T(rail_position_.x); // transform to camera's location along rail
+      camera_point[1] = camera_point[1] + T(rail_position_.y); // transform to camera's location along rail
+      camera_point[2] = camera_point[2] + T(rail_position_.z); // transform to camera's location along rail
+
+      /** compute project point into image plane and compute residual */
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,  residual);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y, 
+				       Point3d rail_position,
+				       Point3d point)
+    {
+      return (new ceres::AutoDiffCostFunction<RailICal3, 2, 9, 6>
+	      (
+	       new RailICal3(o_x, o_y, rail_position, point)
+	       )
+	      );
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    Point3d rail_position_; /** location of camera along rail */
+    Point3d point_; /** point expressed in target coordinates */
+  };
+  class DistortedCameraFinder
+  {
+  public:
+    DistortedCameraFinder(double ob_x, double ob_y, double fx, double fy,
+			  double cx, double cy, double k1, double k2, double k3, double p1, double p2,
+                          Point3d point) :
+        ox_(ob_x), oy_(ob_y), fx_(fx), fy_(fy), cx_(cx), cy_(cy),
+        k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2),
+        point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(const T* const c_p1, /** extrinsic parameters */
+                    T* residual) const
+    {
+      const T *camera_aa(&c_p1[0]);
+      const T *camera_tx(&c_p1[3]);
+      T camera_point[3]; /** point in camera coordinates */
+
+      /** transform point into camera coordinates */
+      transformPoint3d(camera_aa, camera_tx, point_, camera_point);
+
+      /** compute project point into image plane and compute residual */
+      T fx = T(fx_);
+      T fy = T(fy_);
+      T cx = T(cx_);
+      T cy = T(cy_);
+      T ox = T(ox_);
+      T oy = T(oy_);
+      T k1 = T(k1_);
+      T k2 = T(k2_);
+      T k3 = T(k3_);
+      T p1 = T(p1_);
+      T p2 = T(p2_);
+      cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y, 
+				       const double fx, const double fy, 
+				       const double cx, const double cy,
+                                       const double k1, const double k2, const double k3,
+                                       const double p1, const double p2,
+                                       Point3d point)
+    {
+      return (new ceres::AutoDiffCostFunction<DistortedCameraFinder, 2, 6>(
+          new DistortedCameraFinder(o_x, o_y, fx, fy, cx, cy, k1, k2, k3, p1, p2, point)));
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double fx_; /*!< known focal length of camera in x */
+    double fy_; /*!< known focal length of camera in y */
+    double cx_; /*!< known optical center of camera in x */
+    double cy_; /*!< known optical center of camera in y */
+    double k1_; /*!< known radial distorition k1 */
+    double k2_; /*!< known radial distorition k2 */
+    double k3_; /*!< known radial distorition k3 */
+    double p1_; /*!< known decentering distorition p1 */
+    double p2_; /*!< known decentering distorition p2 */
+    Point3d point_; /*!< known location of point in target coordinates */
+  };
+
+  class  RailICalNoDistortion
+  {
+  public:
+    RailICalNoDistortion(double ob_x, double ob_y, double rail_position, Point3d point) :
+      ox_(ob_x), oy_(ob_y), rail_position_(rail_position), point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(	    const T* const c_p1,  /**intrinsics [4] */
+            const T* const c_p2,  /**target_pose [6] */
+            T* residual) const
+    {
+      T fx, fy, cx, cy;      // extract intrinsics
+      extractCameraIntrinsics(c_p1, fx, fy, cx, cy);
+      const T *target_aa(& c_p2[0]); // extract target's angle axis
+      const T *target_tx(& c_p2[3]); // extract target's position
+
+      /** transform point into camera frame */
+      T camera_point[3]; /** point in camera coordinates */
+      transformPoint3d(target_aa, target_tx, point_, camera_point);
+      camera_point[2] = camera_point[2] + T(rail_position_); // transform to camera's location along rail
+
+      /** compute project point into image plane and compute residual */
+      T ox = T(ox_);
+      T oy = T(oy_);
+      cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y,
+                       const double rail_position,
+                       Point3d point)
+    {
+      return (new ceres::AutoDiffCostFunction<RailICal, 2, 4, 6>
+          (
+           new RailICal(o_x, o_y, rail_position, point)
+           )
+          );
+    }
+    double ox_; /** observed x location of object in image */
+    double oy_; /** observed y location of object in image */
+    double rail_position_; /** location of camera along rail */
+    Point3d point_; /** point expressed in target coordinates */
+  };
+  /* @brief rangeSensorExtrinsic This cost function is to be used for extrinsic calibration of a 3D camera. 
+   * This is used when the focal lenghts, optical center and distortion parameters used to get the 3D data
+   * are not available. Instead, we have the point cloud and an intensity image. We use the intensity
+   * image to find the centers of the cirlces of the calibration target and then assume that the same index 
+   * in the point cloud corresponds to the x,y,z location of this point.
+   * This assumption is probably erroneous because rectification of the intensity image is usually performed 
+   * prior to generation of the point cloud. 
+   * Solving extrinsic cal for a range sensor is equivalent to the inner computation of ICP where correspondence
+   * is perfectly known. There exists an analytic solution. 
+   */ 
+  class  RangeSensorExtrinsicCal
+  {
+  public:
+    RangeSensorExtrinsicCal(double ob_x, double ob_y, double ob_z, Point3d point) :
+      ox_(ob_x), oy_(ob_y), oz_(ob_z),
+      point_(point)
+    {
+    }
+
+    template<typename T>
+    bool operator()(	    const T* const c_p1,  /**extriniscs [6] */
+		    T* residual) const
+    {
+      const T *camera_aa(& c_p1[0]); // extract camera's angle axis
+      const T *camera_tx(& c_p1[3]); // extract camera's position
+
+      /** transform point into camera frame */
+      T camera_point[3]; /** point in camera coordinates */
+      transformPoint3d(camera_aa, camera_tx, point_, camera_point);
+
+      /** compute residual */
+      residual[0] = camera_point[0] - T(ox_);
+      residual[1] = camera_point[1] - T(oy_);
+      residual[2] = camera_point[2] - T(oz_);
+
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double o_x, const double o_y,  const double o_z,
+				       Point3d point)
+    {
+      return (new ceres::AutoDiffCostFunction<RangeSensorExtrinsicCal, 3, 6>
+	      (
+	       new RangeSensorExtrinsicCal(o_x, o_y, o_z, point)
+	       )
+	      );
+    }
+    double ox_; /** observed x location of object in 3D data */
+    double oy_; /** observed y location of object in 3D data */
+    double oz_; /** observed z location of object in 3D data */
+    Point3d point_; /** point expressed in target coordinates */
+  };
+
+
+} // end of namespace
 #endif

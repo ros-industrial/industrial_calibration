@@ -1,0 +1,71 @@
+<?xml version="1.0" ?>
+<launch>
+
+   <arg name="xacro_model" default="$(find ind_cal_multi_camera)/urdf/ifm_cal.xacro" />
+   <arg name="gui" default="False" />
+   <arg name="robot1" default="Robot1" />
+
+   <!-- IFM camera node -->
+   <include file="$(find industrial_extrinsic_cal)/launch/ifm.launch" >
+      <arg name="nn" value="ifm1"/>
+      <arg name="ip" value="192.168.33.69"/>
+    </include>
+
+  <!--node pkg="tf" type="static_transform_publisher" 
+                 name="target_frame" 
+                 args="0 0 0 0 0 0 world_frame  target_frame 100" /-->
+
+
+   <!-- Launch mutable joint state publisher for calibratable transforms  -->
+   <node  name="ifm_camera_locs" pkg="industrial_extrinsic_cal" type="mutable_joint_state_publisher" >
+       <param name="mutable_joint_state_yaml_file" value="$(find industrial_extrinsic_cal)/yaml/ifm_joint_states.yaml" />
+       <param name="overwrite_mutable_values" value="true" />	
+       <remap from="mutable_joint_states" to="Robot1/joint_states"/>
+   </node>
+
+  <!-- Launch range camera extrinsic calibration service node  -->
+  <node pkg="industrial_extrinsic_cal" type="range_excal" name="range_cal_srv" output="screen" >
+      <rosparam>
+          camera_name: "ifm1"
+          image_topic: "ifm1/amplitude"
+          cloud_topic: "ifm1/cloud"
+          camera_frame: "ifm1"
+          camera_mounting_frame: "target_frame"
+          image_height: 176.0
+          image_width: 132.0
+          ROI_xmin: 0.0
+          ROI_xmax: 176.0
+          ROI_ymin: 0.0
+          ROI_ymax: 132.0
+          target_rows: 7
+          target_cols: 5
+          target_circle_dia: .045
+          target_spacing: .060
+          use_circle_detector: True
+          service_name: "CalibrationService"
+    </rosparam>
+   </node>
+
+   <!-- Launch gui to call the transform service -->
+   <node name="cal_gui" pkg="calibrate_gui" type="calibrate_gui" />
+
+
+   <!-- Load the xacro file of the cameras and target onto the parameter server as a robot description -->
+   <param name="$(arg robot1)/robot_description" command="$(find xacro)/xacro.py $(arg xacro_model)" />
+   <param name="use_gui" value="$(arg gui)" />
+
+   <!-- Launch robot state publishers for scene -->
+   <node ns="$(arg robot1)" name="ifm_scene_state_publisher" pkg="robot_state_publisher" type="state_publisher" >
+            <!--param name="tf_prefix" value="" /-->
+            <param name="publish_frequency" value="100" />
+    </node>
+
+   <!-- Launch rviz -->
+   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find industrial_extrinsic_cal)/config/range_excal.rviz" required="true"/>
+
+   <!-- Launch image_view to view the intensity image -->
+   <node name="amp_view" pkg="image_view" type="image_view">
+      <remap from="image" to="/ifm1/amplitude"/>
+   </node>
+
+</launch>

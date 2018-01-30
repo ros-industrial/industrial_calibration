@@ -49,6 +49,7 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   pnh.getParam("normalize_calibration_image", normalize_calibration_image_);
 
   // set up blob/circle detectors parameters are dynamic
+
   cv::SimpleBlobDetector::Params simple_blob_params;
   if (!pnh.getParam("white_blobs", white_blobs_))
   {

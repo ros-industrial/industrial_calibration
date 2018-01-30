@@ -54,6 +54,11 @@ enum Cost_function
   LinkCameraCircleTargetReprjError,
   LinkCameraCircleTargetReprjErrorPK,
   FixedCircleTargetCameraReprjErrorPK,
+  RailICal,
+  RailICal3,
+  DistortedCameraFinder,
+  RailICalNoDistortion,
+  RangeSensorExtrinsicCal,
   NullCostType
 };
 }  // end of namespace cost_functions
