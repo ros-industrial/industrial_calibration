@@ -319,7 +319,6 @@ inline void projectPntNoDistortion(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox
     xp = xp1 / zp1;
     yp = yp1 / zp1;
   }
->>>>>>> mkinetic-devel
 
   /** perform projection using focal length and camera center into image plane */
   ox = fx * xp + cx;

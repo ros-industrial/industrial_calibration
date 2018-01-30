@@ -858,7 +858,6 @@ bool ROSCameraObserver::pullCameraInfo(double& fx, double& fy, double& cx, doubl
   fy = info_msg->K[4];
   cy = info_msg->K[5];
   return (true);
->>>>>>> mkinetic-devel
 }
 
 bool ROSCameraObserver::pullCameraInfo(double& fx, double& fy, double& cx, double& cy, double& k1, double& k2,
