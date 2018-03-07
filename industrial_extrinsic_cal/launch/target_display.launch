@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<launch>
+  <node pkg="industrial_extrinsic_cal" type="target_display" name="target_display_node" output="screen" >
+    <param name="target_yaml_file" value="$(find industrial_extrinsic_cal)/targets/m10x12.yaml" />
+  </node>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find industrial_extrinsic_cal)/config/industrial_extrinsic_calibration.rviz" required="true" />
+</launch>

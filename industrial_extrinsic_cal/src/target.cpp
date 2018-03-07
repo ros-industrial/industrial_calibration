@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include <industrial_extrinsic_cal/target.h>
+#include <industrial_extrinsic_cal/ros_camera_observer.h>  // for pattern options
 
 namespace industrial_extrinsic_cal
 {
@@ -39,4 +40,37 @@ void Target::setTIReferenceFrame(std::string ref_frame)
 {
   transform_interface_->setReferenceFrame(ref_frame);
 }
+void Target::generatePoints()
+{
+    pts_.clear();
+    int rows, cols;
+    double spacing;
+    switch(target_type_){
+    case pattern_options::Chessboard:
+      rows    = checker_board_parameters_.pattern_rows;
+      cols    = checker_board_parameters_.pattern_cols;
+      spacing = checker_board_parameters_.square_size;
+        break;
+    case pattern_options::CircleGrid:
+    case pattern_options::ModifiedCircleGrid:
+      rows    = circle_grid_parameters_.pattern_rows;
+      cols    = circle_grid_parameters_.pattern_cols;
+      spacing = circle_grid_parameters_.spacing;
+      break;
+    default:
+      break;
+    }// end switch for target type
+
+    num_points_ = rows*cols;
+    for(int i=0; i<rows; i++){
+      for(int j=0; j<cols; j++){
+	Point3d point;
+	point.x = j*spacing;
+	point.y = (rows -1 -i)*spacing;
+	point.z = 0.0;
+	pts_.push_back(point);
+      }
+    }
+}// end of Target::generatePoints()
+  
 }  // end of namespace

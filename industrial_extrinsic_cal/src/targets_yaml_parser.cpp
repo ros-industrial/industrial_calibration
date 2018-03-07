@@ -48,7 +48,7 @@ bool parseTargets(std::string& target_file, vector<boost::shared_ptr<Target> >& 
         n_static++;
       }
     }
-
+    ROS_INFO("parsed = %d static targets",(int) targets.size());
     // read in all moving targets
     int n_moving = 0;
     const YAML::Node& target_parameters2 = parseNode(target_doc, "moving_targets");
@@ -105,13 +105,17 @@ shared_ptr<Target> parseSingleTarget(const Node& node)
       case pattern_options::Chessboard:
         success &= parseInt(node, "target_rows", temp_target->checker_board_parameters_.pattern_rows);
         success &= parseInt(node, "target_cols", temp_target->checker_board_parameters_.pattern_cols);
+	parseDouble(node, "square_size", temp_target->checker_board_parameters_.square_size);
         ROS_DEBUG_STREAM("TargetRows: " << temp_target->checker_board_parameters_.pattern_rows);
+	parseBool(node,"publish_vis_marker", temp_target->pub_rviz_vis_);
         if (!success) ROS_ERROR("must set rows and cols");
         break;
       case pattern_options::CircleGrid:
         parseInt(node, "target_rows", temp_target->circle_grid_parameters_.pattern_rows);
         parseInt(node, "target_cols", temp_target->circle_grid_parameters_.pattern_cols);
         parseDouble(node, "circle_dia", temp_target->circle_grid_parameters_.circle_diameter);
+	parseDouble(node, "spacing", temp_target->circle_grid_parameters_.spacing);
+	parseBool(node,"publish_vis_marker", temp_target->pub_rviz_vis_);
         temp_target->circle_grid_parameters_.is_symmetric = true;
         ROS_DEBUG_STREAM("TargetRows: " << temp_target->circle_grid_parameters_.pattern_rows);
         break;
@@ -119,6 +123,8 @@ shared_ptr<Target> parseSingleTarget(const Node& node)
         parseInt(node, "target_rows", temp_target->circle_grid_parameters_.pattern_rows);
         parseInt(node, "target_cols", temp_target->circle_grid_parameters_.pattern_cols);
         parseDouble(node, "circle_dia", temp_target->circle_grid_parameters_.circle_diameter);
+	parseDouble(node, "spacing", temp_target->circle_grid_parameters_.spacing);
+	parseBool(node,"publish_vis_marker", temp_target->pub_rviz_vis_);
         temp_target->circle_grid_parameters_.is_symmetric = true;
         ROS_DEBUG_STREAM("TargetRows: " << temp_target->circle_grid_parameters_.pattern_rows);
         break;
@@ -141,23 +147,22 @@ shared_ptr<Target> parseSingleTarget(const Node& node)
     else
     {
       shared_ptr<TransformInterface> temp_ti =
-          parseTransformInterface(node, transform_interface, temp_target->target_frame_, pose);
+	parseTransformInterface(node, transform_interface, temp_target->target_frame_, pose);
       temp_target->setTransformInterface(temp_ti);  // install the transform interface
       if (transform_available)
       {
         temp_target->pushTransform();
       }
     }
-
-    if (!parseUInt(node, "num_points", temp_target->num_points_))
+    temp_target->generatePoints();
+    if (parseUInt(node, "num_points", temp_target->num_points_))
     {
-      ROS_ERROR("must set target num_points");
-    }
-    const YAML::Node& points_node = parseNode(node, "points");
-    int num_points = parseTargetPoints(points_node, temp_target->pts_);
-    if (num_points != temp_target->num_points_ || num_points != (int)temp_target->pts_.size())
-    {
-      ROS_ERROR("Expecting %d points found %d", temp_target->num_points_, num_points);
+      const YAML::Node& points_node = parseNode(node, "points");
+      int num_points = parseTargetPoints(points_node, temp_target->pts_);
+      if (num_points != temp_target->num_points_ || num_points != (int)temp_target->pts_.size())
+	{
+	  ROS_ERROR("Expecting %d points found %d", temp_target->num_points_, num_points);
+	}
     }
   }  // end try
   catch (YAML::ParserException& e)

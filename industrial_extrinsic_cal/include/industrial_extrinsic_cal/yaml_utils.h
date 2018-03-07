@@ -83,7 +83,7 @@ inline const YAML::Node parseNode(const YAML::Node& node, char const* var_name)
 {
   if (!node[var_name])
   {
-    ROS_ERROR("Can't parse node[%s]", var_name);
+    ROS_INFO("Can't parse node[%s]", var_name);
   }
   return (node[var_name]);
 }

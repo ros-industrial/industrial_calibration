@@ -173,6 +173,8 @@ typedef struct
 {
   int pattern_rows;
   int pattern_cols;
+  double square_size;
+  double spacing;
 } CheckerBoardParameters;
 
 /** @brief Parameters defining circle grid target  */
@@ -182,6 +184,7 @@ typedef struct
   int pattern_cols;        // number of colulmns
   bool is_symmetric;       // not sure
   double circle_diameter;  // size of each circle
+  double spacing;          // spacing between circle centers
 } CircleGridParameters;
 
 /** @brief Parameters defining AR target */

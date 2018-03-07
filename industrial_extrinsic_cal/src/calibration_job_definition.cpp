@@ -30,6 +30,7 @@
 #include <industrial_extrinsic_cal/camera_yaml_parser.h>
 #include <industrial_extrinsic_cal/targets_yaml_parser.h>
 #include <industrial_extrinsic_cal/caljob_yaml_parser.h>
+#include <industrial_extrinsic_cal/ros_target_display.hpp>
 
 using std::string;
 using boost::shared_ptr;
@@ -180,6 +181,9 @@ bool CalibrationJob::loadTarget()
   {  // target file parses ok
     for (int i = 0; i < (int)all_targets.size(); i++)
     {
+      if (all_targets[i]->pub_rviz_vis_){ // use rviz visualization marker to display the target, currently must be modified circle grid
+	displayRvizTarget(all_targets[i]);
+      }
       if (all_targets[i]->is_moving_)
       {
         int scene_id = 0;

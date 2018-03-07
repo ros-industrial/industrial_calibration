@@ -78,7 +78,7 @@ public:
     move_group_->setJointValueTarget(goal->joint_values);
     if (move_group_->move())
     {
-      sleep(1);
+      //      sleep(1);
       joint_value_server_.setSucceeded();
     }
     else

@@ -70,7 +70,7 @@
 	<joint name="${prefix}_ir_joint" type="fixed">
 		<parent link="${prefix}_frame"/>
 		<child link="${prefix}_ir_link"/>
-		<origin rpy="0 0 0" xyz="0 0 0"/>
+		<origin rpy="0 0 0" xyz="0 0.05 0"/>
 	</joint>
 	<joint name="${prefix}_ir_optical_frame_joint" type="fixed">
 		<parent link="${prefix}_ir_link"/>
