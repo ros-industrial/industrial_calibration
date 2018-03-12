@@ -40,7 +40,7 @@ using std::vector;
   {
     ros::NodeHandle pnh("~");
     
-    // get the name of the yaml file containing the mutable joints
+    // get the yaml file name for the target
     if (!pnh.getParam("target_yaml_file", target_yaml_file_name_))
       {
 	ROS_ERROR("TargetRvizDisplay, target_yaml_file parameter for this node");

@@ -26,5 +26,4 @@
    * @param target target to be displayed
    */
 void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> target);
-//void displayRvizTarget(industrial_extrinsic_cal::Target &target);
 #endif
