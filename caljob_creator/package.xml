@@ -7,7 +7,6 @@
   </description>
   <author email="clewis@swri.org">Chris Lewis</author>
   <maintainer email="clewis@swri.org">Chris Lewis</maintainer>
-  <maintainer email="Austin.Deric@gmail.com">AustinDeric</maintainer>
   <license>Apache2.0</license>
 
   <url type="website">http://wiki.ros.org/caljob_creator</url>
@@ -22,5 +21,7 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf</depend>
-
+  <depend>industrial_extrinsic_cal</depend>
+  <depend>yaml-cpp</depend>
+  
 </package>

@@ -78,7 +78,8 @@ public:
     move_group_->setJointValueTarget(goal->joint_values);
     if (move_group_->move())
     {
-      sleep(1);
+      // For calibration, one might want a sleep here, but in that case, it should be the caller's responsibility to sleep
+      // after the move completes to allow for vibrations to settle.
       joint_value_server_.setSucceeded();
     }
     else

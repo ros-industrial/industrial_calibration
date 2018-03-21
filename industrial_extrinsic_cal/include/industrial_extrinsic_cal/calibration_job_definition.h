@@ -158,7 +158,7 @@ public:
   {
     return &scene_list_;
   };
-
+  
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 protected:
   /*!

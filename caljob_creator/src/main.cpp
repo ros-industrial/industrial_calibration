@@ -16,7 +16,9 @@
 class CalJob
 {
 public:
-  CalJob(const std::string& outfile, const std::string& camera_name) : file_(outfile.c_str()), camera_name_(camera_name)
+  CalJob(const std::string& outfile, const std::string& camera_name,
+	 const std::string& target_name, const std::string& cost_type)
+    : file_(outfile.c_str()), camera_name_(camera_name), target_name_(target_name), cost_type_(cost_type)
   {
     if (!file_) throw std::runtime_error("Could not open outfile");
     write_headers(file_);
@@ -63,10 +65,10 @@ private:
     os << "          camera: " << camera_name_ << "\n";
     os << "          target: modified_circle_10x10\n";
     os << "          roi_x_min: 0\n";
-    os << "          roi_x_max: " << image_width_ << "\n";
+    os << "          roi_x_max: " << image_height_ << "\n";
     os << "          roi_y_min: 0\n";
-    os << "          roi_y_max: " << image_height_ << "\n";
-    os << "          cost_type: PosedTargetCameraReprjErrorPK\n";
+    os << "          roi_y_max: " << image_width_ << "\n";
+    os << "          cost_type: " << cost_type_   << "\n";
 
     return;
   }
@@ -88,12 +90,12 @@ private:
     os << "     observations:\n";
     os << "     -\n";
     os << "          camera: " << camera_name_ << "\n";
-    os << "          target: modified_circle_10x10\n";
+    os << "          target: " << target_name_ << "\n";
     os << "          roi_x_min: 0\n";
-    os << "          roi_x_max: 1280\n";
+    os << "          roi_x_max: " << image_width_ << "\n";
     os << "          roi_y_min: 0\n";
-    os << "          roi_y_max: 1024\n";
-    os << "          cost_type: PosedTargetCameraReprjErrorPK\n";
+    os << "          roi_y_max: " << image_height_ << "\n";
+    os << "          cost_type: " << cost_type_   << "\n";
 
     return;
   }
@@ -101,6 +103,8 @@ private:
   int image_height_;
   int image_width_;
   std::string camera_name_;
+  std::string target_name_;
+  std::string cost_type_;
 };
 
 static const std::string OPENCV_WINDOW = "Image window";
@@ -139,10 +143,14 @@ int main(int argc, char** argv)
   int image_height;
   int image_width;
   std::string camera_name;
+  std::string target_name;
+  std::string cost_type;
   nh.param<std::string>("image_topic", image_topic_name, "/kinect2/rgb_rect/image");
   nh.param<int>("image_width", image_width, 640);
   nh.param<int>("image_height", image_height, 480);
   nh.param<std::string>("camera_name", camera_name, "basler1");
+  nh.param<std::string>("target_name", target_name, "m10x10");
+  nh.param<std::string>("cost_type", cost_type, "PosedTargetCameraReprjErrorPK");
   std::string output_file_name;
   nh.param<std::string>("output_file", output_file_name, "caljob.yaml");
 
@@ -185,7 +193,7 @@ int main(int argc, char** argv)
   // Create subscribers for images
   image_transport::Subscriber image_sub = image_trans.subscribe(image_topic_name, 1, imageCb);
 
-  CalJob caljob(output_file_name, camera_name);
+  CalJob caljob(output_file_name, camera_name, target_name, cost_type);
   caljob.setImageSize(image_height, image_width);
 
   tf::TransformListener tf_listener;
