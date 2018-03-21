@@ -37,18 +37,15 @@ namespace industrial_extrinsic_cal
 class ROSRuntimeUtils
 {
 public:
-
   /**
    * @brief constructor
    */
-  ROSRuntimeUtils()
-  {  };
+  ROSRuntimeUtils(){};
 
   /**
    * @brief Default destructor
    */
-  ~ROSRuntimeUtils()
-  {
+  ~ROSRuntimeUtils(){
 
   };
 
@@ -57,15 +54,15 @@ public:
    * @param optimized_input
    * @return Tranform to be published/broadcasted
    */
-  tf::Transform pblockToPose(industrial_extrinsic_cal::P_BLOCK &optimized_input);
-  tf::Transform pblockToPose2(industrial_extrinsic_cal::P_BLOCK &optimized_input);
+  tf::Transform pblockToPose(industrial_extrinsic_cal::P_BLOCK& optimized_input);
+  tf::Transform pblockToPose2(industrial_extrinsic_cal::P_BLOCK& optimized_input);
   /**
    * @brief saved final calibrated transforms as launch file
    * @param package_name directory to package path
    * @param file_name name to save under package path
    * @return true if tf's successfully written to file
    */
-  bool store_tf_broadcasters(std::string &package_name, std::string &file_name);
+  bool store_tf_broadcasters(std::string& package_name, std::string& file_name);
   /**
    * @brief file containing camera definition parameters
    */
@@ -95,7 +92,7 @@ public:
    */
   std::vector<std::string> camera_intermediate_frame_;
 
-  //CalJob specific
+  // CalJob specific
   /**
    *  @brief set of initial extrinsics of camera(s)
    */
@@ -109,8 +106,7 @@ public:
    */
   std::vector<industrial_extrinsic_cal::P_BLOCK> target_poses_;
 
-
-  //TF specific
+  // TF specific
   /**
    *  @brief set of initial transform of camera(s)
    */
@@ -139,9 +135,8 @@ public:
    *  @brief set of listeners for transform from camera intermediate to camera optical frames
    */
   tf::TransformListener listener_;
-
 };
 
-} //end industrial_extrinsic_cal namespace
+}  // end industrial_extrinsic_cal namespace
 
 #endif /* RUNTIME_UTILS_H_ */

@@ -27,7 +27,6 @@
 
 TEST(IndustrialExtrinsicCalSuite, loadCamera)
 {
-  
   ros::NodeHandle nh("~");
   std::string yaml_path;
   // set test/yaml_file_path to the test/yaml directory
@@ -36,12 +35,13 @@ TEST(IndustrialExtrinsicCalSuite, loadCamera)
   std::string camera_file("/test_cameras.yaml");
   std::string target_file("/test_targets.yaml");
   std::string caljob_file("/test_caljob.yaml");
-  industrial_extrinsic_cal::CalibrationJob cal_job(yaml_path+camera_file, yaml_path+target_file, yaml_path+caljob_file);
-  EXPECT_TRUE(cal_job.load()); // read in cameras, targets, and scenes
-  industrial_extrinsic_cal::CeresBlocks * cblocks = cal_job.getBlocks();
-  std::vector<industrial_extrinsic_cal::ObservationScene> * scenes = cal_job.getScenes();
+  industrial_extrinsic_cal::CalibrationJob cal_job(yaml_path + camera_file, yaml_path + target_file,
+                                                   yaml_path + caljob_file);
+  EXPECT_TRUE(cal_job.load());  // read in cameras, targets, and scenes
+  industrial_extrinsic_cal::CeresBlocks* cblocks = cal_job.getBlocks();
+  std::vector<industrial_extrinsic_cal::ObservationScene>* scenes = cal_job.getScenes();
   // now, compare the data in these to that expected
-  EXPECT_EQ((int) scenes->size(), 2);
+  EXPECT_EQ((int)scenes->size(), 2);
   EXPECT_EQ((*scenes)[0].get_id(), 0);
   EXPECT_EQ((*scenes)[1].get_id(), 1);
 
@@ -72,12 +72,10 @@ TEST(IndustrialExtrinsicCalSuite, loadCamera)
   EXPECT_EQ(C3->camera_name_, "asus6");
   C4 = cblocks->getCameraByName("asus7");
   EXPECT_EQ(C4->camera_name_, "asus7");
-
-  
 }
 
 // Run all the tests that were declared with TEST()
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   ros::init(argc, argv, "test");
   testing::InitGoogleTest(&argc, argv);
@@ -85,5 +83,5 @@ int main(int argc, char **argv)
   spinner.start();
   bool rtn = RUN_ALL_TESTS();
   ros::waitForShutdown();
-  return(rtn);
+  return (rtn);
 }

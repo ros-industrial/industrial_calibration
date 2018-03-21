@@ -25,10 +25,9 @@
 
 namespace industrial_extrinsic_cal
 {
-
 /* local prototypes of helper functions */
 
-/*! \brief print a quaternion plus position as a homogeneous transform 
+/*! \brief print a quaternion plus position as a homogeneous transform
  *  \param qx quaternion x value
  *  \param qy quaternion y value
  *  \param qz quaternion z value
@@ -72,7 +71,7 @@ void printAAasEuler(double ax, double ay, double az);
  */
 void printCameraParameters(CameraParameters C, std::string words);
 
-/*! \brief  computes image of point in cameras image plane 
+/*! \brief  computes image of point in cameras image plane
  *  \param  C both intrinsic and extrinsic camera parameters
  *  \param  P the point to be projected into image
  */
@@ -90,18 +89,18 @@ Observation projectPointWithDistortion(CameraParameters C, Point3d P)
   /* transform point into camera frame */
   /* note, camera transform takes points from camera frame into world frame */
   double aa[3];
-  aa[0]=C.pb_extrinsics[0];
-  aa[1]=C.pb_extrinsics[1];
-  aa[2]=C.pb_extrinsics[2];
+  aa[0] = C.pb_extrinsics[0];
+  aa[1] = C.pb_extrinsics[1];
+  aa[2] = C.pb_extrinsics[2];
   ceres::AngleAxisRotatePoint(aa, pt, p);
 
   // apply camera translation
   double xp1 = p[0] + C.pb_extrinsics[3];
   double yp1 = p[1] + C.pb_extrinsics[4];
   double zp1 = p[2] + C.pb_extrinsics[5];
-  //p[0] +=C.pb_extrinsics[3];
-  //p[1] +=C.pb_extrinsics[4];
-  //p[2] +=C.pb_extrinsics[5];
+  // p[0] +=C.pb_extrinsics[3];
+  // p[1] +=C.pb_extrinsics[4];
+  // p[2] +=C.pb_extrinsics[5];
 
   double xp = xp1 / zp1;
   double yp = yp1 / zp1;
@@ -115,10 +114,10 @@ Observation projectPointWithDistortion(CameraParameters C, Point3d P)
   double yp2 = yp * yp;
 
   /* apply the distortion coefficients to refine pixel location */
-  double xpp = xp + C.distortion_k1 * r2 * xp + C.distortion_k2 * r4 * xp +
-      C.distortion_k3 * r6 * xp + C.distortion_p2 * (r2 + 2 * xp2) + 2 * C.distortion_p1 * xp * yp;
-  double ypp = yp + C.distortion_k1 * r2 * yp + C.distortion_k2 * r4 * yp +
-      C.distortion_k3 * r6 * yp + C.distortion_p1 * (r2 + 2 * yp2) + 2 * C.distortion_p2 * xp * yp;
+  double xpp = xp + C.distortion_k1 * r2 * xp + C.distortion_k2 * r4 * xp + C.distortion_k3 * r6 * xp +
+               C.distortion_p2 * (r2 + 2 * xp2) + 2 * C.distortion_p1 * xp * yp;
+  double ypp = yp + C.distortion_k1 * r2 * yp + C.distortion_k2 * r4 * yp + C.distortion_k3 * r6 * yp +
+               C.distortion_p1 * (r2 + 2 * yp2) + 2 * C.distortion_p2 * xp * yp;
 
   /* perform projection using focal length and camera center into image plane */
   Observation O;
@@ -130,16 +129,16 @@ Observation projectPointWithDistortion(CameraParameters C, Point3d P)
 
 Observation projectPointNoDistortion(CameraParameters C, Point3d P)
 {
-  double p[3];                  // rotated into camera frame
-  double point[3];              // world location of point
-  double aa[3];                 // angle axis representation of camera transform
-  double tx = C.position[0];    // location of origin in camera frame x
-  double ty = C.position[1];    // location of origin in camera frame y
-  double tz = C.position[2];    // location of origin in camera frame z
-  double fx = C.focal_length_x; // focal length x
-  double fy = C.focal_length_y; // focal length y
-  double cx = C.center_x;       // optical center x
-  double cy = C.center_y;       // optical center y
+  double p[3];                   // rotated into camera frame
+  double point[3];               // world location of point
+  double aa[3];                  // angle axis representation of camera transform
+  double tx = C.position[0];     // location of origin in camera frame x
+  double ty = C.position[1];     // location of origin in camera frame y
+  double tz = C.position[2];     // location of origin in camera frame z
+  double fx = C.focal_length_x;  // focal length x
+  double fy = C.focal_length_y;  // focal length y
+  double cx = C.center_x;        // optical center x
+  double cy = C.center_y;        // optical center y
 
   aa[0] = C.angle_axis[0];
   aa[1] = C.angle_axis[1];
@@ -167,5 +166,5 @@ Observation projectPointNoDistortion(CameraParameters C, Point3d P)
   return (O);
 }
 
-} // end of namespace
+}  // end of namespace
 #endif

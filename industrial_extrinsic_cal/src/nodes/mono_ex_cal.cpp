@@ -5,9 +5,9 @@
 #include <iostream>
 typedef struct
 {
-  int p_id; // point's id
-  double x; // image x
-  double y; // image y
+  int p_id;  // point's id
+  double x;  // image x
+  double y;  // image y
 } observation;
 
 typedef struct
@@ -20,7 +20,7 @@ typedef struct
       double y;
       double z;
     };
-    double PB[3]; // parameter block
+    double PB[3];  // parameter block
   };
 } point;
 
@@ -30,13 +30,13 @@ typedef struct
   {
     struct
     {
-      double PB_extrinsics[6]; // parameter block for intrinsics
-      double PB_intrinsics[9]; // parameter block for extrinsics
+      double PB_extrinsics[6];  // parameter block for intrinsics
+      double PB_intrinsics[9];  // parameter block for extrinsics
     };
     struct
     {
-      double aa[3]; // angle axis data
-      double pos[3]; // position data
+      double aa[3];   // angle axis data
+      double pos[3];  // position data
       double fx;
       double fy;
       double cx;
@@ -86,10 +86,10 @@ observation project_point(Camera C, point P)
   double r4 = r2 * r2;
   double r6 = r2 * r4;
 
-  double xp2 = xp * xp; // temporary variables square of others
+  double xp2 = xp * xp;  // temporary variables square of others
   double yp2 = yp * yp;
 
-  //apply the distortion coefficients to refine pixel location
+  // apply the distortion coefficients to refine pixel location
   double xpp = xp + C.k1 * r2 * xp + C.k2 * r4 * xp + C.k3 * r6 * xp + C.p2 * (r2 + 2 * xp2) + 2 * C.p1 * xp * yp;
   double ypp = yp + C.k1 * r2 * yp + C.k2 * r4 * yp + C.k3 * r6 * yp + C.p1 * (r2 + 2 * yp2) + 2 * C.p2 * xp * yp;
 
@@ -103,84 +103,82 @@ observation project_point(Camera C, point P)
 
 struct Camera_reprj_error
 {
-  Camera_reprj_error(double ob_x, double ob_y) :
-      Ox(ob_x), Oy(ob_y)
+  Camera_reprj_error(double ob_x, double ob_y) : Ox(ob_x), Oy(ob_y)
   {
   }
 
-  template<typename T>
-    bool operator()(const T* const c_p1, // extrinsic parameters
-        const T* c_p2, // intrinsic parameters
-        const T* point, // point being projected, yes this is has 3 parameters
-        T* resid) const
-    {
-      // extract the variables from the camera parameters
-      int q = 0; // extrinsic block of parameters
-      const T& x = c_p1[q++]; //  angle_axis x for rotation of camera		
-      const T& y = c_p1[q++]; //  angle_axis y for rotation of camera
-      const T& z = c_p1[q++]; //  angle_axis z for rotation of camera
-      const T& tx = c_p1[q++]; //  translation of camera x
-      const T& ty = c_p1[q++]; //  translation of camera y
-      const T& tz = c_p1[q++]; //  translation of camera z
+  template <typename T>
+  bool operator()(const T* const c_p1,  // extrinsic parameters
+                  const T* c_p2,        // intrinsic parameters
+                  const T* point,       // point being projected, yes this is has 3 parameters
+                  T* resid) const
+  {
+    // extract the variables from the camera parameters
+    int q = 0;                // extrinsic block of parameters
+    const T& x = c_p1[q++];   //  angle_axis x for rotation of camera
+    const T& y = c_p1[q++];   //  angle_axis y for rotation of camera
+    const T& z = c_p1[q++];   //  angle_axis z for rotation of camera
+    const T& tx = c_p1[q++];  //  translation of camera x
+    const T& ty = c_p1[q++];  //  translation of camera y
+    const T& tz = c_p1[q++];  //  translation of camera z
 
-      q = 0; // intrinsic block of parameters
-      const T& fx = c_p2[q++]; //  focal length x
-      const T& fy = c_p2[q++]; //  focal length x
-      const T& cx = c_p2[q++]; //  center point x
-      const T& cy = c_p2[q++]; //  center point y
-      const T& k1 = c_p2[q++]; //  distortion coefficient on 2nd order terms
-      const T& k2 = c_p2[q++]; //  distortion coefficient on 4th order terms
-      const T& k3 = c_p2[q++]; //  distortion coefficient on 6th order terms
-      const T& p1 = c_p2[q++]; //  tangential distortion coefficient x
-      const T& p2 = c_p2[q++]; //  tangential distortion coefficient y
+    q = 0;                    // intrinsic block of parameters
+    const T& fx = c_p2[q++];  //  focal length x
+    const T& fy = c_p2[q++];  //  focal length x
+    const T& cx = c_p2[q++];  //  center point x
+    const T& cy = c_p2[q++];  //  center point y
+    const T& k1 = c_p2[q++];  //  distortion coefficient on 2nd order terms
+    const T& k2 = c_p2[q++];  //  distortion coefficient on 4th order terms
+    const T& k3 = c_p2[q++];  //  distortion coefficient on 6th order terms
+    const T& p1 = c_p2[q++];  //  tangential distortion coefficient x
+    const T& p2 = c_p2[q++];  //  tangential distortion coefficient y
 
-      // rotate and translate points into camera frame
-      T aa[3]; // angle axis 
-      T p[3]; // point rotated
-      aa[0] = x;
-      aa[1] = y;
-      aa[2] = z;
-      ceres::AngleAxisRotatePoint(aa, point, p);
+    // rotate and translate points into camera frame
+    T aa[3];  // angle axis
+    T p[3];   // point rotated
+    aa[0] = x;
+    aa[1] = y;
+    aa[2] = z;
+    ceres::AngleAxisRotatePoint(aa, point, p);
 
-      // apply camera translation
-      T xp1 = p[0] + tx; // point rotated and translated
-      T yp1 = p[1] + ty;
-      T zp1 = p[2] + tz;
+    // apply camera translation
+    T xp1 = p[0] + tx;  // point rotated and translated
+    T yp1 = p[1] + ty;
+    T zp1 = p[2] + tz;
 
-      // scale into the image plane by distance away from camera
-      T xp = xp1 / zp1;
-      T yp = yp1 / zp1;
+    // scale into the image plane by distance away from camera
+    T xp = xp1 / zp1;
+    T yp = yp1 / zp1;
 
-      // calculate terms for polynomial distortion
-      T r2 = xp * xp + yp * yp;
-      T r4 = r2 * r2;
-      T r6 = r2 * r4;
+    // calculate terms for polynomial distortion
+    T r2 = xp * xp + yp * yp;
+    T r4 = r2 * r2;
+    T r6 = r2 * r4;
 
-      T xp2 = xp * xp; // temporary variables square of others
-      T yp2 = yp * yp;
-      //apply the distortion coefficients to refine pixel location
-      T xpp = xp + k1 * r2 * xp + k2 * r4 * xp + k3 * r6 * xp + p2 * (r2 + T(2.0) * xp2) + T(2.0) * p1 * xp * yp;
-      T ypp = yp + k1 * r2 * yp + k2 * r4 * yp + k3 * r6 * yp + p1 * (r2 + T(2.0) * yp2) + T(2.0) * p2 * xp * yp;
-      // perform projection using focal length and camera center into image plane
-      resid[0] = fx * xpp + cx - Ox;
-      resid[1] = fy * ypp + cy - Oy;
+    T xp2 = xp * xp;  // temporary variables square of others
+    T yp2 = yp * yp;
+    // apply the distortion coefficients to refine pixel location
+    T xpp = xp + k1 * r2 * xp + k2 * r4 * xp + k3 * r6 * xp + p2 * (r2 + T(2.0) * xp2) + T(2.0) * p1 * xp * yp;
+    T ypp = yp + k1 * r2 * yp + k2 * r4 * yp + k3 * r6 * yp + p1 * (r2 + T(2.0) * yp2) + T(2.0) * p2 * xp * yp;
+    // perform projection using focal length and camera center into image plane
+    resid[0] = fx * xpp + cx - Ox;
+    resid[1] = fy * ypp + cy - Oy;
 
-      return true;
-    } // end of operator()
+    return true;
+  }  // end of operator()
 
-    // Factory to hide the construction of the CostFunction object from
-    // the client code.
+  // Factory to hide the construction of the CostFunction object from
+  // the client code.
   static ceres::CostFunction* Create(const double o_x, const double o_y)
   {
     return (new ceres::AutoDiffCostFunction<Camera_reprj_error, 2, 6, 9, 3>(new Camera_reprj_error(o_x, o_y)));
   }
-  double Ox; // observed x location of object in image
-  double Oy; // observed y location of object in image
+  double Ox;  // observed x location of object in image
+  double Oy;  // observed y location of object in image
 };
 
 int main(int argc, char** argv)
 {
-
   google::InitGoogleLogging(argv[0]);
   if (argc != 5)
   {
@@ -207,7 +205,7 @@ int main(int argc, char** argv)
   //   num_observations  # read as integer
   //   x[0] y[0]         # read as double
   //   ...
-  //   x[num_observations-1] y[num_observations-1] 
+  //   x[num_observations-1] y[num_observations-1]
   // 3. Camera intrisic data stored as ascii in the ROS.ini format
   // 4. Camera initial extrinsic file stored as ascii indicating the homogeneous transform
   //  nx ox ax tx  #read all as double
@@ -216,10 +214,10 @@ int main(int argc, char** argv)
   //  0  0  0  1.0
 
   // read in the problem
-  FILE *points_fp = fopen(argv[1], "r");
-  FILE *observations_fp = fopen(argv[2], "r");
-  FILE *intrinsics_fp = fopen(argv[3], "r");
-  FILE *extrinsics_fp = fopen(argv[4], "r");
+  FILE* points_fp = fopen(argv[1], "r");
+  FILE* observations_fp = fopen(argv[2], "r");
+  FILE* intrinsics_fp = fopen(argv[3], "r");
+  FILE* extrinsics_fp = fopen(argv[4], "r");
   if (points_fp == NULL)
   {
     printf("Could not open file: %s", argv[1]);
@@ -290,28 +288,28 @@ int main(int argc, char** argv)
   int image_width;
   int image_height;
   int rtn = 0;
-  rtn += fscanf(intrinsics_fp, "%s", dum); // should be "#"
-  rtn += fscanf(intrinsics_fp, "%s", dum); // should be "Camera"
-  rtn += fscanf(intrinsics_fp, "%s", dum); // should be "intrinsics"
-  rtn += fscanf(intrinsics_fp, "%s", dum); // should be "[image]"
+  rtn += fscanf(intrinsics_fp, "%s", dum);  // should be "#"
+  rtn += fscanf(intrinsics_fp, "%s", dum);  // should be "Camera"
+  rtn += fscanf(intrinsics_fp, "%s", dum);  // should be "intrinsics"
+  rtn += fscanf(intrinsics_fp, "%s", dum);  // should be "[image]"
   //  printf("should be [image]: %s\n",dum);
-  rtn += fscanf(intrinsics_fp, "%s", dum); // should be "width"
+  rtn += fscanf(intrinsics_fp, "%s", dum);  // should be "width"
   //  printf("should be width: %s\n",dum);
-  rtn += fscanf(intrinsics_fp, "%d", &image_width); // should be the image width of provided by camera
+  rtn += fscanf(intrinsics_fp, "%d", &image_width);  // should be the image width of provided by camera
   printf("image_width: %d\n", image_width);
-  rtn += fscanf(intrinsics_fp, "%s", dum); // should be "height"
-  rtn += fscanf(intrinsics_fp, "%d", &image_height); // should be the image width of provided by camera
+  rtn += fscanf(intrinsics_fp, "%s", dum);            // should be "height"
+  rtn += fscanf(intrinsics_fp, "%d", &image_height);  // should be the image width of provided by camera
   printf("height: %d\n", image_height);
-  rtn += fscanf(intrinsics_fp, "%s", dum); // should be "[some name]"
+  rtn += fscanf(intrinsics_fp, "%s", dum);  // should be "[some name]"
   //  printf("[some name]: %s\n",dum);
-  rtn += fscanf(intrinsics_fp, "%s", dum); // should be "camera"
+  rtn += fscanf(intrinsics_fp, "%s", dum);  // should be "camera"
   //  printf("should be camera: %s\n",dum);
-  rtn += fscanf(intrinsics_fp, "%s", dum); // should be "matrix"
+  rtn += fscanf(intrinsics_fp, "%s", dum);  // should be "matrix"
   //  printf("should be matrix: %s\n",dum);
   rtn += fscanf(intrinsics_fp, "%lf %lf %lf", &C.fx, &Dum, &C.cx);
   rtn += fscanf(intrinsics_fp, "%lf %lf %lf", &Dum, &C.fy, &C.cy);
   rtn += fscanf(intrinsics_fp, "%lf %lf %lf", &Dum, &Dum2, &Dum3);
-  rtn += fscanf(intrinsics_fp, "%s", dum); // should be "distortion" 
+  rtn += fscanf(intrinsics_fp, "%s", dum);  // should be "distortion"
   printf("camera matrix:\n");
   printf("%8.3lf %8.3lf %8.3lf\n", C.fx, 0.0, C.cx);
   printf("%8.3lf %8.3lf %8.3lf\n", 0.0, C.fy, C.cy);
@@ -336,16 +334,16 @@ int main(int argc, char** argv)
   fclose(extrinsics_fp);
 
   // use the inverse of transform from camera to world as camera transform
-  double HI[9]; // note ceres uses column major order
-  HI[0] = H[0][0]; // first column becomes first row
+  double HI[9];     // note ceres uses column major order
+  HI[0] = H[0][0];  // first column becomes first row
   HI[1] = H[0][1];
   HI[2] = H[0][2];
 
-  HI[3] = H[1][0]; // second column becomes second row
+  HI[3] = H[1][0];  // second column becomes second row
   HI[4] = H[1][1];
   HI[5] = H[1][2];
 
-  HI[6] = H[2][0]; // third column becomes third row
+  HI[6] = H[2][0];  // third column becomes third row
   HI[7] = H[2][1];
   HI[8] = H[2][2];
   C.pos[0] = -(H[0][3] * H[0][0] + H[1][3] * H[1][0] + H[2][3] * H[2][0]);
@@ -354,23 +352,23 @@ int main(int argc, char** argv)
   printf("C.xyz = %lf %lf %lf\n", C.pos[0], C.pos[1], C.pos[2]);
   ceres::RotationMatrixToAngleAxis(HI, C.aa);
 
-  /* used to create sample data with known solution
-   FILE *fp6 = fopen("new_observations.txt","w");
-   fprintf(fp6,"%d\n",num_points);
-   for(int i=0;i<num_points;i++){
-   o = project_point(C,Pts[i]);
-   fprintf(fp6,"%lf %lf\n",o.x,o.y);
-   }
-   fclose(fp6); 
-   exit(1);
-   */
+/* used to create sample data with known solution
+ FILE *fp6 = fopen("new_observations.txt","w");
+ fprintf(fp6,"%d\n",num_points);
+ for(int i=0;i<num_points;i++){
+ o = project_point(C,Pts[i]);
+ fprintf(fp6,"%lf %lf\n",o.x,o.y);
+ }
+ fclose(fp6);
+ exit(1);
+ */
 #define MONO_EXCAL_DEBUG
 #ifdef MONO_EXCAL_DEBUG
   /* Print initial errors */
   /* Save projections and observations to matlab compatible form    */
-  FILE *fp_temp1 = fopen("Obs.m", "w");
-  FILE *fp_temp2 = fopen("Rep.m", "w");
-  FILE *fp_temp3 = fopen("FRep.m", "w");
+  FILE* fp_temp1 = fopen("Obs.m", "w");
+  FILE* fp_temp2 = fopen("Rep.m", "w");
+  FILE* fp_temp3 = fopen("FRep.m", "w");
   fprintf(fp_temp1, "O = [ ");
   fprintf(fp_temp2, "R = [ ");
   fprintf(fp_temp3, "F = [ ");
@@ -432,25 +430,25 @@ int main(int argc, char** argv)
   fprintf(fp_temp3, "];\n");
   fclose(fp_temp3);
 #endif  // MONO_EXCAL_DEBUG
-  // Print final camera parameters 
+  // Print final camera parameters
   print_camera(C, "final parameters");
 
   // write new extrinsics to a file
   std::string temp(argv[4]);
   std::string new_ex_file = "new_" + temp;
   extrinsics_fp = fopen(new_ex_file.c_str(), "w");
-  ceres::AngleAxisToRotationMatrix(C.aa, HI); // Column Major 
+  ceres::AngleAxisToRotationMatrix(C.aa, HI);  // Column Major
 
   // invert HI to get H
-  H[0][0] = HI[0]; // first column of HI is set to first row of H
+  H[0][0] = HI[0];  // first column of HI is set to first row of H
   H[0][1] = HI[1];
   H[0][2] = HI[2];
 
-  H[1][0] = HI[3]; // second column of HI is set to second row of H
+  H[1][0] = HI[3];  // second column of HI is set to second row of H
   H[1][1] = HI[4];
   H[1][2] = HI[5];
 
-  H[2][0] = HI[6]; // third column of HI is set to third row of H
+  H[2][0] = HI[6];  // third column of HI is set to third row of H
   H[2][1] = HI[7];
   H[2][2] = HI[8];
 

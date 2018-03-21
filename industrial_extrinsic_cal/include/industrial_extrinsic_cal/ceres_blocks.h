@@ -30,7 +30,6 @@
 
 namespace industrial_extrinsic_cal
 {
-
 /** \brief These blocks of data hold the ceres parameters upon which the optimizaition proceeds
  *   Static cameras have a block of parameters for their 6Dof Pose
  *                  they have a block of 4 parameters for pinhole projection model intrinsics
@@ -79,7 +78,7 @@ public:
    *  \param camera this is the camera from the list, either moving or static
    *  \return true on success
    */
-  const boost::shared_ptr<Camera> getCameraByName(const std::string &camera_name);
+  const boost::shared_ptr<Camera> getCameraByName(const std::string& camera_name);
 
   /*!
    * \brief grabs a target from the target list given the target name
@@ -88,9 +87,9 @@ public:
    * @param scene_id, when a target is moving, it has a separate object for each scene
    * @return shared pointer to target
    */
-  const boost::shared_ptr<Target>  getTargetByName(const std::string &target_name, int scene_id=0);
+  const boost::shared_ptr<Target> getTargetByName(const std::string& target_name, int scene_id = 0);
 
-  /*! @brief gets a pointer to the intrinsic parameters of a static camera 
+  /*! @brief gets a pointer to the intrinsic parameters of a static camera
    *  @param camera_name the camera's name
    */
   P_BLOCK getStaticCameraParameterBlockIntrinsics(std::string camera_name);
@@ -156,7 +155,7 @@ public:
    */
   P_BLOCK getMovingTargetPointParameterBlock(std::string target_name, int pnt_id);
 
-  /*! @brief writes a single launch file with all the static tranforms 
+  /*! @brief writes a single launch file with all the static tranforms
    *  @param filepath  the full path to the launch file being created
    */
   bool writeAllStaticTransforms(std::string filepath);
@@ -185,7 +184,7 @@ public:
   /*! @brief sends transform to the interface*/
   void pushTransforms();
 
-  /*! @brief gets transform from interface 
+  /*! @brief gets transform from interface
    *    @param scene_id the current scene's id. Pulls from all static cameras, static targets, and those from this scene
    */
   void pullTransforms(int scene_id);
@@ -194,33 +193,36 @@ public:
   void setReferenceFrame(std::string ref_frame);
 
   /*! @brief get reference frame name from the interface */
-  std::string getReferenceFrame(){ return(reference_frame_);};
+  std::string getReferenceFrame()
+  {
+    return (reference_frame_);
+  };
 
-  std::vector<boost::shared_ptr<Camera> > static_cameras_; /*!< all non-moving cameras in job */
+  std::vector<boost::shared_ptr<Camera> > static_cameras_;       /*!< all non-moving cameras in job */
   std::vector<boost::shared_ptr<MovingCamera> > moving_cameras_; /*! only one camera of a given name per scene */
-  std::vector<boost::shared_ptr<Target> > static_targets_; /*!< all non-moving targets in job */
+  std::vector<boost::shared_ptr<Target> > static_targets_;       /*!< all non-moving targets in job */
   std::vector<boost::shared_ptr<MovingTarget> > moving_targets_; /*! only one target of a given name per scene */
   std::string reference_frame_; /*! name of reference frame, typically a ROS tf frame */
 
-};//end class
+};  // end class
 
- // dangling debugging functions
-/*! @brief displays a pose from the extrinsic parameters 
+// dangling debugging functions
+/*! @brief displays a pose from the extrinsic parameters
  *   @param extrinsics an array of parameters representing the 6D pose
- *   @param message a string that describes the pose to be shown 
+ *   @param message a string that describes the pose to be shown
  */
- void  showPose(P_BLOCK extrinsics, std::string message);
-/*! @brief displays a pose 
+void showPose(P_BLOCK extrinsics, std::string message);
+/*! @brief displays a pose
  *   @param pose the 6D pose to be shown
- *   @param message a string that describes the pose to be shown 
+ *   @param message a string that describes the pose to be shown
  */
- void  showPose(Pose6d pose, std::string message);
+void showPose(Pose6d pose, std::string message);
 /*! @brief displays the intrinsic parameters
  *   @param intrinsics an array of parameters representing the focal length, optical center, and distortion parameters
  *   @param num_param, sometimes there is no distortion, so this is either 4 or 9 depending
  */
- void  showIntrinsics(P_BLOCK intrinsics, int num_param);
+void showIntrinsics(P_BLOCK intrinsics, int num_param);
 
-}// end namespace industrial_extrinsic_cal
+}  // end namespace industrial_extrinsic_cal
 
 #endif /* CERES_BLOCKS_H_ */

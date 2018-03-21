@@ -64,18 +64,18 @@ namespace industrial_extrinsic_cal
   }// end of namespace cost_functions
   typedef cost_functions::Cost_function Cost_function;
 
-  // prototypes of functions 
+// prototypes of functions
 
-  /*! @brief converts a string to a cost type 
-   *   @param cost_type_str The cost type string 
-   *   @returns The cost function type from the enumeration
-   */
-  Cost_function string2CostType(std::string &cost_type_str);
-  /*! @brief converts a cost type to a string
-   *   @param cost_type The cost type 
-   *   @returns The cost function type as a string
-   */
-  std::string costType2String(Cost_function cost_type);
+/*! @brief converts a string to a cost type
+ *   @param cost_type_str The cost type string
+ *   @returns The cost function type from the enumeration
+ */
+Cost_function string2CostType(std::string& cost_type_str);
+/*! @brief converts a cost type to a string
+ *   @param cost_type The cost type
+ *   @returns The cost function type as a string
+ */
+std::string costType2String(Cost_function cost_type);
 
-} // end of namespace industrial_extrinsic_cal
+}  // end of namespace industrial_extrinsic_cal
 #endif

@@ -20,7 +20,7 @@
 #define CALIBRATION_JOB_HPP_
 
 #include <iostream>
-#include <industrial_extrinsic_cal/basic_types.h> /** needed for Roi */
+#include <industrial_extrinsic_cal/basic_types.h>       /** needed for Roi */
 #include <industrial_extrinsic_cal/camera_observer.hpp> /** needed for CameraObserver */
 #include <boost/shared_ptr.hpp>
 #include "ceres/ceres.h"
@@ -28,7 +28,6 @@
 
 namespace industrial_extrinsic_cal
 {
-
 /*! \brief a high level camera wraper including its parameters, and its observer */
 class Camera
 {
@@ -38,7 +37,7 @@ public:
 
   /*! \brief Constructor
    *  \param name name of camera
-   *  \param camera_parameters intrinsic and extrinsic camera parameters 
+   *  \param camera_parameters intrinsic and extrinsic camera parameters
    *  \param is_moving static camera = false, moving camera=true
    */
   Camera(std::string name, CameraParameters camera_parameters, bool is_moving);
@@ -46,13 +45,13 @@ public:
   /*! \brief default destructor, nothing to do really */
   ~Camera();
 
-  /*!  is the camera's location fixed or not? 
+  /*!  is the camera's location fixed or not?
    moving cameras get multiple pose parameters
    static cameras get but one set of pose parameters
    */
   bool is_moving();
-  boost::shared_ptr<DummyCameraObserver> camera_observer_;/*!< processes images, does CameraObservations */
-  CameraParameters camera_parameters_;/*!< The intrinsic and extrinsic parameters */
+  boost::shared_ptr<DummyCameraObserver> camera_observer_; /*!< processes images, does CameraObservations */
+  CameraParameters camera_parameters_;                     /*!< The intrinsic and extrinsic parameters */
   //    ::std::ostream& operator<<(::std::ostream& os, const Camera& C){ return os<< "TODO";};
 
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
@@ -84,27 +83,22 @@ typedef struct
 class ObservationScene
 {
 public:
-  /*! \brief Constructor, 
+  /*! \brief Constructor,
    *   \param Trigger Trig the type of trigger to initiate this observation
    */
-  ObservationScene(Trigger trigger, int scene_id) :
-      trigger_(trigger), scene_id_(scene_id)
-  {
-  }
-  ;
+  ObservationScene(Trigger trigger, int scene_id) : trigger_(trigger), scene_id_(scene_id){};
 
   /*! \brief destructor, clears observation command list*/
   ObservationScene()
   {
     observation_command_list_.clear();
     cameras_in_scene_.clear();
-  }
-  ;
+  };
 
   /*! \brief  Clears all observations from the command */
   void clear();
 
-  /*! \brief Adds and observation of a target by a specific camera in a region of interest 
+  /*! \brief Adds and observation of a target by a specific camera in a region of interest
    *  \param observation_command: the camera to make the observation
    *  \param target: the target to be observed
    *  \param roi:    the region of interest in the camera's field of view to look for target
@@ -114,22 +108,20 @@ public:
   int get_id()
   {
     return (scene_id_);
-  }
-  ;
+  };
 
   /*! \brief gets the trigger of this scene */
   Trigger get_trigger()
   {
     return (trigger_);
-  }
-  ;
+  };
 
-  std::vector<ObservationCmd> observation_command_list_; /*!< list of observations for a scene */
+  std::vector<ObservationCmd> observation_command_list_;     /*!< list of observations for a scene */
   std::vector<boost::shared_ptr<Camera> > cameras_in_scene_; /*!< list of cameras in this scened */
 
 private:
   Trigger trigger_; /*!< event to trigger the observations in this command */
-  int scene_id_; /*!< unique identifier of this scene */
+  int scene_id_;    /*!< unique identifier of this scene */
 };
 // end of class ObservationScene
 
@@ -137,21 +129,20 @@ private:
 /*! \brief moving cameras need a new pose with each scene in which they are used */
 typedef struct MovingCamera
 {
-  boost::shared_ptr<Camera> cam; // must hold a copy of the camera extrinsic parameters
-  int scene_id; // but copy of intrinsics may be and unused duplicate
+  boost::shared_ptr<Camera> cam;  // must hold a copy of the camera extrinsic parameters
+  int scene_id;                   // but copy of intrinsics may be and unused duplicate
 } MovingCamera;
 
 /*! \brief moving  need a new pose with each scene in which they are used */
 typedef struct MovingTarget
 {
-  boost::shared_ptr<Target> targ; // must hold a copy of the target pose parameters,
-  int scene_id; // but point parameters may be unused duplicates
+  boost::shared_ptr<Target> targ;  // must hold a copy of the target pose parameters,
+  int scene_id;                    // but point parameters may be unused duplicates
 } MovingTarget;
 
 class ObservationDataPoint
 {
 public:
-
   /**
    *
    * @param c_name camera name
@@ -178,13 +169,9 @@ public:
     point_position_ = p_position;
     image_x_ = image_x;
     image_y_ = image_y;
-  }
-  ;
+  };
 
-  ~ObservationDataPoint()
-  {
-  }
-  ;
+  ~ObservationDataPoint(){};
 
   std::string camera_name_;
   std::string target_name_;
@@ -200,7 +187,8 @@ public:
 // end of class ObservationDataPoint
 
 /**
- * @brief a list of observation data points which allows all the collected information about the observations to be easily submitted to ceres
+ * @brief a list of observation data points which allows all the collected information about the observations to be
+ * easily submitted to ceres
  *        It also allows the problem data to be printed to files for debugging and external analysis
  */
 class ObservationDataPointList
@@ -232,7 +220,7 @@ public:
   /*! \brief clear all static and moving cameras and targets */
   void clearCamerasTargets();
 
-  /*! \brief adds a static camera to job's list of cameras 
+  /*! \brief adds a static camera to job's list of cameras
    *  \param camera_to_add this is the camera added to the list
    *  \return true on success
    */
@@ -244,7 +232,7 @@ public:
    */
   bool addStaticTarget(boost::shared_ptr<Target> target_to_add);
 
-  /*! \brief adds a moving camera to job's list of cameras 
+  /*! \brief adds a moving camera to job's list of cameras
    *  \param camera_to_add this is the camera added to the list
    *  \param scene_id the scene's id, only one camera of given name existe in each scene
    *  \return true on success
@@ -258,29 +246,29 @@ public:
    */
   bool addMovingTarget(boost::shared_ptr<Target> target_to_add, int scene_id);
 
-  /*! @brief gets a pointer to the intrinsic parameters of a static camera 
+  /*! @brief gets a pointer to the intrinsic parameters of a static camera
    *  @param camera_name the camera's name
    *  @return pointer to the only existing set of intrinsics for this camera
    */
   P_BLOCK getStaticCameraParameterBlockIntrinsics(std::string camera_name);
 
-  /*! @brief gets a pointer to the intrinsic parameters of a moving camera 
+  /*! @brief gets a pointer to the intrinsic parameters of a moving camera
    *  @param camera_name the camera's name
    *  @return pointer to the intrinsic parameters for this camera, note that
    *          a number of copies of the intrinsics exist, because the camera
    *          was duplicated in each scene it made an observation
-   *          however, the first scene in which the camera was used contains the 
+   *          however, the first scene in which the camera was used contains the
    *          only set of intrinsics to be adjusted, and therefore is the only one returned
    */
   P_BLOCK getMovingCameraParameterBlockIntrinsics(std::string camera_name);
 
-  /*! @brief gets a pointer to the extrinsics parameters of a static camera 
+  /*! @brief gets a pointer to the extrinsics parameters of a static camera
    *  @param camera_name the camera's name
    *  @return pointer to the only existing set of extrinsics for this camera
    */
   P_BLOCK getStaticCameraParameterBlockExtrinsics(std::string camera_name);
 
-  /*! @brief gets a pointer to the extrisic parameters of a moving camera 
+  /*! @brief gets a pointer to the extrisic parameters of a moving camera
    *  @param camera_name the camera's name
    *  @return pointer to the intrinsic parameters for this camera, note that
    *          a number of copies of the intrinsics exist, because the camera
@@ -290,7 +278,7 @@ public:
    */
   P_BLOCK getMovingCameraParameterBlockExtrinsics(std::string camera_name, int scene_id);
 
-  /*! @brief gets a pointer to the pose parameters of a static target 
+  /*! @brief gets a pointer to the pose parameters of a static target
    *  @param target_name the target's name
    *  @return pointer to the only existing set of pose parameters for this target
    */
@@ -325,10 +313,10 @@ public:
    */
   P_BLOCK getMovingTargetPointParameterBlock(std::string target_name, int pnt_id);
 
-  //private:
-  std::vector<boost::shared_ptr<Camera> > static_cameras_; /*!< all non-moving cameras in job */
+  // private:
+  std::vector<boost::shared_ptr<Camera> > static_cameras_;       /*!< all non-moving cameras in job */
   std::vector<boost::shared_ptr<MovingCamera> > moving_cameras_; /*! only one camera of a given name per scene */
-  std::vector<boost::shared_ptr<Target> > static_targets_; /*!< all non-moving targets in job */
+  std::vector<boost::shared_ptr<Target> > static_targets_;       /*!< all non-moving targets in job */
   std::vector<boost::shared_ptr<MovingTarget> > moving_targets_; /*! only one target of a given name per scene */
 };
 
@@ -337,76 +325,70 @@ class CalibrationJob
 {
 public:
   /** @brief constructor */
-  CalibrationJob(std::string camera_fn, std::string target_fn, std::string caljob_fn) :
-      camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn)
-  {
-  }
-  ;
+  CalibrationJob(std::string camera_fn, std::string target_fn, std::string caljob_fn)
+    : camera_def_file_name_(camera_fn), target_def_file_name_(target_fn), caljob_def_file_name_(caljob_fn){};
 
   /** @brief default destructor */
-  ~CalibrationJob()
-  {
-  }
-  ;
+  ~CalibrationJob(){};
 
-  /** @brief reads input files to create a calibration job 
-   * @return true if successful 
+  /** @brief reads input files to create a calibration job
+   * @return true if successful
    */
   bool load();
 
-  /** @brief stores calibration job as 3 files 
-   * @return true if successful 
+  /** @brief stores calibration job as 3 files
+   * @return true if successful
    */
   bool store();
 
-  /** @brief runs both data collection and optimization 
-   * @return true if successful 
+  /** @brief runs both data collection and optimization
+   * @return true if successful
    */
   bool run();
 
-  /** @brief runs the data collection portion of the job 
-   * @return true if successful 
+  /** @brief runs the data collection portion of the job
+   * @return true if successful
    */
   bool runObservations();
 
-  /** @brief runs the optimization portion of the job 
-   * @return true if successful 
+  /** @brief runs the optimization portion of the job
+   * @return true if successful
    */
   bool runOptimization();
 
   /** @brief Adds a new camera
    *  @param camera_to_add camera to add
-   *  @return true if successful 
+   *  @return true if successful
    */
   bool addCameraObserver(Camera camera_to_add);
 
   /** @brief Adds a new target to defined target set
    *  @param target_to_add target to add
-   *  @return true if successful 
+   *  @return true if successful
    */
   bool addTarget(Target target_to_add);
 
-  /** @brief removes all camera observers from job 
-   *  @return true if successful 
+  /** @brief removes all camera observers from job
+   *  @return true if successful
    */
   bool clearJobCameraObservers();
 
   /** @brief removes all targets from job
-   *  @return true if successful 
+   *  @return true if successful
    */
   bool clearJobTargets();
 
-  /** @brief clears all previously collected data 
-   *  @return true if successful 
+  /** @brief clears all previously collected data
+   *  @return true if successful
    */
   bool clearObservationData();
 
-  /** @brief select active scene for modification  
+  /** @brief select active scene for modification
    *  @return true if sucessful
    */
   bool selectScene(int scene_id);
 
-  /** @brief adds an observation from a particular camera to current scene  
+  /** @brief adds an observation from a particular camera to current scene
    *  @param camera_observer a pointer to the camera observer
    *  @param target a pointer to the target
    *  @return true if sucessful
@@ -414,7 +396,7 @@ public:
   bool addObservationToCurrentScene(boost::shared_ptr<DummyCameraObserver> camera_observer,
                                     boost::shared_ptr<Target> target);
 
-  /** @brief removes all cameras and targets from current scene 
+  /** @brief removes all cameras and targets from current scene
    *  @return true if sucessful
    */
   bool clearCurrentScene();
@@ -429,17 +411,16 @@ public:
 
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 private:
-  std::string camera_def_file_name_; /*!< this file describes all cameras in job */
-  std::string target_def_file_name_; /*!< this file describes all targets in job */
-  std::string caljob_def_file_name_; /*!< this file describes all observations in job */
-  std::vector<ObservationScene> scene_list_; /*!< contains list of scenes which define the job */
-  int current_scene_; /*!< id of current scene under review or construction */
+  std::string camera_def_file_name_;                  /*!< this file describes all cameras in job */
+  std::string target_def_file_name_;                  /*!< this file describes all targets in job */
+  std::string caljob_def_file_name_;                  /*!< this file describes all observations in job */
+  std::vector<ObservationScene> scene_list_;          /*!< contains list of scenes which define the job */
+  int current_scene_;                                 /*!< id of current scene under review or construction */
   std::vector<DummyCameraObserver> camera_observers_; /*!< interface to images from cameras */
-  std::vector<Target> defined_target_set_; /*!< TODO Not sure if I'll use this one */
-  CeresBlocks ceres_blocks_; /*!< This structure maintains the parameter sets for ceres */
+  std::vector<Target> defined_target_set_;            /*!< TODO Not sure if I'll use this one */
+  CeresBlocks ceres_blocks_;                          /*!< This structure maintains the parameter sets for ceres */
   ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
-
 };
 
-} // end of namespace
+}  // end of namespace
 #endif

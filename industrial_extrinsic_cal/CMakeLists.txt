@@ -151,6 +151,7 @@ add_library(
   src/ros_transform_interface.cpp
   src/target.cpp
   src/targets_yaml_parser.cpp
+  src/ros_target_display.cpp
 )
 add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
@@ -174,7 +175,8 @@ add_executable(service_node                     src/nodes/calibration_service.cp
 add_executable(trigger_service                  src/nodes/ros_scene_trigger_server.cpp)
 add_executable(range_excal                      src/nodes/range_camera_excal.cpp)
 add_executable(rangeNmono                       src/nodes/rangeNmono_excal.cpp)
-add_executable(inkTest                          src/nodes/inktest.cpp)
+add_executable(target_display                   src/nodes/target_display_node.cpp)
+
 
 add_dependencies(camera_observer_scene_trigger    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(mutable_joint_state_publisher    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
@@ -183,7 +185,7 @@ add_dependencies(service_node                     ${catkin_EXPORTED_TARGETS} ${i
 add_dependencies(trigger_service                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(range_excal                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(rangeNmono                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
-add_dependencies(inkTest                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+add_dependencies(target_display                   ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 
 target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY} ${CERES_LIBRARIES})
 target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES})
@@ -191,11 +193,12 @@ target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} ${yaml_c
 target_link_libraries(nist_analysis industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
+target_link_libraries(target_display industrial_extrinsic_cal ${CERES_LIBRARIES})
 #target_link_libraries(test_obs industrial_extrinsic_cal ${yaml_cpp_LIBRARY} ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(trigger_service ${catkin_LIBRARIES})
 target_link_libraries(range_excal industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(rangeNmono industrial_extrinsic_cal ${CERES_LIBRARIES})
-target_link_libraries(inkTest industrial_extrinsic_cal ${CERES_LIBRARIES})
+
 
 install(
   TARGETS
@@ -209,6 +212,7 @@ install(
     trigger_service
     range_excal
     rangeNmono
+    target_display
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -229,17 +233,17 @@ install(
 )
 
 
-if (CATKIN_ENABLE_TESTING)
-  catkin_add_gtest(utest_inds_cal test/utest.cpp)
+#if (CATKIN_ENABLE_TESTING)
+#  catkin_add_gtest(utest_inds_cal test/utest.cpp)
 
-  target_link_libraries(
-    utest_inds_cal
+#  target_link_libraries(
+#    utest_inds_cal
 
-    industrial_extrinsic_cal
-    ${catkin_LIBRARIES}
-    ${CERES_LIBRARIES}
-  )
-endif()
+#    industrial_extrinsic_cal
+#    ${catkin_LIBRARIES}
+#    ${CERES_LIBRARIES}
+#  )
+#endif()
 
 
 ## ROSlint checks

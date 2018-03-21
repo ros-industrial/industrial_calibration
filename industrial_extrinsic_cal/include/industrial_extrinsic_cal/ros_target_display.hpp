@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,36 +16,14 @@
  * limitations under the License.
  */
 
-#ifndef TRIGGER_H_
-#define TRIGGER_H_
+#ifndef ROS_TARGET_DISPLAY_HPP
+#define ROS_TARGET_DISPLAY_HPP
 
-namespace industrial_extrinsic_cal
-{
-/*! @brief what kind of trigger initiates the collection of data for this scene */
-class Trigger
-{ /** Trigger */
-public:
-  /*! \brief Constructor,
+
+#include <industrial_extrinsic_cal/target.h>
+
+  /*@brief display target in rviz
+   * @param target target to be displayed
    */
-  Trigger(){};
-
-  /*! \brief Destructor
-   */
-  virtual ~Trigger(){};
-
-  /*! \brief Initiates and waits for trigger to finish
-   */
-  virtual bool waitForTrigger() = 0;
-};
-
-class NoWaitTrigger : public Trigger
-{
-  bool waitForTrigger()
-  {
-    return (true);
-  };  // don't wait
-};
-
-}  // end of namespace
-
+void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> target);
 #endif
