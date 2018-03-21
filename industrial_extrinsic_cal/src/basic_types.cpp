@@ -114,8 +114,8 @@ namespace industrial_extrinsic_cal
     double wz = az/angle;
     double omct = 1.0 - cos_theta;
     R[0][0] = cos_theta + wx*wx*omct;        R[0][1] = wx*wy*omct - wz*sin_theta;      R[0][2] = wx*wz*omct + wy*sin_theta; 
-    R[1][0] = wy*wx*omct + wz*sin_theta;   R[1][1] =  cos_theta+wy*wy*omct;          R[1][2] = wy*wz*omct - wx*sin_theta;  
-    R[2][0] = wz*wx*omct - wy*sin_theta;     R[2][1] =  wz*wy*omct + wx*sin_theta;   R[2][2] = cos_theta + wz*wz*omct;     
+    R[1][0] = wy*wx*omct + wz*sin_theta;     R[1][1] =  cos_theta+wy*wy*omct;          R[1][2] = wy*wz*omct - wx*sin_theta;  
+    R[2][0] = wz*wx*omct - wy*sin_theta;     R[2][1] =  wz*wy*omct + wx*sin_theta;     R[2][2] = cos_theta + wz*wz*omct;     
     return(R);
   }
 

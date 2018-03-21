@@ -2401,6 +2401,212 @@ namespace industrial_extrinsic_cal
     Point3d rail_position_; /** location of camera along rail */
     Point3d point_; /** point expressed in target coordinates */
   };
+
+  class  RailSCal
+  {
+  public:
+    RailSCal(double left_ob_x,  double left_ob_y,  Point3d left_point,
+	     double right_ob_x, double right_ob_y, Point3d right_point, Point3d rail_position,
+	     double lfx, double lfy, double lcx, double lcy, double lk1, double lk2, double lk3, double lp1, double lp2,
+	     double rfx, double rfy, double rcx, double rcy, double rk1, double rk2, double rk3, double rp1, double rp2) :
+      lox_(left_ob_x),   loy_(left_ob_y),   left_point_(left_point),
+      rox_(right_ob_x),  roy_(right_ob_y),  right_point_(right_point),
+      rail_position_(rail_position),
+      lfx_(lfx), lfy_(lfy), lcx_(lcx), lcy_(lcy), lk1_(lk1), lk2_(lk2), lk3_(lk3), lp1_(lp1), lp2_(lp2),
+      rfx_(rfx), rfy_(rfy), rcx_(rcx), rcy_(rcy), rk1_(rk1), rk2_(rk2), rk3_(rk3), rp1_(rp1), rp2_(rp2)
+    {
+    }
+      
+    template<typename T>
+    bool operator()(	    const T* const c_p1,  /** pose of right camera relative to left frame [6] */
+			    const T* const c_p2,  /** target_pose[6] */
+			    T* residual) const    /** this residual has 4 terms one for each camera */
+    {
+      const T *C1toC2_aa(& c_p1[0]); // extract right camera's angle axis
+      const T *C1toC2_tx(& c_p1[3]); // extract right camera's position
+      const T *target_aa(& c_p2[0]); // extract target's angle axis
+      const T *target_tx(& c_p2[3]); // extract target's position
+      
+      /** transform both points into left camera frame, note, that usually these would be exactly the same point.
+          However, the camera observer may not provide observations in the same order. */
+      T left_camera_point[3]; 
+      T right_point_in_left_frame[3]; 
+      transformPoint3d(target_aa, target_tx, right_point_, right_point_in_left_frame);
+      transformPoint3d(target_aa, target_tx, left_point_, left_camera_point);
+      left_camera_point[0] = left_camera_point[0] + T(rail_position_.x); // transform to camera's location along rail
+      left_camera_point[1] = left_camera_point[1] + T(rail_position_.y); // transform to camera's location along rail
+      left_camera_point[2] = left_camera_point[2] + T(rail_position_.z); // transform to camera's location along rail
+      right_point_in_left_frame[0] = right_point_in_left_frame[0] + T(rail_position_.x); // transform to camera's location along rail
+      right_point_in_left_frame[1] = right_point_in_left_frame[1] + T(rail_position_.y); // transform to camera's location along rail
+      right_point_in_left_frame[2] = right_point_in_left_frame[2] + T(rail_position_.z); // transform to camera's location along rail
+
+      /** transform right point in right camera frame */
+      T right_camera_point[3]; 
+      transformPoint(C1toC2_aa, C1toC2_tx, right_point_in_left_frame, right_camera_point);
+
+      /** compute project point into image plane and compute residual */
+      T lox = T(lox_);
+      T loy = T(loy_);
+      T rox = T(rox_);
+      T roy = T(roy_);
+      
+      T lfx = T(lfx_);
+      T lfy = T(lfy_);
+      T lcx = T(lcx_);
+      T lcy = T(lcy_);
+      T lk1 = T(lk1_);
+      T lk2 = T(lk2_);
+      T lk3 = T(lk3_);	    
+      T lp1 = T(lp1_);
+      T lp2 = T(lp2_);
+      
+      T rfx = T(rfx_);
+      T rfy = T(rfy_);
+      T rcx = T(rcx_);
+      T rcy = T(rcy_);
+      T rk1 = T(rk1_);
+      T rk2 = T(rk2_);
+      T rk3 = T(rk3_);	    
+      T rp1 = T(rp1_);
+      T rp2 = T(rp2_);
+      cameraPntResidualDist(left_camera_point,  lk1, lk2, lk3, lp1, lp2, lfx, lfy, lcx, lcy, lox, loy,  &(residual[0]));
+      cameraPntResidualDist(right_camera_point, rk1, rk2, rk3, rp1, rp2, rfx, rfy, rcx, rcy, rox, roy,  &(residual[2]));			   
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double lo_x, const double lo_y, Point3d lpoint,
+				       const double ro_x, const double ro_y, Point3d rpoint,
+				       Point3d rail_position,
+				       const double lfx, const double lfy,
+				       const double lcx, const double lcy,
+				       const double lk1, const double lk2, const double lk3,
+				       const double lp1, const double lp2,
+				       const double rfx, const double rfy,
+				       const double rcx, const double rcy,
+				       const double rk1, const double rk2, const double rk3,
+				       const double rp1, const double rp2)
+    {
+      return (new ceres::AutoDiffCostFunction<RailSCal, 4, 6, 6>
+	      (
+	       new RailSCal(lo_x, lo_y, lpoint,
+			    ro_x, ro_y, rpoint,
+			    rail_position,
+			    lfx, lfy, lcx, lcy, lk1, lk2, lk3, lp1, lp2,
+			    rfx, rfy, rcx, rcy, rk1, rk2, rk3, rp1, rp2)
+	       )
+	      );
+    }
+    double lox_; /** observed x location of left_point in left image */
+    double loy_; /** observed y location of left_point in left image */
+    double rox_; /** observed x location of right point in right image */
+    double roy_; /** observed x location of right point in right image */
+    Point3d rail_position_; /** location of camera along rail */
+    Point3d left_point_; /** left point expressed in target coordinates */
+    Point3d right_point_; /** right point expressed in target coordinates */
+    double lfx_,lfy_,lcx_,lcy_,lk1_,lk2_,lk3_,lp1_,lp2_; /** left camera intrinsics */
+    double rfx_,rfy_,rcx_,rcy_,rk1_,rk2_,rk3_,rp1_,rp2_; /** right camera intrinsics */
+  };
+
+  class  StereoTargetLocator
+  {
+  public:
+    StereoTargetLocator(double left_ob_x,  double left_ob_y,  Point3d left_point,
+	     double right_ob_x, double right_ob_y, Point3d right_point, Pose6d C1toC2,
+	     double lfx, double lfy, double lcx, double lcy, double lk1, double lk2, double lk3, double lp1, double lp2,
+	     double rfx, double rfy, double rcx, double rcy, double rk1, double rk2, double rk3, double rp1, double rp2) :
+      lox_(left_ob_x),   loy_(left_ob_y),   left_point_(left_point),
+      rox_(right_ob_x),  roy_(right_ob_y),  right_point_(right_point),
+      C1toC2_(C1toC2),
+      lfx_(lfx), lfy_(lfy), lcx_(lcx), lcy_(lcy), lk1_(lk1), lk2_(lk2), lk3_(lk3), lp1_(lp1), lp2_(lp2),
+      rfx_(rfx), rfy_(rfy), rcx_(rcx), rcy_(rcy), rk1_(rk1), rk2_(rk2), rk3_(rk3), rp1_(rp1), rp2_(rp2)
+    {
+    }
+      
+    template<typename T>
+    bool operator()(	    const T* const c_p1,  /** target_pose[6] */
+			    T* residual) const    /** this residual has 4 terms one for each camera */
+    {
+      const T *target_aa(& c_p1[0]); // extract target's angle axis
+      const T *target_tx(& c_p1[3]); // extract target's position
+      
+      /** transform both points into left camera frame, note, that usually these would be exactly the same point.
+          However, the camera observer may not provide observations in the same order. */
+      T left_camera_point[3]; 
+      T right_point_in_left_frame[3]; 
+      transformPoint3d(target_aa, target_tx, right_point_, right_point_in_left_frame);
+      transformPoint3d(target_aa, target_tx, left_point_, left_camera_point);
+
+      /** transform right point in right camera frame */
+      T right_camera_point[3]; 
+      poseTransformPoint(C1toC2_, right_point_in_left_frame, right_camera_point);
+
+      /** compute project point into image plane and compute residual */
+      T lox = T(lox_);
+      T loy = T(loy_);
+      T rox = T(rox_);
+      T roy = T(roy_);
+      
+      T lfx = T(lfx_);
+      T lfy = T(lfy_);
+      T lcx = T(lcx_);
+      T lcy = T(lcy_);
+      T lk1 = T(lk1_);
+      T lk2 = T(lk2_);
+      T lk3 = T(lk3_);	    
+      T lp1 = T(lp1_);
+      T lp2 = T(lp2_);
+      
+      T rfx = T(rfx_);
+      T rfy = T(rfy_);
+      T rcx = T(rcx_);
+      T rcy = T(rcy_);
+      T rk1 = T(rk1_);
+      T rk2 = T(rk2_);
+      T rk3 = T(rk3_);	    
+      T rp1 = T(rp1_);
+      T rp2 = T(rp2_);
+      cameraPntResidualDist(left_camera_point,  lk1, lk2, lk3, lp1, lp2, lfx, lfy, lcx, lcy, lox, loy,  &(residual[0]));
+      cameraPntResidualDist(right_camera_point, rk1, rk2, rk3, rp1, rp2, rfx, rfy, rcx, rcy, rox, roy,  &(residual[2]));			   
+      return true;
+    } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+    static ceres::CostFunction* Create(const double lo_x, const double lo_y, Point3d lpoint,
+				       const double ro_x, const double ro_y, Point3d rpoint,
+				       Pose6d C1toC2,
+				       const double lfx, const double lfy,
+				       const double lcx, const double lcy,
+				       const double lk1, const double lk2, const double lk3,
+				       const double lp1, const double lp2,
+				       const double rfx, const double rfy,
+				       const double rcx, const double rcy,
+				       const double rk1, const double rk2, const double rk3,
+				       const double rp1, const double rp2)
+    {
+      return (new ceres::AutoDiffCostFunction<StereoTargetLocator, 4, 6>
+	      (
+	       new StereoTargetLocator(lo_x, lo_y, lpoint,
+			    ro_x, ro_y, rpoint,
+			    C1toC2,
+			    lfx, lfy, lcx, lcy, lk1, lk2, lk3, lp1, lp2,
+			    rfx, rfy, rcx, rcy, rk1, rk2, rk3, rp1, rp2)
+	       )
+	      );
+    }
+    double lox_; /** observed x location of left_point in left image */
+    double loy_; /** observed y location of left_point in left image */
+    double rox_; /** observed x location of right point in right image */
+    double roy_; /** observed x location of right point in right image */
+    Pose6d C1toC2_; /** transforms points expressed in left camera frame into right camera frame */
+    Point3d left_point_; /** left point expressed in target coordinates */
+    Point3d right_point_; /** right point expressed in target coordinates */
+    double lfx_,lfy_,lcx_,lcy_,lk1_,lk2_,lk3_,lp1_,lp2_; /** left camera intrinsics */
+    double rfx_,rfy_,rcx_,rcy_,rk1_,rk2_,rk3_,rp1_,rp2_; /** right camera intrinsics */
+  };
+  
   class DistortedCameraFinder
   {
   public:

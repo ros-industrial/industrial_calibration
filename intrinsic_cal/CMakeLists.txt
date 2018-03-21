@@ -22,7 +22,8 @@ message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
 add_service_files(
   FILES
-    rail_ical_run.srv
+  rail_ical_run.srv
+  rail_scal_run.srv
 )
 
 generate_messages(
@@ -54,15 +55,23 @@ include_directories(
 
 add_executable(rail_ical src/rail_cal.cpp)
 add_executable(robocyl_ical src/robocyl_ical.cpp)
+add_executable(robocyl_vcal src/robocyl_vcal.cpp)
+add_executable(robocyl_scal src/robocyl_scal.cpp)
 add_dependencies(rail_ical ${PROJECT_NAME}_generate_messages_cpp)
 add_dependencies(robocyl_ical ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(robocyl_vcal ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(robocyl_scal ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(rail_ical ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(robocyl_ical ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(robocyl_vcal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(robocyl_scal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 
 install(
   TARGETS
     rail_ical
     robocyl_ical
+    robocyl_vcal
+    robocyl_scal
   RUNTIME DESTINATION
     ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
