@@ -181,8 +181,12 @@ int main(int argc, char** argv)
         delta_t = delta_t * 1.05;
         break;
       case 's':
-        store_client.call(store_request, store_response);
-        break;
+	store_client.call(store_request, store_response);
+	break;
+      case 'q':
+	system ("/bin/stty cooked");
+	exit(0);
+	break;
       default:
         break;
     }  // end switch

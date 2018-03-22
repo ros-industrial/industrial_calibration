@@ -1,0 +1,32 @@
+<launch>
+
+  <arg name="camera_number" default="21511094"/>
+
+  <include  file="$(find industrial_extrinsic_cal)/launch/basler_camera.launch" >
+     <param name="camera_number" value="$(arg camera_number)"/>
+  </include>
+
+  <node pkg="intrinsic_cal" type="robocyl_ical" name="robocyl_intrinsic_calibration" output="screen" >
+          <param name="image_topic" value="Basler$(arg camera_number)/image_raw" />
+          <param name="camera_name" value="Basler$(arg camera_number)" />
+          <param name="target_rows" value="20" />
+          <param name="target_cols" value="33" />
+          <param name="target_circle_dia" value="0.0015" />
+          <param name="target_spacing" value="0.025" />
+          <param name="num_camera_locations" value="16" />
+          <param name="camera_spacing" value=".050" />
+          <param name="image_height" value="1920" />
+          <param name="image_width" value="1080" />
+          <param name="target_to_rail_distance" value="2.0" />
+          <param name="use_circle_detector" value="false"/>
+          <param name="move_client" value="/move_meters"/>
+          <param name="power_client" value="/power_io"/>
+          <param name="home_client" value="/home"/>
+          <remap from="color_image" to="Basler$(arg camera_number)/image_raw" />
+  </node>
+
+  <node name="observation_view" pkg="image_view" type="image_view" >
+      <remap to="/observer_results_image" from="image"/>
+  </node>
+
+</launch>

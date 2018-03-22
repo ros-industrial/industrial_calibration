@@ -563,7 +563,6 @@ ROSSimpleCameraCalTInterface::ROSSimpleCameraCalTInterface(const string& transfo
   get_request_.joint_names.push_back(transform_frame + "_yaw_joint");
   get_request_.joint_names.push_back(transform_frame + "_pitch_joint");
   get_request_.joint_names.push_back(transform_frame + "_roll_joint");
-
   set_request_.joint_names.push_back(transform_frame + "_x_joint");
   set_request_.joint_names.push_back(transform_frame + "_y_joint");
   set_request_.joint_names.push_back(transform_frame + "_z_joint");

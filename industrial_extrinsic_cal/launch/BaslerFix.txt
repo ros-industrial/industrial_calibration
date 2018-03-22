@@ -1,0 +1,3 @@
+Issue this command if your basler node throws a bunch of errors about incompletely grabbed images and transport layer. The enp4s0 indicates the ethernet port you are connected to.
+
+sudo ifconfig enp4s0 mtu 3000

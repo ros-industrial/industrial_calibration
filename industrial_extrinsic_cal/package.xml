@@ -37,6 +37,8 @@
 
   <build_depend>boost</build_depend>
   <build_depend>message_generation</build_depend>
+  <build_depend>pcl_ros</build_depend>
+  <build_depend>pcl_conversions</build_depend>
 
   <exec_depend>image_view</exec_depend>
   <exec_depend>message_runtime</exec_depend>
