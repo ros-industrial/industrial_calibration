@@ -313,6 +313,7 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
           if (x == centers[start_1st_row].x && y == centers[start_1st_row].y) start_1st_row_size = ksize;
           if (x == centers[end_1st_row].x && y == centers[end_1st_row].y) end_1st_row_size = ksize;
         }
+
         ROS_DEBUG("start_last_row  %f %f %f", centers[start_last_row].x, centers[start_last_row].y,
                   start_last_row_size);
         ROS_DEBUG("end_last_row %f %f %f", centers[end_last_row].x, centers[end_last_row].y, end_last_row_size);

@@ -455,19 +455,18 @@ Pose6d ROSCameraHousingCalTInterface::getIntermediateFrame()
   return (pose);
 }
 
-
-ROSSimpleCalTInterface::ROSSimpleCalTInterface(const string &transform_frame,  const string &parent_frame)
+ROSSimpleCalTInterface::ROSSimpleCalTInterface(const string& transform_frame, const string& parent_frame)
 {
-  transform_frame_               = transform_frame;
-  parent_frame_                  = parent_frame; 
-  ref_frame_initialized_         = false;    // still need to initialize ref_frame_
+  transform_frame_ = transform_frame;
+  parent_frame_ = parent_frame;
+  ref_frame_initialized_ = false;  // still need to initialize ref_frame_
   nh_ = new ros::NodeHandle;
 
-  get_client_    = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
-  set_client_    = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
-  store_client_  = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
-    
-  get_request_.joint_names.clear();
+  get_client_ = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+  set_client_ = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
+  store_client_ =
+      nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
+
   get_request_.joint_names.push_back(transform_frame + "_x_joint");
   get_request_.joint_names.push_back(transform_frame + "_y_joint");
   get_request_.joint_names.push_back(transform_frame + "_z_joint");
@@ -483,67 +482,18 @@ ROSSimpleCalTInterface::ROSSimpleCalTInterface(const string &transform_frame,  c
   set_request_.joint_names.push_back(transform_frame + "_roll_joint");
 
   if (get_client_.call(get_request_, get_response_))
+  {
+    for (int i = 0; i < (int)get_response_.joint_values.size(); i++)
     {
-      for (int i = 0; i < (int)get_response_.joint_values.size(); i++)
-	{
-	  joint_values_.push_back(get_response_.joint_values[i]);
-	}
+      joint_values_.push_back(get_response_.joint_values[i]);
     }
+  }
   else
-    {
-      ROS_ERROR("get_client_ returned false");
-    }
+  {
+    ROS_ERROR("get_client_ returned false");
+  }
 }
 
-ROSSimpleCameraCalTInterface::ROSSimpleCameraCalTInterface(const string &transform_frame,  const string &parent_frame)
-{
-  transform_frame_        = transform_frame;
-  parent_frame_           = parent_frame; 
-  ref_frame_initialized_  = false;    // still need to initialize ref_frame_
-  nh_                     = new ros::NodeHandle();
-  
-  get_client_   = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
-  set_client_   = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
-  store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
-  
-  std::string get_service_name = get_client_.getService();
-  std::string set_service_name = set_client_.getService();
-  std::string store_service_name = store_client_.getService();
-  while(!get_client_.exists()){
-    sleep(1);
-    ROS_ERROR("Waiting for client %s", get_service_name.c_str());
-  }
-  get_request_.joint_names.push_back(transform_frame + "_x_joint");
-  get_request_.joint_names.push_back(transform_frame + "_y_joint");
-  get_request_.joint_names.push_back(transform_frame + "_z_joint");
-  get_request_.joint_names.push_back(transform_frame + "_yaw_joint");
-  get_request_.joint_names.push_back(transform_frame + "_pitch_joint");
-  get_request_.joint_names.push_back(transform_frame + "_roll_joint");
-  
-  set_request_.joint_names.push_back(transform_frame + "_x_joint");
-  set_request_.joint_names.push_back(transform_frame + "_y_joint");
-  set_request_.joint_names.push_back(transform_frame + "_z_joint");
-  set_request_.joint_names.push_back(transform_frame + "_yaw_joint");
-  set_request_.joint_names.push_back(transform_frame + "_pitch_joint");
-  set_request_.joint_names.push_back(transform_frame + "_roll_joint");
-  
-  if(!get_client_.call(get_request_,get_response_))
-    {
-      ROS_ERROR("Error with get_client, check these names");
-      for(int i=0; i<get_request_.joint_names.size();i++)
-	{
-	  ROS_ERROR("name requested: %s", get_request_.joint_names[i].c_str());
-	}
-    }
-  else
-    {
-      for(int i=0;i<(int) get_response_.joint_values.size();i++)
-	{
-	  joint_values_.push_back(get_response_.joint_values[i]);
-	}
-    }
-}
-  
 Pose6d ROSSimpleCalTInterface::pullTransform()
 {
   // The computed transform from the reference frame to the optical frame is composed of 3 transforms
@@ -595,7 +545,43 @@ void ROSSimpleCalTInterface::setReferenceFrame(std::string& ref_frame)
   ref_frame_initialized_ = true;
 }
 
+ROSSimpleCameraCalTInterface::ROSSimpleCameraCalTInterface(const string& transform_frame, const string& parent_frame)
+{
+  transform_frame_ = transform_frame;
+  parent_frame_ = parent_frame;
+  ref_frame_initialized_ = false;  // still need to initialize ref_frame_
+  nh_ = new ros::NodeHandle;
 
+  get_client_ = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
+  set_client_ = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
+  store_client_ =
+      nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
+
+  get_request_.joint_names.push_back(transform_frame + "_x_joint");
+  get_request_.joint_names.push_back(transform_frame + "_y_joint");
+  get_request_.joint_names.push_back(transform_frame + "_z_joint");
+  get_request_.joint_names.push_back(transform_frame + "_yaw_joint");
+  get_request_.joint_names.push_back(transform_frame + "_pitch_joint");
+  get_request_.joint_names.push_back(transform_frame + "_roll_joint");
+  set_request_.joint_names.push_back(transform_frame + "_x_joint");
+  set_request_.joint_names.push_back(transform_frame + "_y_joint");
+  set_request_.joint_names.push_back(transform_frame + "_z_joint");
+  set_request_.joint_names.push_back(transform_frame + "_yaw_joint");
+  set_request_.joint_names.push_back(transform_frame + "_pitch_joint");
+  set_request_.joint_names.push_back(transform_frame + "_roll_joint");
+
+  if (get_client_.call(get_request_, get_response_))
+  {
+    for (int i = 0; i < (int)get_response_.joint_values.size(); i++)
+    {
+      joint_values_.push_back(get_response_.joint_values[i]);
+    }
+  }
+  else
+  {
+    ROS_ERROR("get_client_ returned false");
+  }
+}
 
 Pose6d ROSSimpleCameraCalTInterface::pullTransform()
 {

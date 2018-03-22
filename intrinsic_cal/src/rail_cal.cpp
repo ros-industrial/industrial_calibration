@@ -171,7 +171,6 @@ RailCalService::RailCalService(ros::NodeHandle nh)
   camera_ = boost::make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
   camera_->trigger_ = boost::make_shared<NoWaitTrigger>();
   camera_->camera_observer_ = boost::make_shared<ROSCameraObserver>(image_topic_, camera_name_);
-
   if(!camera_->camera_observer_->pullCameraInfo(camera_->camera_parameters_.focal_length_x,
                                            camera_->camera_parameters_.focal_length_y,
                                            camera_->camera_parameters_.center_x,
@@ -204,6 +203,7 @@ void RailCalService::cameraCallback(const sensor_msgs::Image& image)
   cv_bridge::CvImagePtr bridge = cv_bridge::toCvCopy(image, image.encoding);
 
   cv::Mat mod_img = bridge->image;
+
   cv::circle(mod_img, cv::Point2d(image.width / 2.0, image.height / 2.0), image.width / 30.0, cv::Scalar(175,0,0), image.width / 40.0);
   bridge->image = mod_img;
   sensor_msgs::Image out_img;
@@ -286,7 +286,7 @@ bool RailCalService::executeCallBack(intrinsic_cal::rail_ical_run::Request& req,
     {
       double image_x = camera_observations[i].image_loc_x;
       double image_y = camera_observations[i].image_loc_y;
-      Point3d point = target_->pts_[i]; // assume correct ordering from camera observer
+      Point3d point = target_->pts_[i];  // assume correct ordering from camera observer
       cost_function[i] = industrial_extrinsic_cal::RailICal::Create(image_x, image_y, rail_position, point);
       problem.AddResidualBlock(cost_function[i], NULL, camera_->camera_parameters_.pb_intrinsics,
                                target_->pose_.pb_pose);
