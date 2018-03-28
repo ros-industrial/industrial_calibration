@@ -25,7 +25,7 @@
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
-#include <target_finder/target_locater.h>
+#include <target_finder/target_locator.h>
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
 #include "ceres/types.h"
@@ -42,13 +42,13 @@ using industrial_extrinsic_cal::ROSCameraObserver;
 using industrial_extrinsic_cal::Roi;
 using industrial_extrinsic_cal::Pose6d;
 using industrial_extrinsic_cal::Point3d;
-using target_finder::target_locater;
+using target_finder::target_locator;
 class TargetLocatorService
 {
 public:
   TargetLocatorService(ros::NodeHandle nh);
   ~TargetLocatorService(){};
-  bool executeCallBack(target_locater::Request& req, target_locater::Response& res);
+  bool executeCallBack(target_locator::Request& req, target_locator::Response& res);
   void initMCircleTarget(int rows, int cols, double circle_dia, double spacing);
   void initBallsTarget();
 
@@ -123,7 +123,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   target_locate_server_ = nh_.advertiseService(service_name.c_str(), &TargetLocatorService::executeCallBack, this);
 }
 
-bool TargetLocatorService::executeCallBack(target_locater::Request& req, target_locater::Response& res)
+bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_locator::Response& res)
 {
   ros::NodeHandle nh;
   CameraObservations camera_observations;

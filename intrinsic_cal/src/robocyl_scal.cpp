@@ -469,7 +469,7 @@ bool RobocylSCalService::executeCallBack( intrinsic_cal::rail_scal_run::Request 
 									rp1_, rp2_);
 	  problem.AddResidualBlock(cost_function[q], NULL,
 				   LCtoRC.pb_pose,
-				   //			   target_->pose_.pb_pose);
+				   //target_->pose_.pb_pose);
 				   target_poses[i].pb_pose);
 	  q++; // increment the cost function
 	} // for each observation at this camera_location
