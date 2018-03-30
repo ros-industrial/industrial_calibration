@@ -23,12 +23,12 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <ros/console.h>
-#include <target_finder/target_locater.h>
+#include <target_finder/target_locator.h>
 #include <tf/transform_broadcaster.h>
 
 using std::string;
 using std::vector;
-
+// This node locates two cameras relative to a single target and publishes their transforms
 class callService
 {
 public:
@@ -48,8 +48,8 @@ public:
     }
     ROS_INFO("C1 service = %s", c1_cs.c_str());
     ROS_INFO("C2 service = %s", c2_cs.c_str());
-    c1_client_ = nh_.serviceClient<target_finder::target_locater>(c1_cs.c_str());
-    c2_client_ = nh_.serviceClient<target_finder::target_locater>(c2_cs.c_str());
+    c1_client_ = nh_.serviceClient<target_finder::target_locator>(c1_cs.c_str());
+    c2_client_ = nh_.serviceClient<target_finder::target_locator>(c2_cs.c_str());
 
     if (!pnh.getParam("c1_roi_width", c1_roi_width_))
     {
@@ -93,7 +93,7 @@ public:
 private:
   ros::NodeHandle nh_;
   ros::ServiceClient c1_client_, c2_client_;
-  target_finder::target_locater c1_srv_, c2_srv_;
+  target_finder::target_locator c1_srv_, c2_srv_;
   tf::TransformBroadcaster tf_broadcaster_;
   int c1_roi_width_, c2_roi_width_;
   int c1_roi_height_, c2_roi_height_;

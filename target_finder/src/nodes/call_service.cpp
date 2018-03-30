@@ -23,7 +23,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <ros/console.h>
-#include <target_finder/target_locater.h>
+#include <target_finder/target_locator.h>
 #include <tf/transform_broadcaster.h>
 
 using std::string;
@@ -34,7 +34,7 @@ class callService
 public:
   callService(ros::NodeHandle nh) : nh_(nh)
   {
-    client_ = nh_.serviceClient<target_finder::target_locater>("TargetLocateService");
+    client_ = nh_.serviceClient<target_finder::target_locator>("TargetLocateService");
     ros::NodeHandle pnh("~");
     if (!pnh.getParam("roi_width", roi_width_))
     {
@@ -57,7 +57,7 @@ public:
 private:
   ros::NodeHandle nh_;
   ros::ServiceClient client_;
-  target_finder::target_locater srv_;
+  target_finder::target_locator srv_;
   tf::TransformBroadcaster tf_broadcaster_;
   int roi_width_;
   int roi_height_;

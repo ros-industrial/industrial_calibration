@@ -17,7 +17,7 @@
  */
 
 #include <depth_calibration/depth_calibration.h>
-#include <target_finder/target_locater.h>
+#include <target_finder/target_locator.h>
 #include <boost/thread/locks.hpp>
 #include <sstream>
 
@@ -90,7 +90,7 @@ DepthCalibrator::DepthCalibrator(ros::NodeHandle& nh)
   calibrate_pixel_depth_ =
       nh_.advertiseService("pixel_depth_calibration", &DepthCalibrator::calibrateCameraPixelDepth, this);
   set_store_cloud_ = nh_.advertiseService("store_cloud", &DepthCalibrator::setStoreCloud, this);
-  get_target_pose_ = nh.serviceClient<target_finder::target_locater>("TargetLocateService");
+  get_target_pose_ = nh.serviceClient<target_finder::target_locator>("TargetLocateService");
 
   this->point_cloud_sub_ =
       boost::shared_ptr<PointCloudSubscriberType>(new PointCloudSubscriberType(nh, "depth_points", 1));
@@ -552,8 +552,8 @@ bool DepthCalibrator::findTarget(const double& final_cost, geometry_msgs::Pose& 
 {
   bool rtn = true;
   // Get target pose
-  target_finder::target_locaterRequest target_request;
-  target_finder::target_locaterResponse target_response;
+  target_finder::target_locatorRequest target_request;
+  target_finder::target_locatorResponse target_response;
   target_request.allowable_cost_per_observation = 5000.0;
   target_request.roi.height = 480;
   target_request.roi.width = 640;

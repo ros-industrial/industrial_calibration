@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <!-- Balser3 -->
+  <arg name="camera1_number" default="21511094"/>
+  <arg name="node1_name" default="cam3"/>
+  <arg name="config1_file" default="$(find intrinsic_cal)/launch/mcc/ACA1920_25gc_21511094.yaml" /> 
+
+  <!--Basler4-->
+  <arg name="camera2_number" default="21511083"/> 
+  <arg name="node2_name" default="cam4"/>
+  <arg name="config2_file" default="$(find intrinsic_cal)/launch/mcc/ACA1920_25gc_21511083.yaml" /> 
+
+  <include  file="$(find industrial_extrinsic_cal)/launch/basler_camera.launch" >
+     <arg name="camera_number" value="$(arg camera1_number)"/>
+     <arg name="node_name"     value="$(arg node1_name)"/>
+     <arg name="config_file"   value="$(arg config1_file)"/>
+  </include>
+
+  <include  file="$(find industrial_extrinsic_cal)/launch/basler_camera.launch" >
+     <arg name="camera_number" value="$(arg camera2_number)"/>
+     <arg name="node_name"     value="$(arg node2_name)"/>
+     <arg name="config_file"   value="$(arg config2_file)"/>
+  </include>
+
+
+   <!-- Launch ros's camera calibration-->
+   <node pkg="camera_calibration" type="cameracalibrator.py" name="ros_camera_calibration" args="-s 5x9 -p circles --square=0.029" output="screen">
+              <remap from="image" to="/Basler$(arg camera1_number)/image_raw"/>
+   </node>
+
+
+</launch>
