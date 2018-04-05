@@ -37,12 +37,12 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   , camera_name_(camera_name)
 {
   image_topic_ = camera_topic;
-  results_pub_ = nh_.advertise<sensor_msgs::Image>("observer_results_image", 100);
+  ros::NodeHandle pnh("~");
+  results_pub_ = nh_.advertise<sensor_msgs::Image>(camera_name_+"/observer_results_image", 100);
   debug_pub_ = nh_.advertise<sensor_msgs::Image>("observer_raw_image", 100);
   std::string set_camera_info_service = camera_name_ + "/set_camera_info";
   client_ = nh_.serviceClient<sensor_msgs::SetCameraInfo>(set_camera_info_service);
 
-  ros::NodeHandle pnh("~");
   pnh.getParam("image_directory", image_directory_);
   pnh.getParam("store_observation_images", store_observation_images_);
   pnh.getParam("load_observation_images", load_observation_images_);
@@ -678,11 +678,15 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
   else
   {
     ROS_WARN_STREAM("Pattern not found for pattern: " << pattern_);
-    if (!sym_circle_) ROS_ERROR("not a symetric target????");
-    cv::Point p;
-    p.x = image_roi_.cols / 2;
-    p.y = image_roi_.rows / 2;
-    circle(input_bridge_->image, p, 1.0, 255, 10);
+    std::vector<cv::KeyPoint> temp_points;
+    circle_detector_ptr_->detect(image_roi_, temp_points);
+    for(int i=0;i<temp_points.size(); ++i)
+      {
+	cv::Point p;
+	p.x = temp_points[i].pt.x;
+	p.y = temp_points[i].pt.y;
+	circle(input_bridge_->image, p, 1.0, 255, temp_points[i].size);
+      }
   }
 
   debug_pub_.publish(input_bridge_->toImageMsg());
