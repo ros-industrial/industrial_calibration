@@ -23,6 +23,7 @@
 #include "ceres/rotation.h"
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
+double PI = 4*atan(1);
 
 namespace industrial_extrinsic_cal
 {
@@ -103,6 +104,19 @@ inline void extractCameraIntrinsics(const T intrinsics[4], T& fx, T& fy, T& cx, 
   cy = intrinsics[3]; /** central point y */
 }
 
+template <typename T>
+void extractPoseExtrinsics(Pose6d P, T E[6] );
+template <typename T>
+inline void extractPoseExtrinsics(Pose6d P, T E[6])
+{
+  E[0] = T(P.ax);
+  E[1] = T(P.ay);
+  E[2] = T(P.az);
+  E[3] = T(P.x);
+  E[4] = T(P.y);
+  E[5] = T(P.z);
+}
+
 /*! \brief ceres compliant template to extract the camera pose from an ambigious vector of parameters
  *   @param extrinsics[9] vector of parameters
  *   @param tx, position x
@@ -164,6 +178,25 @@ inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3
   t_point[2] = t_point[2] + tx[2];
 }
 
+
+/*! \brief ceres compliant function to apply an angle-axis and translation to transform a point
+ *  @param E, all extrinsic parameters, ax,ay,az,tx,ty&tz
+ *  @param point the original point
+ *  @param t_point the transformed point
+ */
+
+template <typename T>
+inline void eTransformPoint(const T E[6], const T point[3], T t_point[3]);
+template <typename T>
+inline void eTransformPoint(const T E[6], const T point[3], T t_point[3])
+{
+  
+  ceres::AngleAxisRotatePoint(E, point, t_point);
+  t_point[0] = t_point[0] + E[3];
+  t_point[1] = t_point[1] + E[4];
+  t_point[2] = t_point[2] + E[5];
+}
+
 /*! \brief ceres compliant function to apply a pose to transform a point
  *  @param pose, contains both rotation and translation in a structure
  *  @param point the original point
@@ -206,6 +239,27 @@ inline void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d
   t_point[2] = t_point[2] + tx[2];
 }
 
+
+/*! \brief ceres compliant function to apply an angle-axis and translation to transform a point in Point3d form
+ *  @param E extrinsic parameters  ax, ay, az, tx, ty, tz
+ *  @param point the original point in a Point3d form
+ *  @param t_point the transformed point
+ */
+template <typename T>
+void eTransformPoint3d(const T E[6],  const Point3d& point, T t_point[3]);
+template <typename T>
+inline void eTransformPoint3d(const T E[6], const Point3d& point, T t_point[3])
+{
+  T point_[3];
+  point_[0] = T(point.x);
+  point_[1] = T(point.y);
+  point_[2] = T(point.z);
+  ceres::AngleAxisRotatePoint(E, point_, t_point);
+  t_point[0] = t_point[0] + E[3];
+  t_point[1] = t_point[1] + E[4];
+  t_point[2] = t_point[2] + E[5];
+}
+
 /*! \brief ceres compliant function get a templated rotation from a Pose6d structure
  *  @param pose the input pose
  *  @param pose the output rotatation matrix
@@ -221,6 +275,38 @@ inline void poseRotationMatrix(const Pose6d& pose, T R[9])
   angle_axis[2] = T(pose.az);
   ceres::AngleAxisToRotationMatrix(angle_axis, R);
 }
+
+/*! \brief ceres compliant function to multiply two 6DoF angle-axis-tx poses 
+ *  @param T1 6Dof angle-axis-tx pose 1
+ *  @param T2 6Dof angle-axis-tx pose 2
+ *  @param T1T2 6Dof product in angle-axis-tx form
+ */
+template <typename T>
+void angleAxistxmult(const T T1[6], const T T2[6], T T1T2[6]);
+template <typename T>
+inline void angleAxistxmult(const T T1[6], const T T2[6], T T1T2[6])
+{
+  T R1[9],R2[9],R3[9];
+  const T* aa1(&T1[0]); // angle axis from T1
+  const T* aa2(&T2[0]); // angle axis from T2
+  const T* tx1(&T1[3]); // position part of T1
+  const T* tx2(&T2[3]); // position part of T2
+  T aa3[3], tx3[3];
+  ceres::AngleAxisToRotationMatrix(aa1, R1);
+  ceres::AngleAxisToRotationMatrix(aa2, R2);
+  rotationProduct(R1, R2, R3);
+  ceres::RotationMatrixToAngleAxis(R3,aa3);
+  eTransformPoint(T1, tx2, tx3);
+
+  T1T2[0] = aa3[0];
+  T1T2[1] = aa3[1];
+  T1T2[2] = aa3[2];
+  T1T2[3] = tx3[0];
+  T1T2[4] = tx3[1];
+  T1T2[5] = tx3[2];
+
+}
+
 
 /*! \brief ceres compliant function to compute the residual from a distorted pinhole camera model
  *  @param point[3] the input point
@@ -345,89 +431,81 @@ inline void projectPntNoDistortion(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox
  * was observed
  */
 template <typename T>
-void cameraCircResidualDist(T point[3], T& circle_diameter, T R_TtoC[9], T& k1, T& k2, T& k3, T& p1, T& p2, T& fx,
+void cameraCircResidualDist(T point[3], T& circle_diameter,const T TtoC[6], T& k1, T& k2, T& k3, T& p1, T& p2, T& fx,
                             T& fy, T& cx, T& cy, T& ox, T& oy, T residual[2]);
 template <typename T>
-inline void cameraCircResidualDist(T point[3], T& circle_diameter, T R_TtoC[9], T& k1, T& k2, T& k3, T& p1, T& p2,
+inline void cameraCircResidualDist(T point[3], T& circle_diameter, const T TtoC[6], T& k1, T& k2, T& k3, T& p1, T& p2,
                                    T& fx, T& fy, T& cx, T& cy, T& ox, T& oy, T residual[2])
-{
-  T xp1 = point[0];
-  T yp1 = point[1];
-  T zp1 = point[2];
 
+{  
   // Circle Delta is the difference between the projection of the center of the circle
   // and the center of the projected ellipse
 
-  // The 3 columns of R_TtoC represent:
-  // 1. the x-axis of the target in camera coordinates
-  // 2. the y-axis of the target in camera coordinates
-  // 3. the z-axis (normal of the target plane) in camera coordinates
-  // NOTE: we assume target is an XY planar target (all points on target have nominal z=0)
+  // Concept for predicion:
+  // one point on the perimeter of the circle will be farther away than all the others
+  // one point on the perimeter of the circle will be closer than all the others
+  // The projection of these two points into the camera frame forms the minor axis of the observed ellipse
+  // the center of that line segment is the observed center
 
-  // Find projection of distance vector D = [xp1 yp1 zp1] on to plane of target
-  T D_targetx = xp1 * R_TtoC[0] + yp1 * R_TtoC[1] + zp1 * R_TtoC[2];
-  T D_targety = xp1 * R_TtoC[3] + yp1 * R_TtoC[4] + zp1 * R_TtoC[5];
+  // The Equations:
+  // all points on the perimeter in target coordinates defined by pt =
+  // xt = xp + rcos(theta)
+  // yt = yp + rsin(theta)
+  // zt = 0                   where r is the circle radius
+  // The homogeneous transform of points into camera frame is defined by:
+  // R1 R2 R3 tx
+  // R4 R5 R6 ty
+  // R7 R8 R9 tz
+  // 0  0  0  1
+  // therefore, the z value of the perimeter points is given by
+  // pt_z = R7*xt + R8*yt + R9*zt + tz
+  // we want to find where pt_z is both largest and smallest
+  // take the first derivative with respect to theta and set to zero
+  // 0 = -R7rsin(theta) + R8rcos(theta)
+  // theta = R8rcos(theta)/R7rsin(theta) = atan(R8/R7) or atan(R8/R7) + PI
+  // we now have the two points pt_1 and pt_t
+  // pt_1 = (xp + rcos(atan(R8/R7))), yp + rsin(atan(R8/R7)), 0)
+  // pt_2 = (xp + rcos(atan(R8/R7) + PI)), yp + rsin(atan(R8/R7) + PI), 0)
 
-  // projection of D onto target xy plane expressed in camera frame is given by
-  // D_targetx * R_TtoC(1stcol) + D_targety * R_TtoC(2ndcol)
+  T xp1 = point[0]; // center of circle in target coordinates
+  T yp1 = point[1];
+  T zp1 = point[2];
+  T pt_1[3]; // max/min point in target coordinates
+  T pt_2[3]; // max/min point in target coordinates
+  T camera_point1[3]; // max/min point in camera coordinates
+  T camera_point2[3]; // max/min point in camera coordinates
+  T r   = T(circle_diameter/2.0);
+  const T* target_to_camera_aa(&TtoC[0]);
+  const T* target_to_camera_tx(&TtoC[3]);
+  T predict_p1[2], predict_p2[2]; // predicted image of max/min point1 and point2
+  T R[9];
 
-  // The vector of interest "Vperp" is orthogonal to this in the target xy plane
-  // Vperp = -D_targety * R_TtoC(1stcol) + D_targetx * R_TtoC(2ndcol)
-  // However we want Vperp to be in the direction with a negative z component
+  ceres::AngleAxisToRotationMatrix(target_to_camera_aa, R);
+  T R7     = R[6];
+  T R8     = R[7];
 
-  T Vperp[3];
-  Vperp[0] = -D_targety * R_TtoC[0] + D_targetx * R_TtoC[3];
-  Vperp[1] = -D_targety * R_TtoC[1] + D_targetx * R_TtoC[4];
-  Vperp[2] = -D_targety * R_TtoC[2] + D_targetx * R_TtoC[5];
+  // find max/min points 1 and 2
+  pt_1[0] = xp1 + r*cos(atan(R8/R7));
+  pt_1[1] = yp1 + r*sin(atan(R8/R7));
+  pt_1[2] = zp1; // this should be zero
 
-  // Vector direction of Vperp is arbitrary, but need to specify direction closer to camera
-  T mysign;
-  if (Vperp[2] * Vperp[2] > T(0.0))
-  {
-    mysign = -abs(Vperp[2]) / Vperp[2];
-  }
-  else
-  {
-    mysign = T(1);
-  }
-  Vperp[0] = mysign * Vperp[0];
-  Vperp[1] = mysign * Vperp[1];
-  Vperp[2] = mysign * Vperp[2];
+  pt_2[0] = xp1 + r*cos(atan(R8/R7) + T(PI));
+  pt_2[1] = yp1 + r*sin(atan(R8/R7) + T(PI));
+  pt_2[2] = zp1; // this should be zero
 
-  /** scale into the image plane by distance away from camera */
-  T xp = xp1 / zp1;
-  T yp = yp1 / zp1;
-
-  if (zp1 + Vperp[2] != 0.0)
-  {  // adjust only focal plan not parallel to target's xy plane
-    T Vpx = (xp1 + Vperp[0]) / (zp1 + Vperp[2]);
-    T Vpy = (yp1 + Vperp[1]) / (zp1 + Vperp[2]);
-    T Vnorm = sqrt(Vpx * Vpx + Vpy * Vpy);
-    if (Vnorm != 0.0)
-    {
-      // find scale of motion
-      // Delta = (r*sin(theta)/(D-rcos(theta)) - r*sin(theta)/(D+rcos(theta)))/2
-      // where r is the radius of the circle being projected
-      //       D is the distance between camera and circle center
-      //       theta is the angle between D vector an target xy plane
-      Vpx = Vpx / Vnorm;
-      Vpy = Vpy / Vnorm;
-      T D = sqrt(xp1 * xp1 + yp1 * yp1 + zp1 * zp1);
-      T s_theta = (R_TtoC[6] * xp1 + R_TtoC[7] * yp1 + R_TtoC[8] * zp1) / D;
-      T c_theta = sqrt(T(1.0) - s_theta * s_theta);
-      T r = T(circle_diameter / 2.0);
-      T Delta = r * s_theta * (T(1.0) / (D - r * c_theta) - T(1.0) / (D + r * c_theta)) / T(2.0);
-      xp = xp + Delta * Vpx;
-      yp = yp + Delta * Vpy;
-    }
-  }
-
+  eTransformPoint(TtoC, pt_1, camera_point1);
+  eTransformPoint(TtoC, pt_2, camera_point2);
+  
+  // predict image of first point using distortion model
+  T xp = camera_point1[0] / camera_point1[2];
+  T yp = camera_point1[1] / camera_point1[2];
+  
   /* temporary variables for distortion model */
   T xp2 = xp * xp;  /* x^2 */
   T yp2 = yp * yp;  /* y^2 */
-  T r2 = xp2 + yp2; /* r^2 radius squared */
-  T r4 = r2 * r2;   /* r^4 */
-  T r6 = r2 * r4;   /* r^6 */
+  T r2  = xp2 + yp2; /* r^2 radius squared */
+  T r4  = r2 * r2;   /* r^4 */
+  T r6  = r2 * r4;   /* r^6 */
 
   /* apply the distortion coefficients to refine pixel location */
   T xpp = xp + k1 * r2 * xp           // 2nd order term
@@ -442,9 +520,41 @@ inline void cameraCircResidualDist(T point[3], T& circle_diameter, T R_TtoC[9], 
           + p2 * xp * yp * T(2.0);    // other tangential term
 
   /** perform projection using focal length and camera center into image plane */
-  residual[0] = fx * xpp + cx - ox;
-  residual[1] = fy * ypp + cy - oy;
+  predict_p1[0] = fx * xpp + cx ;
+  predict_p1[1] = fy * ypp + cy ;
+
+  // predict image of second point
+  xp = camera_point2[0] / camera_point2[2];
+  yp = camera_point2[1] / camera_point2[2];
+  
+  /* temporary variables for distortion model */
+  xp2 = xp * xp;  /* x^2 */
+  yp2 = yp * yp;  /* y^2 */
+  r2 = xp2 + yp2; /* r^2 radius squared */
+  r4 = r2 * r2;   /* r^4 */
+  r6 = r2 * r4;   /* r^6 */
+
+  /* apply the distortion coefficients to refine pixel location */
+  xpp = xp + k1 * r2 * xp         // 2nd order term
+      + k2 * r4 * xp              // 4th order term
+      + k3 * r6 * xp              // 6th order term
+      + p2 * (r2 + T(2.0) * xp2)  // tangential
+      + p1 * xp * yp * T(2.0);    // other tangential term
+  ypp = yp + k1 * r2 * yp         // 2nd order term
+      + k2 * r4 * yp              // 4th order term
+      + k3 * r6 * yp              // 6th order term
+      + p1 * (r2 + T(2.0) * yp2)  // tangential term
+      + p2 * xp * yp * T(2.0);    // other tangential term
+
+  predict_p2[0] = fx * xpp + cx;
+  predict_p2[1] = fy * ypp + cy;
+
+  /* compute the residual */
+  residual[0] = (predict_p1[0] + predict_p2[0])/T(2.0) - ox;
+  residual[1] = (predict_p1[1] + predict_p2[1])/T(2.0) - oy;
+
 }
+
 
 /*! \brief ceres compliant function to compute the residual from a pinhole camera model without distortion, in this
  * case,
@@ -462,87 +572,82 @@ inline void cameraCircResidualDist(T point[3], T& circle_diameter, T R_TtoC[9], 
  * was observed
  */
 template <typename T>
-void cameraCircResidual(T point[3], T& circle_diameter, T R_TtoC[9], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy,
+void cameraCircResidual(T point[3], T& circle_diameter, const T TtoC[6], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy,
                         T residual[2]);
 template <typename T>
-inline void cameraCircResidual(T point[3], T& circle_diameter, T R_TtoC[9], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy,
+inline void cameraCircResidual(T point[3], T& circle_diameter, const T TtoC[6], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy,
                                T residual[2])
 {
-  T xp1 = point[0];
-  T yp1 = point[1];
-  T zp1 = point[2];
-
+  
   // Circle Delta is the difference between the projection of the center of the circle
   // and the center of the projected ellipse
 
-  // find rotation from target coordinates into camera coordinates
-  // The 3 columns represent:
-  // 1. the x-axis of the target in camera coordinates
-  // 2. the y-axis of the target in camera coordinates
-  // 3. the z-axis (normal of the target plane) in camera coordinates
-  // NOTE: we assume target is an XY planar target (all points on target have nominal z=0)
+  // Concept for predicion:
+  // one point on the perimeter of the circle will be farther away than all the others
+  // one point on the perimeter of the circle will be closer than all the others
+  // The projection of these two points into the camera frame forms the minor axis of the observed ellipse
+  // the center of that line segment is the observed center
 
-  // Find projection of distance vector D = [xp1 yp1 zp1] on to plane of target
-  T D_targetx = xp1 * R_TtoC[0] + yp1 * R_TtoC[1] + zp1 * R_TtoC[2];
-  T D_targety = xp1 * R_TtoC[3] + yp1 * R_TtoC[4] + zp1 * R_TtoC[5];
+  // The Equations:
+  // all points on the perimeter in target coordinates defined by pt =
+  // xt = xp + rcos(theta)
+  // yt = yp + rsin(theta)
+  // zt = 0                   where r is the circle radius
+  // The homogeneous transform of points into camera frame is defined by:
+  // R1 R2 R3 tx
+  // R4 R5 R6 ty
+  // R7 R8 R9 tz
+  // 0  0  0  1
+  // therefore, the z value of the perimeter points is given by
+  // pt_z = R7*xt + R8*yt + R9*zt + tz
+  // we want to find where pt_z is both largest and smallest
+  // take the first derivative with respect to theta and set to zero
+  // 0 = -R7rsin(theta) + R8rcos(theta)
+  // theta = R8rcos(theta)/R7rsin(theta) = atan(R8/R7) or atan(R8/R7) + PI
+  // we now have the two points pt_1 and pt_t
+  // pt_1 = (xp + rcos(atan(R8/R7))), yp + rsin(atan(R8/R7)), 0)
+  // pt_2 = (xp + rcos(atan(R8/R7) + PI)), yp + rsin(atan(R8/R7) + PI), 0)
 
-  // projection of D onto target xy plane expressed in camera frame is given by
-  // D_targetx * R_TtoC(1stcol) + D_targety * R_TtoC(2ndcol)
+  T xp1 = point[0]; // center of circle in target coordinates
+  T yp1 = point[1];
+  T zp1 = point[2];
+  T pt_1[3]; // max/min point in target coordinates
+  T pt_2[3]; // max/min point in target coordinates
+  T camera_point1[3]; // max/min point in camera coordinates
+  T camera_point2[3]; // max/min point in camera coordinates
+  T r   = T(circle_diameter/2.0);
+  const T* target_to_camera_aa(&TtoC[0]);
+  const T* target_to_camera_tx(&TtoC[3]);
+  T predict_p1[2], predict_p2[2]; // predicted image of max/min point1 and point2
+  T R[9];
 
-  // The vector of interest "Vperp" is orthogonal to this in the target xy plane
-  // Vperp = -D_targety * R_TtoC(1stcol) + D_targetx * R_TtoC(2ndcol)
-  // However we want Vperp to be in the direction with a negative z component
+  ceres::AngleAxisToRotationMatrix(target_to_camera_aa, R);
+  T R7     = R[6];
+  T R8     = R[7];
 
-  T Vperp[3];
-  Vperp[0] = -D_targety * R_TtoC[0] + D_targetx * R_TtoC[3];
-  Vperp[1] = -D_targety * R_TtoC[1] + D_targetx * R_TtoC[4];
-  Vperp[2] = -D_targety * R_TtoC[2] + D_targetx * R_TtoC[5];
+  // find max/min points 1 and 2
+  pt_1[0] = xp1 + r*cos(atan(R8/R7));
+  pt_1[1] = yp1 + r*sin(atan(R8/R7));
+  pt_1[2] = zp1; // this should be zero
 
-  // Vector direction of Vperp is arbitrary, but need to specify direction closer to camera
-  T mysign;
-  if (Vperp[2] * Vperp[2] > T(0.0))
-  {
-    mysign = -abs(Vperp[2]) / Vperp[2];
-  }
-  else
-  {
-    mysign = T(1);
-  }
-  Vperp[0] = mysign * Vperp[0];
-  Vperp[1] = mysign * Vperp[1];
-  Vperp[2] = mysign * Vperp[2];
+  pt_2[0] = xp1 + r*cos(atan(R8/R7) + T(PI));
+  pt_2[1] = yp1 + r*sin(atan(R8/R7) + T(PI));
+  pt_2[2] = zp1; // this should be zero
 
-  /** scale into the image plane by distance away from camera */
-  T xp = xp1 / zp1;
-  T yp = yp1 / zp1;
+  eTransformPoint(TtoC,pt_1, camera_point1);
+  eTransformPoint(TtoC,pt_2, camera_point2);
+  
+  // predict image of first point
+  predict_p1[0] = fx * camera_point1[0] / camera_point1[2] + cx;
+  predict_p1[1] = fy * camera_point1[1] / camera_point1[2] + cy ;
 
-  if (zp1 + Vperp[2] != 0.0)
-  {  // adjust only focal plan not parallel to target's xy plane
-    T Vpx = (xp1 + Vperp[0]) / (zp1 + Vperp[2]);
-    T Vpy = (yp1 + Vperp[1]) / (zp1 + Vperp[2]);
-    T Vnorm = sqrt(Vpx * Vpx + Vpy * Vpy);
-    if (Vnorm != 0.0)
-    {
-      // find scale of motion
-      // Delta = (r*sin(theta)/(D-rcos(theta)) - r*sin(theta)/(D+rcos(theta)))/2
-      // where r is the radius of the circle being projected
-      //       D is the distance between camera and circle center
-      //       theta is the angle between D vector an target xy plane
-      Vpx = Vpx / Vnorm;
-      Vpy = Vpy / Vnorm;
-      T D = sqrt(xp1 * xp1 + yp1 * yp1 + zp1 * zp1);
-      T s_theta = (R_TtoC[6] * xp1 + R_TtoC[7] * yp1 + R_TtoC[8] * zp1) / D;
-      T c_theta = sqrt(T(1.0) - s_theta * s_theta);
-      T r = T(circle_diameter / 2.0);
-      T Delta = r * s_theta * (T(1.0) / (D - r * c_theta) - T(1.0) / (D + r * c_theta)) / T(2.0);
-      xp = xp + Delta * Vpx;
-      yp = yp + Delta * Vpy;
-    }
-  }
+  // predict image of second point
+  predict_p2[0] = fx * camera_point2[0] / camera_point2[2] + cx;
+  predict_p2[1] = fy * camera_point2[1] / camera_point2[2] + cy;
 
-  /** perform projection using focal length and camera center into image plane */
-  residual[0] = fx * xp + cx - ox;
-  residual[1] = fy * yp + cy - oy;
+  /* compute the residual */
+  residual[0] = (predict_p1[0] + predict_p2[0])/T(2.0) - ox;
+  residual[1] = (predict_p1[1] + predict_p2[1])/T(2.0) - oy;
 }
 
 /*! \brief ceres compliant function to compute the residual from a pinhole camera model without distortion
@@ -596,14 +701,13 @@ public:
                   const T* point,      /** point being projected, has 3 parameters */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]);
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
     T camera_point[3]; /** point in camera coordinates*/
 
     /** transform point into camera coordinates */
-    transformPoint(camera_aa, camera_tx, point, camera_point);
+    eTransformPoint(camera_T, point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T ox = T(ox_);
@@ -640,14 +744,13 @@ public:
                   const T* c_p2,       /** intrinsic parameters */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]);
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
     T camera_point[3];
 
     /** transform point into camera coordinates */
-    transformPoint3d(camera_aa, camera_tx, point_, camera_point);
+    eTransformPoint3d(camera_T, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     T ox = T(ox_);
@@ -684,12 +787,11 @@ public:
                   const T* point,      /** point being projected, yes this is has 3 parameters */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]);
     T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
-    transformPoint(camera_aa, camera_tx, point, camera_point);
+    eTransformPoint(camera_T, point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T fx = T(fx_);
@@ -778,12 +880,11 @@ public:
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]);
     T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
-    transformPoint3d(camera_aa, camera_tx, point_, camera_point);
+    eTransformPoint3d(camera_T, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     T fx = T(fx_);
@@ -831,17 +932,15 @@ public:
                   const T* const point, /** point described in target frame */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
+    const T* camera_T(&c_p1[0]);
+    const T* target_T(&c_p2[0]);
 
     T world_point[3];  /** point in world coordinates */
     T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
-    transformPoint(target_aa, target_tx, point, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
+    eTransformPoint(target_T, point, world_point);
+    eTransformPoint(camera_T, world_point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T fx = T(fx_);
@@ -888,16 +987,14 @@ public:
                   const T* const c_p2, /** 6Dof transform of target points into world frame */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
+    const T* camera_T(&c_p1[0]);
+    const T* target_T(&c_p2[0]);
     T world_point[3];  /** point in world coordinates */
     T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
-    transformPoint3d(target_aa, target_tx, point_, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
+    eTransformPoint3d(target_T, point_, world_point);
+    eTransformPoint(camera_T, world_point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T fx = T(fx_);
@@ -946,18 +1043,16 @@ public:
                   const T* const point, /** point described in target frame that is being seen */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
+    const T* camera_T(&c_p1[0]);
+    const T* target_T(&c_p2[0]);
     T link_point[3];   /** point in link coordinates */
     T world_point[3];  /** point in world coordinates */
     T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
-    transformPoint(target_aa, target_tx, point, link_point);
+    eTransformPoint(target_T, point, link_point);
     poseTransformPoint(link_pose_, link_point, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
+    eTransformPoint(camera_T, world_point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T fx = T(fx_);
@@ -1006,18 +1101,16 @@ public:
                   const T* const c_p2, /** 6Dof transform of target points into world frame */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
+    const T* camera_T(&c_p1[0]);
+    const T* target_T(&c_p2[0]);
     T link_point[3];   /** point in link coordinates */
     T world_point[3];  /** point in worls coordinates */
     T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
-    transformPoint3d(target_aa, target_tx, point_, link_point);
+    eTransformPoint3d(target_T, point_, link_point);
     poseTransformPoint(link_pose_, link_point, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
+    eTransformPoint(camera_T, world_point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T fx = T(fx_);
@@ -1066,8 +1159,7 @@ public:
   bool operator()(const T* const c_p1, /** extrinsic parameters */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]);
     T world_point[3];  /** point in worls coordinates */
     T camera_point[3]; /** point in camera coordinates */
     T point[3];
@@ -1076,7 +1168,7 @@ public:
     point[2] = T(point_.z);
     /** transform point into camera coordinates */
     poseTransformPoint(target_pose_, point, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
+    eTransformPoint(camera_T, world_point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T fx = T(fx_);
@@ -1127,18 +1219,16 @@ public:
                   const T* const point, /** point described in target frame that is being seen */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
+    const T* camera_T(&c_p1[0]);
+    const T* target_T(&c_p2[0]);
     T world_point[3];  /** point in world coordinates */
     T link_point[3];   /** point in link coordinates */
     T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
-    transformPoint(target_aa, target_tx, point, world_point);
+    eTransformPoint(target_T, point, world_point);
     poseTransformPoint(link_posei_, world_point, link_point);
-    transformPoint(camera_aa, camera_tx, link_point, camera_point);
+    eTransformPoint(camera_T, link_point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T fx = T(fx_);
@@ -1189,18 +1279,16 @@ public:
                   const T* const c_p2, /** 6Dof transform of target points into world frame */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
+    const T* camera_T(&c_p1[0]);
+    const T* target_T(&c_p2[0]);
     T world_point[3];  /** point in world coordinates */
     T link_point[3];   /** point in link coordinates */
     T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
-    transformPoint3d(target_aa, target_tx, point_, world_point);
+    eTransformPoint3d(target_T, point_, world_point);
     poseTransformPoint(link_posei_, world_point, link_point);
-    transformPoint(camera_aa, camera_tx, link_point, camera_point);
+    eTransformPoint(camera_T, link_point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T fx = T(fx_);
@@ -1249,24 +1337,19 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]); // all six parameters with a new name
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
     T camera_point[3]; /** point in camera coordinates*/
-    T R_TtoC[9];
 
     /** transform point into camera coordinates */
-    transformPoint(camera_aa, camera_tx, point, camera_point);
-
-    // find rotation from target to camera frame
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_TtoC);
+    eTransformPoint(camera_T, point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1297,28 +1380,20 @@ public:
                   const T* const c_p2, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9] */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]);
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
     T camera_point[3]; /** point in camera coordinates */
     T R_TtoC[9];       /** rotation from target to camera coordinates
       
           /** find point in camera coordinates */
-    transformPoint3d(camera_aa, camera_tx, point_, camera_point);
-
-    // find rotation from target to camera coordinates
-    T T2C_angle_axis[3];
-    T2C_angle_axis[0] = T(-camera_aa[0]);
-    T2C_angle_axis[1] = T(-camera_aa[1]);
-    T2C_angle_axis[2] = T(-camera_aa[2]);
-    ceres::AngleAxisToRotationMatrix(T2C_angle_axis, R_TtoC);
+    eTransformPoint3d(camera_T, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1349,16 +1424,11 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]); // all six parameters with a new name
     T camera_point[3]; /** point in camera coordinates */
-    T R_TtoC[9];       /** rotation from target to camera coordinates */
 
     /** transform point into camera coordinates */
-    transformPoint(camera_aa, camera_tx, point, camera_point);
-
-    // find rotation from target to camera coordinates
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_TtoC);
+    eTransformPoint(camera_T, point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
@@ -1368,7 +1438,7 @@ public:
     T cy = T(cy_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidual(camera_point, circle_diameter, camera_T, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1403,16 +1473,11 @@ public:
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]); // all six parameters with a new name
     T camera_point[3]; /* point in camera coordinates */
-    T R_TtoC[9];       /** rotation from target to camera coordinates */
 
     /** rotate and translate point into camera coordinates*/
-    transformPoint3d(camera_aa, camera_tx, point_, camera_point);
-
-    // find rotation from target to camera coordinates
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_TtoC);
+    eTransformPoint3d(camera_T, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
@@ -1422,7 +1487,7 @@ public:
     T cy = T(cy_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidual(camera_point, circle_diameter, camera_T, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1460,34 +1525,21 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p3[0]);
-    const T* target_tx(&c_p3[3]);
+    const T* camera_T(&c_p1[0]); // full 6dof parameters for camera pose
+    const T* target_T(&c_p3[0]); // full 6dof parameters for target pose
+    T TtoC[6];                   // full 6dof parameters for transforming target points into camera frame
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
+    T camera_point[3];
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    T world_point[3];  /** point in world coordinates */
-    T camera_point[3]; /** point in camera coordinates*/
-    T R_WtoC[9];       // rotation from world to camera coordinates
-    T R_TtoW[9];       // rotation from target to world coordinates
-    T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
 
-    /** compute necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_WtoC);
-    ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
-
-    /** transform point into camera coordinates */
-    transformPoint(target_aa, target_tx, point, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
-
-    // find rotation from target to camera coordinates
-    rotationProduct(R_WtoC, R_TtoW, R_TtoC);  // R_WtoC*R_TtoW = R_TtoC
+    angleAxistxmult(camera_T, target_T, TtoC);
+    eTransformPoint(TtoC, point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1518,34 +1570,22 @@ public:
                   const T* const c_p3, /** 6Dof transform of target into world frame [6]*/
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p3[0]);
-    const T* target_tx(&c_p3[3]);
+    const T* camera_T(&c_p1[0]); // full 6dof parameters for camera pose
+    const T* target_T(&c_p3[0]); // full 6dof parameters for target pose
+    T TtoC[6];                   // full 6dof parameters for transforming target points into camera frame
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
+    T camera_point[3];
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    T world_point[3];  /** point in world coordinates */
-    T camera_point[3]; /** point in camera coordinates*/
-    T R_WtoC[9];       // rotation from world to camera coordinates
-    T R_TtoW[9];       // rotation from target to world coordinates
-    T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
 
-    /** compute necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_WtoC);
-    ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
+    angleAxistxmult(camera_T, target_T, TtoC);
+    eTransformPoint3d(TtoC, point_, camera_point);
 
-    /** transform point into camera coordinates */
-    transformPoint3d(target_aa, target_tx, point_, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
-
-    // find rotation from target to camera coordinates
-    rotationProduct(R_WtoC, R_TtoW, R_TtoC);  // R_WtoC*R_TtoW = R_TtoC
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1577,25 +1617,19 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]); // all six parameters with a new name
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
+    T camera_point[3];
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    T world_point[3];  /** point in world coordinates */
-    T camera_point[3]; /** point in camera coordinates*/
-    T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
-
-    /** compute necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_TtoC);
 
     /** transform point into camera coordinates */
-    transformPoint(camera_aa, camera_tx, point, camera_point);
+    eTransformPoint(camera_T, point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1627,29 +1661,20 @@ public:
                   const T* const c_p2, /** intrinsic parameters[9] */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
+    const T* camera_T(&c_p1[0]); // all six parameters with a new name
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
     T camera_point[3];        /** point in camera coordinates */
-    T R_optical_to_target[9]; /** rotation from optical frame to target frame */
+
+    /** transform point into camera coordinates */
+    eTransformPoint3d(camera_T, point_, camera_point);
+
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    T point[3];
-    point[0] = T(point_.x);
-    point[1] = T(point_.y);
-    point[2] = T(point_.z);
-
-    /** get necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_optical_to_target);
-
-    /** transform point into camera coordinates */
-    transformPoint(camera_aa, camera_tx, point, camera_point);
 
     /** compute project point into image plane and compute residual */
-    cameraCircResidualDist(camera_point, circle_diameter, R_optical_to_target, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox,
-                           oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1682,34 +1707,25 @@ public:
                   const T* const c_p3, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9] */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p3[0]);
-    const T* target_tx(&c_p3[3]);
+    const T* camera_T(&c_p1[0]); // all six parameters for camera pose
+    const T* target_T(&c_p3[0]); // all six parameters for target pose
+    T        TtoC[6];            // all six parameters for target to camera transform
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
-    extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    T world_point[3];  /** point in world coordinates */
     T camera_point[3]; /** point in world coordinates */
-    T R_WtoC[9];       // rotation from world to camera coordinates
-    T R_TtoW[9];       // rotation from target to world coordinates
-    T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
 
-    /** compute necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_WtoC);
-    ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
+    extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
+    
+    // compute transform taking points in target frame into camera frame
+    angleAxistxmult(camera_T, target_T, TtoC);
 
     /** transform point into camera coordinates */
-    transformPoint3d(target_aa, target_tx, point_, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
-
-    // find rotation from target to camera coordinates
-    rotationProduct(R_WtoC, R_TtoW, R_TtoC);  // R_WtoC*R_TtoW = R_TtoC
+    eTransformPoint3d(TtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidualDist(camera_point, circle_diameter, R_TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, TtoC, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1741,26 +1757,16 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
-    T world_point[3];  /** point in world coordinates */
-    T camera_point[3]; /** point in camera coordinates*/
-    T R_WtoC[9];       // rotation from world to camera coordinates
-    T R_TtoW[9];       // rotation from target to world coordinates
-    T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
-
-    /** compute necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_WtoC);
-    ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
+    const T* camera_T(&c_p1[0]); // all six parameters for camera pose
+    const T* target_T(&c_p2[0]); // all six parameters for target pose
+    T        TtoC[6];            // all six parameters for target to camera transform
+    T camera_point[3];
+    
+    // compute transform taking points in target frame into camera frame
+    angleAxistxmult(camera_T, target_T, TtoC);
 
     /** transform point into camera coordinates */
-    transformPoint(target_aa, target_tx, point, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
-
-    /** find rotation from target to camera coordinates */
-    rotationProduct(R_WtoC, R_TtoW, R_TtoC);  // R_WtoC*R_TtoW = R_TtoC
+    eTransformPoint(TtoC, point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
@@ -1770,7 +1776,7 @@ public:
     T cy = T(cy_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidual(camera_point, circle_diameter, TtoC, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1806,26 +1812,16 @@ public:
                   const T* const c_p2, /** 6Dof transform of target into world frame [6] */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
-    T world_point[3];  /** point in world coordinates */
-    T camera_point[3]; /** point in camera coordinates */
-    T R_WtoC[9];       // rotation from world to camera coordinates
-    T R_TtoW[9];       // rotation from target to world coordinates
-    T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
+    const T* camera_T(&c_p1[0]); // all six parameters for camera pose
+    const T* target_T(&c_p2[0]); // all six parameters for target pose
+    T        TtoC[6];            // all six parameters for target to camera transform
+    T camera_point[3];
+    
+    // compute transform taking points in target frame into camera frame
+    angleAxistxmult(camera_T, target_T, TtoC);
 
-    /** compute necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_WtoC);
-    ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
-
-    /** transform point into camera frame */
-    transformPoint3d(target_aa, target_tx, point_, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
-
-    /** find rotation from target to camera coordinates */
-    rotationProduct(R_WtoC, R_TtoW, R_TtoC);  // R_WtoC*R_TtoW = R_TtoC
+    /** transform point into camera coordinates */
+    eTransformPoint3d(TtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
@@ -1835,7 +1831,7 @@ public:
     T cy = T(cy_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidual(camera_point, circle_diameter, TtoC, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1873,32 +1869,20 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
-    T link_point[3];   /** point in link coordinates */
-    T world_point[3];  /** point in world coordinates */
-    T camera_point[3]; /** point in camera coordinates*/
-    T R_WtoC[9];       // rotation from world to camera coordinates
-    T R_TtoL[9];       // rotation from target to linkcoordinates
-    T R_LtoW[9];       // rotation from link to world coordinates
-    T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
-    T R_LtoC[9];  // rotation from link to camera coordinates
-
-    /** get necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_WtoC);
-    ceres::AngleAxisToRotationMatrix(target_aa, R_TtoL);
-    poseRotationMatrix(link_pose_, R_LtoW);
+    const T* camera_T(&c_p1[0]); // all six parameters for camera pose
+    const T* target_T(&c_p2[0]); // all six parameters for target pose
+    T        TtoC[6];            // all six parameters for target to camera transform
+    T        TtoL[6];            // target to link transform
+    T      link_T[6];            // world to link transform
+    T camera_point[3];
+    
+    // compute transform taking points in target frame into camera frame
+    extractPoseExtrinsics(link_pose_,link_T);
+    angleAxistxmult(link_T, target_T, TtoL);
+    angleAxistxmult(camera_T, TtoL, TtoC);
 
     /** transform point into camera coordinates */
-    transformPoint(target_aa, target_tx, point, link_point);
-    poseTransformPoint(link_pose_, link_point, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
-
-    /** find rotation from target to camera coordinates */
-    rotationProduct(R_WtoC, R_LtoW, R_LtoC);
-    rotationProduct(R_LtoC, R_TtoL, R_TtoC);  // R_WtoC*R_LtoW*R_TtoL = R_TtoC
+    eTransformPoint(TtoC, point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
@@ -1908,7 +1892,7 @@ public:
     T cy = T(cy_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidual(camera_point, circle_diameter, TtoC, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -1953,32 +1937,21 @@ public:
                   const T* const c_p2, /** 6Dof transform of target into world frame [6] */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
-    T link_point[3];   /** point in link coordinates */
-    T world_point[3];  /** point in world coordinates */
-    T camera_point[3]; /** point in camera coordinates */
-    T R_WtoC[9];       // rotation from world to camera coordinates
-    T R_TtoL[9];       // rotation from target to linkcoordinates
-    T R_LtoW[9];       // rotation from link to world coordinates
-    T R_LtoC[9];       // rotation from link to camera coordinataes
-    T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
+    const T* camera_T(&c_p1[0]); // all six parameters for camera pose
+    const T* target_T(&c_p2[0]); // all six parameters for target pose
+    T        TtoC[6];            // all six parameters for target to camera transform
+    T        TtoL[6];            // target to link transform
+    T      link_T[6];            // world to link transform
+    T camera_point[3];
+    
+    // compute transform taking points in target frame into camera frame
+    
+    extractPoseExtrinsics(link_pose_, link_T);
+    angleAxistxmult(link_T, target_T, TtoL);
+    angleAxistxmult(camera_T, TtoL, TtoC);
 
-    /** compute necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_WtoC);
-    ceres::AngleAxisToRotationMatrix(target_aa, R_TtoL);
-    poseRotationMatrix(link_pose_, R_LtoW);
-
-    /** transform point into camera frame */
-    transformPoint3d(target_aa, target_tx, point_, link_point);
-    poseTransformPoint(link_pose_, link_point, world_point);
-    transformPoint(camera_aa, camera_tx, world_point, camera_point);
-
-    /** find rotation from target to camera coordinates */
-    rotationProduct(R_WtoC, R_LtoW, R_LtoC);
-    rotationProduct(R_LtoC, R_TtoL, R_TtoC);  // R_WtoC*R_LtoW*R_TtoL = R_TtoC
+    /** transform point into camera coordinates */
+    eTransformPoint3d(TtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
@@ -1988,7 +1961,7 @@ public:
     T cy = T(cy_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidual(camera_point, circle_diameter, TtoC, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -2029,32 +2002,17 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
-    T world_point[3];  /** point in world coordinates */
-    T link_point[3];   /** point in link coordinates */
-    T camera_point[3]; /** point in camera coordinates*/
-    T R_LtoC[9];       // rotation from link to camera coordinates
-    T R_WtoL[9];       // rotation from world to link coordinates
-    T R_WtoC[9];       // rotation from world to camera coordinates, and intermediate transform
-    T R_TtoW[9];       // rotation from target to world coordinates
-    T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
-
-    /** compute necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_LtoC);
-    poseRotationMatrix(link_pose_, R_WtoL);
-    ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
-
-    /** transform point into camera coordinates */
-    transformPoint(target_aa, target_tx, point, world_point);
-    poseTransformPoint(link_posei_, world_point, link_point);
-    transformPoint(camera_aa, camera_tx, link_point, camera_point);
-
-    /** find rotation from target to camera coordinates */
-    rotationProduct(R_LtoC, R_WtoL, R_WtoC);
-    rotationProduct(R_WtoC, R_TtoW, R_TtoC);
+    const T* camera_T(&c_p1[0]);
+    const T* target_T(&c_p2[0]);
+    T TtoL[6];
+    T TtoC[6];
+    T          linki_T[6];
+    T camera_point[3];
+    
+    extractPoseExtrinsics(link_posei_, linki_T);
+    angleAxistxmult(linki_T,target_T,TtoL);
+    angleAxistxmult(camera_T,TtoL,TtoC);
+    eTransformPoint(TtoC, point, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
@@ -2064,7 +2022,7 @@ public:
     T cy = T(cy_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidual(camera_point, circle_diameter, TtoC, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -2109,66 +2067,17 @@ public:
 
   void test_residual(const double* c_p1, const double* c_p2, double* residual)
   {
-    const double* camera_aa(&c_p1[0]);
-    const double* camera_tx(&c_p1[3]);
-    const double* target_aa(&c_p2[0]);
-    const double* target_tx(&c_p2[3]);
-    double point[3];        /** point in target coordinates */
-    double world_point[3];  /** point in world coordinates */
-    double link_point[3];   /** point in link coordinates */
-    double camera_point[3]; /** point in camera coordinates*/
-    double R_LtoC[9];       // rotation from link to camera coordinates
-    double R_WtoL[9];       // rotation from world to link coordinates
-    double R_WtoC[9];       // rotation from world to camera coordinates, and intermediate transform
-    double R_TtoW[9];       // rotation from target to world coordinates
-    double R_TtoC[9];       // rotation from target to camera coordinates (assume circle lies in x-y plane of target
-                            // coordinates)
-    /** get necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_LtoC);
-    printf("camera_aa = %6.3lf %6.3lf %6.3lf\n", camera_aa[0], camera_aa[1], camera_aa[2]);
-    printf("R_camera \n");
-    for (int i = 0; i < 3; i++)
-    {
-      for (int j = 0; j < 3; j++)
-      {
-        printf("%6.3lf", R_LtoC[i + j * 3]);
-      }
-      printf("\n");
-    }
-    poseRotationMatrix(link_posei_, R_WtoL);
-    printf("R_inverse link\n");
-    for (int i = 0; i < 3; i++)
-    {
-      for (int j = 0; j < 3; j++)
-      {
-        printf("%6.3lf", R_WtoL[i + j * 3]);
-      }
-      printf("\n");
-    }
-
-    ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
-    printf("R_target\n");
-    for (int i = 0; i < 3; i++)
-    {
-      for (int j = 0; j < 3; j++)
-      {
-        printf("%6.3lf", R_TtoW[i + j * 3]);
-      }
-      printf("\n");
-    }
-
-    printf("point_ = %6.3lf  %6.3lf %6.3lf\n", point_.x, point_.y, point_.z);
-    /** transform point into camera coordinates */
-    transformPoint3d(target_aa, target_tx, point_, world_point);
-    printf("world_point = %6.3lf  %6.3lf %6.3lf\n", world_point[0], world_point[1], world_point[2]);
-    poseTransformPoint(link_posei_, world_point, link_point);
-    printf("link_point = %6.3lf  %6.3lf %6.3lf\n", link_point[0], link_point[1], link_point[2]);
-    transformPoint(camera_aa, camera_tx, link_point, camera_point);
-    printf("camera_point = %6.3lf  %6.3lf %6.3lf\n", camera_point[0], camera_point[1], camera_point[2]);
-
-    /** find rotation from target to camera coordinates */
-    rotationProduct(R_LtoC, R_WtoL, R_WtoC);
-    rotationProduct(R_WtoC, R_TtoW, R_TtoC);
+    const double* camera_T(&c_p1[0]);
+    const double* target_T(&c_p2[0]);
+    double TtoC[6];
+    double linki_T[6];
+    double TtoL[6];
+    double camera_point[3];
+    
+    extractPoseExtrinsics(link_posei_,linki_T);
+    angleAxistxmult(linki_T,target_T,TtoL);
+    angleAxistxmult(camera_T,TtoL,TtoC);
+    eTransformPoint3d(TtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     double circle_diameter = circle_diameter_;
@@ -2178,41 +2087,26 @@ public:
     double cy = cy_;
     double ox = ox_;
     double oy = oy_;
-    //      cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy,cx,cy, ox, oy, residual);
-    cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy, residual);
+
+    cameraCircResidual(camera_point, circle_diameter, TtoC, fx, fy, cx, cy, ox, oy, residual);
+
   }
   template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   const T* const c_p2, /** 6Dof transform of target into world frame [6] */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    const T* target_aa(&c_p2[0]);
-    const T* target_tx(&c_p2[3]);
-    T point[3];        /** point in target coordinates */
-    T world_point[3];  /** point in world coordinates */
-    T link_point[3];   /** point in link coordinates */
-    T camera_point[3]; /** point in camera coordinates*/
-    T R_LtoC[9];       // rotation from link to camera coordinates
-    T R_WtoL[9];       // rotation from world to link coordinates
-    T R_WtoC[9];       // rotation from world to camera coordinates, and intermediate transform
-    T R_TtoW[9];       // rotation from target to world coordinates
-    T R_TtoC[9];  // rotation from target to camera coordinates (assume circle lies in x-y plane of target coordinates)
-
-    /** get necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_LtoC);
-    poseRotationMatrix(link_posei_, R_WtoL);
-    ceres::AngleAxisToRotationMatrix(target_aa, R_TtoW);
-
-    /** transform point into camera coordinates */
-    transformPoint3d(target_aa, target_tx, point_, world_point);
-    poseTransformPoint(link_posei_, world_point, link_point);
-    transformPoint(camera_aa, camera_tx, link_point, camera_point);
-
-    /** find rotation from target to camera coordinates */
-    rotationProduct(R_LtoC, R_WtoL, R_WtoC);
-    rotationProduct(R_WtoC, R_TtoW, R_TtoC);
+    const T* camera_T(&c_p1[0]);
+    const T* target_T(&c_p2[0]);
+    T linki_T[6];
+    T TtoL[6];
+    T TtoC[6];
+    T camera_point[3];
+    
+    extractPoseExtrinsics(link_posei_, linki_T);
+    angleAxistxmult(linki_T, target_T, TtoL);
+    angleAxistxmult(camera_T, TtoL, TtoC);
+    eTransformPoint3d(TtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
@@ -2222,7 +2116,7 @@ public:
     T cy = T(cy_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidual(camera_point, circle_diameter, R_TtoC, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidual(camera_point, circle_diameter, TtoC, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -2269,28 +2163,16 @@ public:
     mount_to_target_pose_ = camera_mounting_pose_.getInverse() * target_pose_;
   }
 
-  void test_residual(const double* c_p1, double* resid)
+  void test_residual(const double* c_p1, double* residual)
   {
-    const double* camera_aa(&c_p1[0]);
-    const double* camera_tx(&c_p1[3]);
-    double mount_point[3];  /** point in world coordinates */
-    double camera_point[3]; /** point in camera coordinates */
-    double point[3];        /** point in world coordinates  */
-    point[0] = point_.x;
-    point[1] = point_.y;
-    point[2] = point_.z;
-    /** transform point into camera coordinates */
-    poseTransformPoint(mount_to_target_pose_, point, mount_point);
-    printf("mount_point = %6.3lf  %6.3lf %6.3lf\n", mount_point[0], mount_point[1], mount_point[2]);
-    transformPoint(camera_aa, camera_tx, mount_point, camera_point);
-    printf("camera_point = %6.3lf  %6.3lf %6.3lf\n", camera_point[0], camera_point[1], camera_point[2]);
+    const double* camera_T(&c_p1[0]);
+    double mount_T[6];
+    double MtoC[6];
+    double camera_point[3];        /** point in camera coordinates */
 
-    double R_optical_to_mount[9]; /** rotation from optical to camera mounting frame */
-    double R_mount_to_target[9];  /** rotation from mounting frame to target frame */
-
-    /** get necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_optical_to_mount);
-    poseRotationMatrix(mount_to_target_pose_, R_mount_to_target);
+    extractPoseExtrinsics(mount_to_target_pose_, mount_T);
+    angleAxistxmult(camera_T, mount_T, MtoC);
+    eTransformPoint3d(MtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     double circle_diameter = circle_diameter_;
@@ -2300,34 +2182,20 @@ public:
     double cy = cy_;
     double ox = ox_;
     double oy = oy_;
-    cameraCircResidual(camera_point, circle_diameter, R_mount_to_target, fx, fy, cx, cy, ox, oy, resid);
+    cameraCircResidual(camera_point, circle_diameter, MtoC, fx, fy, cx, cy, ox, oy, residual);
   }
   template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   T* residual) const
   {
-    const T* camera_aa(&c_p1[0]);
-    const T* camera_tx(&c_p1[3]);
-    T mount_point[3];         /** point in world coordinates */
+    const T* camera_T(&c_p1[0]);
+    T mount_T[6];
+    T MtoC[6];
     T camera_point[3];        /** point in camera coordinates */
-    T R_optical_to_mount[9];  /** rotation from optical to camera mounting frame */
-    T R_mount_to_target[9];   /** rotation from mounting frame to target frame */
-    T R_optical_to_target[9]; /** rotation from optical frame to target frame */
-    T point[3];
-    point[0] = T(point_.x);
-    point[1] = T(point_.y);
-    point[2] = T(point_.z);
-
-    /** get necessary rotation matrices */
-    ceres::AngleAxisToRotationMatrix(camera_aa, R_optical_to_mount);
-    poseRotationMatrix(mount_to_target_pose_, R_mount_to_target);
-
-    /** transform point into camera coordinates */
-    poseTransformPoint(mount_to_target_pose_, point, mount_point);
-    transformPoint(camera_aa, camera_tx, mount_point, camera_point);
-
-    /** find rotation from target to camera coordinates */
-    rotationProduct(R_optical_to_mount, R_mount_to_target, R_optical_to_target);
+    
+    extractPoseExtrinsics(mount_to_target_pose_, mount_T);
+    angleAxistxmult(camera_T, mount_T, MtoC);
+    eTransformPoint3d(MtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
@@ -2337,7 +2205,7 @@ public:
     T cy = T(cy_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidual(camera_point, circle_diameter, R_optical_to_target, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidual(camera_point, circle_diameter, MtoC, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
@@ -2380,12 +2248,11 @@ public:
   {
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;  // extract intrinsics
     extractCameraIntrinsics(c_p1, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    const T* target_aa(&c_p2[0]);  // extract target's angle axis
-    const T* target_tx(&c_p2[3]);  // extract target's position
+    const T* target_T(&c_p2[0]);  // extract target's angle axis
 
     /** transform point into camera frame */
     T camera_point[3]; /** point in camera coordinates */
-    transformPoint3d(target_aa, target_tx, point_, camera_point);
+    eTransformPoint3d(target_T, point_, camera_point);
     camera_point[2] = camera_point[2] + T(rail_position_);  // transform to camera's location along rail
 
     /** compute project point into image plane and compute residual */
@@ -2423,12 +2290,11 @@ public:
   {
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;      // extract intrinsics
     extractCameraIntrinsics(c_p1, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    const T *target_aa(& c_p2[0]); // extract target's angle axis
-    const T *target_tx(& c_p2[3]); // extract target's position
+    const T *target_T(& c_p2[0]); // extract target's angle axis
     
     /** transform point into camera frame */
     T camera_point[3]; /** point in camera coordinates */
-    transformPoint3d(target_aa, target_tx, point_, camera_point);
+    eTransformPoint3d(target_T, point_, camera_point);
     camera_point[0] = camera_point[0] + T(rail_position_.x); // transform to camera's location along rail
     camera_point[1] = camera_point[1] + T(rail_position_.y); // transform to camera's location along rail
     camera_point[2] = camera_point[2] + T(rail_position_.z); // transform to camera's location along rail
@@ -2479,17 +2345,15 @@ public:
 			    const T* const c_p2,  /** target_pose[6] */
 			    T* residual) const    /** this residual has 4 terms one for each camera */
   {
-    const T *C1toC2_aa(& c_p1[0]); // extract right camera's angle axis
-    const T *C1toC2_tx(& c_p1[3]); // extract right camera's position
-    const T *target_aa(& c_p2[0]); // extract target's angle axis
-    const T *target_tx(& c_p2[3]); // extract target's position
+    const T *C1toC2_T(& c_p1[0]); // extract right camera's angle axis
+    const T *target_T(& c_p2[0]); // extract target's angle axis
     
     /** transform both points into left camera frame, note, that usually these would be exactly the same point.
 	However, the camera observer may not provide observations in the same order. */
     T left_camera_point[3]; 
     T right_point_in_left_frame[3]; 
-    transformPoint3d(target_aa, target_tx, right_point_, right_point_in_left_frame);
-    transformPoint3d(target_aa, target_tx, left_point_, left_camera_point);
+    eTransformPoint3d(target_T, right_point_, right_point_in_left_frame);
+    eTransformPoint3d(target_T, left_point_, left_camera_point);
     left_camera_point[0] = left_camera_point[0] + T(rail_position_.x); // transform to camera's location along rail
     left_camera_point[1] = left_camera_point[1] + T(rail_position_.y); // transform to camera's location along rail
     left_camera_point[2] = left_camera_point[2] + T(rail_position_.z); // transform to camera's location along rail
@@ -2499,7 +2363,7 @@ public:
     
     /** transform right point in right camera frame */
     T right_camera_point[3]; 
-    transformPoint(C1toC2_aa, C1toC2_tx, right_point_in_left_frame, right_camera_point);
+    eTransformPoint(C1toC2_T, right_point_in_left_frame, right_camera_point);
     
     /** compute project point into image plane and compute residual */
     T lox = T(lox_);
@@ -2585,15 +2449,14 @@ public:
   bool operator()(	    const T* const c_p1,  /** target_pose[6] */
 			    T* residual) const    /** this residual has 4 terms one for each camera */
   {
-    const T *target_aa(& c_p1[0]); // extract target's angle axis
-    const T *target_tx(& c_p1[3]); // extract target's position
+    const T *target_T(& c_p1[0]); // extract target's extrinsics
     
     /** transform both points into left camera frame, note, that usually these would be exactly the same point.
 	However, the camera observer may not provide observations in the same order. */
     T left_camera_point[3]; 
     T right_point_in_left_frame[3]; 
-    transformPoint3d(target_aa, target_tx, right_point_, right_point_in_left_frame);
-    transformPoint3d(target_aa, target_tx, left_point_, left_camera_point);
+    eTransformPoint3d(target_T, right_point_, right_point_in_left_frame);
+    eTransformPoint3d(target_T, left_point_, left_camera_point);
 
     /** transform right point in right camera frame */
     T right_camera_point[3]; 
@@ -2680,12 +2543,11 @@ public:
   bool operator()(const T* const c_p1, /** extrinsic parameters */
 		  T* residual) const
   {
-    const T *camera_aa(&c_p1[0]);
-    const T *camera_tx(&c_p1[3]);
+    const T *camera_T(&c_p1[0]);
     T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
-    transformPoint3d(camera_aa, camera_tx, point_, camera_point);
+    eTransformPoint3d(camera_T, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
     T fx = T(fx_);
@@ -2745,12 +2607,11 @@ public:
   {
     T fx, fy, cx, cy;      // extract intrinsics
     extractCameraIntrinsics(c_p1, fx, fy, cx, cy);
-    const T *target_aa(& c_p2[0]); // extract target's angle axis
-    const T *target_tx(& c_p2[3]); // extract target's position
+    const T *target_T(& c_p2[0]); // extract target's angle axis
 
     /** transform point into camera frame */
     T camera_point[3]; /** point in camera coordinates */
-    transformPoint3d(target_aa, target_tx, point_, camera_point);
+    eTransformPoint3d(target_T, point_, camera_point);
     camera_point[2] = camera_point[2] + T(rail_position_); // transform to camera's location along rail
 
     /** compute project point into image plane and compute residual */
@@ -2801,12 +2662,11 @@ public:
   bool operator()(	    const T* const c_p1,  /**extriniscs [6] */
 			    T* residual) const
   {
-    const T *camera_aa(& c_p1[0]); // extract camera's angle axis
-    const T *camera_tx(& c_p1[3]); // extract camera's position
+    const T *camera_T(& c_p1[0]); // extract camera's extrinsics
 
     /** transform point into camera frame */
     T camera_point[3]; /** point in camera coordinates */
-    transformPoint3d(camera_aa, camera_tx, point_, camera_point);
+    eTransformPoint3d(camera_T, point_, camera_point);
 
     /** compute residual */
     residual[0] = camera_point[0] - T(ox_);
