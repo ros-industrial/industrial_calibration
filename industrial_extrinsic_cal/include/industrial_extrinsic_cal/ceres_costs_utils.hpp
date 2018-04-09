@@ -163,10 +163,9 @@ inline void rotationInverse(const T R[9], T RI[9])
 /*! \brief ceres compliant function to apply an angle-axis and translation to transform a point
  *  @param angle_axis, ax, ay, and az
  *  @param tx translation tx, ty and tz
- *  @param point the original point
- *  @param t_point the transformed point
+ *  @param point, the original point
+ *  @param t_point, the transformed point
  */
-
 template <typename T>
 inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3], T t_point[3]);
 template <typename T>
@@ -180,11 +179,10 @@ inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3
 
 
 /*! \brief ceres compliant function to apply an angle-axis and translation to transform a point
- *  @param E, all extrinsic parameters, ax,ay,az,tx,ty&tz
- *  @param point the original point
- *  @param t_point the transformed point
+ *  @param E, all 6 extrinsic parameters, ax,ay,az,tx,ty,tz
+ *  @param point, the original point
+ *  @param t_point, the transformed point
  */
-
 template <typename T>
 inline void eTransformPoint(const T E[6], const T point[3], T t_point[3]);
 template <typename T>
@@ -199,10 +197,9 @@ inline void eTransformPoint(const T E[6], const T point[3], T t_point[3])
 
 /*! \brief ceres compliant function to apply a pose to transform a point
  *  @param pose, contains both rotation and translation in a structure
- *  @param point the original point
- *  @param t_point the transformed point
+ *  @param point, the original point
+ *  @param t_point, the transformed point
  */
-
 template <typename T>
 inline void poseTransformPoint(const Pose6d& pose, const T point[3], T t_point[3]);
 template <typename T>
@@ -220,9 +217,9 @@ inline void poseTransformPoint(const Pose6d& pose, const T point[3], T t_point[3
 
 /*! \brief ceres compliant function to apply an angle-axis and translation to transform a point in Point3d form
  *  @param angle_axis, ax, ay, and az
- *  @param tx translation tx, ty and tz
- *  @param point the original point in a Point3d form
- *  @param t_point the transformed point
+ *  @param tx, translation tx, ty and tz
+ *  @param point, the original point in a Point3d form
+ *  @param t_point, the transformed point
  */
 template <typename T>
 void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d& point, T t_point[3]);
@@ -242,8 +239,8 @@ inline void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d
 
 /*! \brief ceres compliant function to apply an angle-axis and translation to transform a point in Point3d form
  *  @param E extrinsic parameters  ax, ay, az, tx, ty, tz
- *  @param point the original point in a Point3d form
- *  @param t_point the transformed point
+ *  @param point, the original point in a Point3d form
+ *  @param t_point, the transformed point
  */
 template <typename T>
 void eTransformPoint3d(const T E[6],  const Point3d& point, T t_point[3]);
@@ -261,8 +258,8 @@ inline void eTransformPoint3d(const T E[6], const Point3d& point, T t_point[3])
 }
 
 /*! \brief ceres compliant function get a templated rotation from a Pose6d structure
- *  @param pose the input pose
- *  @param pose the output rotatation matrix
+ *  @param pose, the input pose
+ *  @param R, the output rotatation matrix
  */
 template <typename T>
 void poseRotationMatrix(const Pose6d& pose, T R[9]);
@@ -282,9 +279,9 @@ inline void poseRotationMatrix(const Pose6d& pose, T R[9])
  *  @param T1T2 6Dof product in angle-axis-tx form
  */
 template <typename T>
-void angleAxistxmult(const T T1[6], const T T2[6], T T1T2[6]);
+void extrinsicsMult(const T T1[6], const T T2[6], T T1T2[6]);
 template <typename T>
-inline void angleAxistxmult(const T T1[6], const T T2[6], T T1T2[6])
+inline void extrinsicsMult(const T T1[6], const T T2[6], T T1T2[6])
 {
   T R1[9],R2[9],R3[9];
   const T* aa1(&T1[0]); // angle axis from T1
@@ -411,6 +408,68 @@ inline void projectPntNoDistortion(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox
   oy = fy * yp + cy;
 }
 
+/*! \brief ceres compliant function to compute projection of a point into the image plane of a pinhole camera with lens
+ * distortion
+ *  @param point[3] the input point
+ *  @param fx focal length in x
+ *  @param fy focal length in y
+ *  @param cx optical center in x
+ *  @param cy optical center in y
+ *  @param k1 lens distortion k1
+ *  @param k2 lens distortion k2
+ *  @param k3 lens distortion k3
+ *  @param p1 lens distortion p1
+ *  @param p2 lens distortion p2
+ *  @param ox observation in x
+ *  @param oy observation in y
+ */
+template <typename T>
+void projectPntDist(T point[3], T& fx, T& fy, T& cx, T& cy, T& k1, T & k2, T& k3, T& p1, T& p2, T& ox, T& oy);
+template <typename T>
+inline void projectPntDist(T point[3], T& fx, T& fy, T& cx, T& cy, T& k1, T & k2, T& k3, T& p1, T& p2, T& ox, T& oy)
+{
+  T xp1 = point[0];
+  T yp1 = point[1];
+  T zp1 = point[2];
+
+  /** scale into the image plane by distance away from camera */
+  T xp;
+  T yp;
+  if (zp1 == T(0))
+  {  // avoid divide by zero
+    xp = xp1;
+    yp = yp1;
+  }
+  else
+  {
+    xp = xp1 / zp1;
+    yp = yp1 / zp1;
+  }
+
+  /* temporary variables for distortion model */
+  T xp2 = xp * xp;  /* x^2 */
+  T yp2 = yp * yp;  /* y^2 */
+  T r2 = xp2 + yp2; /* r^2 radius squared */
+  T r4 = r2 * r2;   /* r^4 */
+  T r6 = r2 * r4;   /* r^6 */
+
+  /* apply the distortion coefficients to refine pixel location */
+  T xpp = xp + k1 * r2 * xp           // 2nd order term
+          + k2 * r4 * xp              // 4th order term
+          + k3 * r6 * xp              // 6th order term
+          + p2 * (r2 + T(2.0) * xp2)  // tangential
+          + p1 * xp * yp * T(2.0);    // other tangential term
+  T ypp = yp + k1 * r2 * yp           // 2nd order term
+          + k2 * r4 * yp              // 4th order term
+          + k3 * r6 * yp              // 6th order term
+          + p1 * (r2 + T(2.0) * yp2)  // tangential term
+          + p2 * xp * yp * T(2.0);    // other tangential term
+
+  /** perform projection using focal length and camera center into image plane */
+  ox = fx * xpp + cx;
+  oy = fy * ypp + cy;
+}
+
 /*! \brief ceres compliant function to compute the residual from a distorted pinhole camera model, in this case,
  *   the point is actually a planar circle with some diameter. There observation is not the projected center,
  *   but is offset due to the angle between the plane and the imaging plane
@@ -477,7 +536,6 @@ inline void cameraCircResidualDist(T point[3], T& circle_diameter, const T TtoC[
   T r   = T(circle_diameter/2.0);
   const T* target_to_camera_aa(&TtoC[0]);
   const T* target_to_camera_tx(&TtoC[3]);
-  T predict_p1[2], predict_p2[2]; // predicted image of max/min point1 and point2
   T R[9];
 
   ceres::AngleAxisToRotationMatrix(target_to_camera_aa, R);
@@ -495,63 +553,15 @@ inline void cameraCircResidualDist(T point[3], T& circle_diameter, const T TtoC[
 
   eTransformPoint(TtoC, pt_1, camera_point1);
   eTransformPoint(TtoC, pt_2, camera_point2);
-  
-  // predict image of first point using distortion model
-  T xp = camera_point1[0] / camera_point1[2];
-  T yp = camera_point1[1] / camera_point1[2];
-  
-  /* temporary variables for distortion model */
-  T xp2 = xp * xp;  /* x^2 */
-  T yp2 = yp * yp;  /* y^2 */
-  T r2  = xp2 + yp2; /* r^2 radius squared */
-  T r4  = r2 * r2;   /* r^4 */
-  T r6  = r2 * r4;   /* r^6 */
 
-  /* apply the distortion coefficients to refine pixel location */
-  T xpp = xp + k1 * r2 * xp           // 2nd order term
-          + k2 * r4 * xp              // 4th order term
-          + k3 * r6 * xp              // 6th order term
-          + p2 * (r2 + T(2.0) * xp2)  // tangential
-          + p1 * xp * yp * T(2.0);    // other tangential term
-  T ypp = yp + k1 * r2 * yp           // 2nd order term
-          + k2 * r4 * yp              // 4th order term
-          + k3 * r6 * yp              // 6th order term
-          + p1 * (r2 + T(2.0) * yp2)  // tangential term
-          + p2 * xp * yp * T(2.0);    // other tangential term
-
-  /** perform projection using focal length and camera center into image plane */
-  predict_p1[0] = fx * xpp + cx ;
-  predict_p1[1] = fy * ypp + cy ;
-
-  // predict image of second point
-  xp = camera_point2[0] / camera_point2[2];
-  yp = camera_point2[1] / camera_point2[2];
-  
-  /* temporary variables for distortion model */
-  xp2 = xp * xp;  /* x^2 */
-  yp2 = yp * yp;  /* y^2 */
-  r2 = xp2 + yp2; /* r^2 radius squared */
-  r4 = r2 * r2;   /* r^4 */
-  r6 = r2 * r4;   /* r^6 */
-
-  /* apply the distortion coefficients to refine pixel location */
-  xpp = xp + k1 * r2 * xp         // 2nd order term
-      + k2 * r4 * xp              // 4th order term
-      + k3 * r6 * xp              // 6th order term
-      + p2 * (r2 + T(2.0) * xp2)  // tangential
-      + p1 * xp * yp * T(2.0);    // other tangential term
-  ypp = yp + k1 * r2 * yp         // 2nd order term
-      + k2 * r4 * yp              // 4th order term
-      + k3 * r6 * yp              // 6th order term
-      + p1 * (r2 + T(2.0) * yp2)  // tangential term
-      + p2 * xp * yp * T(2.0);    // other tangential term
-
-  predict_p2[0] = fx * xpp + cx;
-  predict_p2[1] = fy * ypp + cy;
+  T pnt1_ix, pnt1_iy;  // image of point1
+  T pnt2_ix, pnt2_iy;  // image of point2
+  projectPntDist(camera_point1, fx, fy, cx, cy, k1, k2, k3, p1, p2, pnt1_ix, pnt1_iy);
+  projectPntDist(camera_point2, fx, fy, cx, cy, k1, k2, k3, p1, p2, pnt2_ix, pnt2_iy);
 
   /* compute the residual */
-  residual[0] = (predict_p1[0] + predict_p2[0])/T(2.0) - ox;
-  residual[1] = (predict_p1[1] + predict_p2[1])/T(2.0) - oy;
+  residual[0] = (pnt1_ix + pnt2_ix)/T(2.0) - ox;
+  residual[1] = (pnt1_iy + pnt2_iy)/T(2.0) - oy;
 
 }
 
@@ -637,17 +647,15 @@ inline void cameraCircResidual(T point[3], T& circle_diameter, const T TtoC[6], 
   eTransformPoint(TtoC,pt_1, camera_point1);
   eTransformPoint(TtoC,pt_2, camera_point2);
   
-  // predict image of first point
-  predict_p1[0] = fx * camera_point1[0] / camera_point1[2] + cx;
-  predict_p1[1] = fy * camera_point1[1] / camera_point1[2] + cy ;
-
-  // predict image of second point
-  predict_p2[0] = fx * camera_point2[0] / camera_point2[2] + cx;
-  predict_p2[1] = fy * camera_point2[1] / camera_point2[2] + cy;
+  T pnt1_ix, pnt1_iy;  // image of point1
+  T pnt2_ix, pnt2_iy;  // image of point2
+  projectPntNoDistortion(camera_point1, fx, fy, cx, cy, pnt1_ix, pnt1_iy);
+  projectPntNoDistortion(camera_point2, fx, fy, cx, cy, pnt2_iy, pnt2_iy);
 
   /* compute the residual */
-  residual[0] = (predict_p1[0] + predict_p2[0])/T(2.0) - ox;
-  residual[1] = (predict_p1[1] + predict_p2[1])/T(2.0) - oy;
+  /* compute the residual */
+  residual[0] = (pnt1_ix + pnt2_ix)/T(2.0) - ox;
+  residual[1] = (pnt1_iy + pnt2_iy)/T(2.0) - oy;
 }
 
 /*! \brief ceres compliant function to compute the residual from a pinhole camera model without distortion
@@ -661,7 +669,6 @@ inline void cameraCircResidual(T point[3], T& circle_diameter, const T TtoC[6], 
  *  @param residual the output or difference between where the point should appear given the parameters, and where it
  * was observed
  */
-
 template <typename T>
 void cameraPntResidual(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy, T residual[2]);
 template <typename T>
@@ -687,7 +694,73 @@ inline void cameraPntResidual(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox, T& 
   residual[0] = fx * xp + cx - ox;
   residual[1] = fy * yp + cy - oy;
 }
-
+/********************************** THE COST FUNCTIONS ************************************
+ *  The main thing to pay attention to in determining which cost function you want is:
+ *  What variables are known and what variables are adjusted
+ *  known variables appear in the constructor
+ *  unknown variables appear in the cost evaluation function operator()
+ *
+ *  All cost functions do the following:
+ *  1. Transform a point being observed into the camera's coordinates
+ *  2. Predict the image of that point
+ *  3. Return the difference between the predicted image of the point and the observed image of that point
+ *  Ceres simply adjusts the unknowns to minimize the sum of squared costs
+ *
+ *  The second thing to pay attention to is whether the location of the point is known and fixed
+ *  in the target coordinate. MOST of the time it is. If point appears in the operator() then
+ *  you are allowing ceres to adjust the location of the point on the target.
+ *  This is rarely useful. Most of the time you will want a Points known cost function (PK)
+ *
+ *  The third thing to pay attention to is whether you used a circle target or not
+ *  With a checkerboard, the locations of the intersections simply defined, but CANNOT be found
+ *  with as high an accuracy as a circle may be located. The checkerboard points are formed by the
+ *  intersection between two lines. In the worst case, a line can lie either along a row or a column
+ *  in this case, it is impossible to provide better than 1/2 pixel accuracy.
+ *  The perimeter of a circle on the other hand can be fit to an ellipse with an accuracy of better
+ *  than 1/4 pixel as long as the diameter is greater than 10 pixels. Typically we see .05 pixel accuracy
+ *  for circles. We fit an ellipse instead of a circle because the image of a circle is an ellipse.
+ *  Unfortunately, the projection of the center of a circle is NOT the center of the projected ellipse.
+ *  I'll say it again with more detail to be clear.
+ *  The image of the perimeter of a circle forms an elipse in the image. The center of the observed ellipse
+ *  is defined as the middle of the major axis and minor axis of the observed ellipse. This
+ *  observed center is NOT in the same place as the image of the center point of the circle.
+ *  The offset is small, typically much less than 1/10th of a pixel. The offset is largest at 45degrees.
+ *  It gets bigger with bigger circles. Because the error is so small, it is always safe to use standard
+ *  cost functions that don't have the word Circle in their name. However, sometimes you may want
+ *  to try them.
+ *
+ *  The fourth thing to pay attention to is the extra transform information. For example, sometimes
+ *  either the camera or the target is mounted on a robot's link. In these cases, we usually
+ *  collect the transform from the world or robot base frame to the end of the link using tf.
+ *  These cost functions accept the link transform and have the word link in their names
+ *
+ *  Most common calibration tasks and which cost functions they might use
+ *  1. find the pose of the target or the camera relative to one another
+ *     a. unknown variables are the 6Dof extrinsics
+ *     b. known variables are the intrinsics and the location of the point on the target
+ *     CameraReprjErrorPK()           
+ *     CircleCameraReprjErrorPK()
+ *     DistortedCameraFinder()      same as CameraRepjErrorPK but for unrectified images
+ *
+ *  2. Find the pose of a camera mounted on the robot using a target in the workcell
+ *     a. unknown variables: Extrinsics of camera relative to link, Extrinsic of target relative to base/world
+ *     b. known variables:  Transform from base/world to link, camera intrinsices, point location in target frame
+ *     LinkCameraTargetReprjErrorPK()          Both of these assume a rectified image is used
+ *     LinkCameraCircleTargetReprjErrorPK()
+ *     
+ *  3. Find the pose of a camera in the workcell by viewing a target mounted on the robot
+ *     a. unknown variables: Extrinsics of camera relative to world/base, Extrinsic of target relative to link
+ *     b. known variables:  Transform from base/world to link, camera intrinsices, point location in target frame
+ *     LinkTargetCameraReprjErrorPK()           Both of these assume a rectified image is used
+ *     LinkCircleTargetCameraReprjErrorPK()
+ *
+ *  4. The standard intrinsic calibration method used by opencv and matlab
+ *     a. unknown variables: Extrinsics of the target, and intrinsics of the camera
+ *     b. known variables:   Point location in target frame,
+ *     CameraReprjErrorWithDistortionPK()
+ *     CircleCameraReprjErrorWithDistortionPK()
+ *
+ ******************************************************************************************/
 class CameraReprjErrorWithDistortion
 {
 public:
@@ -829,7 +902,7 @@ public:
   }
 
   template <typename T>
-  bool operator()(const T* point, /** point being projected, yes this is has 3 parameters */
+  bool operator()(const T* point, /** point being projected, yes this has 3 parameters */
                   T* residual) const
   {
     T camera_point[3]; /** point in camera coordinates */
@@ -1532,7 +1605,7 @@ public:
     T camera_point[3];
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
 
-    angleAxistxmult(camera_T, target_T, TtoC);
+    extrinsicsMult(camera_T, target_T, TtoC);
     eTransformPoint(TtoC, point, camera_point);
 
     /** compute project point into image plane and compute residual */
@@ -1577,7 +1650,7 @@ public:
     T camera_point[3];
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
 
-    angleAxistxmult(camera_T, target_T, TtoC);
+    extrinsicsMult(camera_T, target_T, TtoC);
     eTransformPoint3d(TtoC, point_, camera_point);
 
 
@@ -1716,7 +1789,7 @@ public:
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
     
     // compute transform taking points in target frame into camera frame
-    angleAxistxmult(camera_T, target_T, TtoC);
+    extrinsicsMult(camera_T, target_T, TtoC);
 
     /** transform point into camera coordinates */
     eTransformPoint3d(TtoC, point_, camera_point);
@@ -1763,7 +1836,7 @@ public:
     T camera_point[3];
     
     // compute transform taking points in target frame into camera frame
-    angleAxistxmult(camera_T, target_T, TtoC);
+    extrinsicsMult(camera_T, target_T, TtoC);
 
     /** transform point into camera coordinates */
     eTransformPoint(TtoC, point, camera_point);
@@ -1818,7 +1891,7 @@ public:
     T camera_point[3];
     
     // compute transform taking points in target frame into camera frame
-    angleAxistxmult(camera_T, target_T, TtoC);
+    extrinsicsMult(camera_T, target_T, TtoC);
 
     /** transform point into camera coordinates */
     eTransformPoint3d(TtoC, point_, camera_point);
@@ -1878,8 +1951,8 @@ public:
     
     // compute transform taking points in target frame into camera frame
     extractPoseExtrinsics(link_pose_,link_T);
-    angleAxistxmult(link_T, target_T, TtoL);
-    angleAxistxmult(camera_T, TtoL, TtoC);
+    extrinsicsMult(link_T, target_T, TtoL);
+    extrinsicsMult(camera_T, TtoL, TtoC);
 
     /** transform point into camera coordinates */
     eTransformPoint(TtoC, point, camera_point);
@@ -1945,10 +2018,9 @@ public:
     T camera_point[3];
     
     // compute transform taking points in target frame into camera frame
-    
     extractPoseExtrinsics(link_pose_, link_T);
-    angleAxistxmult(link_T, target_T, TtoL);
-    angleAxistxmult(camera_T, TtoL, TtoC);
+    extrinsicsMult(link_T, target_T, TtoL);
+    extrinsicsMult(camera_T, TtoL, TtoC);
 
     /** transform point into camera coordinates */
     eTransformPoint3d(TtoC, point_, camera_point);
@@ -2010,8 +2082,8 @@ public:
     T camera_point[3];
     
     extractPoseExtrinsics(link_posei_, linki_T);
-    angleAxistxmult(linki_T,target_T,TtoL);
-    angleAxistxmult(camera_T,TtoL,TtoC);
+    extrinsicsMult(linki_T,target_T,TtoL);
+    extrinsicsMult(camera_T,TtoL,TtoC);
     eTransformPoint(TtoC, point, camera_point);
 
     /** compute project point into image plane and compute residual */
@@ -2075,8 +2147,8 @@ public:
     double camera_point[3];
     
     extractPoseExtrinsics(link_posei_,linki_T);
-    angleAxistxmult(linki_T,target_T,TtoL);
-    angleAxistxmult(camera_T,TtoL,TtoC);
+    extrinsicsMult(linki_T,target_T,TtoL);
+    extrinsicsMult(camera_T,TtoL,TtoC);
     eTransformPoint3d(TtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
@@ -2104,8 +2176,8 @@ public:
     T camera_point[3];
     
     extractPoseExtrinsics(link_posei_, linki_T);
-    angleAxistxmult(linki_T, target_T, TtoL);
-    angleAxistxmult(camera_T, TtoL, TtoC);
+    extrinsicsMult(linki_T, target_T, TtoL);
+    extrinsicsMult(camera_T, TtoL, TtoC);
     eTransformPoint3d(TtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
@@ -2171,7 +2243,7 @@ public:
     double camera_point[3];        /** point in camera coordinates */
 
     extractPoseExtrinsics(mount_to_target_pose_, mount_T);
-    angleAxistxmult(camera_T, mount_T, MtoC);
+    extrinsicsMult(camera_T, mount_T, MtoC);
     eTransformPoint3d(MtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
@@ -2194,7 +2266,7 @@ public:
     T camera_point[3];        /** point in camera coordinates */
     
     extractPoseExtrinsics(mount_to_target_pose_, mount_T);
-    angleAxistxmult(camera_T, mount_T, MtoC);
+    extrinsicsMult(camera_T, mount_T, MtoC);
     eTransformPoint3d(MtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
