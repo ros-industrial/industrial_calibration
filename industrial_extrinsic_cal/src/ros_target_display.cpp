@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -13,6 +14,7 @@ visualization_msgs::MarkerArray target_geom;
 void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> target)
 {
   ros::NodeHandle pnh("~");
+  std::string myns = target->target_name_ + "_ns";
   vis_pub = pnh.advertise<visualization_msgs::MarkerArray>(target->target_name_.c_str(),0,true);
   double diameter       = target->circle_grid_parameters_.circle_diameter;
   double target_length  = (target->circle_grid_parameters_.pattern_cols+1) *  target->circle_grid_parameters_.spacing;
@@ -20,7 +22,7 @@ void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> targe
   double target_height  = 0.001;
   board.header.frame_id = target->target_frame_.c_str();
   board.header.stamp = ros::Time();
-  board.ns = "my_namespace";
+  board.ns = myns;
   board.id = 0;
   board.type = visualization_msgs::Marker::CUBE;
   board.action = visualization_msgs::Marker::ADD;
@@ -41,7 +43,7 @@ void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> targe
 
   dots.header.frame_id = target->target_frame_.c_str();
   dots.header.stamp = ros::Time();
-  dots.ns = "my_namespace";
+  dots.ns = myns;
   dots.id = 1;
   dots.type = visualization_msgs::Marker::SPHERE_LIST;
   dots.action = visualization_msgs::Marker::ADD;
