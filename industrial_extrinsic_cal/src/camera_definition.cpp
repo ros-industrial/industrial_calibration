@@ -27,6 +27,8 @@ Camera::Camera()
 {
   camera_name_ = "NONE";
   is_moving_ = false;
+  is_right_stereo_camera_ = false;
+  left_stereo_camera_name_ = "";
 }
 
 Camera::Camera(string name, CameraParameters camera_parameters, bool is_moving)

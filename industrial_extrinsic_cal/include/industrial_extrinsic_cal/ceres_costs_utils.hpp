@@ -2598,7 +2598,292 @@ public:
   double lfx_,lfy_,lcx_,lcy_,lk1_,lk2_,lk3_,lp1_,lp2_; /** left camera intrinsics */
   double rfx_,rfy_,rcx_,rcy_,rk1_,rk2_,rk3_,rp1_,rp2_; /** right camera intrinsics */
 };
+
+  // used to locate a stereo pair in world using a target on the end of arm tooling (right camera version)
+class  TargetOnLinkRtStereo
+{
+public:
+  TargetOnLinkRtStereo( double ob_x, double ob_y, Point3d point, Pose6d C1toC2, Pose6d ForwardK,
+		        double fx, double fy, double cx, double cy, double k1, double k2, double k3, double p1, double p2) :
+    ox_(ob_x),  oy_(ob_y),  point_(point),
+    C1toC2_(C1toC2), ForwardK_(ForwardK),
+    fx_(fx), fy_(fy), cx_(cx), cy_(cy), k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2)
+  {
+  }
   
+  template<typename T>
+  bool operator()(	    const T* const c_p1,  /** target_pose[6] */
+			    const T* const c_p2,  /** left_camera_extrinsics_pose[6] */
+			    T* residual) const    /** this residual has 4 terms one for each camera */
+  {
+    const T *target_ex(& c_p1[0]); // extract target's extrinsics
+    const T *Left_C_ex(& c_p2[0]); // left camera's extrinsics
+    T fx = T(fx_);
+    T fy = T(fy_);
+    T cx = T(cx_);
+    T cy = T(cy_);
+    T k1 = T(k1_);
+    T k2 = T(k2_);
+    T k3 = T(k3_);	    
+    T p1 = T(p1_);
+    T p2 = T(p2_);
+    T ox = T(ox_);
+    T oy = T(oy_);
+   
+    /** transform point into right camera frame **/
+    T tool_point[3];
+    T world_point[3];
+    T left_camera_point[3];
+    T right_camera_point[3]; 
+    eTransformPoint3d(target_ex, point_, tool_point);
+    poseTransformPoint(ForwardK_, tool_point, world_point);
+    eTransformPoint(Left_C_ex, world_point, left_camera_point);
+    poseTransformPoint(C1toC2_, left_camera_point, right_camera_point);
+
+    /** compute project point into image plane and compute residual */
+    cameraPntResidualDist(right_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);			   
+
+    return true;
+  } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point,
+				     Pose6d C1toC2, Pose6d ForwardK,
+				     const double fx, const double fy,
+				     const double cx, const double cy,
+				     const double k1, const double k2, const double k3,
+				     const double p1, const double p2)
+  {
+    return (new ceres::AutoDiffCostFunction<TargetOnLinkRtStereo, 2, 6, 6>
+	    (
+	     new TargetOnLinkRtStereo(o_x, o_y, point,
+				      C1toC2, ForwardK,
+				      fx, fy, cx, cy, k1, k2, k3, p1, p2)
+	     )
+	    );
+  }
+  double ox_; /** observed x location */
+  double oy_; /** observed y location */
+  Pose6d C1toC2_; /** transforms points expressed in left camera frame into right camera frame */
+  Pose6d ForwardK_; /** transforms points expressed in tool to world */
+  Point3d point_; /** point expressed in target coordinates */
+  double fx_,fy_,cx_,cy_,k1_,k2_,k3_,p1_,p2_; /** camera intrinsics */
+};
+
+  // used to locate a stereo pair in world using a target on the end of arm tooling (right camera version)
+class  TargetOnLinkLtStereo
+{
+public:
+  TargetOnLinkLtStereo( double ob_x, double ob_y, Point3d point, Pose6d ForwardK,
+		        double fx, double fy, double cx, double cy, double k1, double k2, double k3, double p1, double p2) :
+    ox_(ob_x),  oy_(ob_y),  point_(point),
+    ForwardK_(ForwardK),
+    fx_(fx), fy_(fy), cx_(cx), cy_(cy), k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2)
+  {
+  }
+  
+  template<typename T>
+  bool operator()(	    const T* const c_p1,  /** target_pose[6] */
+			    const T* const c_p2,  /** left_camera_extrinsics_pose[6] */
+			    T* residual) const    /** this residual has 4 terms one for each camera */
+  {
+    const T *target_ex(& c_p1[0]); // extract target's extrinsics
+    const T *Left_C_ex(& c_p2[0]); // left camera's extrinsics
+    T fx = T(fx_);
+    T fy = T(fy_);
+    T cx = T(cx_);
+    T cy = T(cy_);
+    T k1 = T(k1_);
+    T k2 = T(k2_);
+    T k3 = T(k3_);	    
+    T p1 = T(p1_);
+    T p2 = T(p2_);
+    T ox = T(ox_);
+    T oy = T(oy_);
+    
+    /** transform point into left camera frame **/
+    T tool_point[3];
+    T world_point[3];
+    T left_camera_point[3];
+    eTransformPoint3d(target_ex, point_, tool_point);
+    poseTransformPoint(ForwardK_, tool_point, world_point);
+    eTransformPoint(Left_C_ex, world_point, left_camera_point);
+
+    /** compute project point into image plane and compute residual */
+    cameraPntResidualDist(left_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);			   
+
+    return true;
+  } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point,
+				     Pose6d ForwardK,
+				     const double fx, const double fy,
+				     const double cx, const double cy,
+				     const double k1, const double k2, const double k3,
+				     const double p1, const double p2)
+  {
+    return (new ceres::AutoDiffCostFunction<TargetOnLinkLtStereo, 2, 6, 6>
+	    (
+	     new TargetOnLinkLtStereo(o_x, o_y, point,
+				      ForwardK,
+				      fx, fy, cx, cy, k1, k2, k3, p1, p2)
+	     )
+	    );
+  }
+  double ox_; /** observed x location */
+  double oy_; /** observed y location */
+  Pose6d ForwardK_; /** transforms points expressed in tool to world */
+  Point3d point_; /** point expressed in target coordinates */
+  double fx_,fy_,cx_,cy_,k1_,k2_,k3_,p1_,p2_; /** camera intrinsics */
+};
+
+
+  // used to locate a stereo pair on link using a target on the end of arm tooling (right camera version)
+class  StereoOnLinkRt
+{
+public:
+  StereoOnLinkRt( double ob_x, double ob_y, Point3d point, Pose6d C1toC2, Pose6d ForwardK,
+		        double fx, double fy, double cx, double cy, double k1, double k2, double k3, double p1, double p2) :
+    ox_(ob_x),  oy_(ob_y),  point_(point),
+    C1toC2_(C1toC2), 
+    fx_(fx), fy_(fy), cx_(cx), cy_(cy), k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2)
+  {
+    ForwardK_inv_ = ForwardK.getInverse();
+  }
+  
+  template<typename T>
+  bool operator()(	    const T* const c_p1,  /** target_pose[6] */
+			    const T* const c_p2,  /** left_camera_extrinsics_pose[6] */
+			    T* residual) const    /** this residual has 4 terms one for each camera */
+  {
+    const T *target_ex(& c_p1[0]); // extract target's extrinsics
+    const T *Left_C_ex(& c_p2[0]); // left camera's extrinsics
+    T fx = T(fx_);
+    T fy = T(fy_);
+    T cx = T(cx_);
+    T cy = T(cy_);
+    T k1 = T(k1_);
+    T k2 = T(k2_);
+    T k3 = T(k3_);	    
+    T p1 = T(p1_);
+    T p2 = T(p2_);
+    T ox = T(ox_);
+    T oy = T(oy_);
+    
+    /** transform point into right camera frame **/
+    T world_point[3];
+    T tool_point[3];
+    T left_camera_point[3];
+    T right_camera_point[3]; 
+    eTransformPoint3d(target_ex, point_, world_point);
+    poseTransformPoint(ForwardK_inv_, world_point, tool_point);
+    eTransformPoint(Left_C_ex, tool_point, left_camera_point);
+    poseTransformPoint(C1toC2_, left_camera_point, right_camera_point);
+
+    /** compute project point into image plane and compute residual */
+    cameraPntResidualDist(right_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);			   
+
+    return true;
+  } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point,
+				     Pose6d C1toC2, Pose6d ForwardK,
+				     const double fx, const double fy,
+				     const double cx, const double cy,
+				     const double k1, const double k2, const double k3,
+				     const double p1, const double p2)
+  {
+    return (new ceres::AutoDiffCostFunction<StereoOnLinkRt, 2, 6, 6>
+	    (
+	     new StereoOnLinkRt(o_x, o_y, point,
+				C1toC2, ForwardK,
+				fx, fy, cx, cy, k1, k2, k3, p1, p2)
+	     )
+	    );
+  }
+  double ox_; /** observed x location */
+  double oy_; /** observed y location */
+  Pose6d C1toC2_; /** transforms points expressed in left camera frame into right camera frame */
+  Pose6d ForwardK_inv_; /** transforms points expressed in tool to world */
+  Point3d point_; /** point expressed in target coordinates */
+  double fx_,fy_,cx_,cy_,k1_,k2_,k3_,p1_,p2_; /** camera intrinsics */
+};
+
+  // used to locate a stereo pair on link using a target on the end of arm tooling (left camera version)
+class  StereoOnLinkLt
+{
+public:
+  StereoOnLinkLt( double ob_x, double ob_y, Point3d point, Pose6d ForwardK,
+		        double fx, double fy, double cx, double cy, double k1, double k2, double k3, double p1, double p2) :
+    ox_(ob_x),  oy_(ob_y),  point_(point),
+    fx_(fx), fy_(fy), cx_(cx), cy_(cy), k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2)
+  {
+    ForwardK_inv_ = ForwardK.getInverse();
+  }
+  
+  template<typename T>
+  bool operator()(	    const T* const c_p1,  /** target_pose[6] */
+			    const T* const c_p2,  /** left_camera_extrinsics_pose[6] */
+			    T* residual) const    /** this residual has 4 terms one for each camera */
+  {
+    const T *target_ex(& c_p1[0]); // extract target's extrinsics
+    const T *Left_C_ex(& c_p2[0]); // left camera's extrinsics
+    T fx = T(fx_);
+    T fy = T(fy_);
+    T cx = T(cx_);
+    T cy = T(cy_);
+    T k1 = T(k1_);
+    T k2 = T(k2_);
+    T k3 = T(k3_);	    
+    T p1 = T(p1_);
+    T p2 = T(p2_);
+    T ox = T(ox_);
+    T oy = T(oy_);
+    
+    /** transform point into left camera frame **/
+    T world_point[3];
+    T tool_point[3];
+    T left_camera_point[3];
+    eTransformPoint3d(target_ex, point_, world_point);
+    poseTransformPoint(ForwardK_inv_, world_point, tool_point);
+    eTransformPoint(Left_C_ex, tool_point, left_camera_point);
+
+    /** compute project point into image plane and compute residual */
+    cameraPntResidualDist(left_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);			   
+
+    return true;
+  } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point,
+				     Pose6d ForwardK,
+				     const double fx, const double fy,
+				     const double cx, const double cy,
+				     const double k1, const double k2, const double k3,
+				     const double p1, const double p2)
+  {
+    return (new ceres::AutoDiffCostFunction<StereoOnLinkLt, 2, 6, 6>
+	    (
+	     new StereoOnLinkLt(o_x, o_y, point,
+				ForwardK,
+				fx, fy, cx, cy, k1, k2, k3, p1, p2)
+	     )
+	    );
+  }
+  double ox_; /** observed x location */
+  double oy_; /** observed y location */
+  Pose6d ForwardK_inv_; /** transforms points expressed in tool to world */
+  Point3d point_; /** point expressed in target coordinates */
+  double fx_,fy_,cx_,cy_,k1_,k2_,k3_,p1_,p2_; /** camera intrinsics */
+};
+
+
 class DistortedCameraFinder
 {
 public:

@@ -94,6 +94,9 @@ public:
   boost::shared_ptr<TransformInterface> transform_interface_; /**< interface to transform, tf for example  */
   Pose6d intermediate_frame_; /**< Sometimes there is an intermediate transform from ref to origin of intrinsics */
   bool is_moving_;            /*!< bool is_moving_  false for static cameras */
+  bool is_right_stereo_camera_; /*!< set to indicate that this is the right side of a pair */
+  std::string left_stereo_camera_name_; /*!< name of left stereo camera of pair to which this camera belongs */
+  boost::shared_ptr<Camera> left_stereo_camera_; /*!< points toward left half of pair to which this camera belongs */
 };
 // end of class Camera
 

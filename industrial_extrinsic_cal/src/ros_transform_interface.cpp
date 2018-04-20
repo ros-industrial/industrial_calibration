@@ -21,35 +21,6 @@
 #include <fstream>
 namespace industrial_extrinsic_cal
 {
-/*! @brief uses tf listener to get a Pose6d. The pose returned transform points in the to_frame into the from_frame.
- *   @param from_frame the starting frame
- *   @param to_frame  the ending frame
- *   @param tf_listener  the listener object, so we don't have to keep creating it
- */
-Pose6d getPoseFromTF(const std::string& from_frame, const std::string& to_frame,
-                     const tf::TransformListener& tf_listener)
-{
-  // get all the information from tf and from the mutable joint state publisher
-  tf::StampedTransform tf_transform;
-  ros::Time now = ros::Time::now();
-  while (!tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0)))
-  {
-    now = ros::Time::now();
-    ROS_INFO("waiting for tranform from %s to %s", from_frame.c_str(), to_frame.c_str());
-  }
-  try
-  {
-    tf_listener.lookupTransform(from_frame, to_frame, now, tf_transform);
-  }
-  catch (tf::TransformException& ex)
-  {
-    ROS_ERROR("%s", ex.what());
-  }
-  Pose6d pose;
-  pose.setBasis(tf_transform.getBasis());
-  pose.setOrigin(tf_transform.getOrigin());
-  return (pose);
-}
 
 using std::string;
 
@@ -178,6 +149,8 @@ void ROSBroadcastTransInterface::setReferenceFrame(string& ref_frame)
   ref_frame_initialized_ = true;
   timer_ = nh.createTimer(ros::Rate(1.0), &ROSBroadcastTransInterface::timerCallback, this);
 }
+
+
 
 void ROSBroadcastTransInterface::timerCallback(const ros::TimerEvent& timer_event)
 {  // broadcast current value of pose as a transform each time called

@@ -165,6 +165,15 @@ bool CalibrationJob::loadCamera()
       ceres_blocks_.addStaticCamera(all_cameras[i]);
     }
   }
+  // if loaded camera is the right side of a stereo pair, it contains a pointer to the left one.
+  // TODO, check that the left camera existed
+  for (int i = 0; i < (int)all_cameras.size(); i++)
+    {
+      if(all_cameras[i]->is_right_stereo_camera_)
+	{
+	  all_cameras[i]->left_stereo_camera_ = ceres_blocks_.getCameraByName(all_cameras[i]->left_stereo_camera_name_);
+	}
+    }
   return rtn;
 }
 
@@ -660,6 +669,40 @@ bool CalibrationJob::runOptimization()
           problem_->AddResidualBlock(cost_function, NULL, point.pb);
         }
         break;
+        case cost_functions::StereoTargetLocator:
+	{
+	  // This cost function requires two sets of observations at once
+	  ROS_ERROR("Cannot handle StereoTargetLocator cost functions"); 
+	}
+	break;
+        case cost_functions::TargetOnLinkRtStereo:
+	{
+	  // unkowns: target extrinsics attatching target to tool. left camera extrinsics attatching it to the world
+	  // knowns: forward kinematics from world to tool. extrinsics attaching right camera to left, and camera params
+	}
+	break;
+        case cost_functions::TargetOnLinkLtStereo:
+	{
+	  // unkowns: target extrinsics attatching target to tool. left camera extrinsics attatching it to the world
+	  // knowns: forward kinematics from world to tool, and camera params
+	}
+	break;
+        case cost_functions::StereoOnLinkRt:
+	{
+	  // unkowns: target extrinsics attatching target to world. left camera extrinsics attatching it to the tool
+	  // knowns: forward kinematics from world to tool. extrinsics attaching right camera to left, and camera params
+	}
+	break;
+        case cost_functions::StereoOnLinkLt:
+	{
+	  // unkowns: target extrinsics attatching target to world. left camera extrinsics attatching it to the tool
+	  // knowns: forward kinematics from world to tool, and camera params
+	}
+	break;
+        case cost_functions::DistortedCameraFinder:
+ 	{
+	}
+	break;
         default:
         {
           std::string cost_type_string = costType2String(ODP.cost_type_);
