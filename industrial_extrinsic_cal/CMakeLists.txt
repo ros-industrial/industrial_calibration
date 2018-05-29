@@ -152,6 +152,7 @@ add_library(
   src/target.cpp
   src/targets_yaml_parser.cpp
   src/ros_target_display.cpp
+  src/conical_pose_generator.cpp
 )
 add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
