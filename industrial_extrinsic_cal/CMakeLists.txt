@@ -177,6 +177,7 @@ add_executable(trigger_service                  src/nodes/ros_scene_trigger_serv
 add_executable(range_excal                      src/nodes/range_camera_excal.cpp)
 add_executable(rangeNmono                       src/nodes/rangeNmono_excal.cpp)
 add_executable(target_display                   src/nodes/target_display_node.cpp)
+add_executable(position_validation		src/chkIfpntsInPic.cpp)
 
 
 add_dependencies(camera_observer_scene_trigger    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})

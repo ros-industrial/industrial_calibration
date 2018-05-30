@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<launch>
+  <node pkg="industrial_extrinsic_cal" type="cal_job" name="calibration_node" output="screen" >
+    <rosparam>
+      camera_file: "test2_camera_def.yaml"
+      target_file: "test2_target_def.yaml"
+      cal_job_file: "test2_caljob_def.yaml"
+    </rosparam>
+  </node>
+</launch>
