@@ -33,8 +33,8 @@ typedef struct
   double image_loc_x;               /**< target point was found at image location x */
   double image_loc_y;               /**< target point image location y */
   Cost_function cost_type;          /**< type of cost associated with this observation */
-  Pose6d
-      intermediate_frame; /**< sometimes one needs the transform from ref_frame to the frame of extrinics for camera */
+  Pose6d intermediate_camera_frame; /**< transform from camera_mounting_frame_ to ref_frame_ */
+  Pose6d intermediate_target_frame; /**< transform form ref_frame_ to target_mounting_frame_ */
 } Observation;
 
 /*! \brief A vector of observations made by a single camera of posibly multiple targets */

@@ -73,36 +73,30 @@ class ROSTransformInterface : public TransformInterface
     pose.setOrigin(tf_transform.getOrigin());
     return (pose);
   }
+  // base class has
+  // transform_frame_
+  // ref_frame_
+  // ref_frame_initialized_
+  // no argument default constructor 
   tf::TransformListener tf_listener_;
+  std::string mounting_frame_;
 };
 
-// When a target is mounted to some other frame than the reference frame
-// the intermediate frame provides the transform back to the ref_frame_
-// Intermediate_transform is from ref_frame_ to mounting_frame
-class ROSMountedTargetTransformInterface : public ROSTransformInterface
-{
- public:
-  Pose6d getIntermediateFrame()
-  {
-    Pose6d pose(0, 0, 0, 0, 0, 0);
-    if (ref_frame_initialized_)
-      {
-	pose = getPoseFromTF(ref_frame_, mounting_frame_, tf_listener_);
-      }
-    else
-      {
-	ROS_ERROR("ref_frame_ must be initialized before calling getIntermediateFrame()");
-      }
-    return (pose);
-  };
-  std::string mounting_frame_;              /**< mounting frame name */
-};
 
+// this class is meant to be a base class for cameras
 // when a camera is mounted to some frame besides the ref_frame_
 // the intermediate transform is from mounting_frame_ to the ref_frame_
-class ROSMountedCameraTransformInterface : public ROSTransformInterface
+class ROSCameraTransformInterface : public ROSTransformInterface
 {
  public:
+  /* constructor */
+ ROSCameraTransformInterface(const std::string& transform_frame, const std::string& mounting_frame, const std::string& housing_frame) 
+   {
+     transform_frame_ = transform_frame;
+     mounting_frame_ = mounting_frame;
+     housing_frame_ = housing_frame;
+   };
+
   Pose6d getIntermediateFrame()
   {
     /* the intermediate frame is inverted from the standard */
@@ -117,8 +111,7 @@ class ROSMountedCameraTransformInterface : public ROSTransformInterface
       }
     return (pose);
   } ;
-  std::string housing_frame_;               /**< frame name for the housing : not all mounted cameras have a housing frame */
-  std::string mounting_frame_;              /**< mounting frame name */
+  std::string housing_frame_;               /**< frame name for the housing : not all mounted cameras have a housing frame. */
 };
 
 /** @brief this object simply listens to a pose from ref_frame_ to transform_frame_, this must be set in a urdf
@@ -177,14 +170,15 @@ private:
  *            store does nothing
  *            intermediate_frame is identity
  */
-class ROSCameraListenerTransInterface : public ROSTransformInterface
+class ROSCameraListenerTransInterface : public ROSCameraTransformInterface
 {
 public:
   /**
    * @brief constructor
    * @param image_topic name of published image topic
    */
-  ROSCameraListenerTransInterface(const std::string& transform_frame);
+  ROSCameraListenerTransInterface(const std::string& transform_frame, const std::string& camera_mounting_frame);
+
 
   /**
    * @brief Default destructor
@@ -226,7 +220,7 @@ private:
  *            store does nothing
  *            intermediate frame is identity
  */
-class ROSCameraHousingListenerTInterface : public ROSTransformInterface
+class ROSCameraHousingListenerTInterface : public ROSCameraTransformInterface
 {
 public:
   /**
@@ -234,7 +228,7 @@ public:
    * @param optical_frame The name of the optical frame defined in the urdf
    * @param housing_frame The name of camera housing frame defined in the urdf
    */
-  ROSCameraHousingListenerTInterface(const std::string& optical_frame, const std::string& housing_frame);
+  ROSCameraHousingListenerTInterface(const std::string& optical_frame, const std::string& mounting_frame, const std::string& housing_frame);
 
   /**
    * @brief Default destructor
@@ -323,14 +317,14 @@ private:
     
 */
 
-class ROSCameraBroadcastTransInterface : public ROSTransformInterface
+class ROSCameraBroadcastTransInterface : public ROSCameraTransformInterface
 {
 public:
   /**
    * @brief constructor
    * @param transform_frame the frame associated with this transform
    */
-  ROSCameraBroadcastTransInterface(const std::string& transform_frame);
+  ROSCameraBroadcastTransInterface(const std::string& transform_frame, const std::string& mounting_frame);
 
   /**
    * @brief Default destructor
@@ -372,7 +366,7 @@ private:
  * the pose in the camera yaml file is broadcast imediately after the ref_frame_ is initialized
  * the intermediate frame is from the mounting_frame_ to the ref_frame_
 */
-class ROSCameraHousingBroadcastTInterface : public ROSMountedCameraTransformInterface
+class ROSCameraHousingBroadcastTInterface : public ROSCameraTransformInterface
 {
 public:
   /**
@@ -382,8 +376,10 @@ public:
    * @param mounting_frame the camera's mounting frame
    * intermediate frame is from mounting_frame_ to ref_frame_
    */
-  ROSCameraHousingBroadcastTInterface(const std::string& transform_frame, const std::string& housing_frame,
-                                      const std::string& mounting_frame, const Pose6d& pose);
+  ROSCameraHousingBroadcastTInterface(const std::string& transform_frame,
+				      const std::string& mounting_frame,
+				      const std::string& housing_frame,
+				      const Pose6d& pose);
 
   /**
    * @brief Default destructor
@@ -430,7 +426,7 @@ private:
  *             store updates the yaml file by calling the store_mutable_joint_states service
  * intermediate transform is from mounting_frame_ to ref_frame_
  */
-class ROSCameraHousingCalTInterface : public ROSMountedCameraTransformInterface
+class ROSCameraHousingCalTInterface : public ROSCameraTransformInterface
 {
 public:
   /**
@@ -440,7 +436,8 @@ public:
    * @param mounting_frame The name of frame on which the camera housing is mounted
    */
   ROSCameraHousingCalTInterface(const std::string& transform_frame, /* optical frame */
-                                const std::string& housing_frame, const std::string& mounting_frame);
+                                const std::string& mounting_frame,
+				const std::string& housing_frame );
 
   /**
    * @brief Default destructor
@@ -466,11 +463,6 @@ public:
 
   /** @brief sets the reference frame of the transform interface, sometimes not used */
   void setReferenceFrame(std::string& ref_frame);
-
-  /** @brief used to get the pose of the mounting frame in ref_frame coordinates
-   *   @return returns the pose from ref_frame to mounting frame in the case where necessary, identity otherwise
-   */
-  Pose6d getIntermediateFrame() override;
 
 private:
   ros::NodeHandle* nh_;               /**< the standard node handle for ros*/
@@ -544,6 +536,9 @@ public:
   /** @brief sets the reference frame of the transform interface, sometimes not used */
   void setReferenceFrame(std::string& ref_frame);
 
+  /** @brief gets the transform from ref_frame_ to parent_frame_ */
+  Pose6d getIntermediateFrame();
+    
 private:
   ros::NodeHandle* nh_;
   std::string transform_frame_;   /**< transform frame name */
@@ -582,15 +577,16 @@ private:
  *             store updates the yaml file by calling the store_mutable_joint_states service
  * intermediate transform is identity
  */
-class ROSSimpleCameraCalTInterface : public ROSTransformInterface
+class ROSSimpleCameraCalTInterface : public ROSCameraTransformInterface
 {
 public:
   /**
    * @brief constructor
    * @param transform_frame The name of frame being calibrated
-   * @param parent_frame The name of camera housing's frame
+   * @param camera_mounting_frame The name of camera housing's frame
    */
-  ROSSimpleCameraCalTInterface(const std::string& transform_frame, const std::string& parent_frame);
+  ROSSimpleCameraCalTInterface(const std::string& transform_frame, const std::string& camera_mounting_frame);
+
 
   /**
    * @brief Default destructor
@@ -614,8 +610,6 @@ public:
 
 private:
   ros::NodeHandle* nh_;
-  std::string transform_frame_;   /**< transform frame name */
-  std::string parent_frame_;      /**< parent's frame name */
   Pose6d pose_;                   /**< pose associated with the transform from reference frame to housing frame */
   ros::ServiceClient get_client_; /**< a client for calling the service to get the joint values associated with the
                                      transform */

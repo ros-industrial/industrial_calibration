@@ -15,10 +15,11 @@
 #   - reportlab (http://pypi.python.org/pypi/reportlab)
 
 import argparse
+import os.path
+from reportlab.graphics.shapes import Drawing, Rect, Circle, String
+from reportlab.graphics import renderPM, renderPDF
 from reportlab.lib.units import mm, inch
-from reportlab.lib.colors import black, white
-from reportlab.pdfgen import canvas
-from StringIO import StringIO
+from reportlab.lib.colors import Color, black, white
 
 class calTarget:
   fontName = 'Helvetica'
@@ -30,28 +31,27 @@ class calTarget:
     gridSpacing = 25 if gridSpacing is None else gridSpacing
     self.gridSpacing = gridSpacing*mm if hasattr(gridSpacing, "__len__") else (gridSpacing*mm, gridSpacing*mm)
     
-    self.buffer = StringIO()
-    self.canvas = canvas.Canvas(self.buffer, self.get_pageSize())
-    self.canvas.setPageSize((1800,1250))
+    ps = self.get_pageSize()
+    self.drawing = Drawing(ps[0], ps[1])
     self.draw()
 
-  def save(self, filename):
-    self.canvas.showPage()
-    self.canvas.save()
-    
-    pdf = self.buffer.getvalue()
-    self.buffer.close()
-    
-    with file(filename, 'wb') as f:
-      f.write(pdf)
+  def save(self, filename, dpi):
+    ext = os.path.splitext(filename)[1][1:]
+    if (ext == 'pdf'):
+      renderPDF.drawToFile(self.drawing, filename)
+    elif ext in ('png','jpg'):
+      self.drawing.scale(dpi/72.0, dpi/72.0)
+      renderPM.drawToFile(self.drawing, filename, dpi=dpi, fmt=ext)
+    else:
+      raise NotImplementedError('Unknown file type: '+ext)
 
   def addTextFooter(self, str=None):
     if str is None:
       str = self.description()
   
-    self.canvas.setFont(self.fontName, self.fontSize)
-    self.canvas.setFillColorRGB(0.6,0.6,0.6)
-    self.canvas.drawString(self.margins[0], self.margins[1]/2, str)
+    self.drawing.add(String(self.margins[0], self.margins[1]/2, str,
+                            fontName=self.fontName, fontSize=self.fontSize,
+                            fillColor=Color(0.6,0.6,0.6)))
 
 class checkerTarget(calTarget):
   def get_pageSize(self):
@@ -65,13 +65,13 @@ class checkerTarget(calTarget):
 
   def draw(self):
     off = self.margins
-    self.canvas.setFillColor(black)
     for c in range(0, self.gridCount[0]):
       for r in range(0, self.gridCount[1]):
         if ( (r+c)%2 == 0):
-          xy=(off[0]+c*self.gridSpacing[0], off[1]+r*self.gridSpacing[1])
-          self.canvas.rect(xy[0], xy[1], self.gridSpacing[0], self.gridSpacing[1],
-                           stroke=0, fill=1)
+          xy = (off[0]+c*self.gridSpacing[0], off[1]+r*self.gridSpacing[1])
+          rect = Rect(xy[0], xy[1], self.gridSpacing[0], self.gridSpacing[1],
+                      fillColor = black, strokeWidth = 0)
+          self.drawing.add(rect)
 
 class dotTarget(calTarget):
   def __init__(self, gridCount, gridSpacing=None, dotSize=10):
@@ -89,15 +89,12 @@ class dotTarget(calTarget):
 
   def draw(self):
     off = (self.margins[0]+self.dotSize, self.margins[1]+self.dotSize)
-    self.canvas.setFillColor(black)
-    self.canvas.circle(off[0], off[1], self.dotSize, stroke=1, fill=1)  # big corner dot
+    self.drawing.add(Circle(off[0], off[1], self.dotSize, fillColor=black, strokeWidth=0))  # big corner dot
     for c in range(0, self.gridCount[0]):
       for r in range(0, self.gridCount[1]):
         xy=(off[0]+c*self.gridSpacing[0], off[1]+r*self.gridSpacing[1])
-        self.canvas.setFillColor(black)
-        self.canvas.circle(xy[0], xy[1], self.dotSize/2,stroke=0, fill=1)
-        self.canvas.setFillColor(white)
-        self.canvas.circle(xy[0], xy[1], .02*self.dotSize, stroke=0, fill=1)
+        self.drawing.add(Circle(xy[0], xy[1], self.dotSize/2, fillColor=black, strokeWidth=0))
+        self.drawing.add(Circle(xy[0], xy[1], .03*self.dotSize, fillColor=white, strokeWidth=0))
 
 def parse_args():
   parser = argparse.ArgumentParser(description='Generate calibration target')
@@ -106,8 +103,9 @@ def parse_args():
   parser.add_argument('grid_Y', type=int, help='# of grid points in Y-direction')
   parser.add_argument('--spacing', type=float, default=25, help='Grid Spacing (mm)')
   parser.add_argument('--dotSize', type=float, default=10, help='Dot Size (mm)')
-  parser.add_argument('--addFooter', type=int, default=1, help='add/remove footer')
-  parser.add_argument('-o',dest='filename',type=str, default='calibrationTarget.pdf', help='output filename')
+  parser.add_argument('--dpi', type=int, default=300, help='dots per inch (pixel formats only)')
+  parser.add_argument('--addFooter', action='store_true', help='add footer text')
+  parser.add_argument('-o',dest='filename',type=str, default='calibrationTarget.pdf', help='output filename (supports .pdf, .png, .jpg, ...)')
   return parser.parse_args()
 
 if __name__=="__main__":
@@ -117,6 +115,6 @@ if __name__=="__main__":
   elif (args.type == 'dot'):
     target = dotTarget( (args.grid_X, args.grid_Y), gridSpacing=args.spacing, dotSize=args.dotSize)
     
-  if(args.addFooter == 1):
+  if(args.addFooter):
     target.addTextFooter()
-  target.save(args.filename)
+  target.save(args.filename, args.dpi)

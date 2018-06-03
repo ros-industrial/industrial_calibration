@@ -5,7 +5,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <industrial_extrinsic_cal/ros_target_display.hpp>
 
-ros::Publisher vis_pub;
+std::vector<ros::Publisher> vis_pubs;
 visualization_msgs::Marker dots;
 visualization_msgs::Marker board;
 visualization_msgs::Marker zero_dot;
@@ -15,7 +15,8 @@ void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> targe
 {
   ros::NodeHandle pnh("~");
   std::string myns = target->target_name_ + "_ns";
-  vis_pub = pnh.advertise<visualization_msgs::MarkerArray>(target->target_name_.c_str(),0,true);
+  ros::Publisher vis_pub = pnh.advertise<visualization_msgs::MarkerArray>(target->target_name_.c_str(),0,true);
+  vis_pubs.push_back(vis_pub);
   double diameter       = target->circle_grid_parameters_.circle_diameter;
   double target_length  = (target->circle_grid_parameters_.pattern_cols+1) *  target->circle_grid_parameters_.spacing;
   double target_width   = (target->circle_grid_parameters_.pattern_rows+1) *  target->circle_grid_parameters_.spacing;
@@ -85,8 +86,8 @@ void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> targe
   zero_dot.pose.orientation.y = 0.0;
   zero_dot.pose.orientation.z = 0.0;
   zero_dot.pose.orientation.w = 1.0;
-  zero_dot.scale.x = diameter*1.4;
-  zero_dot.scale.y = diameter*1.4;
+  zero_dot.scale.x = diameter*3.0;
+  zero_dot.scale.y = diameter*3.0;
   zero_dot.scale.z = 0.001;
   zero_dot.color.a = 1.0; // Don't forget to set the alpha!
   zero_dot.color.r = 0.01;
@@ -94,8 +95,8 @@ void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> targe
   zero_dot.color.b = 0.01;
 
   target_geom.markers.push_back(board);
-  target_geom.markers.push_back(zero_dot);
   target_geom.markers.push_back(dots);
+  target_geom.markers.push_back(zero_dot);
 
   vis_pub.publish(target_geom);
 }

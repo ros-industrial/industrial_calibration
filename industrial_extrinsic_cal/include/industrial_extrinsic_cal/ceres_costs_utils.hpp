@@ -195,6 +195,112 @@ inline void eTransformPoint(const T E[6], const T point[3], T t_point[3])
   t_point[2] = t_point[2] + E[5];
 }
 
+/*! \brief ceres compliant function to apply dh-parameters to transform a point down the link
+ *  @param a     link x axis length
+ *  @param alpha link twist around x axis
+ *  @param d     link z axis length       (joint valure for prismatic joints) 
+ *  @param theta link twist around z axis (joint value for rotary joints)
+ *  @param point, the original point
+ *  @param t_point, the transformed point
+ */
+template <typename T>
+inline void dhTransformPoint(const T a, const T alpha, const T d, const T theta, const T point[3], T t_point[3]);
+template <typename T>
+inline void dhTransformPoint(const T a, const T alpha, const T d, const T theta, const T point[3], T t_point[3])
+{
+  T M[3][4];
+  T st = sin(theta);
+  T ct = cos(theta);
+  T sa = sin(alpha);
+  T ca = cos(alpha);
+  M[0][0] = ct;      M[0][1] = -st*ca; M[0][2] =  st*sa; M[0][3] = a*ct;
+  M[1][0] = st;      M[1][1] =  ct*ca; M[1][2] = -ct*sa; M[1][3] = a*st;
+  M[2][0] = T(0.0);  M[2][1] =  sa;    M[2][2] =  ca;    M[2][3] = d;
+
+  t_point[0] = M[0][0]*point[0] + M[0][1]*point[1] + M[0][2]*point[2] + M[0][3];
+  t_point[1] = M[1][0]*point[0] + M[1][1]*point[1] + M[1][2]*point[2] + M[1][3];
+  t_point[1] = M[2][0]*point[0] + M[2][1]*point[1] + M[2][2]*point[2] + M[2][3];
+}
+
+/*! \brief ceres compliant function to apply dh-parameters to transform a Point3d down the link
+ *  @param a     link x axis length
+ *  @param alpha link twist around x axis
+ *  @param d     link z axis length       (joint valure for prismatic joints) 
+ *  @param theta link twist around z axis (joint value for rotary joints)
+ *  @param point, the original point
+ *  @param t_point, the transformed point
+ */
+template <typename T>
+inline void dhTransformPoint3d(const T a, const T alpha, const T d, const T theta, const Point3d& point_, T t_point[3]);
+template <typename T>
+inline void dhTransformPoint3d(const T a, const T alpha, const T d, const T theta, const Point3d& point_, T t_point[3])
+{
+  T point[3];
+  point[0] = T(point_.x);
+  point[1] = T(point_.y);
+  point[2] = T(point_.z);
+  dhTransformPoint(a, alpha, d, theta, point, t_point); // use subroutine call rather than duplicate code
+}
+
+/*! \brief ceres compliant function to apply dh-parameters to transform a point up the link
+ *  @param a     link x axis length
+ *  @param alpha link twist around x axis
+ *  @param d     link z axis length       (joint valure for prismatic joints) 
+ *  @param theta link twist around z axis (joint value for rotary joints)
+ *  @param point, the original point
+ *  @param t_point, the transformed point
+ */
+template <typename T>
+inline void dhInvTransformPoint(const T a, const T alpha, const T d, const T theta, const T point[3], T t_point[3]);
+template <typename T>
+inline void dhInvTransformPoint(const T a, const T alpha, const T d, const T theta, const T point[3], T t_point[3])
+{
+  T M[3][4];
+  T st = sin(theta);
+  T ct = cos(theta);
+  T sa = sin(alpha);
+  T ca = cos(alpha);
+
+
+  /* original M matrix
+  M[0][0] = ct;   M[0][1] = -st*ca; M[0][2] =  st*sa; M[0][3] = a*ct;
+  M[1][0] = st;   M[1][1] =  ct*ca; M[1][2] = -ct*sa; M[1][3] = a*st;
+  M[2][0] = 0.0;  M[2][1] =  sa;    M[2][2] =  ca;    M[2][3] = d;
+
+  The inverse is the transpose of the rotation part, and if M is composed of four vectors M=[R | v] = [n | o | a| v] then
+  the upper 3x3 of M_inv is the transpose of the upper 3x3 of M and
+  the last column of M_inv = [  -n^t v ; -o^t v ; a^t v ]
+  */
+
+  M[0][0] =    ct;    M[0][1] =  st;    M[0][2] =  T(0.0);  M[0][3] = -(  ct   * a*ct   +  st    * a*st  + T(0.0) * d);
+  M[1][0] = -st*ca;   M[1][1] =  ct*ca; M[1][2] =  sa;      M[1][3] = -(-st*ca * a*ct   +  ct*ca * a*st  + sa     * d);
+  M[2][0] =  st*sa;   M[2][1] = -ct*sa; M[2][2] =  ca;      M[2][3] = -( st*sa * a*ct   + -ct*sa * a*st  + ca     * d);
+
+  t_point[0] = M[0][0]*point[0] + M[0][1]*point[1] + M[0][2]*point[2] + M[0][3];
+  t_point[1] = M[1][0]*point[0] + M[1][1]*point[1] + M[1][2]*point[2] + M[1][3];
+  t_point[1] = M[2][0]*point[0] + M[2][1]*point[1] + M[2][2]*point[2] + M[2][3];
+}
+
+/*! \brief ceres compliant function to apply dh-parameters to transform a Point3d
+ *  @param a     link x axis length
+ *  @param alpha link twist around x axis
+ *  @param d     link z axis length       (joint valure for prismatic joints) 
+ *  @param theta link twist around z axis (joint value for rotary joints)
+ *  @param point, the original point
+ *  @param t_point, the transformed point
+ */
+template <typename T>
+inline void dhInvTransformPoint3d(const T a, const T alpha, const T d, const T theta, const Point3d& point_, T t_point[3]);
+template <typename T>
+inline void dhInvTransformPoint3d(const T a, const T alpha, const T d, const T theta, const Point3d& point_, T t_point[3])
+{
+  T point[3];
+  point[0] = T(point_.x);
+  point[1] = T(point_.y);
+  point[2] = T(point_.z);
+  dhInvTransformPoint(a, alpha, d, theta, point, t_point); // use subroutine call rather than duplicate code
+}
+
 /*! \brief ceres compliant function to apply a pose to transform a point
  *  @param pose, contains both rotation and translation in a structure
  *  @param point, the original point
@@ -3048,6 +3154,125 @@ public:
   double oy_; /** observed y location of object in 3D data */
   double oz_; /** observed z location of object in 3D data */
   Point3d point_; /** point expressed in target coordinates */
+};
+
+  /* @brief used to calibrate a camera mounted on wrist and the joint offsets and the pose of the target in a workcell */
+class  CameraOnWristWithJointOffsets
+{
+public:
+  CameraOnWristWithJointOffsets(double ob_x, double ob_y,
+				std::vector<DHParameters> DH,
+				Pose6d& target_IT,
+				Pose6d& robot_IT,
+				double fx, double fy,
+				double cx, double cy,
+				double k1, double k2, double k3,
+				double p1, double p2,
+				Point3d point) :
+    ox_(ob_x), oy_(ob_y), 
+    target_IT_(target_IT),
+    robot_IT_(robot_IT),
+    fx_(fx), fy_(fy), cx_(cx), cy_(cy),
+    k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2),
+    point_(point)
+  {
+    N_joints_ = DH.size();
+    for(int i=0; i<N_joints_; i++){
+      DH_.push_back(DH[i]);
+    }
+  }
+
+  template<typename T>
+  bool operator()(	    const T* const c_p1,  /** target extriniscs [6] */
+			    const T* const c_p2,  /** camera extrinsics [6] */
+			    const T* const c_p3,  /** joint offsets, one for each joint */
+			    T* residual) const
+  {
+    const T *target_T(& c_p1[0]); // extract target's extrinsics
+    const T *camera_T(& c_p2[0]); // extract camera's extrinsics
+
+    T target_mt_point[3];  /** point in frame of target's mounting frame */
+    T ref_point[3];        /** point in frame of ref_frame               */
+    T camera_point[3];     /** point in frame of camera's optical frame  */
+    T linki_point[3];      /** point in linki frame                      */
+    T link_ip1_point[3];   /** point in link i+1 frame                   */
+
+    eTransformPoint3d(target_T, point_, target_mt_point);      // point in target's mounting_frame
+    poseTransformPoint(target_IT_, target_mt_point, ref_point); // point in ref_frame
+    poseTransformPoint(robot_IT_, ref_point, linki_point);     // point in the robot base frame 
+    for(int i=0;i<N_joints_;i++){                              // transform point up each link until it reaches the camera
+      T a(DH_[i].a);
+      T alpha(DH_[i].alpha);
+      T d(DH_[i].d);
+      T theta(DH_[i].theta);
+      dhInvTransformPoint(a, alpha, d, theta, linki_point, link_ip1_point);
+      linki_point[0] = link_ip1_point[0];
+      linki_point[1] = link_ip1_point[1];
+      linki_point[2] = link_ip1_point[2];
+    }
+    eTransformPoint(camera_T, linki_point, camera_point);    // point in camera's optical frame
+
+    /** compute residual */
+    T fx(fx_);
+    T fy(fy_);
+    T cx(cx_);
+    T cy(cy_);
+    T k1(k1_);
+    T k2(k2_);
+    T k3(k3_);	
+    T p1(p1_);
+    T p2(p2_);
+    T ox(ox_);
+    T oy(oy_);
+    cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+
+    return true;
+  } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+  static ceres::CostFunction* Create(double ob_x, double ob_y,
+				std::vector<DHParameters> DH,
+				Pose6d& target_IT,
+				Pose6d& robot_IT,
+				double fx, double fy,
+				double cx, double cy,
+				double k1, double k2, double k3,
+				double p1, double p2,
+				Point3d point) 
+
+  {
+    return (new ceres::AutoDiffCostFunction<CameraOnWristWithJointOffsets, 2, 6, 6, 5 >
+	    (
+	     new CameraOnWristWithJointOffsets(ob_x, ob_y,
+					       DH,
+					       target_IT,
+					       robot_IT,
+					       fx, fy,
+					       cx,  cy,
+					       k1,  k2,  k3,
+					       p1,  p2,
+					       point) 
+	     )
+	    );
+  }
+  double ox_; /** observed x location of object in 3D data */
+  double oy_; /** observed y location of object in 3D data */
+  Point3d point_; /** point expressed in target coordinates */
+  int N_joints_;
+  // DH parameters for robot with up to 12 joints
+  std::vector<DHParameters> DH_; // link dh parameters
+  Pose6d target_IT_; // transform from target mounting point to ref_frame
+  Pose6d robot_IT_; // transform from base of robot to ref_frame
+  double fx_; /*!< known focal length of camera in x */
+  double fy_; /*!< known focal length of camera in y */
+  double cx_; /*!< known optical center of camera in x */
+  double cy_; /*!< known optical center of camera in y */
+  double k1_; /*!< known radial distorition k1 */
+  double k2_; /*!< known radial distorition k2 */
+  double k3_; /*!< known radial distorition k3 */
+  double p1_; /*!< known decentering distorition p1 */
+  double p2_; /*!< known decentering distorition p2 */
 };
 
 

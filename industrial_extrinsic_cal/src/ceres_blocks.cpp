@@ -255,7 +255,7 @@ bool CeresBlocks::addMovingCamera(shared_ptr<Camera> camera_to_add, int scene_id
   temp_camera->setTransformInterface(camera_to_add->getTransformInterface());
   temp_camera->setTIReferenceFrame(reference_frame_);
   temp_camera->camera_observer_ = camera_to_add->camera_observer_;
-  temp_camera->intermediate_frame_ = camera_to_add->intermediate_frame_;
+  temp_camera->intermediate_camera_frame_ = camera_to_add->intermediate_camera_frame_;
 
   temp_moving_camera->cam = temp_camera;
   temp_moving_camera->scene_id = scene_id;
@@ -491,6 +491,7 @@ void CeresBlocks::pushTransforms()
 {
   BOOST_FOREACH (shared_ptr<Camera> cam, static_cameras_)
   {
+    ROS_INFO("pushing transform for %s", cam->camera_name_.c_str());
     cam->pushTransform();
   }
   BOOST_FOREACH (shared_ptr<MovingCamera> mcam, moving_cameras_)

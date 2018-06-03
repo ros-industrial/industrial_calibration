@@ -63,6 +63,7 @@ namespace industrial_extrinsic_cal
       DistortedCameraFinder,
       RailICalNoDistortion,
       RangeSensorExtrinsicCal,
+      CameraOnWristWithJointOffsets,
       NullCostType
     };
   }// end of namespace cost_functions

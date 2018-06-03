@@ -91,7 +91,6 @@ shared_ptr<Camera> parseSingleCamera(const Node& node)
     if (!parseString(node, "image_topic", temp_topic)) ROS_ERROR("Can't read image_topic");
     if (!parseString(node, "camera_optical_frame", camera_optical_frame)) ROS_ERROR("Can't read camera_optical_frame");
     if (!parseString(node, "transform_interface", transform_interface)) ROS_ERROR("Can't read transform_interface");
-
     if (parseString(node, "left_stereo_pair_name", temp_left_stereo_camera)){
       temp_is_right_stereo_camera = true;
     }
@@ -249,40 +248,44 @@ shared_ptr<TransformInterface> parseTransformInterface(const Node& node, std::st
   }
   else if (name == std::string("ros_camera_lti"))
   {
-    temp_ti = boost::make_shared<ROSCameraListenerTransInterface>(frame);
+    if (!parseString(node, "camera_mounting_frame", camera_mounting_frame)) ROS_ERROR("Can't read camera_mounting_frame");
+    temp_ti = boost::make_shared<ROSCameraListenerTransInterface>(frame, camera_mounting_frame);
   }
   else if (name == std::string("ros_camera_bti"))
   {
-    temp_ti = boost::make_shared<ROSCameraBroadcastTransInterface>(frame);
+    if (!parseString(node, "camera_mounting_frame", camera_mounting_frame)) ROS_ERROR("Can't read camera_mounting_frame");
+    temp_ti = boost::make_shared<ROSCameraBroadcastTransInterface>(frame, camera_mounting_frame);
   }
   else if (name == std::string("ros_camera_housing_lti"))
   {
+    if (!parseString(node, "camera_mounting_frame", camera_mounting_frame)) ROS_ERROR("Can't read camera_mounting_frame");
     if (!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
-    temp_ti = boost::make_shared<ROSCameraHousingListenerTInterface>(frame, camera_housing_frame);
+    temp_ti = boost::make_shared<ROSCameraHousingListenerTInterface>(frame, camera_mounting_frame, camera_housing_frame);
   }
   else if (name == std::string("ros_camera_housing_bti"))
   {
     if (!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
-    if (!parseString(node, "camera_mounting_frame", camera_mounting_frame))
-      ROS_ERROR("Can't read camera_mounting_frame");
-    temp_ti = boost::make_shared<ROSCameraHousingBroadcastTInterface>(frame, camera_housing_frame,
-                                                                      camera_mounting_frame, pose);
+    if (!parseString(node, "camera_mounting_frame", camera_mounting_frame)) ROS_ERROR("Can't read camera_mounting_frame");
+    temp_ti = boost::make_shared<ROSCameraHousingBroadcastTInterface>(frame, camera_mounting_frame, camera_housing_frame, pose);
   }
   else if (name == std::string("ros_camera_housing_cti"))
   {
     if (!parseString(node, "camera_housing_frame", camera_housing_frame)) ROS_ERROR("Can't read camera_housing_frame");
-    if (!parseString(node, "camera_mounting_frame", camera_mounting_frame))
-      ROS_ERROR("Can't read camera_mounting_frame");
-    temp_ti = boost::make_shared<ROSCameraHousingCalTInterface>(frame, camera_housing_frame, camera_mounting_frame);
+    if (!parseString(node, "camera_mounting_frame", camera_mounting_frame)) ROS_ERROR("Can't read camera_mounting_frame");
+    temp_ti = boost::make_shared<ROSCameraHousingCalTInterface>(frame, camera_mounting_frame, camera_housing_frame );
   }
   else if (name == std::string("ros_scti"))
   {
-    if (!parseString(node, "parent_frame", camera_mounting_frame)) ROS_ERROR("Can't read parent_frame");
-    temp_ti = boost::make_shared<ROSSimpleCalTInterface>(frame, camera_mounting_frame);
+    std::string parent_frame;
+    if (!parseString(node, "parent_frame", parent_frame)) ROS_ERROR("Can't read parent_frame");
+    temp_ti = boost::make_shared<ROSSimpleCalTInterface>(frame, parent_frame);
   }
   else if (name == std::string("ros_camera_scti"))
   {
-    if (!parseString(node, "parent_frame", camera_mounting_frame)) ROS_ERROR("Can't read parent_frame");
+    if (!parseString(node, "camera_mounting_frame", camera_mounting_frame)){
+      ROS_ERROR("Can't read camera_mounting_frame");
+      ROS_ERROR("parse error ros_camera_scti used to use param parent_frame, now uses camera_mounting_frame");
+    }
     temp_ti = boost::make_shared<ROSSimpleCameraCalTInterface>(frame, camera_mounting_frame);
   }
   else if (name == std::string("default_ti"))

@@ -169,7 +169,7 @@ target_link_libraries(
 add_executable(camera_observer_scene_trigger    src/nodes/camera_observer_scene_trigger.cpp)
 add_executable(manual_calt_adjust               src/nodes/manual_calt_adjuster.cpp)
 add_executable(mutable_joint_state_publisher    src/nodes/mutable_joint_state_publisher.cpp)
-add_executable(nist_analysis                    src/nodes/nist_analysis.cpp)
+#add_executable(nist_analysis                    src/nodes/nist_analysis.cpp)
 add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
 add_executable(service_node                     src/nodes/calibration_service.cpp)
 add_executable(trigger_service                  src/nodes/ros_scene_trigger_server.cpp)
@@ -190,7 +190,7 @@ add_dependencies(target_display                   ${catkin_EXPORTED_TARGETS} ${i
 target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY} ${CERES_LIBRARIES})
 target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES})
 target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY})
-target_link_libraries(nist_analysis industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+#target_link_libraries(nist_analysis industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(target_display industrial_extrinsic_cal ${CERES_LIBRARIES})
@@ -206,7 +206,7 @@ install(
     industrial_extrinsic_cal
     manual_calt_adjust
     mutable_joint_state_publisher
-    nist_analysis
+#    nist_analysis
     ros_robot_trigger_action_service
     service_node
     trigger_service
