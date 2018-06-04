@@ -177,7 +177,7 @@ add_executable(trigger_service                  src/nodes/ros_scene_trigger_serv
 add_executable(range_excal                      src/nodes/range_camera_excal.cpp)
 add_executable(rangeNmono                       src/nodes/rangeNmono_excal.cpp)
 add_executable(target_display                   src/nodes/target_display_node.cpp)
-add_executable(position_validation		src/chkIfpntsInPic.cpp)
+add_executable(position_validation		src/chkIfpntsInPic.cpp src/conical_pose_generator.cpp)
 
 
 add_dependencies(camera_observer_scene_trigger    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
@@ -188,6 +188,7 @@ add_dependencies(trigger_service                  ${catkin_EXPORTED_TARGETS} ${i
 add_dependencies(range_excal                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(rangeNmono                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(target_display                   ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+add_dependencies(position_validation               ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 
 target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY} ${CERES_LIBRARIES})
 target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES})
@@ -200,7 +201,7 @@ target_link_libraries(target_display industrial_extrinsic_cal ${CERES_LIBRARIES}
 target_link_libraries(trigger_service ${catkin_LIBRARIES})
 target_link_libraries(range_excal industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(rangeNmono industrial_extrinsic_cal ${CERES_LIBRARIES})
-
+target_link_libraries(position_validation ${catkin_LIBRARIES} industrial_extrinsic_cal)
 
 install(
   TARGETS

@@ -196,7 +196,7 @@ int parseTargetPoints(const Node& node, std::vector<Point3d>& points)
     temp_pnt3d.z = temp_pnt[2];
     points.push_back(temp_pnt3d);
   }
-  return (node.size());
+   (node.size());
 }
 
 }  // end of industrial_extrinsic_cal namespace
