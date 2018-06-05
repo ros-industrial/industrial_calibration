@@ -94,27 +94,46 @@ public:
       }	// end of for each trajectory point
   } // end of execute
 
-  void goStart()
+  void gotoPose(int index)
   {
     industrial_extrinsic_cal::robot_joint_values_triggerGoal goal;
     client_->waitForServer();
     // go back to beginning
     goal.joint_values.clear();
-    for (int j = 0; j < (int)joint_trajectory_data[0].position.size(); j++)
-      {
-	goal.joint_values.push_back(joint_trajectory_data[0].position[j]);
-      }
+    for (int j = 0; j < (int)joint_trajectory_data[index].position.size(); j++)
+    {
+      goal.joint_values.push_back(joint_trajectory_data[index].position[j]);
+    }
     ROS_INFO("SENDING GOAL");
     client_->sendGoal(goal);
     do
-      {
-	client_->waitForResult(ros::Duration(5.0));
-	ROS_INFO("Current State: %s", client_->getState().toString().c_str());
-      } while (client_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED &&
-	       client_->getState() != actionlib::SimpleClientGoalState::ABORTED);
+    {
+      client_->waitForResult(ros::Duration(5.0));
+      ROS_INFO("Current State: %s", client_->getState().toString().c_str());
+    } while (client_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED &&
+             client_->getState() != actionlib::SimpleClientGoalState::ABORTED);
 
-  } // end of goStart()
-
+  } // end of gotoPose()
+  void goNext()
+  {
+    current_pose_index = (current_pose_index +1) % joint_trajectory_data.size();
+    gotoPose(current_pose_index);
+  } // end of goNext
+  void goPrevious()
+  {
+    current_pose_index = (current_pose_index -1) % joint_trajectory_data.size();
+    gotoPose(current_pose_index);
+  } // end of goNext
+  void goEnd()
+  {
+    current_pose_index = joint_trajectory_data.size()-1;
+    gotoPose(current_pose_index);
+  }
+  void goStart()
+  {
+   current_pose_index = 0;
+   gotoPose(current_pose_index);
+  }
   void new_joint_scene(const sensor_msgs::JointState& state)
   {
     write_joint_scene( state.position);
@@ -124,8 +143,10 @@ public:
   std::string ifile_;
   std::ofstream ofile_;
   std::string joints_topic_name_;
+  int current_pose_index; // index into joint_trajectory_data where robot is now
   std::vector< sensor_msgs::JointState > joint_trajectory_data;
   std::string motion_server_name_;
+
 private:
   RobotJointValuesClient* client_;
   void write_header() 
@@ -157,8 +178,8 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "joint_traj");
   ros::NodeHandle nh("~");
 
-  nh.param<std::string>("input_file", in_filename, "joint_traj.yaml");
-  nh.param<std::string>("output_file", out_filename, "joint_traj2.yaml");
+  nh.param<std::string>("joint_ifile", in_filename, "joint_traj.yaml");
+  nh.param<std::string>("joint_ifile", out_filename, "joint_traj2.yaml");
   nh.param<std::string>("joints_topic", joints_topic_name, "/joint_states");
   nh.param<std::string>("motion_server", motion_server_name, "rosRobotSceneTrigger_joint_values");
   
@@ -169,13 +190,19 @@ int main(int argc, char** argv)
   while (ros::ok())
   {
     bool capture_scene = false;
-    bool quit = false;
-    bool execute = false;
-    bool gostart = false;
+    bool quit          = false;
+    bool execute       = false;
+    bool gostart       = false;
+    bool gonext        = false;
+    bool goprevious    = false;
+    bool goend         = false;
     nh.getParam("capture_scene", capture_scene);
     nh.getParam("quit", quit);
     nh.getParam("execute", execute);
     nh.getParam("gostart", gostart);
+    nh.getParam("gonext",gonext);
+    nh.getParam("goprevious",goprevious);
+    nh.getParam("goend",goend);
     if (quit)
       break;
     else if (capture_scene)
@@ -193,14 +220,25 @@ int main(int argc, char** argv)
       }
       else
       {
-          traj.new_joint_scene(*joints);
+        traj.new_joint_scene(*joints);
       }
     }
-    else if (execute)
-      {
+    else if (execute){
       nh.setParam("execute", false);
-	traj.execute();
-      }
+      traj.execute();
+    }
+    else if(gostart){
+      nh.setParam("gostart", false);
+      traj.goStart();
+    }
+    else if(gonext){
+      nh.setParam("gonext", false);
+      traj.goNext();
+    }
+    else if(goprevious){
+      nh.setParam("goprevius", false);
+      traj.goPrevious();
+    }
     else if(gostart){
       nh.setParam("gostart", false);
       traj.goStart();
