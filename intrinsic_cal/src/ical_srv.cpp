@@ -50,31 +50,37 @@ using industrial_extrinsic_cal::CeresBlocks;
 using industrial_extrinsic_cal::Roi;
 using industrial_extrinsic_cal::CameraObservations;
 using industrial_extrinsic_cal::Point3d;
-
-
+using industrial_extrinsic_cal::Pose6d;
+using industrial_extrinsic_cal::P_BLOCK;
 
 class icalServiceNode
 {
 public:
   icalServiceNode(const  ros::NodeHandle& nh)
-    :nh_(nh), P_(NULL), problem_initialized_(false), total_observations_(0)
+    :nh_(nh), P_(NULL), problem_initialized_(false), total_observations_(0), scene_(0)
   {
 
     std::string nn = ros::this_node::getName();
     ros::NodeHandle priv_nh("~");
 
     // load cameras and targets
+    
     priv_nh.getParam("yaml_file_path", yaml_file_path_);
-    priv_nh.getParam("camera_file", camera_file_);
-    priv_nh.getParam("target_file", target_file_);
+    std::string camera_file, target_file;
+    priv_nh.getParam("camera_file", camera_file);
+    priv_nh.getParam("target_file", target_file);
+    camera_file_ = yaml_file_path_ + camera_file ;
+    target_file_ = yaml_file_path_ + target_file ;
     ROS_INFO("yaml_file_path: %s", yaml_file_path_.c_str());
-    ROS_INFO("camera_file: %s", camera_file_.c_str());
-    ROS_INFO("target_file: %s", target_file_.c_str());
+    ROS_INFO("camera_file: %s",  camera_file_.c_str());
+    ROS_INFO("target_file: %s",  target_file_.c_str());
     if(!load_camera()){
       ROS_ERROR("can't load the camera from %s", (yaml_file_path_+camera_file_).c_str());
+      exit(1);
     }
     if(!load_target()){
       ROS_ERROR("can't load the target from %s", (yaml_file_path_+target_file_).c_str());
+      exit(1);
     }
 
     // load cameras, targets and intiialize ceres blocks
@@ -93,15 +99,15 @@ public:
   {
     
     // add one block for each static camera
-    // add one block with scene=0 for moving cameras (new set of extrinsic params for each scene_id)
+    // add one block with scene=0 for moving cameras (new set of extrinsic params for each scene_)
     // add one block for each static target
-    // add one block with each scene=0 for moving targets (new set of extrinsic params for each scene_id
+    // add one block with each scene=0 for moving targets (new set of extrinsic params for each scene_
     for (int i = 0; i < (int)all_cameras_.size(); i++)
       {
 	if (all_cameras_[i]->is_moving_)
 	  {
-	    int scene_id = 0;
-	    ceres_blocks_.addMovingCamera(all_cameras_[i], scene_id);
+	    int scene_ = 0;
+	    ceres_blocks_.addMovingCamera(all_cameras_[i], scene_);
 	  }
 	else
 	  {
@@ -117,8 +123,8 @@ public:
 	}
 	if (all_targets_[i]->is_moving_)
 	  {
-	    int scene_id = 0;
-	    ceres_blocks_.addMovingTarget(all_targets_[i], scene_id);
+	    int scene_ = 0;
+	    ceres_blocks_.addMovingTarget(all_targets_[i], scene_);
 	  }
 	else
 	  {
@@ -135,6 +141,7 @@ public:
 	    all_cameras_[i]->left_stereo_camera_ = ceres_blocks_.getCameraByName(all_cameras_[i]->left_stereo_camera_name_);
 	  }
       }
+    ceres_blocks_.setReferenceFrame(all_cameras_[0]->transform_interface_->getTransformFrame());
   }; // end init_blocks()
 
   bool load_camera() 
@@ -167,16 +174,22 @@ public:
     P_ = new ceres::Problem;
     problem_initialized_ = true;
     total_observations_  = 0;
+    scene_=0;
     ceres_blocks_.clearCamerasTargets(); 
+    init_blocks();
   }
 
   bool observationCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
-    if(!problem_initialized_){
+    if(problem_initialized_ != true ){
       ROS_ERROR("must calll start service");
       return(false);
     }
 
+    for(int i=0; i<all_targets_.size(); i++){
+      all_targets_[i]->pullTransform();
+    }
+    
 
     for(int i=0; i<all_cameras_.size(); i++){
       // set the roi to the whole image
@@ -189,7 +202,7 @@ public:
       // get observations
       all_cameras_[i]->camera_observer_->clearTargets();
       all_cameras_[i]->camera_observer_->clearObservations();
-      industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::CameraReprjErrorWithDistortion;
+      industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::CameraReprjErrorWithDistortionPK;
       int total_pts=0;
       for(int j=0;j<all_targets_.size();j++){ // add all targets to the camera
 	all_cameras_[i]->camera_observer_->addTarget(all_targets_[j], roi, cost_type);
@@ -210,28 +223,50 @@ public:
 	}
       else
 	{
+	  // TODO listen to pose on TF
+	  Pose6d pose = camera_observations[0].target->pose_;
+	  pose.show("pose of target found by listening");
+
 	  // add a new cost to the problem for each observation
 	  CostFunction* cost_function[num_observations];  
 	  total_observations_ += num_observations;
-	  for (int i = 0; i < num_observations; i++)
+	  ceres_blocks_.addMovingTarget(camera_observations[0].target, scene_);
+	  for (int k = 0; k < num_observations; k++)
 	    {
-	      shared_ptr<Target> target = camera_observations[i].target;
-	      double image_x = camera_observations[i].image_loc_x;
-	      double image_y = camera_observations[i].image_loc_y;
-	      Point3d point  = target->pts_[i];
-	      cost_function[i] = industrial_extrinsic_cal::CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y, target->circle_grid_parameters_.circle_diameter, point);
-	      P_->AddResidualBlock(cost_function[i], NULL, all_cameras_[i]->camera_parameters_.pb_intrinsics, target->pose_.pb_pose);
+	      shared_ptr<Target> target = camera_observations[k].target;
+	      double image_x = camera_observations[k].image_loc_x;
+	      double image_y = camera_observations[k].image_loc_y;
+	      Point3d point  = target->pts_[k];
+	      P_BLOCK target_pb  = ceres_blocks_.getMovingTargetPoseParameterBlock(target->target_name_,scene_);
+	      P_BLOCK extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(all_cameras_[i]->camera_name_);
+	      cost_function[k] = industrial_extrinsic_cal::CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y, target->circle_grid_parameters_.circle_diameter, point);
+	      P_->AddResidualBlock(cost_function[k], NULL, target_pb, extrinsics);
 	    }  // for each observation at this camera_location
-	}    // for each camera_location
-    }
-  }; // end observation service
+	} // end of else (there are some observations to add)
+    }// for each camera
+
+    ROS_INFO("now have %d observations after scene %d",total_observations_, scene_);
+    scene_++;
+
+  }; // end observation service};
 
   bool runCallBack( intrinsic_cal::ical_srv_solveRequest &req, intrinsic_cal::ical_srv_solveResponse &res)
   {
+    
+    ROS_INFO("initial values");
+    for(int i=0; i<all_cameras_.size(); i++){
+      ROS_INFO("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]",
+	       all_cameras_[i]->camera_parameters_.focal_length_x, all_cameras_[i]->camera_parameters_.center_x,
+	       all_cameras_[i]->camera_parameters_.focal_length_y, all_cameras_[i]->camera_parameters_.center_y);
+      ROS_INFO("distortion data: [ %lf,  %lf,  %lf,  %lf,  %lf]", all_cameras_[i]->camera_parameters_.distortion_k1,
+	       all_cameras_[i]->camera_parameters_.distortion_k2, all_cameras_[i]->camera_parameters_.distortion_p1,
+	       all_cameras_[i]->camera_parameters_.distortion_p2, all_cameras_[i]->camera_parameters_.distortion_k3);
+    }
+
 
     // check for obvious errors
-    if(!problem_initialized_){
-      ROS_ERROR("must calll start service");
+    if(problem_initialized_==false){
+      ROS_ERROR("must call start service");
       return(false);
     }
     if(total_observations_ == 0){
@@ -239,6 +274,7 @@ public:
       return(false);
     }
 
+    ROS_INFO("calling solve on the problem");
     Solver::Options options;
     Solver::Summary summary;
     options.linear_solver_type = ceres::DENSE_SCHUR;
@@ -250,9 +286,6 @@ public:
 	double initial_cost = summary.initial_cost / total_observations_;
 	double final_cost = summary.final_cost / total_observations_;
 	ROS_INFO("Problem solved, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
-	for(int j=0;j<all_targets_.size();j++){
-	  all_targets_[j]->pose_.show("target_pose");
-	}
 	for(int i=0; i<all_cameras_.size(); i++){
 	  ROS_INFO("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]",
 		   all_cameras_[i]->camera_parameters_.focal_length_x, all_cameras_[i]->camera_parameters_.center_x,
@@ -282,6 +315,7 @@ public:
 
   bool saveCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
+    ROS_ERROR("inside saveCallBack()");
     for(int i=0; i<all_cameras_.size(); i++){
       all_cameras_[i]->camera_observer_->pushCameraInfo(
 							all_cameras_[i]->camera_parameters_.focal_length_x, all_cameras_[i]->camera_parameters_.focal_length_y,
@@ -307,6 +341,7 @@ private:
   ceres::Problem *P_;
   bool problem_initialized_;
   int total_observations_;
+  int scene_;
 };// end of class icalServiceNode
 
 int main(int argc, char** argv)
