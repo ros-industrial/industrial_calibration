@@ -177,13 +177,22 @@ public:
     scene_=0;
     ceres_blocks_.clearCamerasTargets(); 
     init_blocks();
+    res.message = std::string("Intrinsic calibration service started");
+    res.success = true;
+    return(true);
   }
 
   bool observationCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
+    char msg[100];
+    
+
     if(problem_initialized_ != true ){
-      ROS_ERROR("must calll start service");
-      return(false);
+      ROS_ERROR("must call start service");
+      res.success = false;
+      sprintf(msg, "must call start service");
+      res.message = std::string(msg);
+      return(true);
     }
 
     for(int i=0; i<all_targets_.size(); i++){
@@ -248,11 +257,17 @@ public:
     ROS_INFO("now have %d observations after scene %d",total_observations_, scene_);
     scene_++;
 
+    sprintf(msg, "Ical_srv now has %d observations after scene %d",total_observations_, scene_);
+    res.message = std::string(msg);
+    res.success = true;
+    return(true);
+
+
   }; // end observation service};
 
   bool runCallBack( intrinsic_cal::ical_srv_solveRequest &req, intrinsic_cal::ical_srv_solveResponse &res)
   {
-    
+    char msg[100];
     ROS_INFO("initial values");
     for(int i=0; i<all_cameras_.size(); i++){
       ROS_INFO("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]",
@@ -267,11 +282,17 @@ public:
     // check for obvious errors
     if(problem_initialized_==false){
       ROS_ERROR("must call start service");
-      return(false);
+      sprintf(msg, "must call start service to initialized ical service");
+      res.message = std::string(msg);
+      res.success = false;
+      return(true);
     }
     if(total_observations_ == 0){
       ROS_ERROR("must call observations service at least once");
-      return(false);
+      sprintf(msg, "must call observations service at least once");
+      res.message = std::string(msg);
+      res.success = false;
+      return(true);
     }
 
     ROS_INFO("calling solve on the problem");
@@ -285,6 +306,7 @@ public:
       {
 	double initial_cost = summary.initial_cost / total_observations_;
 	double final_cost = summary.final_cost / total_observations_;
+
 	ROS_INFO("Problem solved, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
 	for(int i=0; i<all_cameras_.size(); i++){
 	  ROS_INFO("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]",
@@ -305,16 +327,26 @@ public:
 	  {
 	    res.final_cost_per_observation = final_cost;
 	    ROS_ERROR("allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
-	    return (false);
+	    sprintf(msg, "allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
+	    res.message = std::string(msg);
+	    res.success = false;
+	    return(true);
 	  }
+	sprintf(msg, "final cost %f", final_cost);
+	res.message = std::string(msg);
+	res.success = true;
 	return(true);
       }
     ROS_ERROR("NO CONVERGENCE");
-    return(false);
+    sprintf(msg, "NO CONVERGENCE");
+    res.message = std::string(msg);
+    res.success = false;
+    return(true);
   }; // end runCallBack()
 
   bool saveCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
+    char msg[100];
     ROS_ERROR("inside saveCallBack()");
     for(int i=0; i<all_cameras_.size(); i++){
       all_cameras_[i]->camera_observer_->pushCameraInfo(
@@ -324,6 +356,17 @@ public:
 							all_cameras_[i]->camera_parameters_.distortion_k3, all_cameras_[i]->camera_parameters_.distortion_p1,
 							all_cameras_[i]->camera_parameters_.distortion_p2);
     }
+    sprintf(msg, "intrinsics: %8.2lf %8.2lf %8.2lf %8.2lf, %5.3lf %5.3lf %5.3lf, %5.3lf %5.3lf",
+	    all_cameras_[0]->camera_parameters_.focal_length_x, all_cameras_[0]->camera_parameters_.focal_length_y,
+	    all_cameras_[0]->camera_parameters_.center_x, all_cameras_[0]->camera_parameters_.center_y,
+	    all_cameras_[0]->camera_parameters_.distortion_k1, all_cameras_[0]->camera_parameters_.distortion_k2,
+	    all_cameras_[0]->camera_parameters_.distortion_k3, all_cameras_[0]->camera_parameters_.distortion_p1,
+	    all_cameras_[0]->camera_parameters_.distortion_p2);
+
+    res.message = std::string(msg);
+    res.success = true;
+    return(true);
+
   }// end saveCallback()
 
 private:
