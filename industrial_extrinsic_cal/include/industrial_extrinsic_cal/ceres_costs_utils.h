@@ -34,6 +34,7 @@ namespace industrial_extrinsic_cal
       TargetCameraReprjErrorPK,
       LinkTargetCameraReprjError,
       LinkTargetCameraReprjErrorPK,
+      wristCal,
       PosedTargetCameraReprjErrorPK,
       LinkCameraTargetReprjError,
       LinkCameraTargetReprjErrorPK,

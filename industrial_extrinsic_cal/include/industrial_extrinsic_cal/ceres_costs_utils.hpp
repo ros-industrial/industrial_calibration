@@ -1322,6 +1322,69 @@ public:
   Point3d point_;    /*! location of point in target coordinates */
 };
 
+// used whenever the target or camera is on the wrist of a robot while the camera or target is in the workcell
+// The 
+class WristCal
+{
+public:
+  WristCal(double ob_x, double ob_y, double fx, double fy, double cx, double cy, Pose6d targetm_to_cameram,
+                               Point3d point)
+    : ox_(ob_x), oy_(ob_y), fx_(fx), fy_(fy), cx_(cx), cy_(cy), targetm_to_cameram_(targetm_to_cameram), point_(point)
+  {
+  }
+
+  template <typename T>
+  bool operator()(const T* const c_p1, /** extrinsic parameters */
+                  const T* const c_p2, /** 6Dof transform of target points into world frame */
+                  T* residual) const
+  {
+    const T* camera_T(&c_p1[0]);
+    const T* target_T(&c_p2[0]);
+    T target_mount_point[3];   /** point in link coordinates */
+    T camera_mount_point[3];  /** point in worls coordinates */
+    T camera_point[3]; /** point in camera coordinates */
+
+    /** transform point into camera coordinates */
+    eTransformPoint3d(target_T, point_, target_mount_point);
+    poseTransformPoint(targetm_to_cameram_, target_mount_point, camera_mount_point);
+    eTransformPoint(camera_T, camera_mount_point, camera_point);
+
+    /** compute project point into image plane and compute residual */
+    T fx = T(fx_);
+    T fy = T(fy_);
+    T cx = T(cx_);
+    T cy = T(cy_);
+    T ox = T(ox_);
+    T oy = T(oy_);
+    cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy, residual);
+
+    return true;
+  } /** end of operator() */
+
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, const double fx, const double fy,
+                                     const double cx, const double cy, Pose6d pose, Point3d point)
+
+  {
+    return (new ceres::AutoDiffCostFunction<LinkTargetCameraReprjErrorPK, 2, 6, 6>(
+        new LinkTargetCameraReprjErrorPK(o_x, o_y, fx, fy, cx, cy, pose, point)));
+  }
+  double ox_;                 /** observed x location of object in image */
+  double oy_;                 /** observed y location of object in image */
+  double fx_;                 /*!< known focal length of camera in x */
+  double fy_;                 /*!< known focal length of camera in y */
+  double cx_;                 /*!< known optical center of camera in x */
+  double cy_;                 /*!< known optical center of camera in y */
+  Point3d point_;             /*! location of point in target coordinates */
+  Pose6d targetm_to_cameram_; /*!< transform from targets mount to cameras mount frame. 
+                                 (e.g. camera attached to tool0 and target attached to world this becomes tool0 to world)    
+                                 (e.g. camera attached to world and target attached to tool0 this becomes world to tool0)    
+				 in the camera attached to tool0 case, 
+                                 the transform takes points in the world frame and expresses them in tool0 frame
+			      */
+};
+
 // reprojection error of a single point attatched to a target observed by a camera with NO lens distortion
 // should subscribe to a rectified image when using the error function
 //
