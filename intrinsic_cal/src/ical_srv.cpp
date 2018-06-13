@@ -245,7 +245,8 @@ public:
 		Pose6d P(target_pb[3],target_pb[4],target_pb[5],target_pb[0],target_pb[1],target_pb[2]);
 		P.show("Pose of Target");
 	      }
-	      cost_function[k] = industrial_extrinsic_cal::CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y, target->circle_grid_parameters_.circle_diameter, point);
+	      cost_function[k] = industrial_extrinsic_cal::CameraReprjErrorWithDistortionPK::Create(image_x, image_y, point);
+	      //	      cost_function[k] = industrial_extrinsic_cal::CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y, target->circle_grid_parameters_.circle_diameter, point);
 	      P_->AddResidualBlock(cost_function[k], NULL, target_pb, intrinsics);
 	    }  // for each observation at this camera_location
 	} // end of else (there are some observations to add)
@@ -258,7 +259,6 @@ public:
     res.message = std::string(msg);
     res.success = true;
     return(true);
-
 
   }; // end observation service};
 
