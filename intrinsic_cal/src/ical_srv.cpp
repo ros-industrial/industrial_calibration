@@ -59,12 +59,10 @@ public:
   icalServiceNode(const  ros::NodeHandle& nh)
     :nh_(nh), P_(NULL), problem_initialized_(false), total_observations_(0), scene_(0)
   {
-
     std::string nn = ros::this_node::getName();
     ros::NodeHandle priv_nh("~");
 
     // load cameras and targets
-    
     priv_nh.getParam("yaml_file_path", yaml_file_path_);
     std::string camera_file, target_file;
     priv_nh.getParam("camera_file", camera_file);
@@ -97,11 +95,7 @@ public:
 
   void init_blocks()
   {
-    
-    // add one block for each static camera
-    // add one block with scene=0 for moving cameras (new set of extrinsic params for each scene_)
-    // add one block for each static target
-    // add one block with each scene=0 for moving targets (new set of extrinsic params for each scene_
+    // adds the intial block for each camera and target
     for (int i = 0; i < (int)all_cameras_.size(); i++)
       {
 	if (all_cameras_[i]->is_moving_)
@@ -141,9 +135,12 @@ public:
 	    all_cameras_[i]->left_stereo_camera_ = ceres_blocks_.getCameraByName(all_cameras_[i]->left_stereo_camera_name_);
 	  }
       }
+
+    // set reference frame for all transform interfaces
     ceres_blocks_.setReferenceFrame(all_cameras_[0]->transform_interface_->getTransformFrame());
   }; // end init_blocks()
 
+  // read the camera yaml file
   bool load_camera() 
   {
     bool rtn = true;
@@ -155,6 +152,7 @@ public:
     return rtn;
   };// end of load_camera()
 
+  // read the target yaml file
   bool load_target()
   {
     bool rtn = true;
@@ -182,11 +180,11 @@ public:
     return(true);
   }
 
+  // called to collect observations for the current pose of the scene
   bool observationCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
     char msg[100];
     
-
     if(problem_initialized_ != true ){
       ROS_ERROR("must call start service");
       res.success = false;
@@ -199,7 +197,6 @@ public:
       all_targets_[i]->pullTransform();
     }
     
-
     for(int i=0; i<all_cameras_.size(); i++){
       // set the roi to the whole image
       Roi roi;
@@ -231,12 +228,7 @@ public:
 	  ROS_ERROR("Target Locator could not find all targets found %d out of %d", num_observations, total_pts);
 	}
       else
-	{
-	  // TODO listen to pose on TF
-	  Pose6d pose = camera_observations[0].target->pose_;
-	  pose.show("pose of target found by listening");
-
-	  // add a new cost to the problem for each observation
+	{	 // add a new cost to the problem for each observation
 	  CostFunction* cost_function[num_observations];  
 	  total_observations_ += num_observations;
 	  ceres_blocks_.addMovingTarget(camera_observations[0].target, scene_);
@@ -246,10 +238,15 @@ public:
 	      double image_x = camera_observations[k].image_loc_x;
 	      double image_y = camera_observations[k].image_loc_y;
 	      Point3d point  = target->pts_[k];
+	      P_BLOCK intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[i]->camera_name_);
 	      P_BLOCK target_pb  = ceres_blocks_.getMovingTargetPoseParameterBlock(target->target_name_,scene_);
-	      P_BLOCK extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(all_cameras_[i]->camera_name_);
+	      if(k==0){
+		ROS_ERROR("target_pb = %ld intrinsics = %ld",(long int * ) &(target_pb[0]), (long int *) &intrinsics[0]);
+		Pose6d P(target_pb[3],target_pb[4],target_pb[5],target_pb[0],target_pb[1],target_pb[2]);
+		P.show("Pose of Target");
+	      }
 	      cost_function[k] = industrial_extrinsic_cal::CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y, target->circle_grid_parameters_.circle_diameter, point);
-	      P_->AddResidualBlock(cost_function[k], NULL, target_pb, extrinsics);
+	      P_->AddResidualBlock(cost_function[k], NULL, target_pb, intrinsics);
 	    }  // for each observation at this camera_location
 	} // end of else (there are some observations to add)
     }// for each camera
@@ -295,12 +292,11 @@ public:
       return(true);
     }
 
-    ROS_INFO("calling solve on the problem");
     Solver::Options options;
     Solver::Summary summary;
     options.linear_solver_type = ceres::DENSE_SCHUR;
     options.minimizer_progress_to_stdout = true;
-    options.max_num_iterations = 2000;
+    options.max_num_iterations = 1000;
     ceres::Solve(options, P_, &summary);
     if (summary.termination_type != ceres::NO_CONVERGENCE)
       {
