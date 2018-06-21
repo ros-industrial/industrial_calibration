@@ -94,10 +94,10 @@ public:
     init_blocks();
 
     // advertise services
-    start_server_       = nh_.advertiseService( "IcalSrvStart", &wristCalServiceNode::startCallBack, this);
-    observation_server_ = nh_.advertiseService( "IcalSrvObs", &wristCalServiceNode::observationCallBack, this);
-    run_server_         = nh_.advertiseService( "IcalSrvRun", &wristCalServiceNode::runCallBack, this);
-    save_server_        = nh_.advertiseService( "IcalSrvSave", &wristCalServiceNode::saveCallBack, this);
+    start_server_       = nh_.advertiseService( "WristCalSrvStart", &wristCalServiceNode::startCallBack, this);
+    observation_server_ = nh_.advertiseService( "WristCalSrvObs", &wristCalServiceNode::observationCallBack, this);
+    run_server_         = nh_.advertiseService( "WristCalSrvRun", &wristCalServiceNode::runCallBack, this);
+    save_server_        = nh_.advertiseService( "WristSrvSave", &wristCalServiceNode::saveCallBack, this);
   };// end of constructor
 
   void init_blocks()
@@ -192,6 +192,7 @@ public:
   {
     char msg[100];
     Pose6d TtoC = targetm_to_cameram_TI_->pullTransform();
+    TtoC.show("TtoC");
     
     if(problem_initialized_ != true ){
       sprintf(msg, "must call start service");
@@ -254,9 +255,9 @@ public:
 	      double cx = intrinsics[2];
 	      double cy = intrinsics[3];
 	      if(k==0){
-		ROS_ERROR("target_pb = %ld intrinsics = %ld",(long int * ) &(target_pb[0]), (long int *) &intrinsics[0]);
-		Pose6d P(target_pb[3],target_pb[4],target_pb[5],target_pb[0],target_pb[1],target_pb[2]);
-		P.show("Pose of Target");
+		ROS_ERROR("target_pb = %ld extrinsics %ld intrinsics = %ld",(long int * ) &(target_pb[0]),(long int*) &extrinsics[0], (long int *) &intrinsics[0]);
+		Pose6d P(extrinsics[3],extrinsics[4],extrinsics[5],extrinsics[0],extrinsics[1],extrinsics[2]);
+		P.show("camera to world initial conditions");
 	      }
 	      cost_function[k] = industrial_extrinsic_cal::LinkTargetCameraReprjErrorPK::Create(image_x, image_y, fx, fy, cx, cy, TtoC, point);
 
@@ -316,6 +317,13 @@ public:
 	    res.final_cost_per_observation = final_cost;
 	    ROS_ERROR("allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
 	    sprintf(msg, "allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
+	    Pose6d P(all_cameras_[0]->camera_parameters_.pb_extrinsics[3],
+		     all_cameras_[0]->camera_parameters_.pb_extrinsics[4],
+		     all_cameras_[0]->camera_parameters_.pb_extrinsics[5],
+		     all_cameras_[0]->camera_parameters_.pb_extrinsics[0],
+		     all_cameras_[0]->camera_parameters_.pb_extrinsics[1],
+		     all_cameras_[0]->camera_parameters_.pb_extrinsics[2]);
+	    P.show("final camera_extrinsics");
 	    res.message = std::string(msg);
 	    res.success = false;
 	    return(true);
