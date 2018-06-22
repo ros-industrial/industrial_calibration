@@ -97,7 +97,7 @@ public:
     start_server_       = nh_.advertiseService( "WristCalSrvStart", &wristCalServiceNode::startCallBack, this);
     observation_server_ = nh_.advertiseService( "WristCalSrvObs", &wristCalServiceNode::observationCallBack, this);
     run_server_         = nh_.advertiseService( "WristCalSrvRun", &wristCalServiceNode::runCallBack, this);
-    save_server_        = nh_.advertiseService( "WristSrvSave", &wristCalServiceNode::saveCallBack, this);
+    save_server_        = nh_.advertiseService( "WristCalSrvSave", &wristCalServiceNode::saveCallBack, this);
   };// end of constructor
 
   void init_blocks()
