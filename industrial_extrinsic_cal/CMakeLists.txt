@@ -69,6 +69,7 @@ add_service_files(
     store_mutable_joint_states.srv
     user_accept.srv
     wrist_cal_srv_solve.srv
+    FileOp.srv
 )
 
 add_action_files(
@@ -148,7 +149,9 @@ add_library(
   src/observation_data_point.cpp
   src/observation_scene.cpp
   src/points_yaml_parser.cpp
+  src/pose_yaml_parser.cpp
   src/ros_camera_observer.cpp
+  src/transform_interface.cpp
   src/ros_transform_interface.cpp
   src/target.cpp
   src/targets_yaml_parser.cpp

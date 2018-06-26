@@ -32,10 +32,10 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   , store_observation_images_(false)
   , load_observation_images_(false)
   , normalize_calibration_image_(false)
-  , image_directory_("")
   , image_number_(0)
   , camera_name_(camera_name)
 {
+  image_directory_ = "";
   image_topic_ = camera_topic;
   ros::NodeHandle pnh("~");
   results_pub_ = nh_.advertise<sensor_msgs::Image>(camera_name_+"/observer_results_image", 100);
@@ -762,10 +762,7 @@ bool ROSCameraObserver::observationsDone()
   }
   return true;
 }
-cv::Mat ROSCameraObserver::getLastImage()
-{
-  return (last_raw_image_);
-}
+
 bool ROSCameraObserver::pushCameraInfo(double& fx, double& fy, double& cx, double& cy, double& k1, double& k2,
                                        double& k3, double& p1, double& p2)
 

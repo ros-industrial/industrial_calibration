@@ -22,6 +22,7 @@
 #include <industrial_extrinsic_cal/basic_types.h> /* Target,Roi,Observation,CameraObservations */
 #include <industrial_extrinsic_cal/target.h>      /* Roi,Observation,CameraObservations */
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
+#include <opencv2/opencv.hpp>
 
 namespace industrial_extrinsic_cal
 {
@@ -116,6 +117,76 @@ public:
   virtual bool pullCameraInfo(double& fx, double& fy, double& cx, double& cy, double& k1, double& k2, double& k3,
                               double& p1, double& p2, int& width, int& height) = 0;
 
+
+  /** @brief sets directory for saving and restoring images */
+  /** @param dir_name, the directory path */
+  void set_image_directory(std::string dir_name){ image_directory_ = dir_name;};
+
+  /** @brief gets directory for saving and restoring images */
+  /** @param dir_name, the directory path */
+  std::string get_image_directory(){ return(image_directory_);};
+
+  /** @brief saves the latest image to the image_directory_ with the provided filename
+   *  if the filename is a null string, the name is built 
+   *  from the image_directory_/camera_name_ + underscore + scene_number.jpg
+  */
+  /** @param scene, the scene number */
+  /** @param filename, the file name */
+  bool save_current_image(int scene, std::string& filename)
+  {
+    std::string full_file_path_name;
+    char scene_chars[8];
+    sprintf(scene_chars,"_%03d.jpg",scene);
+    if(filename == ""){ // build file name from image_directory_, 
+      full_file_path_name  = image_directory_ + std::string("/") +  camera_name_ + std::string(scene_chars);
+    }
+    else{
+      full_file_path_name  = image_directory_ + "/" +  filename;
+    }
+    return(cv::imwrite(full_file_path_name, getCurrentImage()));
+  };
+
+  /** @brief load image from the image_directory_ with the provided filename
+   *  if the filename is a null string, the name is built 
+   *  from the image_directory_/camera_name_ + underscore + scene_number.jpg
+  */
+  /** @param scene, the scene number */
+  /** @param filename, the file name */
+  bool load_image(int scene, std::string& filename)
+  {
+    std::string full_file_path_name;
+    char scene_chars[8];
+    sprintf(scene_chars,"_%03d.jpg",scene);
+    if(filename == ""){ // build file name from image_directory_, 
+      full_file_path_name  = image_directory_ + "/" +  camera_name_ + std::string(scene_chars);
+    }
+    else{
+      full_file_path_name  = image_directory_ + "/" +  filename;
+    }
+    setCurrentImage(cv::imread(full_file_path_name));
+    return(true);
+  };
+
+  /**
+   *  @brief get current image
+   *  @return the most recent image
+   */
+  cv::Mat getCurrentImage()
+  {
+    return (last_raw_image_);
+  }
+  /**
+   *  @brief set current image
+   *  @param image set the current image to this one
+   */
+  void setCurrentImage(const cv::Mat image)
+  {
+    last_raw_image_ = image.clone();
+  }
+
+  
+  cv::Mat last_raw_image_; /**< the image last received */
+  std::string image_directory_; /*!< string directory for saving and loading images */
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
 
   /** @brief print this object TODO */

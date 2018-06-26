@@ -12,6 +12,7 @@
 #include <industrial_extrinsic_cal/trigger.h>
 #include <industrial_extrinsic_cal/ros_triggers.h>
 #include <industrial_extrinsic_cal/camera_yaml_parser.h>
+#include <industrial_extrinsic_cal/pose_yaml_parser.h>
 #include <industrial_extrinsic_cal/yaml_utils.h>
 
 using std::ifstream;
@@ -82,13 +83,17 @@ shared_ptr<Camera> parseSingleCamera(const Node& node)
   try
   {
     string temp_name, temp_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame, parent_frame;
-    string trigger_name, transform_interface;
+    string trigger_name, transform_interface, image_directory;
     CameraParameters temp_parameters;
     string temp_left_stereo_camera;
     bool temp_is_right_stereo_camera=false;
     if (!parseString(node, "camera_name", temp_name)) ROS_ERROR("Can't read camera_name");
     if (!parseString(node, "trigger", trigger_name)) ROS_ERROR("Can't read trigger");
     if (!parseString(node, "image_topic", temp_topic)) ROS_ERROR("Can't read image_topic");
+    if (!parseString(node, "image_directory", image_directory)){
+      image_directory = "";
+      ROS_ERROR("Can't read image_directory, using null for camera %s", temp_name.c_str());
+    }
     if (!parseString(node, "camera_optical_frame", camera_optical_frame)) ROS_ERROR("Can't read camera_optical_frame");
     if (!parseString(node, "transform_interface", transform_interface)) ROS_ERROR("Can't read transform_interface");
     if (parseString(node, "left_stereo_pair_name", temp_left_stereo_camera)){
@@ -148,6 +153,7 @@ shared_ptr<Camera> parseSingleCamera(const Node& node)
       temp_camera->pullTransform();
     }
     temp_camera->camera_observer_ = boost::make_shared<ROSCameraObserver>(temp_topic, temp_name);
+    temp_camera->camera_observer_->image_directory_ = image_directory;
   }
   catch (YAML::ParserException& e)
   {
@@ -300,46 +306,5 @@ shared_ptr<TransformInterface> parseTransformInterface(const Node& node, std::st
   return (temp_ti);
 }
 
-bool parsePose(const Node& node, Pose6d& pose)
-{
-  bool rtn = true;
-  std::vector<double> temp_values;
-  if (parseVectorD(node, "xyz_quat_pose", temp_values))
-  {
-    if (temp_values.size() == 7)
-    {
-      pose.x = temp_values[0];
-      pose.y = temp_values[1];
-      pose.z = temp_values[2];
-      pose.setQuaternion(temp_values[3], temp_values[4], temp_values[5], temp_values[6]);
-    }  // got 7 values
-    else
-    {  // not 7 values
-      ROS_ERROR("did not read xyz_quat_pose correctly, %d values, 7 required", (int)temp_values.size());
-      rtn = false;
-    }  // right number of values
-  }    // "xyz_quat_pose" exists in yaml node
-  else if (parseVectorD(node, "xyz_aaxis_pose", temp_values))
-  {
-    if (temp_values.size() == 6)
-    {
-      pose.x = temp_values[0];
-      pose.y = temp_values[1];
-      pose.z = temp_values[2];
-      pose.setAngleAxis(temp_values[3], temp_values[4], temp_values[5]);
-    }  // got 6 values
-    else
-    {  // can't find xyz_aaxis_pose
-      ROS_ERROR("did not read xyz_aaxis_pose correctly, %d values, 6 required v[0] = %lf", (int)temp_values.size(),
-                temp_values[0]);
-      rtn = false;
-    }
-  }
-  else
-  {  // cant read xyz_aaxis either
-    rtn = false;
-  }
-  return rtn;
-}
 
 }  // end of industrial_extrinsic_cal namespace

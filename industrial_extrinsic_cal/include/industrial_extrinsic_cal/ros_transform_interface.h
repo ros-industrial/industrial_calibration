@@ -157,7 +157,6 @@ public:
   }
 
 private:
-  Pose6d pose_;
   tf::StampedTransform transform_;
 };
 
@@ -208,7 +207,6 @@ public:
   }
 
 private:
-  Pose6d pose_;
   tf::StampedTransform transform_;
 };
 
@@ -260,7 +258,6 @@ public:
 private:
   std::string
       housing_frame_; /**< housing frame name note, this is not used, but kept be symetry with broadcaster param list */
-  Pose6d pose_;       /**< pose associated with the transform from reference frame to housing frame */
 };
 
 /** @brief This transform interface is used when the pose from the ref_frame_ to the transform_frame_ is determined through calibration
@@ -303,7 +300,6 @@ public:
   void timerCallback(const ros::TimerEvent& timer_event);
 
 private:
-  Pose6d pose_;                             /**< pose associated with the transform */
   ros::Timer timer_;                        /**< need a timer to initiate broadcast of transform */
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
@@ -351,7 +347,6 @@ public:
   void timerCallback(const ros::TimerEvent& timer_event);
 
 private:
-  Pose6d pose_;                             /**< pose associated with the transform */
   ros::Timer timer_;                        /**< need a timer to initiate broadcast of transform */
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
@@ -402,7 +397,6 @@ public:
   void timerCallback(const ros::TimerEvent& timer_event);
 
 private:
-  Pose6d pose_;                             /**< pose associated with the transform */
   ros::Timer timer_;                        /**< need a timer to initiate broadcast of transform */
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
@@ -466,7 +460,6 @@ public:
 
 private:
   ros::NodeHandle* nh_;               /**< the standard node handle for ros*/
-  Pose6d pose_;                       /**< pose associated with the transform from reference frame to housing frame */
   ros::ServiceClient get_client_;     /**< a client for calling the service to get the joint values associated with the
                                          transform */
   ros::ServiceClient set_client_;     /**< a client for calling the service to set the joint values associated with the
@@ -543,7 +536,6 @@ private:
   ros::NodeHandle* nh_;
   std::string transform_frame_;   /**< transform frame name */
   std::string parent_frame_;      /**< parent's frame name */
-  Pose6d pose_;                   /**< pose associated with the transform from reference frame to housing frame */
   ros::ServiceClient get_client_; /**< a client for calling the service to get the joint values associated with the
                                      transform */
   ros::ServiceClient set_client_; /**< a client for calling the service to set the joint values associated with the
@@ -610,7 +602,6 @@ public:
 
 private:
   ros::NodeHandle* nh_;
-  Pose6d pose_;                   /**< pose associated with the transform from reference frame to housing frame */
   ros::ServiceClient get_client_; /**< a client for calling the service to get the joint values associated with the
                                      transform */
   ros::ServiceClient set_client_; /**< a client for calling the service to set the joint values associated with the
@@ -626,6 +617,49 @@ private:
   industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_;
   industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_;
 };
+  class DefaultTransformInterface : public TransformInterface
+  {
+  public:
+    /** @brief  constructor
+     *   @param pose the pose associated with the transform interface
+     */
+    DefaultTransformInterface(){};
+
+    /** @brief  destructor */
+    ~DefaultTransformInterface(){};
+
+    /** @brief push the transform to the hardware or display
+     *   @param pose the pose associated with the transform interface
+     */
+    bool pushTransform(Pose6d& pose)
+    {
+      pose_ = pose;
+    };
+
+    /** @brief get the transform from the hardware or display
+     *    @return the pose
+     */
+    Pose6d pullTransform()
+    {
+      return (pose_);
+    };
+
+    /** @brief sets the reference frame of the transform interface, sometimes not used */
+    void setReferenceFrame(std::string& ref_frame)
+    {
+      ref_frame_ = ref_frame;
+      ref_frame_initialized_ = true;
+    }
+    /** @brief typically outputs the results to a file, but here does nothing
+     *    @param the file path name, a dummy argument in this case
+     *    @return   always true
+     */
+    bool store(std::string& filePath)
+    {
+      return (true);
+    };
+  };              // end of default tranform interface
+
 
 }  // end industrial_extrinsic_cal namespace
 #endif /* ROS_CAMERA_OBSERVER_H_ */

@@ -23,10 +23,10 @@
 #include <industrial_extrinsic_cal/camera_observer.hpp>
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/trigger.h>
-#include <industrial_extrinsic_cal/transform_interface.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
+#include <industrial_extrinsic_cal/transform_interface.hpp>
 
 namespace industrial_extrinsic_cal
 {

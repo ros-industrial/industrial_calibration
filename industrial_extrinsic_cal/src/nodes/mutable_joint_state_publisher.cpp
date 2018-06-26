@@ -17,8 +17,8 @@
  */
 
 #include "yaml-cpp/yaml.h"
-#include <industrial_extrinsic_cal/mutable_joint_state_publisher.h>
 #include <industrial_extrinsic_cal/yaml_utils.h>
+#include <industrial_extrinsic_cal/mutable_joint_state_publisher.h>
 #include <iostream>
 #include <fstream>
 namespace industrial_extrinsic_cal
