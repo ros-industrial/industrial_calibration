@@ -69,6 +69,7 @@ add_service_files(
     store_mutable_joint_states.srv
     user_accept.srv
     wrist_cal_srv_solve.srv
+    stereo_cal_srv_solve.srv
     FileOp.srv
 )
 
@@ -181,6 +182,7 @@ add_executable(range_excal                      src/nodes/range_camera_excal.cpp
 add_executable(rangeNmono                       src/nodes/rangeNmono_excal.cpp)
 add_executable(target_display                   src/nodes/target_display_node.cpp)
 add_executable(wrist_cal_srv                    src/nodes/wrist_cal_srv.cpp)
+add_executable(stereo_cal_srv                    src/nodes/stereo_cal_srv.cpp)
 
 
 add_dependencies(camera_observer_scene_trigger    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
@@ -192,6 +194,7 @@ add_dependencies(range_excal                      ${catkin_EXPORTED_TARGETS} ${i
 add_dependencies(rangeNmono                       ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(target_display                   ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(wrist_cal_srv                    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+add_dependencies(stereo_cal_srv                    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 
 target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY} ${CERES_LIBRARIES})
 target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES})
@@ -205,6 +208,7 @@ target_link_libraries(trigger_service ${catkin_LIBRARIES})
 target_link_libraries(range_excal industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(rangeNmono industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(wrist_cal_srv industrial_extrinsic_cal ${CERES_LIBRARIES})
+target_link_libraries(stereo_cal_srv industrial_extrinsic_cal ${CERES_LIBRARIES})
 
 
 install(
@@ -221,6 +225,7 @@ install(
     rangeNmono
     target_display
     wrist_cal_srv
+    stereo_cal_srv
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

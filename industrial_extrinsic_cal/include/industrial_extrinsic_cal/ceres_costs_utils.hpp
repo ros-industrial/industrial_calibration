@@ -2671,6 +2671,94 @@ public:
   double rfx_,rfy_,rcx_,rcy_,rk1_,rk2_,rk3_,rp1_,rp2_; /** right camera intrinsics */
 };
 
+  /* use to compute the pose between two intrinsically calibrated cameras used as a stereo pair when eiither
+   *  the camera or the target is on the wrist of a robot. The transform from the left camera to the target
+   *  is provided as an initial guess for each scene
+   *  For N scenes there will be N*6 target pose parameters and 6 camera to camera pose parameters
+   */
+class  WristStereoCal
+{
+public:
+  WristStereoCal(double left_ob_x,  double left_ob_y,  Point3d left_point,
+		      double right_ob_x, double right_ob_y, Point3d right_point,
+		      double lfx, double lfy, double lcx, double lcy,
+		      double rfx, double rfy, double rcx, double rcy) :
+    lox_(left_ob_x),   loy_(left_ob_y),   left_point_(left_point),
+    rox_(right_ob_x),  roy_(right_ob_y),  right_point_(right_point),
+    lfx_(lfx), lfy_(lfy), lcx_(lcx), lcy_(lcy),
+    rfx_(rfx), rfy_(rfy), rcx_(rcx), rcy_(rcy)
+  {
+
+  }
+  
+  template<typename T>
+  bool operator()(	    const T* const c_p1,  /** target_pose_relative to left camera[6] */
+			    const T* const c_p2,  /** left camera relative to right camera[6] */
+			    T* residual) const    /** this residual has 4 terms one for each camera */
+  {
+    const T *target_T(& c_p1[0]); // extract target's extrinsics
+    const T *Stereo_T(& c_p2[0]); // extract right_camera extrinsics
+    
+    // Even though both cameras observe the same target and therefore have the same number of observations,
+    // we don't assume the points observed are in the same order. Point1 will likely be the same as point2
+    T left_camera_point1[3]; // point observed by left camera in left camera frame
+    T left_camera_point2[3]; // point observed by right camera in left frame
+    T right_camera_point[3]; // point observed by right camera in right camera fraem
+    eTransformPoint3d(target_T, left_point_, left_camera_point1);
+    eTransformPoint3d(target_T, right_point_,left_camera_point2);
+
+    /** transform right point in right camera frame */
+    T right_camera_point[3]; 
+    eTransformPoint(Stereo_T, left_camera_point2, right_camera_point);
+
+    /** project point into image plane and compute residual in both images*/
+    T lox = T(lox_);
+    T loy = T(loy_);
+    T rox = T(rox_);
+    T roy = T(roy_);
+    T lfx = T(lfx_);
+    T lfy = T(lfy_);
+    T lcx = T(lcx_);
+    T lcy = T(lcy_);
+    T rfx = T(rfx_);
+    T rfy = T(rfy_);
+    T rcx = T(rcx_);
+    T rcy = T(rcy_);
+    cameraPntResidual(left_camera_point, lfx, lfy, lcx, lcy, lox, loy,  &(residual[0]));
+    cameraPntResidual(right_camera_point,rfx, rfy, rcx, rcy, rox, roy,  &(residual[2]));			   
+    return true;
+  } /** end of operator() */
+
+    /** Factory to hide the construction of the CostFunction object from */
+    /** the client code. */
+  static ceres::CostFunction* Create(const double lo_x, const double lo_y, Point3d lpoint,
+				     const double ro_x, const double ro_y, Point3d rpoint,
+				     const double lfx, const double lfy,
+				     const double lcx, const double lcy,
+				     const double rfx, const double rfy,
+				     const double rcx, const double rcy)
+  {
+    return (new ceres::AutoDiffCostFunction<WristStereoCal, 4, 6>
+	    (
+	     new StereoTargetLocator(lo_x, lo_y, lpoint,
+				     ro_x, ro_y, rpoint,
+				     lfx, lfy, lcx, lcy,
+				     rfx, rfy, rcx, rcy)
+	     )
+	    );
+  }
+  double lox_; /** observed x location of left_point in left image */
+  double loy_; /** observed y location of left_point in left image */
+  double rox_; /** observed x location of right point in right image */
+  double roy_; /** observed x location of right point in right image */
+  Pose6d C1toC2_; /** transforms points expressed in left camera frame into right camera frame */
+  Point3d left_point_; /** left point expressed in target coordinates */
+  Point3d right_point_; /** right point expressed in target coordinates */
+  double lfx_,lfy_,lcx_,lcy_,lk1_,lk2_,lk3_,lp1_,lp2_; /** left camera intrinsics */
+  double rfx_,rfy_,rcx_,rcy_,rk1_,rk2_,rk3_,rp1_,rp2_; /** right camera intrinsics */
+};
+
+
 class  StereoTargetLocator
 {
 public:

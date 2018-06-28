@@ -59,6 +59,7 @@ namespace industrial_extrinsic_cal
       StereoTargetLocator,
       TargetOnLinkRtStereo,
       TargetOnLinkLtStereo,
+      WristStereoCal,
       StereoOnLinkRt,
       StereoOnLinkLt,
       DistortedCameraFinder,
