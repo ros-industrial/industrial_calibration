@@ -2688,7 +2688,6 @@ public:
     lfx_(lfx), lfy_(lfy), lcx_(lcx), lcy_(lcy),
     rfx_(rfx), rfy_(rfy), rcx_(rcx), rcy_(rcy)
   {
-
   }
   
   template<typename T>
@@ -2701,15 +2700,12 @@ public:
     
     // Even though both cameras observe the same target and therefore have the same number of observations,
     // we don't assume the points observed are in the same order. Point1 will likely be the same as point2
-    T left_camera_point1[3]; // point observed by left camera in left camera frame
+    T left_camera_point[3]; // point observed by left camera in left camera frame
     T left_camera_point2[3]; // point observed by right camera in left frame
     T right_camera_point[3]; // point observed by right camera in right camera fraem
-    eTransformPoint3d(target_T, left_point_, left_camera_point1);
+    eTransformPoint3d(target_T, left_point_, left_camera_point);// transform both points into left frame, probably the same point twice
     eTransformPoint3d(target_T, right_point_,left_camera_point2);
-
-    /** transform right point in right camera frame */
-    T right_camera_point[3]; 
-    eTransformPoint(Stereo_T, left_camera_point2, right_camera_point);
+    eTransformPoint(Stereo_T, left_camera_point2, right_camera_point);    /** transform right point in right camera frame */
 
     /** project point into image plane and compute residual in both images*/
     T lox = T(lox_);
@@ -2738,9 +2734,9 @@ public:
 				     const double rfx, const double rfy,
 				     const double rcx, const double rcy)
   {
-    return (new ceres::AutoDiffCostFunction<WristStereoCal, 4, 6>
+    return (new ceres::AutoDiffCostFunction<WristStereoCal, 4, 6, 6>
 	    (
-	     new StereoTargetLocator(lo_x, lo_y, lpoint,
+	     new WristStereoCal(lo_x, lo_y, lpoint,
 				     ro_x, ro_y, rpoint,
 				     lfx, lfy, lcx, lcy,
 				     rfx, rfy, rcx, rcy)
@@ -2751,11 +2747,10 @@ public:
   double loy_; /** observed y location of left_point in left image */
   double rox_; /** observed x location of right point in right image */
   double roy_; /** observed x location of right point in right image */
-  Pose6d C1toC2_; /** transforms points expressed in left camera frame into right camera frame */
   Point3d left_point_; /** left point expressed in target coordinates */
   Point3d right_point_; /** right point expressed in target coordinates */
-  double lfx_,lfy_,lcx_,lcy_,lk1_,lk2_,lk3_,lp1_,lp2_; /** left camera intrinsics */
-  double rfx_,rfy_,rcx_,rcy_,rk1_,rk2_,rk3_,rp1_,rp2_; /** right camera intrinsics */
+  double lfx_,lfy_,lcx_,lcy_;/** left camera intrinsics */
+  double rfx_,rfy_,rcx_,rcy_; /** right camera intrinsics */
 };
 
 

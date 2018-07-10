@@ -42,7 +42,6 @@ add_service_files(
   FILES
   rail_ical_run.srv
   rail_scal_run.srv
-  ical_srv_solve.srv
 )
 
 generate_messages(

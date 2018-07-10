@@ -104,9 +104,7 @@ public:
     targetm_to_cameram_TI_->setReferenceFrame(camera_mount_frame);
     targetm_to_cameram_TI_->setDataDirectory(data_directory_);
 
-    // load cameras, targets and intiialize ceres blocks
-    load_camera();
-    load_target();
+    // intiialize ceres blocks
     init_blocks();
 
     // advertise services
@@ -207,7 +205,7 @@ public:
     scene_=0;
     ceres_blocks_.clearCamerasTargets(); 
     init_blocks();
-    res.message = std::string("Intrinsic calibration service started");
+    res.message = std::string("Wrist calibration service started");
     res.success = true;
     return(true);
   }
@@ -342,7 +340,6 @@ public:
   bool runCallBack( industrial_extrinsic_cal::wrist_cal_srv_solveRequest &req, industrial_extrinsic_cal::wrist_cal_srv_solveResponse &res)
   {
     char msg[100];
-
     // check for obvious errors
     if(problem_initialized_==false){
       ROS_ERROR("must call start service");
@@ -357,6 +354,11 @@ public:
       res.message = std::string(msg);
       res.success = false;
       return(true);
+    }
+
+    // Set intitial conditions of camera poses
+    for(int i=0; i<all_cameras_.size(); i++){
+      all_cameras_[i]->pullTransform();
     }
 
     Solver::Options options;

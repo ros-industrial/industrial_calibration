@@ -68,8 +68,7 @@ add_service_files(
     set_mutable_joint_states.srv
     store_mutable_joint_states.srv
     user_accept.srv
-    wrist_cal_srv_solve.srv
-    stereo_cal_srv_solve.srv
+    cal_srv_solve.srv
     FileOp.srv
 )
 

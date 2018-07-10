@@ -15,7 +15,7 @@
 #include <actionlib/client/simple_action_client.h>
 
 // intrinsic_cal includes
-#include <intrinsic_cal/ical_srv_solve.h>
+#include <industrial_extrinsic_cal/cal_srv_solve.h>
 
 // industrial_extrinsic_cal includes
 #include <industrial_extrinsic_cal/basic_types.h>
@@ -262,7 +262,7 @@ public:
 
   }; // end observation service};
 
-  bool runCallBack( intrinsic_cal::ical_srv_solveRequest &req, intrinsic_cal::ical_srv_solveResponse &res)
+  bool runCallBack( industrial_extrinsic_cal::cal_srv_solveRequest &req, industrial_extrinsic_cal::cal_srv_solveResponse &res)
   {
     char msg[100];
     ROS_INFO("initial values");
