@@ -400,13 +400,13 @@ public:
 	double final_cost = summary.final_cost / total_observations_;
 
 	ROS_INFO("Problem solved, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
+	res.final_cost_per_observation = final_cost;
 	if (final_cost <= req.allowable_cost_per_observation)
 	  {
 	    ROS_INFO("Stereo calibration was successful");
 	  }
 	else
 	  {
-	    res.final_cost_per_observation = final_cost;
 	    ROS_ERROR("allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
 	    sprintf(msg, "allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
 	    Pose6d P(all_cameras_[1]->camera_parameters_.pb_extrinsics[3],
