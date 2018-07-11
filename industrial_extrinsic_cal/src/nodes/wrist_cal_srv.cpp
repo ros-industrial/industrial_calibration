@@ -36,7 +36,7 @@
 #include <industrial_extrinsic_cal/ros_transform_interface.h>
 
 //defined services
-#include <industrial_extrinsic_cal/wrist_cal_srv_solve.h>
+#include <industrial_extrinsic_cal/cal_srv_solve.h>
 #include <industrial_extrinsic_cal/FileOp.h>
 
 // boost includes
@@ -337,7 +337,7 @@ public:
 
   }; // end observation service};
 
-  bool runCallBack( industrial_extrinsic_cal::wrist_cal_srv_solveRequest &req, industrial_extrinsic_cal::wrist_cal_srv_solveResponse &res)
+  bool runCallBack( industrial_extrinsic_cal::cal_srv_solveRequest &req, industrial_extrinsic_cal::cal_srv_solveResponse &res)
   {
     char msg[100];
     // check for obvious errors
