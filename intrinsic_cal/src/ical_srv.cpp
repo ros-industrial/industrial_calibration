@@ -72,25 +72,25 @@ public:
     ROS_INFO("yaml_file_path: %s", yaml_file_path_.c_str());
     ROS_INFO("camera_file: %s",  camera_file_.c_str());
     ROS_INFO("target_file: %s",  target_file_.c_str());
+
     if(!load_camera()){
       ROS_ERROR("can't load the camera from %s", (yaml_file_path_+camera_file_).c_str());
       exit(1);
     }
+
     if(!load_target()){
       ROS_ERROR("can't load the target from %s", (yaml_file_path_+target_file_).c_str());
       exit(1);
     }
 
     // load cameras, targets and intiialize ceres blocks
-    load_camera();
-    load_target();
     init_blocks();
 
     // advertise services
-    start_server_       = nh_.advertiseService( "IcalSrvStart", &icalServiceNode::startCallBack, this);
-    observation_server_ = nh_.advertiseService( "IcalSrvObs", &icalServiceNode::observationCallBack, this);
-    run_server_         = nh_.advertiseService( "IcalSrvRun", &icalServiceNode::runCallBack, this);
-    save_server_        = nh_.advertiseService( "IcalSrvSave", &icalServiceNode::saveCallBack, this);
+    start_server_       = nh_.advertiseService( "ICalSrvStart", &icalServiceNode::startCallBack, this);
+    observation_server_ = nh_.advertiseService( "ICalSrvObs", &icalServiceNode::observationCallBack, this);
+    run_server_         = nh_.advertiseService( "ICalSrvRun", &icalServiceNode::runCallBack, this);
+    save_server_        = nh_.advertiseService( "ICalSrvSave", &icalServiceNode::saveCallBack, this);
   };// end of constructor
 
   void init_blocks()
@@ -186,11 +186,10 @@ public:
     char msg[100];
     
     if(problem_initialized_ != true ){
-      ROS_ERROR("must call start service");
-      res.success = false;
-      sprintf(msg, "must call start service");
-      res.message = std::string(msg);
-      return(true);
+      ROS_INFO("calling start");
+      std_srvs::TriggerRequest  sreq;
+      std_srvs::TriggerResponse sres;
+      startCallBack(sreq,sres);
     }
 
     for(int i=0; i<all_targets_.size(); i++){

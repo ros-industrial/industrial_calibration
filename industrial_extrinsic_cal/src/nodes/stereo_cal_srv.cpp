@@ -83,6 +83,8 @@ public:
     priv_nh.getParam("data_directory", data_directory_);
     camera_file_ = yaml_file_path_ + camera_file ;
     target_file_ = yaml_file_path_ + target_file ;
+
+    // provide feedback for the launch file developer
     ROS_INFO("yaml_file_path: %s", yaml_file_path_.c_str());
     ROS_INFO("camera_file: %s",  camera_file_.c_str());
     ROS_INFO("target_file: %s",  target_file_.c_str());
@@ -167,7 +169,7 @@ public:
 	rtn = false;
       }
     for(int i=0;i<(int)all_cameras_.size();i++){
-      all_cameras_[i]->transform_interface_->setDataDirectory(data_directory_);
+      all_cameras_[i]->transform_interface_->setDataDirectory(all_cameras_[i]->camera_observer_->image_directory_);
     }
     return rtn;
   };// end of load_camera()
@@ -183,7 +185,7 @@ public:
 	rtn = false;
       }
     for(int i=0;i<(int)all_targets_.size();i++){
-      all_targets_[i]->transform_interface_->setDataDirectory(data_directory_);
+      all_targets_[i]->transform_interface_->setDataDirectory(all_cameras_[0]->camera_observer_->image_directory_);
     }
 
     return rtn;
@@ -210,15 +212,14 @@ public:
     char msg[100];
 
     if(problem_initialized_ != true ){
-      sprintf(msg, "must call start service");
-      ROS_ERROR("%s",msg);
-      res.message = std::string(msg);
-      res.success = false;
-      return(true);
+      std_srvs::TriggerRequest  sreq;
+      std_srvs::TriggerResponse sres;
+      ROS_INFO("Problem not yet initialized, calling start service");
+      startCallBack(sreq, sres);
     }
 
     // WARNING
-    // here we assume there is only one target and two cameras where the first camera is the left camera and the second is the rigth
+    // assume only one target and two cameras 1st camera is the left camera and 2nd right
     // get the intitial conditions for this scene
     all_targets_[0]->pullTransform();
 
@@ -291,7 +292,7 @@ public:
 											 lfx, lfy, lcx, lcy,
 											 rfx, rfy, rcx, rcy);
 	  P_->AddResidualBlock(cost_function, NULL, target_pb, right_extrinsics);
-	    /*
+	    /* Why am I leaving all this debugging code here? I have no good reason TODO Remove before PR to upstream master
 	      if(k<3){
 	      ROS_ERROR("target_pb = %ld extrinsics %ld intrinsics = %ld",(long int ) &(target_pb[0]),(long int) &extrinsics[0], (long int ) &intrinsics[0]);
 	      Pose6d P(extrinsics[3],extrinsics[4],extrinsics[5],extrinsics[0],extrinsics[1],extrinsics[2]);
@@ -323,8 +324,18 @@ public:
 	  std::string image2_file = all_cameras_[1]->camera_name_ + std::string(image_scene_chars);
 	  std::string extrinsics_scene_d_yaml = std::string("_extrinsics") + std::string(pose_scene_chars);
 	  std::string target_extrinsics = all_targets_[0]->target_name_ + extrinsics_scene_d_yaml;
-	  all_cameras_[0]->camera_observer_->save_current_image(scene_,image1_file);
-	  all_cameras_[1]->camera_observer_->save_current_image(scene_,image2_file);
+	  if(!all_cameras_[0]->camera_observer_->save_current_image(scene_,image1_file)){
+	    ROS_ERROR("couldn't save image named %s",image1_file.c_str());
+	  }
+	  else{
+	    ROS_INFO("saved image as %s",image1_file.c_str());
+	  }
+	  if(!all_cameras_[1]->camera_observer_->save_current_image(scene_,image2_file)){
+	    ROS_ERROR("couldn't save image named %s",image2_file.c_str());
+	  }
+	  else{
+	    ROS_INFO("saved image as %s",image2_file.c_str());
+	  }
 	  all_targets_[0]->transform_interface_->saveCurrentPose(scene_, target_extrinsics);
 	  if(scene_ == 0){
 	    std::string camera_extrinsics = all_cameras_[1]->camera_name_ + extrinsics_scene_d_yaml;
@@ -378,7 +389,7 @@ public:
       sprintf(msg,"Camera %s initial pose",all_cameras_[i]->camera_name_.c_str());
       CP.show(msg);
     }
-    /* show initial conditions 
+    /* show initial conditions  TODO remove this debugging code before PR to upstream master
     for(int i=0;i<scene_;i++){
       P_BLOCK te = ceres_blocks_.getMovingTargetPoseParameterBlock(all_targets_[0]->target_name_,i);
       Pose6d TP(te[3],te[4],te[5],te[0],te[1],te[2]);
@@ -417,7 +428,7 @@ public:
 		     all_cameras_[1]->camera_parameters_.pb_extrinsics[2]);
 	    P.show("final right camera_extrinsics");
 
-	    /* show poses after optimization
+	    /* show poses of target after optimization TODO remove this debugging code before PR to upstream master
 	       for(int i=0;i<scene_;i++){
 	       P_BLOCK te = ceres_blocks_.getMovingTargetPoseParameterBlock(all_targets_[0]->target_name_,i);
 	       Pose6d TP(te[3],te[4],te[5],te[0],te[1],te[2]);
@@ -445,7 +456,6 @@ public:
 
   bool saveCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
-    ROS_ERROR("inside saveCallBack()");
     for(int i=0; i<all_cameras_.size(); i++){
       all_cameras_[i]->pushTransform();
     }
@@ -471,21 +481,22 @@ public:
     bool finished = false;
     while (! finished)
     {
-      artemis_msgs::GetStereoImages img_srv_data;
       std::map<std::string, Pose6d> transforms;
-      if (loadSceneData(scene_idx, directory.string(), img_srv_data, transforms))
+      sensor_msgs::Image left_image, right_image;
+      if (loadSceneData(scene_idx, directory.string(), left_image, right_image, transforms))
       {
         ROS_INFO_STREAM("Loaded scene " << scene_idx);
-        observeScene(img_srv_data, transforms);
+	//        observeScene(img_srv_data, transforms);
         scene_idx++;
       }
       else
         finished = true;
     }
-    auto res_str = boost::format("Loaded data from %d scenes") % (scene_idx-1);
+    std::string res_str = boost::format("Loaded data from %d scenes") % (scene_idx-1);
     resp.result = res_str.str();
     */
     return true;
+    
   }
 
   bool loadSceneData(
@@ -497,45 +508,43 @@ public:
       std::map<std::string, Pose6d> &transforms)
   {
     /*
+    // read the left and right images from the provided directory along with the transform
     char tmp_name[255];
-    std::string side("left");
-    sprintf(tmp_name,"%scapture_%03d_%s.jpg",path(dir)scene_idx, side);
-    std::string get_image_file(tmp_name);
-    
-    //Function to create the file string for each image
-    auto get_image_file = [&](std::string side) -> path
+    sprintf(tmp_name,"%scapture_%03d_left.jpg",dir.c_str(), scene_idx);
+    std::string left_image_file(tmp_name);
+    sprintf(tmp_name,"%scapture_%03d_right.jpg",dir.c_str(), scene_idx);
+    std::string right_image_file(tmp_name);
+    sprintf(tmp_name,"%scapture%03d_transform", dir.c_str(), scene_idx);
+    std::string left_camera_to_target_transform_file(tmp_name);
+
+    if (! boost::filesystem::is_regular_file(left_image_file))
     {
-      auto img_file = boost::format("capture_%03d_%s.jpg") % scene_idx % side;
-      path img_path = path(dir) / img_file.str();
-      return img_path;
-    };
-    //Load left image
-    auto left_image_path = get_image_file("left");
-    if (! boost::filesystem::is_regular_file(left_image_path))
-    {
+      ROS_ERROR("left image file doesn't exists: %s", left_image_file.c_str());
       return false;
     }
-    loadImage(left_image_path, img_srv_data.response.left_image);
-    //Load right image
-    auto right_image_path = get_image_file("right");
-    if (! boost::filesystem::is_regular_file(right_image_path))
+    if (! boost::filesystem::is_regular_file(right_image_file))
     {
+      ROS_ERROR("right image file doesn't exists: %s", right_image_file.c_str());
       return false;
     }
-    loadImage(right_image_path, img_srv_data.response.right_image);
-    //Create transforms file string and load YAML
-    auto tf_file = boost::format("capture_%03d_transform.yaml") % scene_idx;
-    path tf_file_path = path(dir) / tf_file.str();
-    if (! boost::filesystem::is_regular_file(tf_file_path))
+    if (! boost::filesystem::is_regular_file(left_camera_to_target_transform_file.c_str()))
     {
+      ROS_ERROR("left_camera_to_target_tranform file doesn't exists: %s", left_camera_to_target_transform_file.c_str());
       return false;
     }
+
+    if(!loadImage( left_image_file,  left_image)){
+      ROS_ERROR_STREAM("Problem loading left_image file at scene " << scene_idx);
+    }
+    if(!loadImage(right_image_file, right_image){
+      ROS_ERROR_STREAM("Problem loading right_image file at scene " << scene_idx);
+      }
     if (! loadTransformYAML(tf_file_path, transforms))
     {
       ROS_ERROR_STREAM("Problem loading transform yaml file at scene " << scene_idx);
       return false;
     }
-		     */
+    */	
     return true;
   }
 

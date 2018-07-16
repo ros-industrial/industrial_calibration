@@ -35,7 +35,6 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   , image_number_(0)
   , camera_name_(camera_name)
 {
-  image_directory_ = "";
   image_topic_ = camera_topic;
   ros::NodeHandle pnh("~");
   results_pub_ = nh_.advertise<sensor_msgs::Image>(camera_name_+"/observer_results_image", 100);
@@ -43,7 +42,6 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   std::string set_camera_info_service = camera_name_ + "/set_camera_info";
   client_ = nh_.serviceClient<sensor_msgs::SetCameraInfo>(set_camera_info_service);
 
-  pnh.getParam("image_directory", image_directory_);
   pnh.getParam("store_observation_images", store_observation_images_);
   pnh.getParam("load_observation_images", load_observation_images_);
   pnh.getParam("normalize_calibration_image", normalize_calibration_image_);

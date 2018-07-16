@@ -152,7 +152,7 @@ shared_ptr<Camera> parseSingleCamera(const Node& node)
     {
       temp_camera->pullTransform();
     }
-    temp_camera->camera_observer_ = boost::make_shared<ROSCameraObserver>(temp_topic, temp_name);
+    temp_camera->camera_observer_ = boost::make_shared<ROSCameraObserver>(camera_observer);
     temp_camera->camera_observer_->image_directory_ = image_directory;
   }
   catch (YAML::ParserException& e)
