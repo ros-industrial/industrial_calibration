@@ -26,6 +26,7 @@
   <depend>rosconsole</depend>
   <depend>roscpp</depend>
   <depend>roslib</depend>
+  <depend>applicable_pose_generator</depend>
   <depend>roslint</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
@@ -34,6 +35,7 @@
   <depend>tf_conversions</depend>
   <depend>yaml-cpp</depend>
   <depend>ceres-solver</depend>
+
 
   <build_depend>boost</build_depend>
   <build_depend>message_generation</build_depend>

@@ -22,7 +22,9 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   pcl_conversions
   dynamic_reconfigure
+  applicable_pose_generator
 )
+
 
 find_package(Boost REQUIRED)
 
@@ -137,7 +139,6 @@ include_directories(
 # target: main library
 add_library(
   industrial_extrinsic_cal
-
   src/basic_types.cpp
   src/calibration_job_definition.cpp
   src/caljob_yaml_parser.cpp
@@ -159,6 +160,9 @@ add_library(
   src/conical_pose_generator.cpp
 )
 add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
+
+
+
 
 target_link_libraries(
   industrial_extrinsic_cal
@@ -182,8 +186,8 @@ add_executable(range_excal                      src/nodes/range_camera_excal.cpp
 add_executable(rangeNmono                       src/nodes/rangeNmono_excal.cpp)
 add_executable(target_display                   src/nodes/target_display_node.cpp)
 add_executable(wrist_cal_srv                    src/nodes/wrist_cal_srv.cpp)
-add_executable(stereo_cal_srv                    src/nodes/stereo_cal_srv.cpp)
-add_executable(position_validation		src/chkIfpntsInPic.cpp src/conical_pose_generator.cpp)
+add_executable(stereo_cal_srv                   src/nodes/stereo_cal_srv.cpp)
+add_executable(position_validation				src/check_if_points_in_pic.cpp src/conical_pose_generator.cpp)
 
 add_dependencies(camera_observer_scene_trigger    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(mutable_joint_state_publisher    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})

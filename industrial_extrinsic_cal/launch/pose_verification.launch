@@ -1,12 +1,20 @@
 <?xml version="1.0" ?>
 <launch>
-  <node pkg="tf" type="static_transform_publisher" name="camera_poses_that_see_target" args="0 0 1.25 0 0 0 /world /target2 25"/>
-  <node pkg="tf" type="static_transform_publisher" name="all_camera_poses" args="0 0 1 0 0 0 /world /target 25"/>  
+  <arg name="model" />
+  <param name="robot_description" textfile="$(find abb_irb1600_cal_support)/urdf/irb1600_6_12.urdf"/>
+  <param name="use_gui" value="true"/>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+  <node pkg="tf" type="static_transform_publisher" name="camera_poses_that_see_target" args=".3 0 0 0 1.570796 0 /world /target2 25"/>
+  <node pkg="tf" type="static_transform_publisher" name="all_camera_poses" args=".3 0 0 0 1.570796 0 /world /target 25"/>
   <node pkg="industrial_extrinsic_cal" type="position_validation" name="position_validation" output="screen">
     <rosparam>
       camera_file: "test2_camera_def.yaml"
       target_file: "test2_target_def.yaml"
       cal_job_file: "test2_caljob_def.yaml"
     </rosparam>
+    <param name="robot_urdf" type="str" value="$(find abb_irb1600_cal_support)/urdf/irb1600_6_12.urdf"/>
   </node>
 </launch>
