@@ -31,8 +31,10 @@ using std::string;
 using industrial_extrinsic_cal::Target;
 
 // local function prototypes
+geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy );
 void imagePoint(Eigen::Vector3d TargetPoint, double fx, double fy, double cx, double cy, double &u, double &v,Eigen::Affine3d cameraPose);
 geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target );
+
 int addingFactorial(int lastAdded);
 Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY);
 //cvoid creates_listener_to_tfs(const std::string from_frame, const std::string to_frame , ros::Time now,const tf::TransformListener tf_listener, tf::StampedTransform tf_transform);
@@ -62,7 +64,6 @@ int main(int argc, char **argv)
   tf::TransformListener tf_listener;
   tf::StampedTransform tf_transform;
 
-// creates_listener_to_tfs(from_frame, to_frame, now, tf_listener,tf_transform);
   while (!tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0)))
    {
      now = ros::Time::now();
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
    }
    try
    {
-     tf_listener.lookupTransform(from_frame, to_frame, now, tf_transform);
+    tf_listener.lookupTransform(from_frame, to_frame, now, tf_transform);
    }
    catch (tf::TransformException& ex)
    {
@@ -163,59 +164,15 @@ int main(int argc, char **argv)
   }
 
   // filters out unreachable and un seable poses
-  int num_created_poses = AllcameraPoses.size();
-  for(int j=0;j<num_created_poses;j++)
-  {
-      bool accept_pose = true;
-      for(int i=0;i<4;i++)
-      {
-          create_chain_take_pose_inverse_kinamatics::chain_creation reachability_filter;
-          double u=0;
-          double v=0;
-          imagePoint(corner_points[i], fx, fy, cx, cy, u, v,AllcameraPoses[j]);
-          if(u<0 || u>=image_width || v<0 || v>= image_height )
-          {
-            ROS_ERROR("u,v = %lf %lf but image size = %d %d",u,v,image_width,image_height);
-            accept_pose = false;
-          }
-          double x_part = tf_transform.getOrigin().x();
-          double y_part = tf_transform.getOrigin().y();
-          double z_part = tf_transform.getOrigin().z();
-
-          //ROS_INFO("%lf %lf %lf", tf_transform.getOrigin().x(), tf_transform.getOrigin().y(), tf_transform.getOrigin().z());
-
-          tf::Quaternion Q;
-          tf_transform.getBasis().getRotation(Q);
-          Eigen::Affine3d R;
-          R.setIdentity();
-          R.translate(Eigen::Vector3d(x_part,y_part,z_part));
-          R.rotate(Eigen::Quaterniond(Q.getW(), Q.getX(), Q.getY(), Q.getZ()));
-          Eigen::Matrix3Xd m = R.rotation();
-          Eigen::Vector3d vec = R.translation();
-
-          if(!reachability_filter.chain_Parse(R*AllcameraPoses[j]))
-          {
-            ROS_ERROR("Robot unable to reach the location");
-            accept_pose = false;
-          }
-      }
-      if(accept_pose)
-      {
-          geometry_msgs::Pose pose;
-          ROS_INFO("adding an accepted pose");
-          tf::poseEigenToMsg(AllcameraPoses[j], pose);
-          msg2.poses.push_back(pose);
-      }
-  }
-
+  geometry_msgs::PoseArray filtered_msgs = pose_filters(msg2,tf_transform, image_width, image_height, AllcameraPoses, corner_points, fx,  fy,  cx,  cy );
   ros::Publisher pub2 = n.advertise<geometry_msgs::PoseArray>("topic2", 1, true);
-  msg2.header.frame_id = "target";
-  msg2.header.stamp = ros::Time::now();
+  filtered_msgs.header.frame_id = "target";
+  filtered_msgs.header.stamp = ros::Time::now();
 
   ros::Rate r(10); // 10 hz
   while (ros::ok())
   {
-    pub2.publish(msg2);
+    pub2.publish(filtered_msgs);
     pub.publish(msg);
     ros::spinOnce();
     r.sleep();
@@ -254,13 +211,6 @@ int findingMidpoint(int pointOne, int pointTwo)
   int midpoint;
   return midpoint;
 }
-
-//creates a listener that keeps track of the transform from the camera to the robot
-//void creates_listener_to_tfs(const std::string& from_frame, const std::string& to_frame , ros::Time now,const tf::TransformListener tf_listener, tf::StampedTransform tf_transform)
-//{
-
-//  return;
-//}
 Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY)
 {
   Eigen::Vector2d center_point;
@@ -311,4 +261,52 @@ Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double 
     numberOfStopsForPhotos ++;
   }
   return msg;
+}
+geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy )
+{
+  int num_created_poses = AllcameraPoses.size();
+  for(int j=0;j<num_created_poses;j++)
+  {
+      bool accept_pose = true;
+      for(int i=0;i<4;i++)
+      {
+          create_chain_take_pose_inverse_kinamatics::chain_creation reachability_filter;
+          double u=0;
+          double v=0;
+          imagePoint(corner_points[i], fx, fy, cx, cy, u, v,AllcameraPoses[j]);
+          if(u<0 || u>=image_width || v<0 || v>= image_height )
+          {
+            ROS_ERROR("u,v = %lf %lf but image size = %d %d",u,v,image_width,image_height);
+            accept_pose = false;
+          }
+          double x_part = tf_transform.getOrigin().x();
+          double y_part = tf_transform.getOrigin().y();
+          double z_part = tf_transform.getOrigin().z();
+
+          //ROS_INFO("%lf %lf %lf", tf_transform.getOrigin().x(), tf_transform.getOrigin().y(), tf_transform.getOrigin().z());
+
+          tf::Quaternion Q;
+          tf_transform.getBasis().getRotation(Q);
+          Eigen::Affine3d R;
+          R.setIdentity();
+          R.translate(Eigen::Vector3d(x_part,y_part,z_part));
+          R.rotate(Eigen::Quaterniond(Q.getW(), Q.getX(), Q.getY(), Q.getZ()));
+          Eigen::Matrix3Xd m = R.rotation();
+          Eigen::Vector3d vec = R.translation();
+
+          if(!reachability_filter.chain_Parse(R*AllcameraPoses[j]))
+          {
+            ROS_ERROR("Robot unable to reach the location");
+            accept_pose = false;
+          }
+      }
+      if(accept_pose)
+      {
+          geometry_msgs::Pose pose;
+          ROS_INFO("adding an accepted pose");
+          tf::poseEigenToMsg(AllcameraPoses[j], pose);
+          msg2.poses.push_back(pose);
+      }
+  }
+  return msg2;
 }
