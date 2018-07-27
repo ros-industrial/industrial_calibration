@@ -1,5 +1,5 @@
-rows = 10;
-cols = 5;
+rows = 5;
+cols = 9;
 image_rows = 2000;
 image_cols = 2000;
 white = 1;
@@ -46,7 +46,7 @@ for i=1:s2,
 		dist2center_sq = (i-center1_x)*(i-center1_x) + (j-center1_y)*(j-center1_y);
                 square1(i,j) = white;
                 if dist2center_sq < 2.5*r_sq,
-                   mcircle(i,j) = black;
+		  mcircle((rows-1)*s2+i,j) = black;
                 endif
         end;
 end;
