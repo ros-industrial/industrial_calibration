@@ -63,6 +63,7 @@ int main(int argc, char **argv)
   ros::Time now = ros::Time::now();
   tf::TransformListener tf_listener;
   tf::StampedTransform tf_transform;
+  double xMax,yMax,xMin,yMin;
 
   while (!tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0)))
    {
@@ -89,7 +90,6 @@ int main(int argc, char **argv)
    boost::shared_ptr<Target> Mytarget = myYamlDefinedTargets[0];
 
   //finds the max values to be used as corner points
-  double xMax,yMax,xMin,yMin;
   ROS_INFO("target name = %s num_points = %d size of pts_ = %d",Mytarget->target_name_,Mytarget->num_points_,(int)Mytarget->pts_.size());
   xMax = Mytarget->pts_[0].x;
   xMin = Mytarget->pts_[0].x;
@@ -112,8 +112,8 @@ int main(int argc, char **argv)
 
   // creates camera transforms in the shape of a cone
   ros::Publisher pub = n.advertise<geometry_msgs::PoseArray>("topic", 1, true);
+
   // radius of the cone = (poseHeight/ std::tan(angleOfCone))
-  // to increase amount of rings per height decrease the "l" incrementer and starting point by same factor
   geometry_msgs::PoseArray msg = create_all_poses(poseHeight, spacing_in_z, angleOfCone, numberOfStopsForPhotos,  center_point_of_target );
 
   //creates target rectangle
@@ -169,6 +169,7 @@ int main(int argc, char **argv)
   filtered_msgs.header.frame_id = "target";
   filtered_msgs.header.stamp = ros::Time::now();
 
+  // publishes all transforms
   ros::Rate r(10); // 10 hz
   while (ros::ok())
   {
@@ -178,8 +179,6 @@ int main(int argc, char **argv)
     r.sleep();
   }
 } //end of main
-
-
 
 // Transforms a point into the camera frame then projects the new point into the 2d screen
 void imagePoint(Eigen::Vector3d TargetPoint , double fx, double fy, double cx, double cy, double &u, double &v,Eigen::Affine3d cameraPose )
@@ -211,6 +210,7 @@ int findingMidpoint(int pointOne, int pointTwo)
   int midpoint;
   return midpoint;
 }
+
 Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY)
 {
   Eigen::Vector2d center_point;
@@ -264,13 +264,13 @@ Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double 
 }
 geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy )
 {
+  CreateChain::chain_creation reachability_filter;
   int num_created_poses = AllcameraPoses.size();
   for(int j=0;j<num_created_poses;j++)
   {
       bool accept_pose = true;
       for(int i=0;i<4;i++)
       {
-          create_chain_take_pose_inverse_kinamatics::chain_creation reachability_filter;
           double u=0;
           double v=0;
           imagePoint(corner_points[i], fx, fy, cx, cy, u, v,AllcameraPoses[j]);
@@ -293,7 +293,6 @@ geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::Stamped
           R.rotate(Eigen::Quaterniond(Q.getW(), Q.getX(), Q.getY(), Q.getZ()));
           Eigen::Matrix3Xd m = R.rotation();
           Eigen::Vector3d vec = R.translation();
-
           if(!reachability_filter.chain_Parse(R*AllcameraPoses[j]))
           {
             ROS_ERROR("Robot unable to reach the location");

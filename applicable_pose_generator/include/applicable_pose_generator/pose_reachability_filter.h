@@ -1,3 +1,20 @@
+/*
+    Software License Agreement (Apache License)
+    Copyright (c) 2014, Southwest Research Institute
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+#ifndef POSE_REACHABILITY_FILTER_H_
+#define POSE_REACHABILITY_FILTER_H_
+
+
 #include <kdl/chainiksolverpos_lma.hpp>
 
 #include "ros/ros.h"
@@ -7,13 +24,29 @@
 #include <kdl_parser/kdl_parser.hpp>
 #include <eigen_conversions/eigen_kdl.h>
 
-namespace create_chain_take_pose_inverse_kinamatics
+#include <tesseract_ros/kdl/kdl_chain_kin.h>
+
+namespace CreateChain
 {
   class chain_creation
   {
     public:
-      //loads urdf that discribes the chain
+    std::string robot_urdf;
+    std::string tool0_param;
+    std::string base_link_param;
+
+    //loads urdf that discribes the chain
+    chain_creation();
     bool chain_Parse(Eigen::Affine3d ei_transform_to_check);
-    //bool reachability_filter();
+  private:
+    KDL::JntArray robot_joints;
+    KDL::JntArray return_joint_values;
+    urdf::Model Mymodel;
+    tesseract::tesseract_ros::KDLChainKin CK;
+    KDL::Tree robot_tree;
+    KDL::Chain robot_chain;
+    KDL::Frame transform_goal_kdl;
+
   };
 }
+#endif
