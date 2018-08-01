@@ -26,6 +26,7 @@ catkin_package(
     ${PROJECT_NAME}_kdl
     ${orocos_kdl_LIBRARIES}
    CATKIN_DEPENDS
+    tesseract_ros
     roscpp
     rospy
     std_msgs

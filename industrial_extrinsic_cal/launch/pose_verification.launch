@@ -4,6 +4,7 @@
   <param name="robot_description" textfile="$(find abb_irb1600_cal_support)/urdf/irb1600_6_12.urdf"/>
   <param name="use_gui" value="true"/>
 
+
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
 
@@ -16,5 +17,7 @@
       cal_job_file: "test2_caljob_def.yaml"
     </rosparam>
     <param name="robot_urdf" type="str" value="$(find abb_irb1600_cal_support)/urdf/irb1600_6_12.urdf"/>
+    <param name="base_link" type="str" value="base_link"/>
+    <param name="tool0" type="str" value="tool0"/>
   </node>
 </launch>
