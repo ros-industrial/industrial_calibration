@@ -1,12 +1,10 @@
 ﻿//This program checks to see if the camera can see the target at different poses.
 //Assumes a flat rectangular target.
 
-#include <iostream>
 #include <vector>
 #include <industrial_extrinsic_cal/conical_pose_generator.h>
 #include <industrial_extrinsic_cal/targets_yaml_parser.h>
 #include <Eigen/Dense>
-#include <Eigen/Eigen>
 #include <Eigen/Core>
 #include <boost/shared_ptr.hpp>
 #include <industrial_extrinsic_cal/target.h>
@@ -17,14 +15,11 @@
 #include <eigen_conversions/eigen_msg.h>
 #include "applicable_pose_generator/pose_reachability_filter.h"
 
-#include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
 
 #include <industrial_extrinsic_cal/ros_transform_interface.h>
-
-#include "tf/transform_datatypes.h"
-
+#include <industrial_extrinsic_cal/check_if_points_in_pic.h>
 
 using std::vector;
 using std::string;
@@ -58,26 +53,12 @@ int main(int argc, char **argv)
   double center_Of_TargetX;
   double center_Of_TargetY;
   Eigen::Vector2d center_point_of_target;
-  const std::string& from_frame = "world";
-  const std::string& to_frame = "target";
-  ros::Time now = ros::Time::now();
-  tf::TransformListener tf_listener;
   tf::StampedTransform tf_transform;
+  tf::TransformListener tf_listener;
   double xMax,yMax,xMin,yMin;
 
-  while (!tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0)))
-   {
-     now = ros::Time::now();
-     ROS_INFO("waiting for tranform from %s to %s", from_frame.c_str(), to_frame.c_str());
-   }
-   try
-   {
-    tf_listener.lookupTransform(from_frame, to_frame, now, tf_transform);
-   }
-   catch (tf::TransformException& ex)
-   {
-     ROS_ERROR("%s", ex.what());
-   }
+  make_main_smaller initialization;
+  initialization.create_transform_listener(tf_transform, tf_listener);
 
   //reads in information about target
   string targetFile = "/home/lawrencelewis/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/ical_srv_target.yaml";
@@ -95,7 +76,8 @@ int main(int argc, char **argv)
   xMin = Mytarget->pts_[0].x;
   yMax = Mytarget->pts_[0].y;
   yMin = Mytarget->pts_[0].y;
-  for(int i=0;i<Mytarget->num_points_;i++){
+  for(int i=0;i<Mytarget->num_points_;i++)
+  {
     if(Mytarget->pts_[i].x > xMax) xMax = Mytarget->pts_[i].x;
     if(Mytarget->pts_[i].y > yMax) yMax = Mytarget->pts_[i].y;
     if(Mytarget->pts_[i].x < xMin) xMin = Mytarget->pts_[i].x;
@@ -116,44 +98,8 @@ int main(int argc, char **argv)
   // radius of the cone = (poseHeight/ std::tan(angleOfCone))
   geometry_msgs::PoseArray msg = create_all_poses(poseHeight, spacing_in_z, angleOfCone, numberOfStopsForPhotos,  center_point_of_target );
 
-  //creates target rectangle
-  geometry_msgs::Pose pnt1,pnt2,pnt3,pnt4;
-  pnt1.position.x = corner_points[0][0];
-  pnt1.position.y = corner_points[0][1];
-  pnt1.position.z = corner_points[0][2];
-  pnt1.orientation.w = 1.0;
-  pnt1.orientation.x = 0.0;
-  pnt1.orientation.y = 0.0;
-  pnt1.orientation.z = 0.0;
-
-  pnt2.position.x = corner_points[1][0];
-  pnt2.position.y = corner_points[1][1];
-  pnt2.position.z = corner_points[1][2];
-  pnt2.orientation.w = 1.0;
-  pnt2.orientation.x = 0.0;
-  pnt2.orientation.y = 0.0;
-  pnt2.orientation.z = 0.0;
-
-  pnt3.position.x = corner_points[2][0];
-  pnt3.position.y = corner_points[2][1];
-  pnt3.position.z = corner_points[2][2];
-  pnt3.orientation.w = 1.0;
-  pnt3.orientation.x = 0.0;
-  pnt3.orientation.y = 0.0;
-  pnt3.orientation.z = 0.0;
-
-  pnt4.position.x = corner_points[3][0];
-  pnt4.position.y = corner_points[3][1];
-  pnt4.position.z = corner_points[3][2];
-  pnt4.orientation.w = 1.0;
-  pnt4.orientation.x = 0.0;
-  pnt4.orientation.y = 0.0;
-  pnt4.orientation.z = 0.0;
-
-  msg.poses.push_back(pnt1);
-  msg.poses.push_back(pnt2);
-  msg.poses.push_back(pnt3);
-  msg.poses.push_back(pnt4);
+  //creates rectanglular target in rviz
+  initialization.create_rviz_target(corner_points,msg);
 
   // convert the messages back into poses
   EigenSTL::vector_Affine3d AllcameraPoses(msg.poses.size());
@@ -163,7 +109,7 @@ int main(int argc, char **argv)
     tf::poseMsgToEigen(msg.poses[i],AllcameraPoses[i]);
   }
 
-  // filters out unreachable and un seable poses
+  // filters out unreachable and unseeable poses
   geometry_msgs::PoseArray filtered_msgs = pose_filters(msg2,tf_transform, image_width, image_height, AllcameraPoses, corner_points, fx,  fy,  cx,  cy );
   ros::Publisher pub2 = n.advertise<geometry_msgs::PoseArray>("topic2", 1, true);
   filtered_msgs.header.frame_id = "target";
@@ -232,7 +178,8 @@ Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double 
   center_point[1]=center_Of_TargetY;
   return center_point;
 }
- geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target )
+
+geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target )
 {
   geometry_msgs::PoseArray msg;
   int extra_Counter = 0;
@@ -262,6 +209,7 @@ Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double 
   }
   return msg;
 }
+
 geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy )
 {
   CreateChain::chain_creation reachability_filter;
@@ -308,4 +256,76 @@ geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::Stamped
       }
   }
   return msg2;
+}
+
+void make_main_smaller::create_transform_listener(tf::StampedTransform& tf_transform,tf::TransformListener& tf_listen)
+{
+  ros::Time now = ros::Time::now();
+  while (!tf_listen.waitForTransform(from_frame_param, to_frame_param, now, ros::Duration(1.0)))
+   {
+     now = ros::Time::now();
+     ROS_INFO("waiting for tranform from %s to %s", from_frame_param.c_str(), to_frame_param.c_str());
+   }
+   try
+   {
+    tf_listen.lookupTransform(from_frame_param, to_frame_param, now, tf_transform);
+   }
+   catch (tf::TransformException& ex)
+   {
+     ROS_ERROR("%s", ex.what());
+   }
+}
+make_main_smaller::make_main_smaller()
+{
+  ros::NodeHandle privatenh("~");
+  if (!privatenh.getParam("world", from_frame_param))
+  {
+    ROS_ERROR("did not set parameter world");
+  }
+  if (!privatenh.getParam("target", to_frame_param))
+  {
+    ROS_ERROR("did not set parameter target");
+  }
+}
+void make_main_smaller::create_rviz_target(Eigen::Vector3d corner_points[4], geometry_msgs::PoseArray& msg)
+{
+  geometry_msgs::Pose pnt1,pnt2,pnt3,pnt4;
+  pnt1.position.x = corner_points[0][0];
+  pnt1.position.y = corner_points[0][1];
+  pnt1.position.z = corner_points[0][2];
+  pnt1.orientation.w = 1.0;
+  pnt1.orientation.x = 0.0;
+  pnt1.orientation.y = 0.0;
+  pnt1.orientation.z = 0.0;
+
+  pnt2.position.x = corner_points[1][0];
+  pnt2.position.y = corner_points[1][1];
+  pnt2.position.z = corner_points[1][2];
+  pnt2.orientation.w = 1.0;
+  pnt2.orientation.x = 0.0;
+  pnt2.orientation.y = 0.0;
+  pnt2.orientation.z = 0.0;
+
+  pnt3.position.x = corner_points[2][0];
+  pnt3.position.y = corner_points[2][1];
+  pnt3.position.z = corner_points[2][2];
+  pnt3.orientation.w = 1.0;
+  pnt3.orientation.x = 0.0;
+  pnt3.orientation.y = 0.0;
+  pnt3.orientation.z = 0.0;
+
+  pnt4.position.x = corner_points[3][0];
+  pnt4.position.y = corner_points[3][1];
+  pnt4.position.z = corner_points[3][2];
+  pnt4.orientation.w = 1.0;
+  pnt4.orientation.x = 0.0;
+  pnt4.orientation.y = 0.0;
+  pnt4.orientation.z = 0.0;
+
+  msg.poses.push_back(pnt1);
+  msg.poses.push_back(pnt2);
+  msg.poses.push_back(pnt3);
+  msg.poses.push_back(pnt4);
+
+  return;
 }

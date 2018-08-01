@@ -17,7 +17,10 @@
       cal_job_file: "test2_caljob_def.yaml"
     </rosparam>
     <param name="robot_urdf" type="str" value="$(find abb_irb1600_cal_support)/urdf/irb1600_6_12.urdf"/>
+    <param name="target_yaml" type="str" value="$(find industrial_extrinsic_cal)/yaml/ical_srv_target.yaml"/>
     <param name="base_link" type="str" value="base_link"/>
     <param name="tool0" type="str" value="tool0"/>
+    <param name="target" type="str" value="target"/>
+    <param name="world" type="str" value="world"/>
   </node>
 </launch>
