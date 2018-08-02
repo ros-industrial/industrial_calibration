@@ -22,5 +22,8 @@
     <param name="tool0" type="str" value="tool0"/>
     <param name="target" type="str" value="target"/>
     <param name="world" type="str" value="world"/>
+    <param name="image_width" type="int" value="1080"/>
+    <param name="image_height" type="int" value="1080"/>
+    <param name="focal_length" type="double" value="529.2"/>
   </node>
 </launch>

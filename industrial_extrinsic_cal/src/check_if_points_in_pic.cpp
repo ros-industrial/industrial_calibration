@@ -21,9 +21,12 @@
 #include <industrial_extrinsic_cal/ros_transform_interface.h>
 #include <industrial_extrinsic_cal/check_if_points_in_pic.h>
 
+#include <industrial_extrinsic_cal/camera_yaml_parser.h>
+
 using std::vector;
 using std::string;
 using industrial_extrinsic_cal::Target;
+using YAML::Node;
 
 // local function prototypes
 geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy );
@@ -32,7 +35,6 @@ geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z
 
 int addingFactorial(int lastAdded);
 Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY);
-//cvoid creates_listener_to_tfs(const std::string from_frame, const std::string to_frame , ros::Time now,const tf::TransformListener tf_listener, tf::StampedTransform tf_transform);
 
 int main(int argc, char **argv)
 {
@@ -43,12 +45,9 @@ int main(int argc, char **argv)
   int image_height = 1080;
   double fy=529.4;
   double fx =529.2;
-  double cx = image_width/2;//assumes that lense is ligned up with sensor
-  double cy = image_height/2;//assums that lense is ligned up with sensor
   int numberOfStopsForPhotos= 8; // controlls amount of stops for each ring
   double poseHeight = 1.2;
   double angleOfCone = M_PI/3;
-  int num_poses = numberOfStopsForPhotos*3+1;
   double spacing_in_z = .25;
   double center_Of_TargetX;
   double center_Of_TargetY;
@@ -56,6 +55,22 @@ int main(int argc, char **argv)
   tf::StampedTransform tf_transform;
   tf::TransformListener tf_listener;
   double xMax,yMax,xMin,yMin;
+
+  ros::NodeHandle pivnh("~");
+  if (!pivnh.getParam("image_width", image_width)){
+    ROS_ERROR("did not set parameter image_width");
+  }
+  if (!pivnh.getParam("image_height", image_height)){
+    ROS_ERROR("did not set parameter image_height");
+  }
+  if (!pivnh.getParam("focal_length", fx)){
+    ROS_ERROR("did not set parameter focal_length");
+  }
+
+  fy = fx;
+
+  double cx = image_width/2;//assumes that lense is ligned up with sensor
+  double cy = image_height/2;//assums that lense is ligned up with sensor
 
   make_main_smaller initialization;
   initialization.create_transform_listener(tf_transform, tf_listener);
@@ -94,7 +109,6 @@ int main(int argc, char **argv)
 
   // creates camera transforms in the shape of a cone
   ros::Publisher pub = n.advertise<geometry_msgs::PoseArray>("topic", 1, true);
-
   // radius of the cone = (poseHeight/ std::tan(angleOfCone))
   geometry_msgs::PoseArray msg = create_all_poses(poseHeight, spacing_in_z, angleOfCone, numberOfStopsForPhotos,  center_point_of_target );
 
@@ -111,6 +125,8 @@ int main(int argc, char **argv)
 
   // filters out unreachable and unseeable poses
   geometry_msgs::PoseArray filtered_msgs = pose_filters(msg2,tf_transform, image_width, image_height, AllcameraPoses, corner_points, fx,  fy,  cx,  cy );
+
+
   ros::Publisher pub2 = n.advertise<geometry_msgs::PoseArray>("topic2", 1, true);
   filtered_msgs.header.frame_id = "target";
   filtered_msgs.header.stamp = ros::Time::now();
@@ -141,6 +157,7 @@ void imagePoint(Eigen::Vector3d TargetPoint , double fx, double fy, double cx, d
  u = fx*(cp.x()/divider) + cx;
  v = fy*(cp.y()/divider) + cy;
 }
+
 int addingFactorial(int lastAdded)
 {
     int sumation = 0;
