@@ -27,6 +27,8 @@ Camera::Camera()
 {
   camera_name_ = "NONE";
   is_moving_ = false;
+  is_right_stereo_camera_ = false;
+  left_stereo_camera_name_ = "";
 }
 
 Camera::Camera(string name, CameraParameters camera_parameters, bool is_moving)
@@ -77,9 +79,11 @@ int Camera::getObservations(CameraObservations& camera_observations)
 {
   camera_observations.clear();
   camera_observer_->getObservations(camera_observations);
+  // get intermediate frames form camera and target
   for (int i = 0; i < (int)camera_observations.size(); i++)
-  {  // Add last pulled frame to observation's intermediate frame
-    camera_observations[i].intermediate_frame = transform_interface_->getIntermediateFrame();
+    {
+    camera_observations[i].intermediate_camera_frame = transform_interface_->getIntermediateFrame();
+    camera_observations[i].intermediate_target_frame = camera_observations[i].target->transform_interface_->getIntermediateFrame();
   }
 }
 }  // end namespace industrial_extrinsic_cal

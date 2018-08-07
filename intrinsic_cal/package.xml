@@ -24,7 +24,8 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>ceres-solver</depend>
-
+  <depend>yaml-cpp</depend>
+  
   <build_depend>message_generation</build_depend>
   <build_depend>robo_cylinder</build_depend>
 

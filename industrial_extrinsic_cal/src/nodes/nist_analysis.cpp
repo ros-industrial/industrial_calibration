@@ -193,7 +193,8 @@ int main(int argc, char** argv)
     temp_camera.trigger_ = current_camera->trigger_;
     temp_camera.camera_parameters_ = current_camera->camera_parameters_;
     temp_camera.camera_name_ = current_camera->camera_name_;
-    temp_camera.intermediate_frame_ = current_camera->intermediate_frame_;
+    temp_camera.intermediate_camera_frame_ = current_camera->intermediate_camera_frame_;
+    temp_camera.intermediate_target_frame_ = current_camera->intermediate_target_frame_;
     temp_camera.is_moving_ = current_camera->is_moving_;
     temp_camera.height = current_camera->camera_parameters_.height;
     temp_camera.width = current_camera->camera_parameters_.width;

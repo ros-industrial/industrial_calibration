@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<launch>
+  
+  <arg name="input_file"  default="$(find caljob_creator)/launch/mcc_wrist_joint_traj.yaml"/> <!-- name of input file -->
+  <arg name="output_file" default="$(find caljob_creator)/launch/mcc_wrist_joint_traj_new.yaml"/> <!-- name of output file -->
+  <arg name="joints_topic" default="/abb/joint_states"/> <!-- listens to this topic to gather robot joint values -->
+  <arg name="motion_server" default="rosRobotSceneTrigger_joint_values"/>
+  <arg name="trigger_server" default="/IcalSrvObs"/>
+
+  <node pkg="caljob_creator" type="joint_traj_node" name="joint_traj">
+    <param name="input_file" value="$(arg input_file)"/>
+    <param name="output_file" value="$(arg output_file)"/>
+    <param name="joints_topic" value="$(arg joints_topic)"/>
+    <param name="motion_server" value="$(arg motion_server)"/>
+    <param name="trigger_server" value="$(arg trigger_server)"/>
+  </node>
+
+</launch>

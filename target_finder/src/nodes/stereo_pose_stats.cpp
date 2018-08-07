@@ -47,7 +47,7 @@ private:
 
 bool stereoStats::callTheService()
 {
-  srv_.request.allowable_cost_per_observation = 3.0;
+  srv_.request.allowable_cost_per_observation = 5.0;
   std::vector<double> x;
   std::vector<double> y;
   std::vector<double> z;
@@ -122,7 +122,7 @@ bool stereoStats::callTheService()
   double ez,ey,ex;
   mean_pose.getEulerZYX(ez,ey,ex);
 
-  ROS_INFO("mean  = %lf %lf %lf  %lf %lf %lf %lf euler: %lf %lf %lf", xmean, ymean, zmean, qxmean, qymean, qzmean, qwmean, ez, ey, ex);
+  ROS_INFO("mean  = %lf %lf %lf  %lf %lf %lf %lf euler(deg): %lf %lf %lf", xmean, ymean, zmean, qxmean, qymean, qzmean, qwmean, ez*180./3.14, ey*180./3.14, ex*180./3.14);
   ROS_INFO("sigma = %lf %lf %lf  %lf %lf %lf %lf", xs, ys, zs, qxs, qys, qzs, qws);
   
   return (true);

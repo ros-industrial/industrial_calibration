@@ -238,10 +238,6 @@ private:
    */
   bool normalize_calibration_image_;
 
-  /**
-   *  @brief image_directory_ place to save images
-   */
-  std::string image_directory_;
 
   /**
    *  @brief getImageNumber
@@ -258,11 +254,6 @@ private:
     image_number_ = image_number;
   }
 
-  /**
-   *  @brief get last image
-   *  @return the most recent image
-   */
-  cv::Mat getLastImage();
 
 public:
   /**
@@ -314,9 +305,9 @@ public:
 
   void dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig& config, uint32_t level);
 
+  
 private:
   int image_number_;       /**< a counter of images recieved */
-  cv::Mat last_raw_image_; /**< the image last received */
   bool use_circle_detector_;
   bool white_blobs_;
   ros::ServiceClient client_;

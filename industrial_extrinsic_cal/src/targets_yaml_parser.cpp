@@ -8,7 +8,8 @@
 #include <yaml-cpp/yaml.h>
 #include <industrial_extrinsic_cal/ros_transform_interface.h>
 #include <industrial_extrinsic_cal/targets_yaml_parser.h>
-#include <industrial_extrinsic_cal/camera_yaml_parser.h>   // for parse_pose() and parse_transform_interface()
+#include <industrial_extrinsic_cal/camera_yaml_parser.h>   
+#include <industrial_extrinsic_cal/pose_yaml_parser.h>   
 #include <industrial_extrinsic_cal/ros_camera_observer.h>  // for pattern options
 
 using std::ifstream;

@@ -44,6 +44,14 @@ public:
     move_group_->setPlanningTime(10.0);                     // give it 10 seconds to plan
     move_group_->setNumPlanningAttempts(30.0);              // Allow parallel planner to hybridize this many plans
     move_group_->setPlannerId("RRTConnectkConfigDefault");  // use this planner
+    ros::NodeHandle pnh("~");
+    if (!pnh.getParam("end_effector_link_name", end_effector_link_name_)){
+      end_effector_link_name_ = "ee_link";
+    }
+    if (!pnh.getParam("pose_ref_frame_name", pose_ref_frame_name_)){
+      pose_ref_frame_name_ = "world";
+    }
+    ROS_INFO("using %s as pose reference frame and %s as end effector frame", pose_ref_frame_name_.c_str(), end_effector_link_name_.c_str());
   };
 
   ~ServersNode()
@@ -90,8 +98,8 @@ public:
 
   void poseCallBack(const industrial_extrinsic_cal::robot_pose_triggerGoalConstPtr& goal)
   {
-    move_group_->setPoseReferenceFrame("world");
-    move_group_->setEndEffectorLink("ee_link");
+    move_group_->setPoseReferenceFrame(pose_ref_frame_name_.c_str());
+    move_group_->setEndEffectorLink(end_effector_link_name_.c_str());
     move_group_->setGoalPositionTolerance(0.005);
     move_group_->setGoalOrientationTolerance(0.005);
     move_group_->setStartStateToCurrentState();
@@ -114,7 +122,7 @@ public:
               target_pose.orientation.w);
 
     poses.push_back(target_pose);
-    move_group_->setPoseTargets(poses, "ee_link");
+    move_group_->setPoseTargets(poses, end_effector_link_name_.c_str());
 
     moveit::planning_interface::MoveGroup::Plan plan;
     if (move_group_->plan(plan))
@@ -139,6 +147,8 @@ private:
   PoseServer pose_server_;
   std::string action_name_;
   moveit::planning_interface::MoveGroup* move_group_;
+  std::string end_effector_link_name_;
+  std::string pose_ref_frame_name_;
 };
 
 int main(int argc, char** argv)

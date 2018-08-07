@@ -19,7 +19,7 @@
   </node>
 
   <node if="$(arg view_cameras)" pkg="image_view" type="image_view" name="Basler$(arg camera_number)_view" >
-   <remap from="image" to="Basler$(arg camera_number)/image_rect"/>
+   <remap from="image" to="Basler$(arg camera_number)/image_raw"/>
   </node>
 
 </launch>

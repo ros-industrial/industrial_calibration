@@ -1,0 +1,31 @@
+<launch>
+
+  <arg name="camera_number" default="21511094"/>
+  <arg name="joint_ifile" default="joint_traj.yaml"/>
+  <arg name="joint_ofile" default="joint_traj2.yaml">
+  <arg name="joints_topic" default="/joint_states">
+  <arg name="motion_server_name" default="rosRobotSceneTrigger_joint_values">
+
+  <include  file="$(find industrial_extrinsic_cal)/launch/basler_camera.launch" >
+     <param name="camera_number" value="$(arg camera_number)"/>
+  </include>
+
+  <node pkg="intrinsic_cal" type="robot_ical" name="robot_intrinsic_calibration" output="screen" >
+          <param name="image_topic" value="Basler$(arg camera_number)/image_raw" />
+          <param name="camera_name" value="Basler$(arg camera_number)" />
+          <param name="target_rows" value="20" />
+          <param name="target_cols" value="33" />
+          <param name="target_circle_dia" value="0.0015" />
+          <param name="target_spacing" value="0.025" />
+          <param name="use_circle_detector" value="false"/>
+	  <param name="joint_ifile" value="$(arg joint_ifile)"/>
+  	  <param name="joint_ofile" value="$(arg joint_ofile)"/>
+  	  <param name="joints_topic" value="$(arg joints_topic)"/>	  
+	  <param name="motion_server" value="$(arg motion_server)"/>
+  </node>
+
+  <node name="observation_view" pkg="image_view" type="image_view" >
+      <remap to="/observer_results_image" from="image"/>
+  </node>
+
+</launch>
