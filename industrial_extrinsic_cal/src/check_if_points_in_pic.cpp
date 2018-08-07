@@ -56,6 +56,7 @@ int main(int argc, char **argv)
   tf::TransformListener tf_listener;
   double xMax,yMax,xMin,yMin;
 
+  //gets camera parameters
   ros::NodeHandle pivnh("~");
   if (!pivnh.getParam("image_width", image_width)){
     ROS_ERROR("did not set parameter image_width");
