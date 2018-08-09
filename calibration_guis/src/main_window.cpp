@@ -52,22 +52,8 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 
     ReadSettings();
   setWindowIcon(QIcon(":/images/icon.png"));
-  //ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
     QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
-
-  /*********************
-  ** Logging
-  **********************/
-  //ui.view_logging->setModel(qnode.loggingModel());
     QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
-
-    /*********************
-    ** Auto Start
-    **********************/
-//    if ( ui.checkbox_remember_settings->isChecked() ) {
-//        on_button_connect_clicked(true);
-  //  }
-
 }
 
 MainWindow::~MainWindow() {
@@ -84,29 +70,6 @@ void MainWindow::showNoMasterMessage() {
   msgBox.exec();
     close();
 }
-
-/*
- * These triggers whenever the button is clicked, regardless of whether it
- * is already checked or not.
- */
-
-//void MainWindow::on_button_connect_clicked(bool check ) {
-//}
-
-
-//void MainWindow::on_checkbox_use_environment_stateChanged(int state) {
-//  bool enabled;
-//  if ( state == 0 ) {
-//    enabled = true;
-//  } else {
-//    enabled = false;
-//  }
-//}
-
-/*****************************************************************************
-** Implemenation [Slots][manually connected]
-*****************************************************************************/
-
 /**
  * This function is signalled by the underlying model. When the model changes,
  * this will drop the cursor down to the last line in the QListview to ensure
@@ -152,10 +115,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
   WriteSettings();
   QMainWindow::closeEvent(event);
 }
-
-
-
-
 
 void calibration_guis::MainWindow::on_startButton_clicked()
 {

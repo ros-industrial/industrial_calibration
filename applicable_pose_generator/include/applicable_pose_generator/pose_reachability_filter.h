@@ -26,6 +26,10 @@
 
 #include <tesseract_ros/kdl/kdl_chain_kin.h>
 
+/*!
+ * This class creates the chain of transforms from joint to joint for the robot
+ * It then checks to see if that chain can reach the pose that we want
+ */
 namespace CreateChain
 {
   class chain_creation
@@ -34,7 +38,6 @@ namespace CreateChain
     std::string robot_urdf;
     std::string tool0_param;
     std::string base_link_param;
-
     //loads urdf that discribes the chain
     chain_creation();
     bool chain_Parse(Eigen::Affine3d ei_transform_to_check);
@@ -46,7 +49,6 @@ namespace CreateChain
     KDL::Tree robot_tree;
     KDL::Chain robot_chain;
     KDL::Frame transform_goal_kdl;
-
   };
 }
 #endif

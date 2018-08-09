@@ -56,15 +56,15 @@ bool chain_creation::chain_Parse(Eigen::Affine3d ei_transform_to_check)
 
   ROS_INFO("%d",solving_Ik.CartToJnt(robot_joints,transform_goal_kdl,return_joint_values));
 
-  if(0 == solving_Ik.CartToJnt(robot_joints,transform_goal_kdl,return_joint_values))
+  if(!solving_Ik.CartToJnt(robot_joints,transform_goal_kdl,return_joint_values))
   {
     ROS_INFO("Reachable Pose Found");
     return true;
   }
   else
   {
-    return false;
     ROS_INFO("Unreachable pose found");
+    return false;
   }
 }
 }//end of namespace create_chain_take_pose_inverse_kinamatics
