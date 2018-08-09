@@ -3,9 +3,7 @@
   <name>calibration_guis</name>
   <version>0.1.0</version>
   <description>
-
-     calibration_guis
-
+    This gui can be used for rail calibration.
   </description>
   <maintainer email="lewii@gmail.com">Lawrence Lewis</maintainer>
   <author>Lawrence Lewis</author>

@@ -67,20 +67,11 @@ public Q_SLOTS:
    void on_obsButton_clicked();
    void on_saveButton_clicked();
    void on_covButton_clicked();
-
-
-
    void on_runButton_clicked();
-
    void on_testingButton_clicked();
-
 
 private:
     void on_pushButton_clicked();
-
-    //void on_testingRosInfo_clicked();
-
-    //void on_button_connect_clicked();
 
 private:
 	Ui::MainWindowDesign ui;

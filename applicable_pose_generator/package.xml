@@ -1,4 +1,17 @@
 <?xml version="1.0"?>
+<!--Copyright [2018] [Lawrence]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.-->
 <package>
   <name>applicable_pose_generator</name>
   <version>0.0.0</version>
@@ -15,18 +28,7 @@
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
   <license>TODO</license>
 
-
-  <!-- Url tags are optional, but multiple are allowed, one per tag -->
-  <!-- Optional attribute type can be: website, bugtracker, or repository -->
-  <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/applicable_pose_generator</url> -->
-
-
-  <!-- Author tags are optional, multiple are allowed, one per tag -->
-  <!-- Authors do not have to be maintainers, but could be -->
-  <!-- Example: -->
-  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
-
+  <!-- <author email="lewii5000@gmail.com">Lawrence Lewis</author> -->
 
   <!-- The *_depend tags are used to specify dependencies -->
   <!-- Dependencies can be catkin packages or system dependencies -->
@@ -50,14 +52,8 @@
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>kdl_parser</run_depend>
-
-
-
-
-
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
-
   </export>
 </package>
