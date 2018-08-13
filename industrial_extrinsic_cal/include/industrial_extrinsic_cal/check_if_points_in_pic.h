@@ -26,6 +26,20 @@
 class make_main_smaller
 {
 public:
+  int image_width;
+  int image_height;
+  double fy;
+  double fx;
+  int numberOfStopsForPhotos; // controlls amount of stops for each ring
+  double poseHeight;
+  double angleOfCone;
+  double spacing_in_z;
+  double center_Of_TargetX;
+  double center_Of_TargetY;
+  Eigen::Vector2d center_point_of_target;
+  tf::StampedTransform tf_transform;
+  tf::TransformListener tf_listener;
+  double xMax,yMax,xMin,yMin;
   std::string from_frame_param_;
   std::string to_frame_param_;
   void create_rviz_target(Eigen::Vector3d corner_points[4], geometry_msgs::PoseArray& msg);
@@ -35,7 +49,7 @@ public:
   geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target );
   int addingFactorial(int lastAdded);
   Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY);
-  make_main_smaller();
+  make_main_smaller(ros::NodeHandle pivnh);
 private:
 };
 #endif
