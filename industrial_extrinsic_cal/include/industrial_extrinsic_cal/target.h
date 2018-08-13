@@ -50,6 +50,9 @@ public:
 
   /*! \brief generates the points given rows, cols and spacing in correct order*/
   void generatePoints();
+
+  /*! \brief gets the number of rows and cols, if not this kind, no change */
+  bool getRowsCols(int &rows, int & cols);
   
   // TODO make these each a derived class of a base target class
   union

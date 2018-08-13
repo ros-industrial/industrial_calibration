@@ -55,6 +55,8 @@ namespace industrial_extrinsic_cal
       FixedCircleTargetCameraReprjErrorPK,
       RailICal,
       RailICal3,
+      RailICal4,
+      RailICal5,
       RailSCal,
       StereoTargetLocator,
       TargetOnLinkRtStereo,

@@ -961,4 +961,5 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
 }
 
+
 }  // industrial_extrinsic_cal

@@ -305,6 +305,13 @@ public:
 
   void dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig& config, uint32_t level);
 
+  /**
+   * @brief compute the proclivity for the observations, and verify the observataions make sense
+   * @param CO the camera observations
+   * @return true of all observations check out
+   */
+  bool checkObservationProclivity(CameraObservations& CO);
+  
   
 private:
   int image_number_;       /**< a counter of images recieved */

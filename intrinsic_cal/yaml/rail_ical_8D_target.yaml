@@ -1,0 +1,13 @@
+---
+
+moving_targets:
+-
+     target_name: target
+     target_type: 2
+     circle_dia:  0.006
+     spacing:  0.0141667
+     target_frame: target2_frame
+     transform_interface: ros_lti
+     parent_frame: basler3_optical_frame
+     target_rows: 20
+     target_cols: 30

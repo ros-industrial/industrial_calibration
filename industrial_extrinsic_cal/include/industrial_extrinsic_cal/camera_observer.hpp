@@ -184,6 +184,109 @@ public:
     last_raw_image_ = image.clone();
   }
 
+  bool checkObservationProclivity(CameraObservations& CO)
+  {
+    /* compute proclivity from a few specific points in the observation */
+    cv::Mat Alpha(8,1, CV_64F);
+    cv::Mat A(18,8, CV_64F); // use twice as many as necessary
+    cv::Mat B(18,1, CV_64F);
+    boost::shared_ptr<Target> target = CO[0].target;
+
+    // determine rows and cols of target
+    int rows, cols;
+    target->getRowsCols(rows,cols);
+
+    std::vector<int> selected_point_index;
+    selected_point_index.push_back(0); // upper left point
+    selected_point_index.push_back(rows-1); // upper right point 
+    selected_point_index.push_back(rows*cols - cols -1); // lower left point 
+    selected_point_index.push_back(rows*cols -1); // lower right point
+    selected_point_index.push_back(1);  // nearby to point1
+    selected_point_index.push_back(rows-2);// nearby to point2
+    selected_point_index.push_back(rows*cols - cols -2); // nearby to point3
+    selected_point_index.push_back(rows*cols -2); // nearby to point4
+    selected_point_index.push_back(rows*cols/2); // middle point
+    // build matrix of type Ax=b where A x is the unknown elements of the proclivity matrix "alpha"
+    int row = 0;
+    for(int i=0; i<(int) selected_point_index.size(); i++){
+      int pi = CO.at(selected_point_index[i]).point_id; // We expect that selected_point_index = pi, but not sure
+      double xi = target->pts_[pi].x;
+      double yi = target->pts_[pi].y;
+      double Ui = CO.at(pi).image_loc_x;
+      double Vi = CO.at(pi).image_loc_y;
+      A.at<double>(row,0) = -xi;
+      A.at<double>(row,1) = -yi;
+      A.at<double>(row,2) = -1.0;
+      A.at<double>(row,3) = 0.0;
+      A.at<double>(row,4) = 0.0;
+      A.at<double>(row,5) = 0.0;
+      A.at<double>(row,6) = Ui*xi;
+      A.at<double>(row,7) = Ui*yi;
+      B.at<double>(row)   = -Ui;
+      row++;
+      A.at<double>(row,0) = 0.0;
+      A.at<double>(row,1) = 0.0;
+      A.at<double>(row,2) = 0.0;
+      A.at<double>(row,3) = -xi;
+      A.at<double>(row,4) = -yi;
+      A.at<double>(row,5) = -1.0;
+      A.at<double>(row,6) = Vi*xi;
+      A.at<double>(row,7) = Vi*yi;
+      B.at<double>(row)   = -Vi;
+      row++;
+    }
+    cv::solve(A,B,Alpha, cv::DECOMP_SVD);
+
+    // construct the Proclivity matrix from Alpha
+    cv::Mat P(3,3,CV_64F);
+    P.at<double>(0,0) = Alpha.at<double>(0);
+    P.at<double>(0,1) = Alpha.at<double>(1);
+    P.at<double>(0,2) = Alpha.at<double>(2);
+    P.at<double>(1,0) = Alpha.at<double>(3);
+    P.at<double>(1,1) = Alpha.at<double>(4);
+    P.at<double>(1,2) = Alpha.at<double>(5);
+    P.at<double>(2,0) = Alpha.at<double>(6);
+    P.at<double>(2,1) = Alpha.at<double>(7);
+    P.at<double>(2,2) = 1.0;
+
+    /*
+    ROS_ERROR("Proclivity=");
+    ROS_ERROR("[ %8.3lf %8.3lf %8.3lf ",  P.at<double>(0,0), P.at<double>(0,1), P.at<double>(0,2));
+    ROS_ERROR("  %8.3lf %8.3lf %8.3lf ",  P.at<double>(1,0), P.at<double>(1,1), P.at<double>(1,2));
+    ROS_ERROR("  %8.3lf %8.3lf %8.3lf ]", P.at<double>(2,0), P.at<double>(2,1), P.at<double>(2,2));
+    */
+    // check the proclivity of every observation
+    bool rtn = true;
+    double ave_error = 0.0;
+    for(int i=0; i<(int) CO.size(); i++){
+      int pi = CO[i].point_id;
+      double Ui = CO.at(pi).image_loc_x;
+      double Vi = CO.at(pi).image_loc_y;
+      double xi = target->pts_[pi].x;
+      double yi = target->pts_[pi].y;
+      double ki = 1.0/(Alpha.at<double>(6)*xi + Alpha.at<double>(7)*yi + 1.0);
+      cv::Mat UV(3,1, CV_64F);
+      cv::Mat X(3,1, CV_64F);
+      X.at<double>(0) = xi;
+      X.at<double>(1) = yi;
+      X.at<double>(2) = 1.0;
+      UV = ki*P*X;
+      double EU = Ui - UV.at<double>(0);
+      double EV = Vi - UV.at<double>(1);
+      ave_error += sqrt(EU*EU + EV*EV);
+      if(fabs(EU)>5.0 || fabs(EV)>5.0){
+	ROS_ERROR("pi = %d %8.3lf %8.3lf Ui Vi = %8.3lf %8.3lf UV = %8.3lf %8.3lf Error: %8.3lf %8.3lf",pi, xi, yi,
+		  Ui, Vi,
+		  UV.at<double>(0), UV.at<double>(1),
+		  EU, EV);
+	rtn = false;
+      }
+    }// done checking proclivities
+    ave_error = ave_error/(int) CO.size();
+    ROS_WARN("average proclivity error = %8.3lf",ave_error);
+    return(rtn);
+  };
+
   
   cv::Mat last_raw_image_; /**< the image last received */
   std::string image_directory_; /*!< string directory for saving and loading images */
