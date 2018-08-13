@@ -25,18 +25,9 @@ EigenSTL::vector_Affine3d getConicalPoses(const int n,
     //rotate about Y to make z point at big dot
     frame.rotate(Eigen::AngleAxisd {-M_PI/2-dpp, Eigen::Vector3d::UnitY()});
     //rotate about x to point z at big dot
-    /*
-    frame.rotate(Eigen::AngleAxisd {M_PI, Eigen::Vector3d::UnitX()});
     // once the camera is looking at the point with axis z
     // rotate camera about z axis to get 3 more positions
-    frame.rotate(Eigen::AngleAxisd {dpp, Eigen::Vector3d::UnitY()});*/
     frames.push_back(std::move(frame));
-    /*
-    frame.rotate(Eigen::AngleAxisd {M_PI/4, Eigen::Vector3d::UnitZ()});
-    frames.push_back(std::move(frame));
-    frame.rotate(Eigen::AngleAxisd {-M_PI/2, Eigen::Vector3d::UnitZ()});
-    frames.push_back(std::move(frame));
-    */
   }
 
   // Add a frame looking directly down

@@ -25,5 +25,9 @@
     <param name="image_width" type="int" value="1080"/>
     <param name="image_height" type="int" value="1080"/>
     <param name="focal_length" type="double" value="529.2"/>
+    <param name="numberOfStopsForPhotos" type="double" value="8"/>
+    <param name="poseHeight" type="double" value="1.2"/>
+    <param name="spacing_in_z" type="double" value=".25"/>
+    <param name="angleOfCone" type="double" value="1.047197"/>
   </node>
 </launch>
