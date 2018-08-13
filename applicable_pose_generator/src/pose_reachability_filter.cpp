@@ -18,14 +18,15 @@ chain_creation::chain_creation()
   ros::NodeHandle pnh("~");
   if (!pnh.getParam("robot_urdf", robot_urdf)){
     ROS_ERROR("did not set parameter robot_urdf");
+    exit (EXIT_FAILURE);
   }
   if (!pnh.getParam("base_link", base_link_param)){
     ROS_ERROR("did not set parameter base_link");
-
+    exit (EXIT_FAILURE);
   }
   if (!pnh.getParam("tool0", tool0_param)){
     ROS_ERROR("did not set parameter tool0");
-
+    exit (EXIT_FAILURE);
   }
   if (!Mymodel.initFile(robot_urdf))
   {

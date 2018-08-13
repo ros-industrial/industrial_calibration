@@ -178,7 +178,6 @@ target_link_libraries(
 add_executable(camera_observer_scene_trigger    src/nodes/camera_observer_scene_trigger.cpp)
 add_executable(manual_calt_adjust               src/nodes/manual_calt_adjuster.cpp)
 add_executable(mutable_joint_state_publisher    src/nodes/mutable_joint_state_publisher.cpp)
-#add_executable(nist_analysis                    src/nodes/nist_analysis.cpp)
 add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
 add_executable(service_node                     src/nodes/calibration_service.cpp)
 add_executable(trigger_service                  src/nodes/ros_scene_trigger_server.cpp)
@@ -197,6 +196,7 @@ add_dependencies(trigger_service                  ${catkin_EXPORTED_TARGETS} ${i
 add_dependencies(range_excal                      ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(rangeNmono                       ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(target_display                   ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+
 add_dependencies(wrist_cal_srv                    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(stereo_cal_srv                    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(position_validation               ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})

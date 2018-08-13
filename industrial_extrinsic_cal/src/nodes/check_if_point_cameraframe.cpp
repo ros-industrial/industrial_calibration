@@ -23,7 +23,7 @@ bool callback(msgreqesttype input,
     }
     if(target.pts_[q].y <= yMin)
     {
-      xMin = target.pts_[q].y;
+      yMin = target.pts_[q].y;
     }
     if(target.pts_[q].x >= xMax)
     {
@@ -36,8 +36,8 @@ bool callback(msgreqesttype input,
   }
 
   double botLetCorner[3] = {xMin, yMin, 0};
-  double botRiteCorner[3] = {xMax, yMin, 0};
-  double topRiteCorner[3] = {xMax, yMax, 0};
+  double botRightCorner[3] = {xMax, yMin, 0};
+  double topRightCorner[3] = {xMax, yMax, 0};
   double topLetCorner[3] = {xMin, yMax, 0};
 
   int maxPixlex;

@@ -26,10 +26,15 @@
 class make_main_smaller
 {
 public:
-  std::string from_frame_param;
-  std::string to_frame_param;
+  std::string from_frame_param_;
+  std::string to_frame_param_;
   void create_rviz_target(Eigen::Vector3d corner_points[4], geometry_msgs::PoseArray& msg);
   void create_transform_listener(tf::StampedTransform& tf_transform, tf::TransformListener& tf_listen);
+  geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy );
+  void imagePoint(Eigen::Vector3d TargetPoint, double fx, double fy, double cx, double cy, double &u, double &v,Eigen::Affine3d cameraPose);
+  geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target );
+  int addingFactorial(int lastAdded);
+  Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY);
   make_main_smaller();
 private:
 };

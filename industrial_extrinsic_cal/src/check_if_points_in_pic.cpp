@@ -29,26 +29,25 @@ using industrial_extrinsic_cal::Target;
 using YAML::Node;
 
 // local function prototypes
-geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy );
-void imagePoint(Eigen::Vector3d TargetPoint, double fx, double fy, double cx, double cy, double &u, double &v,Eigen::Affine3d cameraPose);
-geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target );
 
-int addingFactorial(int lastAdded);
-Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY);
+
+
+
+
+
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "node");
-  sleep(2);
   ros::NodeHandle n("~");
-  int image_width =  1080;
-  int image_height = 1080;
-  double fy=529.4;
-  double fx =529.2;
-  int numberOfStopsForPhotos= 8; // controlls amount of stops for each ring
-  double poseHeight = 1.2;
-  double angleOfCone = M_PI/3;
-  double spacing_in_z = .25;
+  int image_width;
+  int image_height;
+  double fy;
+  double fx;
+  int numberOfStopsForPhotos; // controlls amount of stops for each ring
+  double poseHeight;
+  double angleOfCone;
+  double spacing_in_z;
   double center_Of_TargetX;
   double center_Of_TargetY;
   Eigen::Vector2d center_point_of_target;
@@ -67,6 +66,18 @@ int main(int argc, char **argv)
   if (!pivnh.getParam("focal_length", fx)){
     ROS_ERROR("did not set parameter focal_length");
   }
+  if (!pivnh.getParam("numberOfStopsForPhotos", numberOfStopsForPhotos)){
+    ROS_ERROR("did not set parameter numberOfStopsForPhotos");
+  }
+  if (!pivnh.getParam("poseHeight", poseHeight)){
+    ROS_ERROR("did not set parameter poseHeight");
+  }
+  if (!pivnh.getParam("spacing_in_z", spacing_in_z)){
+    ROS_ERROR("did not set parameter spacing_in_z");
+  }
+  if (!pivnh.getParam("angleOfCone", angleOfCone)){
+    ROS_ERROR("did not set parameter angleOfCone");
+  }
 
   fy = fx;
 
@@ -81,7 +92,7 @@ int main(int argc, char **argv)
   vector<boost::shared_ptr<Target>>  myYamlDefinedTargets;
   if(!parseTargets(targetFile , myYamlDefinedTargets))
 {
-    ROS_ERROR("file name bad");
+    ROS_ERROR("could not parse target file %s", targetFile.c_str());
     return 0;
   }
    boost::shared_ptr<Target> Mytarget = myYamlDefinedTargets[0];
@@ -106,12 +117,12 @@ int main(int argc, char **argv)
   corner_points[2] = Eigen::Vector3d((xMin-xMax/2)/5,(yMax-yMax/2)/5,0);
   corner_points[3] = Eigen::Vector3d((xMax-xMax/2)/5,(yMax-yMax/2)/5,0);
 
-  center_point_of_target = finds_middle_of_target(corner_points, center_Of_TargetX,center_Of_TargetY);
+  center_point_of_target = make_main_smaller::finds_middle_of_target(corner_points, center_Of_TargetX,center_Of_TargetY);
 
   // creates camera transforms in the shape of a cone
   ros::Publisher pub = n.advertise<geometry_msgs::PoseArray>("topic", 1, true);
   // radius of the cone = (poseHeight/ std::tan(angleOfCone))
-  geometry_msgs::PoseArray msg = create_all_poses(poseHeight, spacing_in_z, angleOfCone, numberOfStopsForPhotos,  center_point_of_target );
+  geometry_msgs::PoseArray msg = make_main_smaller::create_all_poses(poseHeight, spacing_in_z, angleOfCone, numberOfStopsForPhotos,  center_point_of_target );
 
   //creates rectanglular target in rviz
   initialization.create_rviz_target(corner_points,msg);
@@ -125,7 +136,7 @@ int main(int argc, char **argv)
   }
 
   // filters out unreachable and unseeable poses
-  geometry_msgs::PoseArray filtered_msgs = pose_filters(msg2,tf_transform, image_width, image_height, AllcameraPoses, corner_points, fx,  fy,  cx,  cy );
+  geometry_msgs::PoseArray filtered_msgs = make_main_smaller::pose_filters(msg2,tf_transform, image_width, image_height, AllcameraPoses, corner_points, fx,  fy,  cx,  cy );
 
 
   ros::Publisher pub2 = n.advertise<geometry_msgs::PoseArray>("topic2", 1, true);
@@ -144,7 +155,7 @@ int main(int argc, char **argv)
 } //end of main
 
 // Transforms a point into the camera frame then projects the new point into the 2d screen
-void imagePoint(Eigen::Vector3d TargetPoint , double fx, double fy, double cx, double cy, double &u, double &v,Eigen::Affine3d cameraPose )
+void make_main_smaller::imagePoint(Eigen::Vector3d TargetPoint , double fx, double fy, double cx, double cy, double &u, double &v,Eigen::Affine3d cameraPose )
 {
  Eigen::Vector3d cp;
  cp = cameraPose.inverse() * TargetPoint;
@@ -159,7 +170,7 @@ void imagePoint(Eigen::Vector3d TargetPoint , double fx, double fy, double cx, d
  v = fy*(cp.y()/divider) + cy;
 }
 
-int addingFactorial(int lastAdded)
+int make_main_smaller::addingFactorial(int lastAdded)
 {
     int sumation = 0;
     while(lastAdded>0)
@@ -175,7 +186,7 @@ int findingMidpoint(int pointOne, int pointTwo)
   return midpoint;
 }
 
-Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY)
+Eigen::Vector2d make_main_smaller::finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY)
 {
   Eigen::Vector2d center_point;
   for(int i=0; i<4; i++)
@@ -197,7 +208,7 @@ Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double 
   return center_point;
 }
 
-geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target )
+geometry_msgs::PoseArray make_main_smaller::create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target )
 {
   geometry_msgs::PoseArray msg;
   int extra_Counter = 0;
@@ -228,7 +239,7 @@ geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z
   return msg;
 }
 
-geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy )
+geometry_msgs::PoseArray make_main_smaller::pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy )
 {
   CreateChain::chain_creation reachability_filter;
   int num_created_poses = AllcameraPoses.size();
@@ -239,7 +250,7 @@ geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::Stamped
       {
           double u=0;
           double v=0;
-          imagePoint(corner_points[i], fx, fy, cx, cy, u, v,AllcameraPoses[j]);
+          make_main_smaller::imagePoint(corner_points[i], fx, fy, cx, cy, u, v,AllcameraPoses[j]);
           if(u<0 || u>=image_width || v<0 || v>= image_height )
           {
             ROS_ERROR("u,v = %lf %lf but image size = %d %d",u,v,image_width,image_height);
@@ -279,14 +290,14 @@ geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::Stamped
 void make_main_smaller::create_transform_listener(tf::StampedTransform& tf_transform,tf::TransformListener& tf_listen)
 {
   ros::Time now = ros::Time::now();
-  while (!tf_listen.waitForTransform(from_frame_param, to_frame_param, now, ros::Duration(1.0)))
+  while (!tf_listen.waitForTransform(from_frame_param_, to_frame_param_, now, ros::Duration(1.0)))
    {
      now = ros::Time::now();
-     ROS_INFO("waiting for tranform from %s to %s", from_frame_param.c_str(), to_frame_param.c_str());
+     ROS_INFO("waiting for tranform from %s to %s", from_frame_param_.c_str(), to_frame_param_.c_str());
    }
    try
    {
-    tf_listen.lookupTransform(from_frame_param, to_frame_param, now, tf_transform);
+    tf_listen.lookupTransform(from_frame_param_, to_frame_param_, now, tf_transform);
    }
    catch (tf::TransformException& ex)
    {
@@ -296,11 +307,11 @@ void make_main_smaller::create_transform_listener(tf::StampedTransform& tf_trans
 make_main_smaller::make_main_smaller()
 {
   ros::NodeHandle privatenh("~");
-  if (!privatenh.getParam("world", from_frame_param))
+  if (!privatenh.getParam("world", from_frame_param_))
   {
     ROS_ERROR("did not set parameter world");
   }
-  if (!privatenh.getParam("target", to_frame_param))
+  if (!privatenh.getParam("target", to_frame_param_))
   {
     ROS_ERROR("did not set parameter target");
   }
