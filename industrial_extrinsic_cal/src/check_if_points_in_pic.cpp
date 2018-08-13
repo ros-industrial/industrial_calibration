@@ -29,98 +29,20 @@ using industrial_extrinsic_cal::Target;
 using YAML::Node;
 
 // local function prototypes
-
-
-
-
-
-
-
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "node");
   ros::NodeHandle n("~");
-  int image_width;
-  int image_height;
-  double fy;
-  double fx;
-  int numberOfStopsForPhotos; // controlls amount of stops for each ring
-  double poseHeight;
-  double angleOfCone;
-  double spacing_in_z;
-  double center_Of_TargetX;
-  double center_Of_TargetY;
-  Eigen::Vector2d center_point_of_target;
-  tf::StampedTransform tf_transform;
-  tf::TransformListener tf_listener;
-  double xMax,yMax,xMin,yMin;
-
-  //gets camera parameters
   ros::NodeHandle pivnh("~");
-  if (!pivnh.getParam("image_width", image_width)){
-    ROS_ERROR("did not set parameter image_width");
-  }
-  if (!pivnh.getParam("image_height", image_height)){
-    ROS_ERROR("did not set parameter image_height");
-  }
-  if (!pivnh.getParam("focal_length", fx)){
-    ROS_ERROR("did not set parameter focal_length");
-  }
-  if (!pivnh.getParam("numberOfStopsForPhotos", numberOfStopsForPhotos)){
-    ROS_ERROR("did not set parameter numberOfStopsForPhotos");
-  }
-  if (!pivnh.getParam("poseHeight", poseHeight)){
-    ROS_ERROR("did not set parameter poseHeight");
-  }
-  if (!pivnh.getParam("spacing_in_z", spacing_in_z)){
-    ROS_ERROR("did not set parameter spacing_in_z");
-  }
-  if (!pivnh.getParam("angleOfCone", angleOfCone)){
-    ROS_ERROR("did not set parameter angleOfCone");
-  }
 
-  fy = fx;
-
-  double cx = image_width/2;//assumes that lense is ligned up with sensor
-  double cy = image_height/2;//assums that lense is ligned up with sensor
-
-  make_main_smaller initialization;
-  initialization.create_transform_listener(tf_transform, tf_listener);
-
-  //reads in information about target
-  string targetFile = "/home/lawrencelewis/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/ical_srv_target.yaml";
-  vector<boost::shared_ptr<Target>>  myYamlDefinedTargets;
-  if(!parseTargets(targetFile , myYamlDefinedTargets))
-{
-    ROS_ERROR("could not parse target file %s", targetFile.c_str());
-    return 0;
-  }
-   boost::shared_ptr<Target> Mytarget = myYamlDefinedTargets[0];
-
-  //finds the max values to be used as corner points
-  ROS_INFO("target name = %s num_points = %d size of pts_ = %d",Mytarget->target_name_,Mytarget->num_points_,(int)Mytarget->pts_.size());
-  xMax = Mytarget->pts_[0].x;
-  xMin = Mytarget->pts_[0].x;
-  yMax = Mytarget->pts_[0].y;
-  yMin = Mytarget->pts_[0].y;
-  for(int i=0;i<Mytarget->num_points_;i++)
-  {
-    if(Mytarget->pts_[i].x > xMax) xMax = Mytarget->pts_[i].x;
-    if(Mytarget->pts_[i].y > yMax) yMax = Mytarget->pts_[i].y;
-    if(Mytarget->pts_[i].x < xMin) xMin = Mytarget->pts_[i].x;
-    if(Mytarget->pts_[i].y < yMin) yMin = Mytarget->pts_[i].y;
-  }
-  Eigen::Vector3d corner_points[4];
-
-  corner_points[0] = Eigen::Vector3d((xMin-xMax/2)/5,(yMin-yMax/2)/5,0);
-  corner_points[1] = Eigen::Vector3d((xMax-xMax/2)/5,(yMin-yMax/2)/5,0);
-  corner_points[2] = Eigen::Vector3d((xMin-xMax/2)/5,(yMax-yMax/2)/5,0);
-  corner_points[3] = Eigen::Vector3d((xMax-xMax/2)/5,(yMax-yMax/2)/5,0);
+  //loads all known values and parameters
+  make_main_smaller initialization(pivnh);
 
   center_point_of_target = make_main_smaller::finds_middle_of_target(corner_points, center_Of_TargetX,center_Of_TargetY);
 
   // creates camera transforms in the shape of a cone
   ros::Publisher pub = n.advertise<geometry_msgs::PoseArray>("topic", 1, true);
+
   // radius of the cone = (poseHeight/ std::tan(angleOfCone))
   geometry_msgs::PoseArray msg = make_main_smaller::create_all_poses(poseHeight, spacing_in_z, angleOfCone, numberOfStopsForPhotos,  center_point_of_target );
 
@@ -304,17 +226,75 @@ void make_main_smaller::create_transform_listener(tf::StampedTransform& tf_trans
      ROS_ERROR("%s", ex.what());
    }
 }
-make_main_smaller::make_main_smaller()
+make_main_smaller::make_main_smaller(ros::NodeHandle pivnh)
 {
-  ros::NodeHandle privatenh("~");
-  if (!privatenh.getParam("world", from_frame_param_))
+  //gets camera parameters
+  if (!pivnh.getParam("image_width", image_width)){
+    ROS_ERROR("did not set parameter image_width");
+  }
+  if (!pivnh.getParam("image_height", image_height)){
+    ROS_ERROR("did not set parameter image_height");
+  }
+  if (!pivnh.getParam("focal_length", fx)){
+    ROS_ERROR("did not set parameter focal_length");
+  }
+  if (!pivnh.getParam("numberOfStopsForPhotos", numberOfStopsForPhotos)){
+    ROS_ERROR("did not set parameter numberOfStopsForPhotos");
+  }
+  if (!pivnh.getParam("poseHeight", poseHeight)){
+    ROS_ERROR("did not set parameter poseHeight");
+  }
+  if (!pivnh.getParam("spacing_in_z", spacing_in_z)){
+    ROS_ERROR("did not set parameter spacing_in_z");
+  }
+  if (!pivnh.getParam("angleOfCone", angleOfCone)){
+    ROS_ERROR("did not set parameter angleOfCone");
+  }
+
+  fy = fx;
+  double cx = image_width/2;//assumes that lense is ligned up with sensor
+  double cy = image_height/2;//assums that lense is ligned up with sensor
+
+  if (!pivnh.getParam("world", from_frame_param_))
   {
     ROS_ERROR("did not set parameter world");
   }
-  if (!privatenh.getParam("target", to_frame_param_))
+  if (!pivnh.getParam("target", to_frame_param_))
   {
     ROS_ERROR("did not set parameter target");
   }
+
+  initialization.create_transform_listener(tf_transform, tf_listener);
+
+  //reads in information about target
+  string targetFile = "/home/lawrencelewis/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/ical_srv_target.yaml";
+  vector<boost::shared_ptr<Target>>  myYamlDefinedTargets;
+  if(!parseTargets(targetFile , myYamlDefinedTargets))
+{
+    ROS_ERROR("could not parse target file %s", targetFile.c_str());
+    return 0;
+  }
+   boost::shared_ptr<Target> Mytarget = myYamlDefinedTargets[0];
+
+  //finds the max values to be used as corner points
+  ROS_INFO("target name = %s num_points = %d size of pts_ = %d",Mytarget->target_name_,Mytarget->num_points_,(int)Mytarget->pts_.size());
+  xMax = Mytarget->pts_[0].x;
+  xMin = Mytarget->pts_[0].x;
+  yMax = Mytarget->pts_[0].y;
+  yMin = Mytarget->pts_[0].y;
+  for(int i=0;i<Mytarget->num_points_;i++)
+  {
+    if(Mytarget->pts_[i].x > xMax) xMax = Mytarget->pts_[i].x;
+    if(Mytarget->pts_[i].y > yMax) yMax = Mytarget->pts_[i].y;
+    if(Mytarget->pts_[i].x < xMin) xMin = Mytarget->pts_[i].x;
+    if(Mytarget->pts_[i].y < yMin) yMin = Mytarget->pts_[i].y;
+  }
+  Eigen::Vector3d corner_points[4];
+
+  corner_points[0] = Eigen::Vector3d((xMin-xMax/2)/5,(yMin-yMax/2)/5,0);
+  corner_points[1] = Eigen::Vector3d((xMax-xMax/2)/5,(yMin-yMax/2)/5,0);
+  corner_points[2] = Eigen::Vector3d((xMin-xMax/2)/5,(yMax-yMax/2)/5,0);
+  corner_points[3] = Eigen::Vector3d((xMax-xMax/2)/5,(yMax-yMax/2)/5,0);
 }
 void make_main_smaller::create_rviz_target(Eigen::Vector3d corner_points[4], geometry_msgs::PoseArray& msg)
 {
