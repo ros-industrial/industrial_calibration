@@ -9,7 +9,6 @@
 #include <ros/console.h>
 #include <std_srvs/Trigger.h>
 
-
 // ros actionlib includes
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
@@ -42,10 +41,18 @@
 #include <robo_cylinder/StatusUpdate.h>
 #include <robo_cylinder/VelAcc.h>
 
-
 // boost includes
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
+
+// opencv includes
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
+
+// other includes
+#include <sys/stat.h>
+
 
 using boost::shared_ptr;
 using ceres::Solver;
@@ -171,6 +178,7 @@ public:
 
     // advertise services
     start_server_       = nh_.advertiseService( "ICalSrvStart", &robocyl_ical_8D::startCallBack, this);
+    load_server_        = nh_.advertiseService( "ICalSrvLoad",  &robocyl_ical_8D::loadCallBack, this);
     observation_server_ = nh_.advertiseService( "ICalSrvObs",   &robocyl_ical_8D::observationCallBack, this);
     run_server_         = nh_.advertiseService( "ICalSrvRun",   &robocyl_ical_8D::runCallBack, this);
     save_server_        = nh_.advertiseService( "ICalSrvSave",  &robocyl_ical_8D::saveCallBack, this);
@@ -215,6 +223,120 @@ public:
     res.success = true;
     return(true);
   }
+
+  // called to load previously collected observations
+  bool loadCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
+  {
+    char msg[100];
+    int * foo;
+    char image_scene_chars[255];
+    industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::RailICal4;
+
+    //create a vector to store all images
+    std::vector<cv::Mat> listOfImageMatrices;
+
+
+    char current_image_scene_chars[255];
+    sprintf(current_image_scene_chars,"_%03d_%03d.jpg",scene_,0); // add rail distance index to image, scene_ will automatically be added by camera_observer.save_current_image()
+    std::string image_file_currently = camera_->camera_name_ + std::string(current_image_scene_chars);
+    std::string image_file_now = current_image_file(scene_,image_file_currently);
+
+    while(camera_->camera_observer_->exists_test(image_file_now)){
+      //reset everything for each individual scene
+      if(problem_initialized_ != true ){
+        ROS_INFO("calling start");
+        std_srvs::TriggerRequest  sreq;
+        std_srvs::TriggerResponse sres;
+        startCallBack(sreq,sres);
+      }
+      // add a new target pose for each scene_, initialized to something reasonable for our standard setup
+      Pose6d P;
+      P.setOrigin(0,0,.8);
+      tf::Matrix3x3 R(-1, 0, 0, 0, 1, 0, 0, 0, -1);
+      P.setBasis(R);
+      target_to_camera_poses.push_back(P);
+
+      // iether creates a place to hold all usefull information about images or groups all of the valuable information into p_blocks
+      P_BLOCK intrinsics = camera_->camera_parameters_.pb_intrinsics;
+      P_BLOCK extrinsics = target_to_camera_poses[scene_].pb_pose;
+      for(int i = 0; i<(num_camera_locations_);i++){
+        // todo load files before you preform observations
+        char image_scene_chars[255];
+        sprintf(image_scene_chars,"_%03d_%03d.jpg",scene_,i); // add rail distance index to image, scene_ will automatically be added by camera_observer.save_current_image()
+        std::string image_file = camera_->camera_name_ + std::string(image_scene_chars);
+
+        camera_->camera_observer_->load_current_image(scene_,image_file);
+        ROS_ERROR("lawr");
+        double Dist = i*camera_spacing_;
+        // set the roi to the whole image
+        Roi roi;
+        roi.x_min = 0;
+        roi.y_min = 0;
+        roi.x_max = image_width_;
+        roi.y_max = image_height_;
+
+        // get ready for taking Observations
+        camera_->camera_observer_->clearTargets();
+        camera_->camera_observer_->clearObservations();
+
+        //creates a target in region of interest and adds up points in target
+        int total_pts=0;
+        camera_->camera_observer_->addTarget(target_, roi, cost_type);
+        total_pts += target_->num_points_;
+
+
+        // preform observations
+        CameraObservations camera_observations;
+
+
+        cv::Mat loaded_color_image = cv::imread(image_file.c_str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat loaded_mono_image = cv::imread(image_file.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
+
+        camera_->camera_observer_->setCurrentImage(loaded_mono_image);
+        camera_->camera_observer_->getObservations(camera_observations);
+        int num_observations = (int)camera_observations.size();
+        ROS_INFO("Found %d observations", (int)camera_observations.size());
+
+        // add observations to problem
+        num_observations = (int)camera_observations.size();
+        if (num_observations != total_pts)
+    {
+      ROS_ERROR("Target Locator could not find all targets found %d out of %d", num_observations, total_pts);
+    }
+        else if(!camera_->camera_observer_->checkObservationProclivity(camera_observations))
+    {
+      ROS_ERROR("Proclivities Check not successful");
+    }
+        else
+    {
+      // add a new cost to the problem for each observation
+      total_observations_ += num_observations;
+      for (int k = 0; k < num_observations; k++)
+        {
+          double image_x = camera_observations[k].image_loc_x;
+          double image_y = camera_observations[k].image_loc_y;
+          Point3d point  = camera_observations[k].target->pts_[camera_observations[k].point_id];
+          if(k==10) ROS_ERROR("target point %d = %8.3lf %8.3lf %8.3lf observed at %8.3lf %8.3lf",camera_observations[k].point_id, point.x, point.y, point.z, image_x, image_y);
+          //	      CostFunction *cost_function = industrial_extrinsic_cal::RailICal4::Create(image_x, image_y, -Dist, point);
+          CostFunction *cost_function = industrial_extrinsic_cal::RailICal5::Create(image_x, image_y, Dist, point);
+          P_->AddResidualBlock(cost_function, NULL, intrinsics, extrinsics, ax_ay_);
+        }  // for each observation at this camera_location
+    } // end of else (there are some observations to add)
+
+      }
+      ROS_INFO("now have %d observations after scene %d",total_observations_, scene_);
+      scene_++;
+      sprintf(current_image_scene_chars,"_%03d_%03d.jpg",scene_,0); // add rail distance index to image, scene_ will automatically be added by camera_observer.save_current_image()
+      image_file_currently = camera_->camera_name_ + std::string(current_image_scene_chars);
+      image_file_now = current_image_file(scene_,image_file_currently);
+    }
+    sprintf(msg, "Ical_srv now has %d observations after scene %d",total_observations_, scene_);
+
+    res.message = string(msg);
+    res.success = true;
+
+    return(true);
+  }; // end of load service};
   
   // called to collect observations for the current pose of the scene
   bool observationCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
@@ -238,12 +360,12 @@ public:
 
     P_BLOCK intrinsics = camera_->camera_parameters_.pb_intrinsics;
     P_BLOCK extrinsics = target_to_camera_poses[scene_].pb_pose;
-    ROS_INFO("scene %d: intrinsics = %ld extrinsics = %ld", scene_, intrinsics, extrinsics);
+    //ROS_INFO("scene %d: intrinsics = %ld extrinsics = %ld", scene_, intrinsics, extrinsics);
 
     // This is a bit abnormal,
     // a single scene has a sequence of camera locations
     // it is expected that the initial pose at the first pose is changed each scene
-    // therefore, the target must be defined to be "moving"
+    // therefore, the target   , new_image_collected_(false)must be defined to be "moving"
     // We get a new set of extrinsic parameters for the target with each call to observationCallBack()
     for(int i=0; i<num_camera_locations_; i++){
       
@@ -294,7 +416,7 @@ public:
 	    char image_scene_chars[255];
 	    sprintf(image_scene_chars,"_%03d_%03d.jpg",scene_,i); // add rail distance index to image, scene_ will automatically be added by camera_observer.save_current_image()
 	    std::string image_file = camera_->camera_name_ + std::string(image_scene_chars);
-	    camera_->camera_observer_->save_current_image(scene_,image_file);
+      camera_->camera_observer_->save_current_image(scene_,image_file);
 	  }// end if save_data_
 
 	  // add a new cost to the problem for each observation
@@ -303,7 +425,7 @@ public:
 	    {
 	      double image_x = camera_observations[k].image_loc_x;
 	      double image_y = camera_observations[k].image_loc_y;
-	      Point3d point  = target_->pts_[camera_observations[k].point_id];
+        Point3d point  = camera_observations[k].target->pts_[camera_observations[k].point_id];
 	      if(k==10) ROS_ERROR("target point %d = %8.3lf %8.3lf %8.3lf observed at %8.3lf %8.3lf",camera_observations[k].point_id, point.x, point.y, point.z, image_x, image_y);
 	      //	      CostFunction *cost_function = industrial_extrinsic_cal::RailICal4::Create(image_x, image_y, -Dist, point);
 	      CostFunction *cost_function = industrial_extrinsic_cal::RailICal5::Create(image_x, image_y, Dist, point);
@@ -532,12 +654,24 @@ public:
     ROS_ERROR("could not open covariance file %s", covariance_file_name.c_str());
     return (false);
   };  // end computeCovariance()
+  std::string current_image_file (int scene, std::string& filename){
+    std::string present_image_file_path_name;
+    char scene_chars[8];
+    sprintf(scene_chars,"_%03d.jpg",scene);
+    if(filename == ""){ // build file name from image_directory_,
+      present_image_file_path_name  = image_directory_ + std::string("/") +  camera_name_ + std::string(scene_chars);
+    }
+    else{
+      present_image_file_path_name  = image_directory_ + "/" +  filename;
+    }
+    return present_image_file_path_name;
+  }
 
-  
 private:
   ros::NodeHandle nh_;
   double ax_ay_[2];                           /*!< The ax and ay parameters defining the axis of motion relative to optical axis */ 
   ros::ServiceServer start_server_;
+  ros::ServiceServer load_server_;
   ros::ServiceServer observation_server_;
   ros::ServiceServer run_server_;
   ros::ServiceServer save_server_;
