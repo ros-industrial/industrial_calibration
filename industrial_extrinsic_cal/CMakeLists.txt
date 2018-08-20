@@ -25,7 +25,6 @@ find_package(catkin REQUIRED COMPONENTS
   applicable_pose_generator
 )
 
-
 find_package(Boost REQUIRED)
 
 find_package(Ceres REQUIRED)
@@ -33,9 +32,6 @@ message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
 find_package(OpenCV REQUIRED)
 message("-- Found OpenCV version ${OpenCV_VERSION}: ${OpenCV_INCLUDE_DIRS}")
-
-
-
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(yaml_cpp REQUIRED yaml-cpp)
@@ -55,11 +51,6 @@ find_library(
   NAMES ${yaml_cpp_LIBRARIES}
   PATHS ${yaml_cpp_LIBRARY_DIRS}
 )
-
-#message("yaml_cpp_INCLUDE_DIRS: ${yaml_cpp_INCLUDE_DIRS}")
-#message("yaml_cpp_INCLUDE_DIR: ${yaml_cpp_INCLUDE_DIR}")
-#message("yaml_cpp_LIBRARY: ${yaml_cpp_LIBRARY}")
-
 
 add_service_files(
   FILES
@@ -97,7 +88,6 @@ generate_dynamic_reconfigure_options(
   cfg/circle_grid_finder.cfg
 )
 
-
 catkin_package(
   LIBRARIES
     industrial_extrinsic_cal
@@ -124,9 +114,6 @@ catkin_package(
     Boost
     CERES
 )
-
-
-
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -134,8 +121,6 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${yaml_cpp_INCLUDE_DIR}
 )
-
-
 # target: main library
 add_library(
   industrial_extrinsic_cal
@@ -160,10 +145,6 @@ add_library(
   src/conical_pose_generator.cpp
 )
 add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
-
-
-
-
 target_link_libraries(
   industrial_extrinsic_cal
 
@@ -172,8 +153,6 @@ target_link_libraries(
   ${OpenCV_LIBRARIES}
   ${CERES_LIBRARIES}
 )
-
-
 # targets: other nodes
 add_executable(camera_observer_scene_trigger    src/nodes/camera_observer_scene_trigger.cpp)
 add_executable(manual_calt_adjust               src/nodes/manual_calt_adjuster.cpp)
@@ -204,21 +183,15 @@ add_dependencies(stereo_cal_srv                    ${catkin_EXPORTED_TARGETS} ${
 target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY} ${CERES_LIBRARIES})
 target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES})
 target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY})
-#target_link_libraries(nist_analysis industrial_extrinsic_cal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES})
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(target_display industrial_extrinsic_cal ${CERES_LIBRARIES})
-#target_link_libraries(test_obs industrial_extrinsic_cal ${yaml_cpp_LIBRARY} ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(trigger_service ${catkin_LIBRARIES})
 target_link_libraries(range_excal industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(rangeNmono industrial_extrinsic_cal ${CERES_LIBRARIES})
 
-#target_link_libraries(position_validation ${catkin_LIBRARIES} industrial_extrinsic_cal)
-
 target_link_libraries(wrist_cal_srv industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(stereo_cal_srv industrial_extrinsic_cal ${CERES_LIBRARIES})
-
-
 
 install(
   TARGETS
@@ -226,7 +199,6 @@ install(
     industrial_extrinsic_cal
     manual_calt_adjust
     mutable_joint_state_publisher
-#    nist_analysis
     ros_robot_trigger_action_service
     service_node
     trigger_service
@@ -254,30 +226,6 @@ install(
     ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-
-#if (CATKIN_ENABLE_TESTING)
-#  catkin_add_gtest(utest_inds_cal test/utest.cpp)
-
-#  target_link_libraries(
-#    utest_inds_cal
-
-#    industrial_extrinsic_cal
-#    ${catkin_LIBRARIES}
-#    ${CERES_LIBRARIES}
-#  )
-#endif()
-
-
-## ROSlint checks
-## For more information see: http://wiki.ros.org/roslint
-##
-## CPPlint options justifications
-## - whitespace/* - errors are ignored, it is assumed that the follwing eclipse
-##   format file has been applied:
-##   http://wiki.ros.org/IDEs?action=AttachFile&do=get&target=ROS_format.xml
-## - build/header_guard - #ifdef/#ifndef naming doesn't match ROS sytle
-## - readability/stream - does not apply to logging (the typical use in ROS)
-## - runtime/references - pass by reference is allowed for output parameters
 set(ROSLINT_CPP_OPTS
   "--filter=-whitespace,-build/header_guard,-build/include_order,-readability/streams,-runtime/references")
 file(GLOB_RECURSE ${PROJECT_NAME}_LINT_SRCS

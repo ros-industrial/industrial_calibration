@@ -36,15 +36,15 @@ int main(int argc, char **argv)
   ros::NodeHandle pivnh("~");
 
   //loads all known values and parameters
-  make_main_smaller initialization(pivnh);
+  check_if_point_in_pic initialization(pivnh);
 
-  center_point_of_target = make_main_smaller::finds_middle_of_target(corner_points, center_Of_TargetX,center_Of_TargetY);
+  center_point_of_target = check_if_point_in_pic::finds_middle_of_target(corner_points, center_Of_TargetX,center_Of_TargetY);
 
   // creates camera transforms in the shape of a cone
   ros::Publisher pub = n.advertise<geometry_msgs::PoseArray>("topic", 1, true);
 
   // radius of the cone = (poseHeight/ std::tan(angleOfCone))
-  geometry_msgs::PoseArray msg = make_main_smaller::create_all_poses(poseHeight, spacing_in_z, angleOfCone, numberOfStopsForPhotos,  center_point_of_target );
+  geometry_msgs::PoseArray msg = check_if_point_in_pic::create_all_poses(poseHeight, spacing_in_z, angleOfCone, numberOfStopsForPhotos,  center_point_of_target );
 
   //creates rectanglular target in rviz
   initialization.create_rviz_target(corner_points,msg);
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
   }
 
   // filters out unreachable and unseeable poses
-  geometry_msgs::PoseArray filtered_msgs = make_main_smaller::pose_filters(msg2,tf_transform, image_width, image_height, AllcameraPoses, corner_points, fx,  fy,  cx,  cy );
+  geometry_msgs::PoseArray filtered_msgs = check_if_point_in_pic::pose_filters(msg2,tf_transform, image_width, image_height, AllcameraPoses, corner_points, fx,  fy,  cx,  cy );
 
 
   ros::Publisher pub2 = n.advertise<geometry_msgs::PoseArray>("topic2", 1, true);
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 } //end of main
 
 // Transforms a point into the camera frame then projects the new point into the 2d screen
-void make_main_smaller::imagePoint(Eigen::Vector3d TargetPoint , double fx, double fy, double cx, double cy, double &u, double &v,Eigen::Affine3d cameraPose )
+void check_if_point_in_pic::imagePoint(Eigen::Vector3d TargetPoint , double fx, double fy, double cx, double cy, double &u, double &v,Eigen::Affine3d cameraPose )
 {
  Eigen::Vector3d cp;
  cp = cameraPose.inverse() * TargetPoint;
@@ -92,7 +92,7 @@ void make_main_smaller::imagePoint(Eigen::Vector3d TargetPoint , double fx, doub
  v = fy*(cp.y()/divider) + cy;
 }
 
-int make_main_smaller::addingFactorial(int lastAdded)
+int check_if_point_in_pic::addingFactorial(int lastAdded)
 {
     int sumation = 0;
     while(lastAdded>0)
@@ -108,7 +108,7 @@ int findingMidpoint(int pointOne, int pointTwo)
   return midpoint;
 }
 
-Eigen::Vector2d make_main_smaller::finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY)
+Eigen::Vector2d check_if_point_in_pic::finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY)
 {
   Eigen::Vector2d center_point;
   for(int i=0; i<4; i++)
@@ -130,7 +130,7 @@ Eigen::Vector2d make_main_smaller::finds_middle_of_target(Eigen::Vector3d corner
   return center_point;
 }
 
-geometry_msgs::PoseArray make_main_smaller::create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target )
+geometry_msgs::PoseArray check_if_point_in_pic::create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target )
 {
   geometry_msgs::PoseArray msg;
   int extra_Counter = 0;
@@ -161,7 +161,7 @@ geometry_msgs::PoseArray make_main_smaller::create_all_poses(double poseHeight, 
   return msg;
 }
 
-geometry_msgs::PoseArray make_main_smaller::pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy )
+geometry_msgs::PoseArray check_if_point_in_pic::pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy )
 {
   CreateChain::chain_creation reachability_filter;
   int num_created_poses = AllcameraPoses.size();
@@ -172,7 +172,7 @@ geometry_msgs::PoseArray make_main_smaller::pose_filters(geometry_msgs::PoseArra
       {
           double u=0;
           double v=0;
-          make_main_smaller::imagePoint(corner_points[i], fx, fy, cx, cy, u, v,AllcameraPoses[j]);
+          check_if_point_in_pic::imagePoint(corner_points[i], fx, fy, cx, cy, u, v,AllcameraPoses[j]);
           if(u<0 || u>=image_width || v<0 || v>= image_height )
           {
             ROS_ERROR("u,v = %lf %lf but image size = %d %d",u,v,image_width,image_height);
@@ -209,7 +209,7 @@ geometry_msgs::PoseArray make_main_smaller::pose_filters(geometry_msgs::PoseArra
   return msg2;
 }
 
-void make_main_smaller::create_transform_listener(tf::StampedTransform& tf_transform,tf::TransformListener& tf_listen)
+void check_if_point_in_pic::create_transform_listener(tf::StampedTransform& tf_transform,tf::TransformListener& tf_listen)
 {
   ros::Time now = ros::Time::now();
   while (!tf_listen.waitForTransform(from_frame_param_, to_frame_param_, now, ros::Duration(1.0)))
@@ -226,7 +226,7 @@ void make_main_smaller::create_transform_listener(tf::StampedTransform& tf_trans
      ROS_ERROR("%s", ex.what());
    }
 }
-make_main_smaller::make_main_smaller(ros::NodeHandle pivnh)
+check_if_point_in_pic::check_if_point_in_pic(ros::NodeHandle pivnh)
 {
   //gets camera parameters
   if (!pivnh.getParam("image_width", image_width)){
@@ -296,7 +296,7 @@ make_main_smaller::make_main_smaller(ros::NodeHandle pivnh)
   corner_points[2] = Eigen::Vector3d((xMin-xMax/2)/5,(yMax-yMax/2)/5,0);
   corner_points[3] = Eigen::Vector3d((xMax-xMax/2)/5,(yMax-yMax/2)/5,0);
 }
-void make_main_smaller::create_rviz_target(Eigen::Vector3d corner_points[4], geometry_msgs::PoseArray& msg)
+void check_if_point_in_pic::create_rviz_target(Eigen::Vector3d corner_points[4], geometry_msgs::PoseArray& msg)
 {
   geometry_msgs::Pose pnt1,pnt2,pnt3,pnt4;
   pnt1.position.x = corner_points[0][0];
