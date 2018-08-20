@@ -167,7 +167,6 @@ public:
     if(exists_test(full_image_file_path_name)){
       ROS_INFO("Loading image: %s", full_image_file_path_name.c_str());
       setCurrentImage(cv::imread(full_image_file_path_name));
-      ROS_ERROR("done");
       return(true);
     }
     else{

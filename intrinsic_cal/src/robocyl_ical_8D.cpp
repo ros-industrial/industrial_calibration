@@ -112,7 +112,6 @@ public:
 	ROS_ERROR("robocyl_ical_8D is saving image and rail position data in image_directory %s", image_directory_.c_str());
       }
     }
-    
     bool is_moving = true;
     camera_ =  shared_ptr<industrial_extrinsic_cal::Camera>(new industrial_extrinsic_cal::Camera("my_camera", camera_parameters_, is_moving));
     camera_->trigger_ = shared_ptr<NoWaitTrigger>(new NoWaitTrigger());
@@ -266,7 +265,7 @@ public:
         std::string image_file = camera_->camera_name_ + std::string(image_scene_chars);
 
         camera_->camera_observer_->load_current_image(scene_,image_file);
-        ROS_ERROR("lawr");
+
         double Dist = i*camera_spacing_;
         // set the roi to the whole image
         Roi roi;
@@ -274,6 +273,7 @@ public:
         roi.y_min = 0;
         roi.x_max = image_width_;
         roi.y_max = image_height_;
+
 
         // get ready for taking Observations
         camera_->camera_observer_->clearTargets();
@@ -292,7 +292,7 @@ public:
         cv::Mat loaded_color_image = cv::imread(image_file.c_str(), CV_LOAD_IMAGE_COLOR);
         cv::Mat loaded_mono_image = cv::imread(image_file.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
 
-        camera_->camera_observer_->setCurrentImage(loaded_mono_image);
+        //camera_->camera_observer_->setCurrentImage(loaded_mono_image);
         camera_->camera_observer_->getObservations(camera_observations);
         int num_observations = (int)camera_observations.size();
         ROS_INFO("Found %d observations", (int)camera_observations.size());

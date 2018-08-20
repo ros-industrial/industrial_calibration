@@ -144,11 +144,28 @@ void ROSCameraObserver::clearObservations()
 void ROSCameraObserver::setCurrentImage(const cv::Mat &image)
 {
   // TODO pass the color image, and convert to mono where necessar
+
+  ROS_ERROR("inside ROSCameraObserver version of setCurrentImage()");
   last_raw_image_       = image.clone();
+  std::string encoding = "mono8";
+  std_msgs::Header header;
+  if(!input_bridge_){
+    input_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header,encoding,image));
+  }
+  encoding = "bgr8";
+  if(!output_bridge_){
+    output_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header, encoding, image));
+  }
+  encoding = "mono8";
+  if(!out_bridge_){
+    out_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header,encoding,image));
+  }
   output_bridge_->image = image.clone();
   input_bridge_ ->image = image.clone();
   out_bridge_   ->image = image.clone();
   new_image_collected_ = true;
+  ROS_INFO("Image width is %d",input_bridge_->image.cols);
+  ROS_ERROR("done loading image");
 }
 
 int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
