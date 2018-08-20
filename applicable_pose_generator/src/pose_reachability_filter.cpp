@@ -16,19 +16,19 @@ namespace CreateChain
 chain_creation::chain_creation()
 {
   ros::NodeHandle pnh("~");
-  if (!pnh.getParam("robot_urdf", robot_urdf)){
+  if (!pnh.getParam("robot_urdf", robot_urdf_)){
     ROS_ERROR("did not set parameter robot_urdf");
     exit (EXIT_FAILURE);
   }
-  if (!pnh.getParam("base_link", base_link_param)){
+  if (!pnh.getParam("base_link", base_link_param_)){
     ROS_ERROR("did not set parameter base_link");
     exit (EXIT_FAILURE);
   }
-  if (!pnh.getParam("tool0", tool0_param)){
+  if (!pnh.getParam("tool0", tool0_param_)){
     ROS_ERROR("did not set parameter tool0");
     exit (EXIT_FAILURE);
   }
-  if (!Mymodel.initFile(robot_urdf))
+  if (!Mymodel.initFile(robot_urdf_))
   {
     ROS_ERROR("Failed to parse urdf file");
     return;
@@ -38,13 +38,13 @@ chain_creation::chain_creation()
   ROS_INFO("Successfully parsed urdf file");
   }
   urdf::ModelInterfaceConstSharedPtr model_ptr = boost::make_shared<urdf::Model>(Mymodel);
-  if(!CK.init(model_ptr,base_link_param,tool0_param,"Robot_from_urdf"))
+  if(!CK.init(model_ptr,base_link_param_,tool0_param_,"Robot_from_urdf"))
   {
     ROS_ERROR("failed to initiat the chain");
     return;
   }
   kdl_parser::treeFromUrdfModel(*model_ptr, robot_tree);
-  robot_tree.getChain(base_link_param,tool0_param,robot_chain);
+  robot_tree.getChain(base_link_param_,tool0_param_,robot_chain);
 }
 
 bool chain_creation::chain_Parse(Eigen::Affine3d ei_transform_to_check)

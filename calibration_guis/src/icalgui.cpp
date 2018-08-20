@@ -11,7 +11,7 @@
 
 #include <QtGui>
 #include <QApplication>
-#include "../include/calibration_guis/main_window.hpp"
+#include "../include/calibration_guis/icalgui_main_window.hpp"
 
 /*****************************************************************************
 ** Main
