@@ -31,7 +31,13 @@ find_package(Boost REQUIRED)
 find_package(Ceres REQUIRED)
 message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
+<<<<<<< HEAD
 find_package(OpenCV REQUIRED)
+=======
+find_package(Eigen3 REQUIRED)
+
+find_package(OpenCV 2 REQUIRED)
+>>>>>>> b144dddd3a81c768a079f8f2a0120f11e9917026
 message("-- Found OpenCV version ${OpenCV_VERSION}: ${OpenCV_INCLUDE_DIRS}")
 
 
@@ -120,9 +126,12 @@ catkin_package(
     std_srvs
     tf
     tf_conversions
+    pcl_ros
+    pcl_conversions
   DEPENDS
     Boost
     CERES
+    EIGEN3
 )
 
 
@@ -131,10 +140,10 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${yaml_cpp_INCLUDE_DIR}
 )
-
 
 # target: main library
 add_library(
