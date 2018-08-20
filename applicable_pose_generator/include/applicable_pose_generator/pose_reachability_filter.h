@@ -16,15 +16,13 @@
 
 
 #include <kdl/chainiksolverpos_lma.hpp>
+#include <kdl_parser/kdl_parser.hpp>
+#include <eigen_conversions/eigen_kdl.h>
+#include <tesseract_ros/kdl/kdl_chain_kin.h>
 
 #include "ros/ros.h"
 
 #include <boost/shared_ptr.hpp>
-
-#include <kdl_parser/kdl_parser.hpp>
-#include <eigen_conversions/eigen_kdl.h>
-
-#include <tesseract_ros/kdl/kdl_chain_kin.h>
 
 /*!
  * This class creates the chain of transforms from joint to joint for the robot
@@ -35,9 +33,9 @@ namespace CreateChain
   class chain_creation
   {
     public:
-    std::string robot_urdf;
-    std::string tool0_param;
-    std::string base_link_param;
+    std::string robot_urdf_;
+    std::string tool0_param_;
+    std::string base_link_param_;
     //loads urdf that discribes the chain
     chain_creation();
     bool chain_Parse(Eigen::Affine3d ei_transform_to_check);

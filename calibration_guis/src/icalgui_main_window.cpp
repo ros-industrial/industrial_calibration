@@ -12,7 +12,7 @@
 #include <QtGui>
 #include <QMessageBox>
 #include <iostream>
-#include "../include/calibration_guis/main_window.hpp"
+#include "../include/calibration_guis/icalgui_main_window.hpp"
 #include "std_srvs/Trigger.h"
 #include "industrial_extrinsic_cal/cal_srv_solve.h"
 
@@ -46,7 +46,9 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
   cov_client5_   = nh_->serviceClient<std_srvs::Trigger>(covService);
 
 	ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
-    QObject::connect(ui.actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt())); // qApp is a global variable for the application
+
+
+  QObject::connect(ui.actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt())); // qApp is a global variable for the application
 
     ReadSettings();
   setWindowIcon(QIcon(":/images/icon.png"));
