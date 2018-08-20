@@ -94,9 +94,9 @@ void MainWindow::ReadSettings() {
     QSettings settings("Qt-Ros Package", "calibration_guis");
     restoreGeometry(settings.value("geometry").toByteArray());
     restoreState(settings.value("windowState").toByteArray());
-    QString master_url = settings.value("master_url",QString("http://192.168.1.2:11311/")).toString();
-    QString host_url = settings.value("host_url", QString("192.168.1.3")).toString();
-    bool remember = settings.value("remember_settings", false).toBool();
+    //QString master_url = settings.value("master_url",QString("http://192.168.1.2:11311/")).toString();
+    //QString host_url = settings.value("host_url", QString("192.168.1.3")).toString();
+    //bool remember = settings.value("remember_settings", false).toBool();
     bool checked = settings.value("use_environment_variables", false).toBool();
     if ( checked ) {
     }
@@ -201,8 +201,5 @@ void calibration_guis::MainWindow::on_runButton_clicked()
 }
 }  // namespace calibration_guis
 
-void calibration_guis::MainWindow::on_testingButton_clicked()
-{
-    ROS_INFO("testing");
-}
+
 

@@ -88,13 +88,6 @@
       <string>Start</string>
      </property>
     </widget>
-    <zorder>obsButton</zorder>
-    <zorder>saveButton</zorder>
-    <zorder>covButton</zorder>
-    <zorder>obsButton</zorder>
-    <zorder>saveButton</zorder>
-    <zorder>covButton</zorder>
-    <zorder>startButton</zorder>
    </widget>
    <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
@@ -163,27 +156,6 @@
       <string>_________</string>
      </property>
     </widget>
-    <zorder>allowed_residual_</zorder>
-    <zorder>runButton</zorder>
-    <zorder>final_label</zorder>
-    <zorder>final_resid_lb_</zorder>
-    <zorder>allowed_residual_</zorder>
-    <zorder>runButton</zorder>
-    <zorder>final_label</zorder>
-    <zorder>final_resid_lb_</zorder>
-   </widget>
-   <widget class="QPushButton" name="testingButton">
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>240</y>
-      <width>80</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>TESTING</string>
-    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
