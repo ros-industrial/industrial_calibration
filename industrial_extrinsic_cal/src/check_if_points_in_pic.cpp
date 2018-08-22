@@ -132,11 +132,12 @@ Eigen::Vector2d check_if_point_in_pic::finds_middle_of_target(Eigen::Vector3d co
 
 geometry_msgs::PoseArray check_if_point_in_pic::create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target )
 {
+  double angleInRadians = angleOfCone*(pi/180);
   geometry_msgs::PoseArray msg;
   int extra_Counter = 0;
   for(double j=0; j<=poseHeight; j=j+spacing_in_z)
   {
-    for(double l = (std::tan(angleOfCone))*spacing_in_z ; l<=(std::tan(angleOfCone) * (j) ); l = l+(std::tan(angleOfCone))*spacing_in_z)
+    for(double l = (std::tan(angleInRadians))*spacing_in_z ; l<=(std::tan(angleInRadians) * (j) ); l = l+(std::tan(angleInRadians))*spacing_in_z)
     {
       EigenSTL::vector_Affine3d cameraPoses = getConicalPoses(numberOfStopsForPhotos, j, l);
       msg.header.frame_id = "target";
@@ -145,7 +146,6 @@ geometry_msgs::PoseArray check_if_point_in_pic::create_all_poses(double poseHeig
       for(int i=0; i<cameraPoses.size(); i++ )
       {
         geometry_msgs::Pose pose;
-        //cameraPoses[i]
         tf::poseEigenToMsg(cameraPoses[i], pose);
         ROS_INFO("adding a pose");
         pose.position.x = pose.position.x + center_point_of_target[0];

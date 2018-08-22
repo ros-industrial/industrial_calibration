@@ -1,6 +1,6 @@
 #include <industrial_extrinsic_cal/conical_pose_generator.h>
 
-EigenSTL::vector_Affine3d getConicalPoses(const int n,
+EigenSTL::vector_Affine3d getConicalPoses(const int num_tfs_per_circle,
                              //height of cone
                              const double standoff,
                              //top of cone radius
@@ -8,11 +8,11 @@ EigenSTL::vector_Affine3d getConicalPoses(const int n,
 {
   EigenSTL::vector_Affine3d frames;
 
-  double dt = 2.0f * M_PI / (double)(n);
+  double dt = 2.0f * M_PI / (double)(num_tfs_per_circle);
   double dp = std::tan(radius / standoff);
   double dpp = std::atan(standoff /radius);
 
-  for(int i = 0; i < n; ++i)
+  for(int i = 0; i < num_tfs_per_circle; ++i)
   {
     Eigen::Affine3d frame;
     frame = Eigen::Affine3d::Identity();
