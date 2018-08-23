@@ -227,13 +227,7 @@ public:
   bool loadCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
     char msg[100];
-    int * foo;
-    char image_scene_chars[255];
     industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::RailICal4;
-
-    //create a vector to store all images
-    std::vector<cv::Mat> listOfImageMatrices;
-
 
     char current_image_scene_chars[255];
     sprintf(current_image_scene_chars,"_%03d_%03d.jpg",scene_,0); // add rail distance index to image, scene_ will automatically be added by camera_observer.save_current_image()
@@ -288,11 +282,6 @@ public:
         // preform observations
         CameraObservations camera_observations;
 
-
-        cv::Mat loaded_color_image = cv::imread(image_file.c_str(), CV_LOAD_IMAGE_COLOR);
-        cv::Mat loaded_mono_image = cv::imread(image_file.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
-
-        //camera_->camera_observer_->setCurrentImage(loaded_mono_image);
         camera_->camera_observer_->getObservations(camera_observations);
         int num_observations = (int)camera_observations.size();
         ROS_INFO("Found %d observations", (int)camera_observations.size());
@@ -300,28 +289,27 @@ public:
         // add observations to problem
         num_observations = (int)camera_observations.size();
         if (num_observations != total_pts)
-    {
-      ROS_ERROR("Target Locator could not find all targets found %d out of %d", num_observations, total_pts);
-    }
-        else if(!camera_->camera_observer_->checkObservationProclivity(camera_observations))
-    {
-      ROS_ERROR("Proclivities Check not successful");
-    }
-        else
-    {
-      // add a new cost to the problem for each observation
-      total_observations_ += num_observations;
-      for (int k = 0; k < num_observations; k++)
         {
-          double image_x = camera_observations[k].image_loc_x;
-          double image_y = camera_observations[k].image_loc_y;
-          Point3d point  = camera_observations[k].target->pts_[camera_observations[k].point_id];
-          if(k==10) ROS_ERROR("target point %d = %8.3lf %8.3lf %8.3lf observed at %8.3lf %8.3lf",camera_observations[k].point_id, point.x, point.y, point.z, image_x, image_y);
-          //	      CostFunction *cost_function = industrial_extrinsic_cal::RailICal4::Create(image_x, image_y, -Dist, point);
-          CostFunction *cost_function = industrial_extrinsic_cal::RailICal5::Create(image_x, image_y, Dist, point);
-          P_->AddResidualBlock(cost_function, NULL, intrinsics, extrinsics, ax_ay_);
-        }  // for each observation at this camera_location
-    } // end of else (there are some observations to add)
+          ROS_ERROR("Target Locator could not find all targets found %d out of %d", num_observations, total_pts);
+        }
+        else if(!camera_->camera_observer_->checkObservationProclivity(camera_observations))
+        {
+          ROS_ERROR("Proclivities Check not successful");
+        }
+        else
+        {
+          // add a new cost to the problem for each observation
+          total_observations_ += num_observations;
+          for (int k = 0; k < num_observations; k++)
+          {
+            double image_x = camera_observations[k].image_loc_x;
+            double image_y = camera_observations[k].image_loc_y;
+            Point3d point  = camera_observations[k].target->pts_[camera_observations[k].point_id];
+            if(k==10) ROS_ERROR("target point %d = %8.3lf %8.3lf %8.3lf observed at %8.3lf %8.3lf",camera_observations[k].point_id, point.x, point.y, point.z, image_x, image_y);
+            CostFunction *cost_function = industrial_extrinsic_cal::RailICal5::Create(image_x, image_y, Dist, point);
+            P_->AddResidualBlock(cost_function, NULL, intrinsics, extrinsics, ax_ay_);
+          }  // for each observation at this camera_location
+        } // end of else (there are some observations to add)
 
       }
       ROS_INFO("now have %d observations after scene %d",total_observations_, scene_);
@@ -387,7 +375,7 @@ public:
       // get ready for taking images
       camera_->camera_observer_->clearTargets();
       camera_->camera_observer_->clearObservations();
-	
+
       int total_pts=0;
       camera_->camera_observer_->addTarget(target_, roi, cost_type);
       total_pts += target_->num_points_;
@@ -402,36 +390,37 @@ public:
       
       // add observations to problem
       num_observations = (int)camera_observations.size();
+      if (save_data_){
+        char image_scene_chars[255];
+        sprintf(image_scene_chars,"_%03d_%03d.jpg",scene_,i); // add rail distance index to image, scene_ will automatically be added by camera_observer.save_current_image()
+        std::string image_file = camera_->camera_name_ + std::string(image_scene_chars);
+        camera_->camera_observer_->save_current_image(scene_,image_file);
+      }// end if save_data_
       if (num_observations != total_pts)
-	{
-	  ROS_ERROR("Target Locator could not find all targets found %d out of %d", num_observations, total_pts);
-	}
+      {
+        ROS_ERROR("Target Locator could not find all targets found %d out of %d", num_observations, total_pts);
+      }
       else if(!camera_->camera_observer_->checkObservationProclivity(camera_observations))
-	{
-	  ROS_ERROR("Proclivities Check not successful");
-	}
+      {
+        ROS_ERROR("Proclivities Check not successful");
+      }
       else
-	{
-	  if (save_data_){
-	    char image_scene_chars[255];
-	    sprintf(image_scene_chars,"_%03d_%03d.jpg",scene_,i); // add rail distance index to image, scene_ will automatically be added by camera_observer.save_current_image()
-	    std::string image_file = camera_->camera_name_ + std::string(image_scene_chars);
-      camera_->camera_observer_->save_current_image(scene_,image_file);
-	  }// end if save_data_
+      {
 
-	  // add a new cost to the problem for each observation
-	  total_observations_ += num_observations;
-	  for (int k = 0; k < num_observations; k++)
-	    {
-	      double image_x = camera_observations[k].image_loc_x;
-	      double image_y = camera_observations[k].image_loc_y;
-        Point3d point  = camera_observations[k].target->pts_[camera_observations[k].point_id];
-	      if(k==10) ROS_ERROR("target point %d = %8.3lf %8.3lf %8.3lf observed at %8.3lf %8.3lf",camera_observations[k].point_id, point.x, point.y, point.z, image_x, image_y);
-	      //	      CostFunction *cost_function = industrial_extrinsic_cal::RailICal4::Create(image_x, image_y, -Dist, point);
-	      CostFunction *cost_function = industrial_extrinsic_cal::RailICal5::Create(image_x, image_y, Dist, point);
-	      P_->AddResidualBlock(cost_function, NULL, intrinsics, extrinsics, ax_ay_);
-	    }  // for each observation at this camera_location
-	} // end of else (there are some observations to add)
+
+        // add a new cost to the problem for each observation
+        total_observations_ += num_observations;
+        for (int k = 0; k < num_observations; k++)
+        {
+          double image_x = camera_observations[k].image_loc_x;
+          double image_y = camera_observations[k].image_loc_y;
+          Point3d point  = camera_observations[k].target->pts_[camera_observations[k].point_id];
+          if(k==10) ROS_ERROR("target point %d = %8.3lf %8.3lf %8.3lf observed at %8.3lf %8.3lf",camera_observations[k].point_id, point.x, point.y, point.z, image_x, image_y);
+          //	 CostFunction *cost_function = industrial_extrinsic_cal::RailICal4::Create(image_x, image_y, -Dist, point);
+          CostFunction *cost_function = industrial_extrinsic_cal::RailICal5::Create(image_x, image_y, Dist, point);
+          P_->AddResidualBlock(cost_function, NULL, intrinsics, extrinsics, ax_ay_);
+        }  // for each observation at this camera_location
+      } // end of else (there are some observations to add)
     }// for each linear rail position
 
     ROS_INFO("now have %d observations after scene %d",total_observations_, scene_);
