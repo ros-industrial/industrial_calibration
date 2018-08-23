@@ -684,7 +684,7 @@ bool CalibrationJob::runOptimization()
 	    // TODO, don't assume static camera
 	    lt_camera_ex = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(Rt_camera->left_stereo_camera_name_);
 	    if(lt_camera_ex == NULL){
-	      ROS_ERROR("couldn't find left stereo camera:",Rt_camera->left_stereo_camera_name_.c_str());
+        ROS_ERROR("couldn't find left stereo camera: %s",Rt_camera->left_stereo_camera_name_.c_str());
 	    }
 	  }
 	  else{

@@ -28,13 +28,13 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   , pattern_(pattern_options::Chessboard)
   , pattern_rows_(0)
   , pattern_cols_(0)
-  , new_image_collected_(false)
   , store_observation_images_(false)
   , load_observation_images_(false)
   , normalize_calibration_image_(false)
   , image_number_(0)
   , camera_name_(camera_name)
 {
+  new_image_collected_ = false;
   image_topic_ = camera_topic;
   ros::NodeHandle pnh("~");
   results_pub_ = nh_.advertise<sensor_msgs::Image>(camera_name_+"/observer_results_image", 100);
@@ -139,6 +139,30 @@ void ROSCameraObserver::clearObservations()
 {
   camera_obs_.clear();
   new_image_collected_ = false;
+}
+
+void ROSCameraObserver::setCurrentImage(const cv::Mat &image)
+{
+  // TODO pass the color image, and convert to mono where necessar
+
+  last_raw_image_       = image.clone();
+  std::string encoding = "mono8";
+  std_msgs::Header header;
+  if(!input_bridge_){
+    input_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header,encoding,image));
+  }
+  encoding = "bgr8";
+  if(!output_bridge_){
+    output_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header, encoding, image));
+  }
+  encoding = "mono8";
+  if(!out_bridge_){
+    out_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header,encoding,image));
+  }
+  output_bridge_->image = image.clone();
+  input_bridge_ ->image = image.clone();
+  out_bridge_   ->image = image.clone();
+  new_image_collected_ = true;
 }
 
 int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
