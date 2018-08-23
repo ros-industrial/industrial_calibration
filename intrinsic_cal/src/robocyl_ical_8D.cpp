@@ -348,7 +348,6 @@ public:
 
     P_BLOCK intrinsics = camera_->camera_parameters_.pb_intrinsics;
     P_BLOCK extrinsics = target_to_camera_poses[scene_].pb_pose;
-    //ROS_INFO("scene %d: intrinsics = %ld extrinsics = %ld", scene_, intrinsics, extrinsics);
 
     // This is a bit abnormal,
     // a single scene has a sequence of camera locations
@@ -406,8 +405,6 @@ public:
       }
       else
       {
-
-
         // add a new cost to the problem for each observation
         total_observations_ += num_observations;
         for (int k = 0; k < num_observations; k++)
@@ -564,85 +561,87 @@ public:
   {
     FILE* fp;
     if ((fp = fopen(covariance_file_name.c_str(), "w")) != NULL)
+    {
+      ceres::Covariance::Options covariance_options;
+      covariance_options.algorithm_type = ceres::DENSE_SVD;
+      ceres::Covariance covariance(covariance_options);
+
+      std::vector<std::pair<const double*, const double*> > covariance_pairs;
+      covariance_pairs.push_back(std::make_pair(camera_->camera_parameters_.pb_intrinsics, camera_->camera_parameters_.pb_intrinsics));
+      covariance_pairs.push_back(std::make_pair(ax_ay_,ax_ay_));
+      covariance_pairs.push_back(std::make_pair(camera_->camera_parameters_.pb_intrinsics, ax_ay_));
+
+      if(covariance.Compute(covariance_pairs, P_))
       {
-	ceres::Covariance::Options covariance_options;
-	covariance_options.algorithm_type = ceres::DENSE_SVD;
-	ceres::Covariance covariance(covariance_options);
-	
-	std::vector<std::pair<const double*, const double*> > covariance_pairs;
-	covariance_pairs.push_back(std::make_pair(camera_->camera_parameters_.pb_intrinsics, camera_->camera_parameters_.pb_intrinsics));
-	covariance_pairs.push_back(std::make_pair(ax_ay_,ax_ay_));
-	covariance_pairs.push_back(std::make_pair(camera_->camera_parameters_.pb_intrinsics, ax_ay_));
-	
-	if(covariance.Compute(covariance_pairs, P_))
-	  {
-	    fprintf(fp, "covariance blocks:\n");
-	    double cov_in_in[9*9];
-	    double cov_axis_axis[2*2];
-	    double cov_in_axis[9*2];
-	    if(covariance.GetCovarianceBlock(camera_->camera_parameters_.pb_intrinsics, camera_->camera_parameters_.pb_intrinsics, cov_in_in) &&
-	       covariance.GetCovarianceBlock(ax_ay_, ax_ay_, cov_axis_axis) &&
-	       covariance.GetCovarianceBlock(camera_->camera_parameters_.pb_intrinsics, ax_ay_, cov_in_axis)){
-	      fprintf(fp, "cov_in_in is 9x9\n");
-	      for(int i=0;i<9;i++){
-		double sigma_i = sqrt(fabs(cov_in_in[i*9+i]));
-		for(int j=0;j<9;j++){
-		  double sigma_j = sqrt(fabs(cov_in_in[j*9+j]));
-		  double value;
-		  if(i==j){
-		    value = sigma_i;
-		  }
-		  else{
-		    if(sigma_i==0) sigma_i = 1;
-		    if(sigma_j==0) sigma_j = 1;
-		    value = cov_in_in[i * 9 + j]/(sigma_i*sigma_j);
-		  }
-		  fprintf(fp, "%16.5f ", value);
-		}  // end of j loop
-		fprintf(fp, "\n");
-	      }  // end of i loop
-	      fprintf(fp, "cov_axis_axis is 2x2\n");
-	      for(int i=0;i<2;i++){
-		double sigma_i = sqrt(fabs(cov_axis_axis[i*2+i]));
-		for(int j=0;j<2;j++){
-		  double sigma_j = sqrt(fabs(cov_axis_axis[j*2+j]));
-		  double value;
-		  if(i==j){
-		    value = sigma_i;
-		  }
-		  else{
-		    if(sigma_i==0) sigma_i = 1;
-		    if(sigma_j==0) sigma_j = 1;
-		    value = cov_axis_axis[i * 2 + j]/(sigma_i*sigma_j);
-		  }
-		  fprintf(fp, "%16.5f ", value);
-		}  // end of j loop
-		fprintf(fp, "\n");
-	      }  // end of i loop
-	      fprintf(fp, "cov_in_axis is 9x2\n");
-	      for(int i=0;i<9;i++){
-		double sigma_i = sqrt(fabs(cov_in_in[i*9+i]));
-		for(int j=0;j<2;j++){
-		  double sigma_j = sqrt(fabs(cov_axis_axis[j*2+j]));
-		  double value;
-		  if(sigma_i==0) sigma_i = 1;
-		  if(sigma_j==0) sigma_j = 1;
-		  value = cov_in_axis[i * 2 + j]/(sigma_i*sigma_j);
-		  fprintf(fp, "%16.5f ", value);
-		}  // end of j loop
-		fprintf(fp, "\n");
-	      }  // end of i loop
-	    }// end if success getting covariance 
-	    fclose(fp);
-	    return(true);
-	  }// end if covariances could be computed
-	else{
-	  ROS_ERROR("could not compute covariance");
-	}
-      }// end if file opens
+        fprintf(fp, "covariance blocks:\n");
+        double cov_in_in[9*9];
+        double cov_axis_axis[2*2];
+        double cov_in_axis[9*2];
+        if(covariance.GetCovarianceBlock(camera_->camera_parameters_.pb_intrinsics, camera_->camera_parameters_.pb_intrinsics, cov_in_in) &&
+           covariance.GetCovarianceBlock(ax_ay_, ax_ay_, cov_axis_axis) &&
+           covariance.GetCovarianceBlock(camera_->camera_parameters_.pb_intrinsics, ax_ay_, cov_in_axis)){
+          fprintf(fp, "cov_in_in is 9x9\n");
+          for(int i=0;i<9;i++){
+            double sigma_i = sqrt(fabs(cov_in_in[i*9+i]));
+            for(int j=0;j<9;j++){
+              double sigma_j = sqrt(fabs(cov_in_in[j*9+j]));
+              double value;
+              if(i==j){
+                value = sigma_i;
+              }
+              else{
+                if(sigma_i==0) sigma_i = 1;
+                if(sigma_j==0) sigma_j = 1;
+                value = cov_in_in[i * 9 + j]/(sigma_i*sigma_j);
+              }
+              fprintf(fp, "%16.5f ", value);
+            }  // end of j loop
+            fprintf(fp, "\n");
+          }  // end of i loop
+          fprintf(fp, "cov_axis_axis is 2x2\n");
+          for(int i=0;i<2;i++){
+            double sigma_i = sqrt(fabs(cov_axis_axis[i*2+i]));
+            for(int j=0;j<2;j++){
+              double sigma_j = sqrt(fabs(cov_axis_axis[j*2+j]));
+              double value;
+              if(i==j){
+                value = sigma_i;
+              }
+              else{
+                if(sigma_i==0) sigma_i = 1;
+                if(sigma_j==0) sigma_j = 1;
+                value = cov_axis_axis[i * 2 + j]/(sigma_i*sigma_j);
+              }
+              fprintf(fp, "%16.5f ", value);
+            }  // end of j loop
+            fprintf(fp, "\n");
+          }  // end of i loop
+          fprintf(fp, "cov_in_axis is 9x2\n");
+          for(int i=0;i<9;i++){
+            double sigma_i = sqrt(fabs(cov_in_in[i*9+i]));
+            for(int j=0;j<2;j++){
+              double sigma_j = sqrt(fabs(cov_axis_axis[j*2+j]));
+              double value;
+              if(sigma_i==0) sigma_i = 1;
+              if(sigma_j==0) sigma_j = 1;
+              value = cov_in_axis[i * 2 + j]/(sigma_i*sigma_j);
+              fprintf(fp, "%16.5f ", value);
+            }  // end of j loop
+            fprintf(fp, "\n");
+          }  // end of i loop
+        }// end if success getting covariance
+        fclose(fp);
+        return(true);
+      }// end if covariances could be computed
+      else{
+        ROS_ERROR("could not compute covariance");
+      }
+    }// end if file opens
     ROS_ERROR("could not open covariance file %s", covariance_file_name.c_str());
     return (false);
   };  // end computeCovariance()
+
+  //construct image file from scene name
   std::string current_image_file (int scene, std::string& filename){
     std::string present_image_file_path_name;
     char scene_chars[8];
@@ -654,7 +653,7 @@ public:
       present_image_file_path_name  = image_directory_ + "/" +  filename;
     }
     return present_image_file_path_name;
-  }
+  }; // end of current_image_file()
 
 private:
   ros::NodeHandle nh_;
