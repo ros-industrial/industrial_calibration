@@ -13,6 +13,7 @@
 #include <ros/node_handle.h>
 #include <geometry_msgs/PoseArray.h>
 #include <eigen_conversions/eigen_msg.h>
+
 #include "applicable_pose_generator/pose_reachability_filter.h"
 
 #include <geometry_msgs/TransformStamped.h>
@@ -22,6 +23,8 @@
 #include <industrial_extrinsic_cal/check_if_points_in_pic.h>
 
 #include <industrial_extrinsic_cal/camera_yaml_parser.h>
+
+
 
 using std::vector;
 using std::string;
@@ -38,16 +41,16 @@ int main(int argc, char **argv)
   //loads all known values and parameters
   check_if_point_in_pic initialization(pivnh);
 
-  center_point_of_target = check_if_point_in_pic::finds_middle_of_target(corner_points, center_Of_TargetX,center_Of_TargetY);
+  initialization.center_point_of_target = initialization.finds_middle_of_target(initialization.center_Of_TargetX, initialization.center_Of_TargetY);
 
   // creates camera transforms in the shape of a cone
   ros::Publisher pub = n.advertise<geometry_msgs::PoseArray>("topic", 1, true);
 
   // radius of the cone = (poseHeight/ std::tan(angleOfCone))
-  geometry_msgs::PoseArray msg = check_if_point_in_pic::create_all_poses(poseHeight, spacing_in_z, angleOfCone, numberOfStopsForPhotos,  center_point_of_target );
+  geometry_msgs::PoseArray msg = initialization.create_all_poses(initialization.poseHeight, initialization.spacing_in_z, initialization.angleOfCone, initialization.numberOfStopsForPhotos,  initialization.center_point_of_target );
 
   //creates rectanglular target in rviz
-  initialization.create_rviz_target(corner_points,msg);
+  initialization.create_rviz_target(msg);
 
   // convert the messages back into poses
   EigenSTL::vector_Affine3d AllcameraPoses(msg.poses.size());
@@ -58,8 +61,7 @@ int main(int argc, char **argv)
   }
 
   // filters out unreachable and unseeable poses
-  geometry_msgs::PoseArray filtered_msgs = check_if_point_in_pic::pose_filters(msg2,tf_transform, image_width, image_height, AllcameraPoses, corner_points, fx,  fy,  cx,  cy );
-
+  geometry_msgs::PoseArray filtered_msgs = initialization.pose_filters(msg2,initialization.tf_transform, initialization.image_width,initialization.image_height, AllcameraPoses, initialization.fx,  initialization.fy,  initialization.cx_,  initialization.cy_ );
 
   ros::Publisher pub2 = n.advertise<geometry_msgs::PoseArray>("topic2", 1, true);
   filtered_msgs.header.frame_id = "target";
@@ -77,7 +79,7 @@ int main(int argc, char **argv)
 } //end of main
 
 // Transforms a point into the camera frame then projects the new point into the 2d screen
-void check_if_point_in_pic::imagePoint(Eigen::Vector3d TargetPoint , double fx, double fy, double cx, double cy, double &u, double &v,Eigen::Affine3d cameraPose )
+void check_if_point_in_pic::imagePoint(Eigen::Vector3d TargetPoint , double fx, double fy, double cx, double cy, double &u, double &v,const Eigen::Affine3d &cameraPose )
 {
  Eigen::Vector3d cp;
  cp = cameraPose.inverse() * TargetPoint;
@@ -108,20 +110,20 @@ int findingMidpoint(int pointOne, int pointTwo)
   return midpoint;
 }
 
-Eigen::Vector2d check_if_point_in_pic::finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY)
+Eigen::Vector2d check_if_point_in_pic::finds_middle_of_target( double center_Of_TargetX, double center_Of_TargetY)
 {
   Eigen::Vector2d center_point;
   for(int i=0; i<4; i++)
   {
     for(int j=0; j<4; j++)
     {
-      if(corner_points[i][0] != corner_points[j][0])
+      if(corner_points_[i][0] != corner_points_[j][0])
       {
-        center_Of_TargetX = (corner_points[i][0] + corner_points[j][0]) / 2;
+        center_Of_TargetX = (corner_points_[i][0] + corner_points_[j][0]) / 2;
       }
-      if(corner_points[i][1] != corner_points[j][1])
+      if(corner_points_[i][1] != corner_points_[j][1])
       {
-        center_Of_TargetY = (corner_points[i][1] + corner_points[j][1]) / 2;
+        center_Of_TargetY = (corner_points_[i][1] + corner_points_[j][1]) / 2;
       }
     }
   }
@@ -132,7 +134,9 @@ Eigen::Vector2d check_if_point_in_pic::finds_middle_of_target(Eigen::Vector3d co
 
 geometry_msgs::PoseArray check_if_point_in_pic::create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target )
 {
+  double pi = 3.14159265359;
   double angleInRadians = angleOfCone*(pi/180);
+  ROS_INFO ("angle= %lf degrees", angleInRadians *pi/180.0 );
   geometry_msgs::PoseArray msg;
   int extra_Counter = 0;
   for(double j=0; j<=poseHeight; j=j+spacing_in_z)
@@ -161,7 +165,7 @@ geometry_msgs::PoseArray check_if_point_in_pic::create_all_poses(double poseHeig
   return msg;
 }
 
-geometry_msgs::PoseArray check_if_point_in_pic::pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy )
+geometry_msgs::PoseArray check_if_point_in_pic::pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses, double fx, double fy, double cx, double cy )
 {
   CreateChain::chain_creation reachability_filter;
   int num_created_poses = AllcameraPoses.size();
@@ -172,7 +176,7 @@ geometry_msgs::PoseArray check_if_point_in_pic::pose_filters(geometry_msgs::Pose
       {
           double u=0;
           double v=0;
-          check_if_point_in_pic::imagePoint(corner_points[i], fx, fy, cx, cy, u, v,AllcameraPoses[j]);
+          imagePoint(corner_points_[i], fx, fy, cx_, cy_, u, v,AllcameraPoses[j]);
           if(u<0 || u>=image_width || v<0 || v>= image_height )
           {
             ROS_ERROR("u,v = %lf %lf but image size = %d %d",u,v,image_width,image_height);
@@ -252,8 +256,8 @@ check_if_point_in_pic::check_if_point_in_pic(ros::NodeHandle pivnh)
   }
 
   fy = fx;
-  double cx = image_width/2;//assumes that lense is ligned up with sensor
-  double cy = image_height/2;//assums that lense is ligned up with sensor
+  cx_ = image_width/2;//assumes that lense is ligned up with sensor
+  cy_ = image_height/2;//assums that lense is ligned up with sensor
 
   if (!pivnh.getParam("world", from_frame_param_))
   {
@@ -264,15 +268,15 @@ check_if_point_in_pic::check_if_point_in_pic(ros::NodeHandle pivnh)
     ROS_ERROR("did not set parameter target");
   }
 
-  initialization.create_transform_listener(tf_transform, tf_listener);
+  create_transform_listener(tf_transform, tf_listener);
 
   //reads in information about target
   string targetFile = "/home/lawrencelewis/catkin_ws/src/industrial_calibration/industrial_extrinsic_cal/yaml/ical_srv_target.yaml";
   vector<boost::shared_ptr<Target>>  myYamlDefinedTargets;
   if(!parseTargets(targetFile , myYamlDefinedTargets))
-{
+  {
     ROS_ERROR("could not parse target file %s", targetFile.c_str());
-    return 0;
+    return ;
   }
    boost::shared_ptr<Target> Mytarget = myYamlDefinedTargets[0];
 
@@ -289,43 +293,42 @@ check_if_point_in_pic::check_if_point_in_pic(ros::NodeHandle pivnh)
     if(Mytarget->pts_[i].x < xMin) xMin = Mytarget->pts_[i].x;
     if(Mytarget->pts_[i].y < yMin) yMin = Mytarget->pts_[i].y;
   }
-  Eigen::Vector3d corner_points[4];
 
-  corner_points[0] = Eigen::Vector3d((xMin-xMax/2)/5,(yMin-yMax/2)/5,0);
-  corner_points[1] = Eigen::Vector3d((xMax-xMax/2)/5,(yMin-yMax/2)/5,0);
-  corner_points[2] = Eigen::Vector3d((xMin-xMax/2)/5,(yMax-yMax/2)/5,0);
-  corner_points[3] = Eigen::Vector3d((xMax-xMax/2)/5,(yMax-yMax/2)/5,0);
+  corner_points_[0] = Eigen::Vector3d((xMin-xMax/2)/5,(yMin-yMax/2)/5,0);
+  corner_points_[1] = Eigen::Vector3d((xMax-xMax/2)/5,(yMin-yMax/2)/5,0);
+  corner_points_[2] = Eigen::Vector3d((xMin-xMax/2)/5,(yMax-yMax/2)/5,0);
+  corner_points_[3] = Eigen::Vector3d((xMax-xMax/2)/5,(yMax-yMax/2)/5,0);
 }
-void check_if_point_in_pic::create_rviz_target(Eigen::Vector3d corner_points[4], geometry_msgs::PoseArray& msg)
+void check_if_point_in_pic::create_rviz_target( geometry_msgs::PoseArray& msg)
 {
   geometry_msgs::Pose pnt1,pnt2,pnt3,pnt4;
-  pnt1.position.x = corner_points[0][0];
-  pnt1.position.y = corner_points[0][1];
-  pnt1.position.z = corner_points[0][2];
+  pnt1.position.x = corner_points_[0][0];
+  pnt1.position.y = corner_points_[0][1];
+  pnt1.position.z = corner_points_[0][2];
   pnt1.orientation.w = 1.0;
   pnt1.orientation.x = 0.0;
   pnt1.orientation.y = 0.0;
   pnt1.orientation.z = 0.0;
 
-  pnt2.position.x = corner_points[1][0];
-  pnt2.position.y = corner_points[1][1];
-  pnt2.position.z = corner_points[1][2];
+  pnt2.position.x = corner_points_[1][0];
+  pnt2.position.y = corner_points_[1][1];
+  pnt2.position.z = corner_points_[1][2];
   pnt2.orientation.w = 1.0;
   pnt2.orientation.x = 0.0;
   pnt2.orientation.y = 0.0;
   pnt2.orientation.z = 0.0;
 
-  pnt3.position.x = corner_points[2][0];
-  pnt3.position.y = corner_points[2][1];
-  pnt3.position.z = corner_points[2][2];
+  pnt3.position.x = corner_points_[2][0];
+  pnt3.position.y = corner_points_[2][1];
+  pnt3.position.z = corner_points_[2][2];
   pnt3.orientation.w = 1.0;
   pnt3.orientation.x = 0.0;
   pnt3.orientation.y = 0.0;
   pnt3.orientation.z = 0.0;
 
-  pnt4.position.x = corner_points[3][0];
-  pnt4.position.y = corner_points[3][1];
-  pnt4.position.z = corner_points[3][2];
+  pnt4.position.x = corner_points_[3][0];
+  pnt4.position.y = corner_points_[3][1];
+  pnt4.position.z = corner_points_[3][2];
   pnt4.orientation.w = 1.0;
   pnt4.orientation.x = 0.0;
   pnt4.orientation.y = 0.0;
