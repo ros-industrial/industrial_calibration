@@ -142,7 +142,6 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${yaml_cpp_INCLUDE_DIR}
 )
-
 # target: main library
 add_library(
   industrial_extrinsic_cal
