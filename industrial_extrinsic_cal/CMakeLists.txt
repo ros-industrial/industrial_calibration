@@ -31,13 +31,11 @@ find_package(Boost REQUIRED)
 find_package(Ceres REQUIRED)
 message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
-<<<<<<< HEAD
 find_package(OpenCV REQUIRED)
-=======
+
 find_package(Eigen3 REQUIRED)
 
-find_package(OpenCV 2 REQUIRED)
->>>>>>> b144dddd3a81c768a079f8f2a0120f11e9917026
+find_package(OpenCV 3 REQUIRED)
 message("-- Found OpenCV version ${OpenCV_VERSION}: ${OpenCV_INCLUDE_DIRS}")
 
 
