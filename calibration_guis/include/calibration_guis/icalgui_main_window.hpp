@@ -64,7 +64,6 @@ public Q_SLOTS:
   void on_saveButton_clicked();
   void on_covButton_clicked();
   void on_runButton_clicked();
-  void on_testingButton_clicked();
 private:
   Ui::MainWindowDesign ui;
   QNode qnode;
