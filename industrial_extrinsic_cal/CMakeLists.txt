@@ -226,7 +226,6 @@ install(
     industrial_extrinsic_cal
     manual_calt_adjust
     mutable_joint_state_publisher
-#    nist_analysis
     ros_robot_trigger_action_service
     service_node
     trigger_service
