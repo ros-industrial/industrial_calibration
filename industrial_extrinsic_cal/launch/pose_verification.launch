@@ -10,7 +10,7 @@
 
   <node pkg="tf" type="static_transform_publisher" name="camera_poses_that_see_target" args=".6 0 -.4 0 0 0 /world /target2 25"/>
   <node pkg="tf" type="static_transform_publisher" name="all_camera_poses" args=".6 0 -.4 0 0 0 /world /target 25"/>
-  <node pkg="industrial_extrinsic_cal" type="position_validation" name="position_validation" output="screen">
+  <node pkg="industrial_extrinsic_cal" type="check_visible" name="check_visible" output="screen">
     <rosparam>
       camera_file: "test2_camera_def.yaml"
       target_file: "test2_target_def.yaml"
@@ -28,6 +28,6 @@
     <param name="numberOfStopsForPhotos" type="double" value="8"/>
     <param name="poseHeight" type="double" value="1.2"/>
     <param name="spacing_in_z" type="double" value=".25"/>
-    <param name="angleOfCone" type="double" value="1.047197"/>
+    <param name="angleOfCone" type="double" value="60"/>
   </node>
 </launch>

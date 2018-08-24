@@ -32,6 +32,8 @@ class check_if_point_in_pic
 public:
   int image_width;
   int image_height;
+  double cx_;
+  double cy_;
   double fy;
   double fx;
   int numberOfStopsForPhotos; // controlls amount of stops for each ring
@@ -46,13 +48,15 @@ public:
   double xMax,yMax,xMin,yMin;
   std::string from_frame_param_;
   std::string to_frame_param_;
-  void create_rviz_target(Eigen::Vector3d corner_points[4], geometry_msgs::PoseArray& msg);
+  Eigen::Vector3d corner_points_[4];
+
+  void create_rviz_target(geometry_msgs::PoseArray& msg);
   void create_transform_listener(tf::StampedTransform& tf_transform, tf::TransformListener& tf_listen);
-  geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,Eigen::Vector3d corner_points[4],double fx, double fy, double cx, double cy );
-  void imagePoint(Eigen::Vector3d TargetPoint, double fx, double fy, double cx, double cy, double &u, double &v,Eigen::Affine3d cameraPose);
+  geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,double fx, double fy, double cx, double cy );
+  void imagePoint(Eigen::Vector3d TargetPoint, double fx, double fy, double cx, double cy, double &u, double &v,const Eigen::Affine3d &cameraPose);
   geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target );
   int addingFactorial(int lastAdded);
-  Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY);
+  Eigen::Vector2d finds_middle_of_target(double center_Of_TargetX, double center_Of_TargetY);
   check_if_point_in_pic(ros::NodeHandle pivnh);
 private:
 };
