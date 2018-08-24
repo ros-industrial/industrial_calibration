@@ -19,11 +19,15 @@
 #include <industrial_extrinsic_cal/ros_transform_interface.h>
 #include <Eigen/Eigen>
 
+/*!
+ * \brief The check_if_point_in_pic class
+ * this class has many functions that are all used
+ * to create a bunch of transforms looking at a target, first.
+ * Then it uses filters to check if the camera can see the function
+ * and to see if the robot can actually reach those transforms we created.
+ */
 
-
-
-
-class make_main_smaller
+class check_if_point_in_pic
 {
 public:
   int image_width;
@@ -49,7 +53,7 @@ public:
   geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target );
   int addingFactorial(int lastAdded);
   Eigen::Vector2d finds_middle_of_target(Eigen::Vector3d corner_points[4], double center_Of_TargetX, double center_Of_TargetY);
-  make_main_smaller(ros::NodeHandle pivnh);
+  check_if_point_in_pic(ros::NodeHandle pivnh);
 private:
 };
 #endif
