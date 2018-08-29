@@ -51,7 +51,7 @@
 
 
    <!-- Load the xacro file of the cameras and target onto the parameter server as a robot description -->
-   <param name="$(arg robot1)/robot_description" command="$(find xacro)/xacro.py $(arg xacro_model)" />
+   <param name="$(arg robot1)/robot_description" command="$(find xacro)/xacro --inorder $(arg xacro_model)" />
    <param name="use_gui" value="$(arg gui)" />
 
    <!-- Launch robot state publishers for scene -->
