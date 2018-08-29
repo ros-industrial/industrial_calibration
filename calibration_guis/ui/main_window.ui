@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>QRosApp</string>
+   <string>Robo-Cylinder Intrinsic Calibration</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../resources/images.qrc">
@@ -27,14 +27,14 @@
       <x>20</x>
       <y>50</y>
       <width>161</width>
-      <height>161</height>
+      <height>181</height>
      </rect>
     </property>
     <property name="autoFillBackground">
      <bool>false</bool>
     </property>
     <property name="title">
-     <string>Intrinsic Calibration</string>
+     <string>Triggers</string>
     </property>
     <widget class="QPushButton" name="obsButton">
      <property name="geometry">
@@ -46,7 +46,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Observation</string>
+      <string>Observe</string>
      </property>
     </widget>
     <widget class="QPushButton" name="saveButton">
@@ -75,6 +75,19 @@
       <string>COV</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="loadButton">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>150</y>
+       <width>80</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>LOAD</string>
+     </property>
+    </widget>
     <widget class="QPushButton" name="startButton">
      <property name="geometry">
       <rect>
@@ -99,7 +112,7 @@
      </rect>
     </property>
     <property name="title">
-     <string>Optimize</string>
+     <string>Allowed Cost Per Pixel</string>
     </property>
     <widget class="QLineEdit" name="allowed_residual_">
      <property name="geometry">
@@ -135,18 +148,18 @@
       <rect>
        <x>10</x>
        <y>90</y>
-       <width>171</width>
+       <width>175</width>
        <height>20</height>
       </rect>
      </property>
      <property name="text">
-      <string>final cost per observation:</string>
+      <string>final cost per pixel:</string>
      </property>
     </widget>
     <widget class="QLabel" name="final_resid_lb_">
      <property name="geometry">
       <rect>
-       <x>180</x>
+       <x>190</x>
        <y>90</y>
        <width>59</width>
        <height>20</height>

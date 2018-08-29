@@ -34,11 +34,12 @@ class MainWindow : public QMainWindow {
 
 public:
 
-  ros::ServiceClient start_client1_;
-  ros::ServiceClient obs_client2_;
-  ros::ServiceClient run_client3_;
-  ros::ServiceClient save_client4_;
-  ros::ServiceClient cov_client5_;
+  ros::ServiceClient start_client_;
+  ros::ServiceClient obs_client_;
+  ros::ServiceClient run_client_;
+  ros::ServiceClient save_client_;
+  ros::ServiceClient cov_client_;
+  ros::ServiceClient load_client_;
 
   ros::NodeHandle *nh_;
   MainWindow(int argc, char** argv, QWidget *parent = 0);
@@ -64,6 +65,7 @@ public Q_SLOTS:
   void on_saveButton_clicked();
   void on_covButton_clicked();
   void on_runButton_clicked();
+  void on_loadButton_clicked();
 private:
   Ui::MainWindowDesign ui;
   QNode qnode;

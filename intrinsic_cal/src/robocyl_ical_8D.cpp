@@ -305,7 +305,6 @@ public:
             double image_x = camera_observations[k].image_loc_x;
             double image_y = camera_observations[k].image_loc_y;
             Point3d point  = camera_observations[k].target->pts_[camera_observations[k].point_id];
-            if(k==10) ROS_ERROR("target point %d = %8.3lf %8.3lf %8.3lf observed at %8.3lf %8.3lf",camera_observations[k].point_id, point.x, point.y, point.z, image_x, image_y);
             CostFunction *cost_function = industrial_extrinsic_cal::RailICal5::Create(image_x, image_y, Dist, point);
             P_->AddResidualBlock(cost_function, NULL, intrinsics, extrinsics, ax_ay_);
           }  // for each observation at this camera_location
@@ -510,6 +509,7 @@ public:
 	    return(true);
 	  }
 	sprintf(msg, "final cost %f", final_cost);
+	res.final_cost_per_observation = final_cost;
 	res.message = string(msg);
 	res.success = true;
 	return(true);
