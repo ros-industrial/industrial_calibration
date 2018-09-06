@@ -73,14 +73,26 @@ public:
     ros::NodeHandle priv_nh("~");
     std::string target_mount_frame;
     std::string camera_mount_frame;
+    std::string camera_file, target_file;
     
     // load cameras and targets
-    priv_nh.getParam("yaml_file_path", yaml_file_path_);
-    std::string camera_file, target_file;
-    priv_nh.getParam("camera_file", camera_file);
-    priv_nh.getParam("target_file", target_file);
-    priv_nh.getParam("target_mount_frame", target_mount_frame);
-    priv_nh.getParam("camera_mount_frame", camera_mount_frame);
+    if(!priv_nh.getParam("yaml_file_path", yaml_file_path_)){
+      ROS_ERROR("Must set param: yaml_file_path desribing where to find camera_file.yaml and target_file.yaml");
+    }
+    if(!priv_nh.getParam("camera_file", camera_file)){
+      ROS_ERROR("Must set param: camera_file, this defines the camera to calibrate");
+    }
+    if(!priv_nh.getParam("target_file", target_file)){
+      ROS_ERROR("Must set param: target_file, this defines the target used for calibration");
+    }
+
+    if(!priv_nh.getParam("target_mount_frame", target_mount_frame)){
+      ROS_ERROR("Must set param: target_mount_frame, this defines the tf-frame on which the target is mounted");
+    }
+    if(!priv_nh.getParam("camera_mount_frame", camera_mount_frame)){
+      ROS_ERROR("Must set param: target_mount_frame, this defines the tf-frame on which the target is mounted");
+    }
+    
     priv_nh.getParam("save_data", save_data_);
     priv_nh.getParam("data_directory", data_directory_);
     camera_file_ = yaml_file_path_ + camera_file ;
@@ -99,7 +111,6 @@ public:
     }
 
     // initialize the target_mount to camera_mount transform listener
-    
     targetm_to_cameram_TI_ = new industrial_extrinsic_cal::ROSListenerTransInterface(target_mount_frame);
     targetm_to_cameram_TI_->setReferenceFrame(camera_mount_frame);
     targetm_to_cameram_TI_->setDataDirectory(data_directory_);
@@ -108,11 +119,12 @@ public:
     init_blocks();
 
     // advertise services
-    start_server_       = nh_.advertiseService( "WristCalSrvStart", &wristCalServiceNode::startCallBack, this);
-    observation_server_ = nh_.advertiseService( "WristCalSrvObs", &wristCalServiceNode::observationCallBack, this);
-    run_server_         = nh_.advertiseService( "WristCalSrvRun", &wristCalServiceNode::runCallBack, this);
-    save_server_        = nh_.advertiseService( "WristCalSrvSave", &wristCalServiceNode::saveCallBack, this);
-    import_server_      = nh_.advertiseService( "WristCalSrvImport", &wristCalServiceNode::importObservationData, this);
+    start_server_       = nh_.advertiseService( "WristCalSrvStart",  &wristCalServiceNode::startCallBack, this);
+    load_server_        = nh_.advertiseService( "WristCalSrvLoad",   &wristCalServiceNode::loadCallBack, this);
+    observation_server_ = nh_.advertiseService( "WristCalSrvObs",    &wristCalServiceNode::observationCallBack, this);
+    run_server_         = nh_.advertiseService( "WristCalSrvRun",    &wristCalServiceNode::runCallBack, this);
+    save_server_        = nh_.advertiseService( "WristCalSrvSave",   &wristCalServiceNode::saveCallBack, this);
+    covariance_server_  = nh_.advertiseService( "ICalSrvCov",        &wristCalServiceNode::covCallBack, this);
 
   };// end of constructor
 
@@ -428,9 +440,9 @@ public:
   /**
    * \brief Load and set the calibration data from a previous job.
    */
-  bool importObservationData(industrial_extrinsic_cal::FileOp::Request &req, industrial_extrinsic_cal::FileOp::Response &resp)
+  bool loadCallBack(industrial_extrinsic_cal::FileOp::Request &req, industrial_extrinsic_cal::FileOp::Response &resp)
   {
-    /*
+
     path directory = path(data_directory_) / req.name;
     ROS_INFO_STREAM("Loading from directory: " << directory);
     int scene_idx = 1;
@@ -638,7 +650,7 @@ private:
   ros::ServiceServer observation_server_;
   ros::ServiceServer run_server_;
   ros::ServiceServer save_server_;
-  ros::ServiceServer import_server_;
+  ros::ServiceServer load_server_;
   ceres::Problem *P_;
   bool problem_initialized_;
 

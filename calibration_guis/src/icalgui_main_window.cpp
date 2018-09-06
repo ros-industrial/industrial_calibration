@@ -38,14 +38,14 @@ namespace calibration_guis {
     std::string runService     = "ICalSrvRun";
     std::string saveService    = "ICalSrvSave";
     std::string covService     = "ICalSrvCov";
-    std::string LoadService     = "ICalSrvLoae";
+    std::string LoadService    = "ICalSrvLoad";
 
     start_client_ = nh_->serviceClient<std_srvs::Trigger>(startService);
     obs_client_   = nh_->serviceClient<std_srvs::Trigger>(observeService);
     run_client_   = nh_->serviceClient<industrial_extrinsic_cal::cal_srv_solve>(runService);
     save_client_  = nh_->serviceClient<std_srvs::Trigger>(saveService);
     cov_client_   = nh_->serviceClient<std_srvs::Trigger>(covService);
-    load_client_   = nh_->serviceClient<std_srvs::Trigger>(LoadService);
+    load_client_  = nh_->serviceClient<std_srvs::Trigger>(LoadService);
 
     ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
 
