@@ -442,12 +442,20 @@ public:
    */
   bool loadCallBack(industrial_extrinsic_cal::FileOp::Request &req, industrial_extrinsic_cal::FileOp::Response &resp)
   {
+    
+    char current_image_scene_chars[255];
+    sprintf(current_image_scene_chars,"_%03d_%03d.jpg",scene_,0); // add rail distance index to image, scene_ will automatically be added by camera_observer.save_current_image()
+    std::string image_file_currently = camera_->camera_name_ + std::string(current_image_scene_chars);
+    std::string image_file_now = current_image_file(scene_,image_file_currently);
+
+    while(camera_->camera_observer_->exists_test(image_file_now)){
+
 
     path directory = path(data_directory_) / req.name;
     ROS_INFO_STREAM("Loading from directory: " << directory);
     int scene_idx = 1;
     bool finished = false;
-    while (! finished)
+    while (!finished)
     {
       artemis_msgs::GetStereoImages img_srv_data;
       std::map<std::string, Pose6d> transforms;
@@ -637,6 +645,21 @@ public:
       write_transform(it->first, it->second);
     outfile.close();
   }
+
+  //construct image file from scene name
+  std::string current_image_file (int scene, std::string& filename){
+    std::string present_image_file_path_name;
+    char scene_chars[8];
+    sprintf(scene_chars,"_%03d.jpg",scene);
+    if(filename == ""){ // build file name from image_directory_,
+      present_image_file_path_name  = image_directory_ + std::string("/") +  camera_name_ + std::string(scene_chars);
+    }
+    else{
+      present_image_file_path_name  = image_directory_ + "/" +  filename;
+    }
+    return present_image_file_path_name;
+  }; // end of current_image_file()
+
 
 private:
   ros::NodeHandle nh_;
