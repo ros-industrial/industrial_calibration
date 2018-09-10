@@ -52,6 +52,7 @@ using industrial_extrinsic_cal::CameraObservations;
 using industrial_extrinsic_cal::Point3d;
 using industrial_extrinsic_cal::Pose6d;
 using industrial_extrinsic_cal::P_BLOCK;
+using std::string;
 
 class icalServiceNode
 {
@@ -59,12 +60,12 @@ public:
   icalServiceNode(const  ros::NodeHandle& nh)
     :nh_(nh), P_(NULL), problem_initialized_(false), total_observations_(0), scene_(0)
   {
-    std::string nn = ros::this_node::getName();
+    string nn = ros::this_node::getName();
     ros::NodeHandle priv_nh("~");
 
     // load cameras and targets
     priv_nh.getParam("yaml_file_path", yaml_file_path_);
-    std::string camera_file, target_file;
+    string camera_file, target_file;
     priv_nh.getParam("camera_file", camera_file);
     priv_nh.getParam("target_file", target_file);
     priv_nh.getParam("save_data", save_data_);
@@ -86,22 +87,22 @@ public:
 
     // set all the data directories to the first camera's image_directory_
     for(int i=1; i<all_cameras_.size(); i++){
-      all_cameras_[i].set_image_directory(all_cameras_[0].get_image_directory());
+      all_cameras_[i]->camera_observer_->set_image_directory(all_cameras_[0]->camera_observer_->get_image_directory());
     }
     for(int i=0; i<all_targets_.size(); i++){
-      all_targets_[i].setDataDirectory(all_cameras_[0].get_image_directory());
+      all_targets_[i]->transform_interface_->setDataDirectory(all_cameras_[0]->camera_observer_->get_image_directory());
     }
 
     // load cameras, targets and intiialize ceres blocks
     init_blocks();
 
     // advertise services
-    start_server_       = nh_.advertiseService( "ICalSrvStart", &icalServiceNode::startCallBack, this);
-    observation_server_ = nh_.advertiseService( "ICalSrvObs", &icalServiceNode::observationCallBack, this);
-    run_server_         = nh_.advertiseService( "ICalSrvRun", &icalServiceNode::runCallBack, this);
-    save_server_        = nh_.advertiseService( "ICalSrvSave", &icalServiceNode::saveCallBack, this);
+    start_server_       = nh_.advertiseService( "ICalSrvStart",       &icalServiceNode::startCallBack, this);
+    observation_server_ = nh_.advertiseService( "ICalSrvObs",         &icalServiceNode::observationCallBack, this);
+    run_server_         = nh_.advertiseService( "ICalSrvRun",         &icalServiceNode::runCallBack, this);
+    save_server_        = nh_.advertiseService( "ICalSrvSave",        &icalServiceNode::saveCallBack, this);
     load_server_        = nh_.advertiseService( "StereoCalSrvImport", &icalServiceNode::loadCallBack, this);
-    covariance_server_  = nh_.advertiseService( "ICalSrvCov",        &icalCalServiceNode::covCallBack, this);
+    covariance_server_  = nh_.advertiseService( "ICalSrvCov",         &icalServiceNode::covCallBack, this);
 
   };// end of constructor
 
@@ -112,7 +113,7 @@ public:
       {
 	if (all_cameras_[i]->is_moving_)
 	  {
-	    int scene_ = 0;
+	    scene_ = 0;
 	    ceres_blocks_.addMovingCamera(all_cameras_[i], scene_);
 	  }
 	else
@@ -129,7 +130,7 @@ public:
 	}
 	if (all_targets_[i]->is_moving_)
 	  {
-	    int scene_ = 0;
+	    scene_ = 0;
 	    ceres_blocks_.addMovingTarget(all_targets_[i], scene_);
 	  }
 	else
@@ -187,7 +188,7 @@ public:
     scene_=0;
     ceres_blocks_.clearCamerasTargets(); 
     init_blocks();
-    res.message = std::string("Intrinsic calibration service started");
+    res.message = string("Intrinsic calibration service started");
     res.success = true;
     return(true);
   }
@@ -196,7 +197,7 @@ public:
   bool observationCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
     char msg[100];
-    std::string null_string("");
+    string null_string("");
     if(problem_initialized_ != true ){
       ROS_INFO("calling start");
       std_srvs::TriggerRequest  sreq;
@@ -231,7 +232,7 @@ public:
       all_cameras_[i]->camera_observer_->triggerCamera();
 
       if(save_data_){
-	all_camera_[i]->camera_observer_->saveCurrentImage(scene_, null_string);
+	all_cameras_[i]->camera_observer_->save_current_image(scene_, null_string);
       }
 
       while (!all_cameras_[i]->camera_observer_->observationsDone());
@@ -274,7 +275,7 @@ public:
     scene_++;
 
     sprintf(msg, "Ical_srv now has %d observations after scene %d",total_observations_, scene_);
-    res.message = std::string(msg);
+    res.message = string(msg);
     res.success = true;
     return(true);
 
@@ -283,14 +284,16 @@ public:
   /**
    * \brief Load and set the calibration data from a previous job.
    */
-  bool loadCallBack(industrial_extrinsic_cal::FileOp::Request &req, industrial_extrinsic_cal::FileOp::Response &resp)
+  bool loadCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
-    if(problem_initialized_ != true ){ // scene_id=0, problem re-initialized
-      ROS_INFO("calling start");
-      std_srvs::TriggerRequest  sreq;
-      std_srvs::TriggerResponse sres;
-      startCallBack(sreq,sres);
-    }
+    string null_string("");
+    if(problem_initialized_ != true ) // scene_id=0, problem re-initialized
+      {
+	ROS_INFO("calling start");
+	std_srvs::TriggerRequest  sreq;
+	std_srvs::TriggerResponse sres;
+	startCallBack(sreq,sres);
+      }
 
 
     // for each scene data includes
@@ -339,7 +342,7 @@ public:
 	    int num_observations = (int)camera_observations.size();
 	    
 	    if(camera_observations.size() == all_targets_[0]->num_points_);
-	    ROS_INFO("Found %d camera observations", (int)left_camera_observations.size());
+	    ROS_INFO("Found %d camera observations", (int)camera_observations.size());
 	    
 	    // add the moving target to the blocks
 	    shared_ptr<Target> target = camera_observations[0].target;
@@ -347,6 +350,7 @@ public:
 	    P_BLOCK intrinsics  = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[i]->camera_name_);
 	    P_BLOCK target_pb   = ceres_blocks_.getMovingTargetPoseParameterBlock(target->target_name_,scene_);
 	  
+	    CostFunction* cost_function[num_observations];  
 	    for (int k = 0; k < num_observations; k++)
 	      {
 		shared_ptr<Target> target = camera_observations[k].target;
@@ -370,7 +374,7 @@ public:
 
   bool covCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
-    std::string covariance_file_name("/home/clewis/junk.txt");
+    string covariance_file_name("/home/clewis/junk.txt");
     if(!computeCovariance(covariance_file_name)){
       ROS_ERROR("could not compute covariance");
       res.success = false;
@@ -383,7 +387,7 @@ public:
     return(true);
   };
 
-  bool computeCovariance(std::string& covariance_file_name)
+  bool computeCovariance(string& covariance_file_name)
   {
     FILE* fp;
     if ((fp = fopen(covariance_file_name.c_str(), "w")) != NULL)
@@ -450,14 +454,14 @@ public:
     if(problem_initialized_==false){
       ROS_ERROR("must call start service");
       sprintf(msg, "must call start service to initialized ical service");
-      res.message = std::string(msg);
+      res.message = string(msg);
       res.success = false;
       return(true);
     }
     if(total_observations_ == 0){
       ROS_ERROR("must call observations service at least once");
       sprintf(msg, "must call observations service at least once");
-      res.message = std::string(msg);
+      res.message = string(msg);
       res.success = false;
       return(true);
     }
@@ -494,18 +498,18 @@ public:
 	    res.final_cost_per_observation = final_cost;
 	    ROS_ERROR("allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
 	    sprintf(msg, "allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
-	    res.message = std::string(msg);
+	    res.message = string(msg);
 	    res.success = false;
 	    return(true);
 	  }
 	sprintf(msg, "final cost %f", final_cost);
-	res.message = std::string(msg);
+	res.message = string(msg);
 	res.success = true;
 	return(true);
       }
     ROS_ERROR("NO CONVERGENCE");
     sprintf(msg, "NO CONVERGENCE");
-    res.message = std::string(msg);
+    res.message = string(msg);
     res.success = false;
     return(true);
   }; // end runCallBack()
@@ -529,7 +533,7 @@ public:
 	    all_cameras_[0]->camera_parameters_.distortion_k3, all_cameras_[0]->camera_parameters_.distortion_p1,
 	    all_cameras_[0]->camera_parameters_.distortion_p2);
 
-    res.message = std::string(msg);
+    res.message = string(msg);
     res.success = true;
     return(true);
 
@@ -539,9 +543,9 @@ private:
   ros::NodeHandle nh_;
   std::vector<shared_ptr<Camera> > all_cameras_;
   std::vector<shared_ptr<Target> > all_targets_;
-  std::string yaml_file_path_;
-  std::string camera_file_;
-  std::string target_file_;
+  string yaml_file_path_;
+  string camera_file_;
+  string target_file_;
   CeresBlocks ceres_blocks_;                 /*!< This structure maintains the parameter sets for ceres */
   ros::ServiceServer start_server_;
   ros::ServiceServer observation_server_;
@@ -553,6 +557,8 @@ private:
   bool problem_initialized_;
   int total_observations_;
   int scene_;
+  bool save_data_;
+  string image_directory_;
 };// end of class icalServiceNode
 
 int main(int argc, char** argv)
