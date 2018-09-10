@@ -349,6 +349,110 @@ public:
 
   }; // end observation service};
 
+  bool covCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
+  {
+    std::string covariance_file_name("/home/clewis/junk.txt");
+    if(!computeCovariance(covariance_file_name)){
+      ROS_ERROR("could not compute covariance");
+      res.success = false;
+      res.message = "failure";
+    }
+    else{
+      res.message = "good job";
+      res.success = true;
+    }
+    return(true);
+  };
+
+  bool computeCovariance(std::string& covariance_file_name)
+  {
+    FILE* fp;
+    if ((fp = fopen(covariance_file_name.c_str(), "w")) != NULL)
+    {
+      ceres::Covariance::Options covariance_options;
+      covariance_options.algorithm_type = ceres::DENSE_SVD;
+      ceres::Covariance covariance(covariance_options);
+
+      P_BLOCK extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(all_cameras_[0]->camera_name_);
+      P_BLOCK target_pb  = ceres_blocks_.getStaticTargetPoseParameterBlock(all_targets_[0]->target_name_);
+
+      std::vector<std::pair<const double*, const double*> > covariance_pairs;
+      covariance_pairs.push_back(std::make_pair(extrinsics, extrinsics));
+      covariance_pairs.push_back(std::make_pair(target_pb, target_pb));
+      covariance_pairs.push_back(std::make_pair(extrinsics,target_pb));
+
+      if(covariance.Compute(covariance_pairs, P_))
+      {
+        fprintf(fp, "covariance blocks:\n");
+        double cov_ex_ex[6*6];
+	double cov_t_t[6*6];
+	double cov_ex_t[6*6];
+        if(covariance.GetCovarianceBlock(extrinsics, extrinsics, cov_ex_ex) &&
+	   covariance.GetCovarianceBlock(target_pb, target_pb, cov_t_t) &&
+	   covariance.GetCovarianceBlock(extrinsics, target_pb, cov_ex_t)){
+          fprintf(fp, "cov_ex_ex is 6x6\n");
+          for(int i=0;i<6;i++){
+            double sigma_i = sqrt(fabs(cov_ex_ex[i*6+i]));
+            for(int j=0;j<6;j++){
+              double sigma_j = sqrt(fabs(cov_ex_ex[j*6+j]));
+              double value;
+              if(i==j){
+                value = sigma_i;
+              }
+              else{
+                if(sigma_i==0) sigma_i = 1;
+                if(sigma_j==0) sigma_j = 1;
+                value = cov_ex_ex[i * 6 + j]/(sigma_i*sigma_j);
+              }
+              fprintf(fp, "%16.5f ", value);
+            }  // end of j loop
+            fprintf(fp, "\n");
+          }  // end of i loop
+	   fprintf(fp, "cov_t_t is 6x6\n");
+          for(int i=0;i<6;i++){
+            double sigma_i = sqrt(fabs(cov_t_t[i*6+i]));
+            for(int j=0;j<6;j++){
+              double sigma_j = sqrt(fabs(cov_t_t[j*6+j]));
+              double value;
+              if(i==j){
+                value = sigma_i;
+              }
+              else{
+                if(sigma_i==0) sigma_i = 1;
+                if(sigma_j==0) sigma_j = 1;
+                value = cov_t_t[i * 6 + j]/(sigma_i*sigma_j);
+              }
+              fprintf(fp, "%16.5f ", value);
+            }  // end of j loop
+            fprintf(fp, "\n");
+          }  // end of i loop
+          fprintf(fp, "cov_ex_t is 6x6\n");
+          for(int i=0;i<6;i++){
+            double sigma_i = sqrt(fabs(cov_ex_ex[i*6+i]));
+            for(int j=0;j<6;j++){
+              double sigma_j = sqrt(fabs(cov_t_t[j*6+j]));
+              double value;
+              if(sigma_i==0) sigma_i = 1;
+              if(sigma_j==0) sigma_j = 1;
+              value = cov_ex_t[i * 6 + j]/(sigma_i*sigma_j);
+              fprintf(fp, "%16.5f ", value);
+            }  // end of j loop
+            fprintf(fp, "\n");
+          }  // end of i loop
+        }// end if success getting covariance
+        fclose(fp);
+        return(true);
+      }// end if covariances could be computed
+      else{
+        ROS_ERROR("could not compute covariance");
+      }
+    }// end if file opens
+    ROS_ERROR("could not open covariance file %s", covariance_file_name.c_str());
+    return (false);
+  };  // end computeCovariance()
+
+
+
   bool runCallBack( industrial_extrinsic_cal::cal_srv_solveRequest &req, industrial_extrinsic_cal::cal_srv_solveResponse &res)
   {
     char msg[100];
@@ -442,223 +546,84 @@ public:
    */
   bool loadCallBack(industrial_extrinsic_cal::FileOp::Request &req, industrial_extrinsic_cal::FileOp::Response &resp)
   {
+    industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::CameraReprjErrorWithDistortionPK;
+    Roi roi;
+    roi.x_min = 0;
+    roi.y_min = 0;
+    roi.x_max = all_cameras_[0]->camera_parameters_.width;
+    roi.y_max = all_cameras_[0]->camera_parameters_.height;
+    int total_pts= all_targets_[0]->num_points_;
+
+    if(problem_initialized_ != true ){ // scene_id=0, problem re-initialized
+      ROS_INFO("calling start");
+      std_srvs::TriggerRequest  sreq;
+      std_srvs::TriggerResponse sres;
+      startCallBack(sreq,sres);
+    }
     
-    char current_image_scene_chars[255];
-    sprintf(current_image_scene_chars,"_%03d_%03d.jpg",scene_,0); // add rail distance index to image, scene_ will automatically be added by camera_observer.save_current_image()
-    std::string image_file_currently = camera_->camera_name_ + std::string(current_image_scene_chars);
-    std::string image_file_now = current_image_file(scene_,image_file_currently);
-
-    while(camera_->camera_observer_->exists_test(image_file_now)){
-
-
-    path directory = path(data_directory_) / req.name;
-    ROS_INFO_STREAM("Loading from directory: " << directory);
-    int scene_idx = 1;
-    bool finished = false;
-    while (!finished)
-    {
-      artemis_msgs::GetStereoImages img_srv_data;
-      std::map<std::string, Pose6d> transforms;
-      if (loadSceneData(scene_idx, directory.string(), img_srv_data, transforms))
-      {
-        ROS_INFO_STREAM("Loaded scene " << scene_idx);
-        observeScene(img_srv_data, transforms);
-        scene_idx++;
-      }
-      else
-        finished = true;
-    }
-    auto res_str = boost::format("Loaded data from %d scenes") % (scene_idx-1);
-    resp.result = res_str.str();
-    */
-    return true;
-  }
-
-  bool loadSceneData(
-
-      int scene_idx,
-      const std::string dir,
-      sensor_msgs::Image &left_image,
-      sensor_msgs::Image &right_image,
-      std::map<std::string, Pose6d> &transforms)
-  {
-    /*
-    char tmp_name[255];
-    std::string side("left");
-    sprintf(tmp_name,"%scapture_%03d_%s.jpg",path(dir)scene_idx, side);
-    std::string get_image_file(tmp_name);
-    
-    //Function to create the file string for each image
-    auto get_image_file = [&](std::string side) -> path
-    {
-      auto img_file = boost::format("capture_%03d_%s.jpg") % scene_idx % side;
-      path img_path = path(dir) / img_file.str();
-      return img_path;
-    };
-    //Load left image
-    auto left_image_path = get_image_file("left");
-    if (! boost::filesystem::is_regular_file(left_image_path))
-    {
-      return false;
-    }
-    loadImage(left_image_path, img_srv_data.response.left_image);
-    //Load right image
-    auto right_image_path = get_image_file("right");
-    if (! boost::filesystem::is_regular_file(right_image_path))
-    {
-      return false;
-    }
-    loadImage(right_image_path, img_srv_data.response.right_image);
-    //Create transforms file string and load YAML
-    auto tf_file = boost::format("capture_%03d_transform.yaml") % scene_idx;
-    path tf_file_path = path(dir) / tf_file.str();
-    if (! boost::filesystem::is_regular_file(tf_file_path))
-    {
-      return false;
-    }
-    if (! loadTransformYAML(tf_file_path, transforms))
-    {
-      ROS_ERROR_STREAM("Problem loading transform yaml file at scene " << scene_idx);
-      return false;
-    }
-		     */
-    return true;
-  }
-
-  void saveObservationData(
-      int scene_idx,
-      const sensor_msgs::Image &left_image,
-      const sensor_msgs::Image &right_image,
-      const std::map<std::string, Pose6d> &transforms)
-  {
-    if (save_subdir_.empty())
-    {
-      ROS_WARN("No calibration data subdir set, cannot save observation data");
-      return;
-    }
-
-    path save_dir = path(data_directory_) / save_subdir_;
-    if (! boost::filesystem::is_directory(save_dir))
-    {
-      try
-      {
-        boost::filesystem::create_directories(save_dir);
-      }
-      catch (boost::filesystem::filesystem_error &ex)
-      {
-        ROS_ERROR_STREAM("Could not create subdir for calibration data: " << save_dir.string());
-        save_subdir_ = "";
-        return;
-      }
-    }
-
-    boost::format left_image_name = boost::format("capture_%03d_left.jpg") % scene_idx;
-    path left_image_path = path(data_directory_) / save_subdir_ / left_image_name.str();
-    writeImage(left_image, left_image_path);
-
-    boost::format right_image_name = boost::format("capture_%03d_right.jpg") % scene_idx;
-    path right_image_path = path(data_directory_) / save_subdir_ / right_image_name.str();
-    writeImage(right_image, right_image_path);
-
-    boost::format transform_file_name = boost::format("capture_%03d_transform.yaml") % scene_idx;
-    path transform_path = path(data_directory_) / save_subdir_ / transform_file_name.str();
-    writeTransformYAML(transforms, transform_path);
-  }
-
-  /**
-   * \brief Creates and sets a new timestamp-based subdirectory to store calibration data.
-   */
-  void setNewSaveSubdir(const std::string &base_dir)
-  {
-    auto t = std::time(nullptr);
-    auto tm = std::localtime(&t);
-    std::ostringstream ss;
-    ss << std::put_time(tm, "%y%m%d_%H%M%S");
-    save_subdir_ = ss.str();
-
-    //This directory gets created only when we need to write the first observation into it
-    path data_dir = path(base_dir) / save_subdir_;
-    ROS_INFO_STREAM("Storing calibration info in new directory: " << data_dir.string());
-  }
-
-  void loadImage(path &file, sensor_msgs::Image &output)
-  {
-    ROS_INFO_STREAM("Loading image from file: " << file);
-    cv_bridge::CvImage::Ptr cv_img(new cv_bridge::CvImage);
-    cv_img->image = cv::imread(file.string(), CV_LOAD_IMAGE_GRAYSCALE);
-    cv_img->encoding = "mono8";
-    cv_img->toImageMsg(output);
-  }
-
-  void writeImage(const sensor_msgs::Image &img, path &file)
-  {
-    cv_bridge::CvImage::Ptr cv_img = cv_bridge::toCvCopy(img, "mono8");
-    cv::imwrite(file.string(), cv_img->image);
-  }
-
-  bool loadTransformYAML(path &file, std::map<std::string, Pose6d> &transforms)
-  {
-    ROS_INFO_STREAM("Loading yaml from file: " << file);
-    auto load_transform_from_yaml = [](const YAML::Node &n) -> Pose6d
-    {
-      Pose6d t;
-      t.x = n["x"].as<double>();
-      t.y = n["y"].as<double>();
-      t.z = n["z"].as<double>();
-      t.ax = n["ax"].as<double>();
-      t.ay = n["ay"].as<double>();
-      t.az = n["az"].as<double>();
-      return t;
-    };
-
-    try
-    {
-      YAML::Node n = YAML::LoadFile(file.string());
-      for (auto it = n.begin(); it != n.end(); ++it)
-      {
-        transforms[it->first.as<std::string>()] = load_transform_from_yaml(it->second);
-      }
-    }
-    catch (YAML::Exception &ex)
-    {
-      ROS_ERROR_STREAM("YAML exception: " << ex.what());
-      return false;
+    bool data_read_ok=true;
+    while(data_read_ok){
+      char pose_scene_chars[8];
+      char image_scene_chars[7];
+      std::string image_file = all_cameras_[0]->camera_name_ + std::string(image_scene_chars);
+      std::string extrinsics_scene_d_yaml = std::string("_extrinsics") + std::string(pose_scene_chars);
+      std::string camera_mount_to_target_mount= std::string("Cm_to_Tm") + std::string(pose_scene_chars);  // write pose info to data_directory_/Cm_to_tm_sceneID.yaml
+      std::string camera_extrinsics = all_cameras_[0]->camera_name_ + extrinsics_scene_d_yaml; // write pose to data_directory_/camera_name_extrinsics_sceneID.yaml
+      std::string target_extrinsics = all_targets_[0]->target_name_ + extrinsics_scene_d_yaml; // write pose to data_directory_/target_name_extrinsics_sceneID.yaml
+      
+      data_read_ok &= targetm_to_cameram_TI_->loadPose(scene_,camera_mount_to_target_mount);
+      data_read_ok &= all_cameras_[0]->camera_observer_->load_current_image(scene_,image_file);
+      
+      if(data_read_ok){
+	Pose6d TtoC = targetm_to_cameram_TI_->getCurrentPose();
+	TtoC.show("TtoC");
+	
+	
+	// set target and get observations from the image
+	CameraObservations camera_observations;
+	all_cameras_[0]->camera_observer_->clearTargets();
+	all_cameras_[0]->camera_observer_->clearObservations();
+	all_cameras_[0]->camera_observer_->addTarget(all_targets_[0], roi, cost_type);
+	while (!all_cameras_[0]->camera_observer_->observationsDone());
+	all_cameras_[0]->camera_observer_->getObservations(camera_observations);
+	
+	int num_observations = (int)camera_observations.size();
+	ROS_INFO("Found %d observations", (int)camera_observations.size());
+	
+	// add observations to problem
+	num_observations = (int)camera_observations.size();
+	if (num_observations != total_pts)
+	  {
+	    ROS_ERROR("Target Locator could not find all targets found %d out of %d", num_observations, total_pts);
+	  }
+	else	 // add a new cost to the problem for each observation
+	  {	 
+	    total_observations_ += num_observations;
+	    ceres_blocks_.addMovingTarget(camera_observations[0].target, scene_);
+	    for (int k = 0; k < num_observations; k++)
+	      {
+		shared_ptr<Target> target = camera_observations[k].target;
+		double image_x = camera_observations[k].image_loc_x;
+		double image_y = camera_observations[k].image_loc_y;
+		Point3d point  = target->pts_[camera_observations[k].point_id];
+		P_BLOCK intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[0]->camera_name_);
+		P_BLOCK extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(all_cameras_[0]->camera_name_);
+		P_BLOCK target_pb  = ceres_blocks_.getStaticTargetPoseParameterBlock(target->target_name_);
+		double fx = intrinsics[0];
+		double fy = intrinsics[1];
+		double cx = intrinsics[2];
+		double cy = intrinsics[3];
+		CostFunction* cost_function = industrial_extrinsic_cal::LinkTargetCameraReprjErrorPK::Create(image_x, image_y, fx, fy, cx, cy, TtoC, point);
+		P_->AddResidualBlock(cost_function, NULL, extrinsics, target_pb);
+	      }  // for each observation at this camera_location
+	  } // end of else (there are some observations to add)
+	scene_++;
+      }// end if data_read_ok
     }
     return true;
   }
 
-  void writeTransformYAML(const std::map<std::string, Pose6d> &transforms, path &file)
-  {
-    std::ofstream outfile(file.string());
-    auto write_transform = [&](const std::string &name, const Pose6d &transform)
-    {
-      outfile << name << ":" << std::endl;
-      outfile << "  x: " << transform.x << std::endl;
-      outfile << "  y: " << transform.y << std::endl;
-      outfile << "  z: " << transform.z << std::endl;
-      outfile << "  ax: " << transform.ax << std::endl;
-      outfile << "  ay: " << transform.ay << std::endl;
-      outfile << "  az: " << transform.az << std::endl;
-    };
 
-    for (auto it = transforms.begin(); it != transforms.end(); ++it)
-      write_transform(it->first, it->second);
-    outfile.close();
-  }
-
-  //construct image file from scene name
-  std::string current_image_file (int scene, std::string& filename){
-    std::string present_image_file_path_name;
-    char scene_chars[8];
-    sprintf(scene_chars,"_%03d.jpg",scene);
-    if(filename == ""){ // build file name from image_directory_,
-      present_image_file_path_name  = image_directory_ + std::string("/") +  camera_name_ + std::string(scene_chars);
-    }
-    else{
-      present_image_file_path_name  = image_directory_ + "/" +  filename;
-    }
-    return present_image_file_path_name;
-  }; // end of current_image_file()
 
 
 private:
@@ -674,6 +639,7 @@ private:
   ros::ServiceServer run_server_;
   ros::ServiceServer save_server_;
   ros::ServiceServer load_server_;
+  ros::ServiceServer covariance_server_;
   ceres::Problem *P_;
   bool problem_initialized_;
 

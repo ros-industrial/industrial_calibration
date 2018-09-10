@@ -42,7 +42,7 @@ namespace industrial_extrinsic_cal
   {
     std::string full_file_path_name;
     char scene_chars[8];
-    sprintf(scene_chars,"_%03d.jpg",scene);
+    sprintf(scene_chars,"_%03d.yaml",scene);
     if(filename == ""){ // build file name from data_directory_, 
       full_file_path_name  = data_directory_ + "/" +  transform_frame_ + std::string(scene_chars);
     }

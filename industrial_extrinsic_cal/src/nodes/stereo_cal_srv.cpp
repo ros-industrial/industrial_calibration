@@ -106,7 +106,8 @@ public:
     observation_server_ = nh_.advertiseService( "StereoCalSrvObs", &stereoCalServiceNode::observationCallBack, this);
     run_server_         = nh_.advertiseService( "StereoCalSrvRun", &stereoCalServiceNode::runCallBack, this);
     save_server_        = nh_.advertiseService( "StereoCalSrvSave", &stereoCalServiceNode::saveCallBack, this);
-    import_server_      = nh_.advertiseService( "StereoCalSrvImport", &stereoCalServiceNode::importObservationData, this);
+    load_server_        = nh_.advertiseService( "StereoCalSrvImport", &stereoCalServiceNode::loadCallBack, this);
+    covariance_server_  = nh_.advertiseService( "ICalSrvCov",        &stereoCalServiceNode::covCallBack, this);
 
   };// end of constructor
 
@@ -292,28 +293,6 @@ public:
 											 lfx, lfy, lcx, lcy,
 											 rfx, rfy, rcx, rcy);
 	  P_->AddResidualBlock(cost_function, NULL, target_pb, right_extrinsics);
-	    /* Why am I leaving all this debugging code here? I have no good reason TODO Remove before PR to upstream master
-	      if(k<3){
-	      ROS_ERROR("target_pb = %ld extrinsics %ld intrinsics = %ld",(long int ) &(target_pb[0]),(long int) &extrinsics[0], (long int ) &intrinsics[0]);
-	      Pose6d P(extrinsics[3],extrinsics[4],extrinsics[5],extrinsics[0],extrinsics[1],extrinsics[2]);
-	      P.show("camera to world initial conditions");
-	      Pose6d TP(target_pb[3],target_pb[4],target_pb[5],target_pb[0],target_pb[1],target_pb[2]);
-	      TP.show("tool0 to Target initial conditions");
-	      Pose6d T;
-	      T = P*TtoC*TP;
-	      T.show("full transform");
-	      double resid[2];
-	      double *params[2];
-	      double J[12][12];
-	      double **JP;
-	      JP[0] = J[0];
-	      JP[1] = J[1];
-	      params[0] = extrinsics;
-	      params[1] = target_pb;
-	      bool rtn = cost_function->Evaluate(params, resid, JP);
-	      ROS_ERROR("Target Point %lf %lf %lf observed %lf %lf Residual = %lf %lf",point.x, point.y, point.z, image_x, image_y, resid[0],resid[1]);
-	      }
-	    */
 	}  // for each point on the target
       if (save_data_){
 	  char pose_scene_chars[8];
@@ -472,202 +451,170 @@ public:
   /**
    * \brief Load and set the calibration data from a previous job.
    */
-  bool importObservationData(industrial_extrinsic_cal::FileOp::Request &req, industrial_extrinsic_cal::FileOp::Response &resp)
+  bool loadCallBack(industrial_extrinsic_cal::FileOp::Request &req, industrial_extrinsic_cal::FileOp::Response &resp)
   {
-    /*
-    path directory = path(data_directory_) / req.name;
-    ROS_INFO_STREAM("Loading from directory: " << directory);
-    int scene_idx = 1;
-    bool finished = false;
-    while (! finished)
+    if(problem_initialized_ != true ){ // scene_id=0, problem re-initialized
+      ROS_INFO("calling start");
+      std_srvs::TriggerRequest  sreq;
+      std_srvs::TriggerResponse sres;
+      startCallBack(sreq,sres);
+    }
+
+      // data includes
+      //   initial pose between right camera and left camera
+      // for each scene
+      //   a. image from left camera
+      //   b. image from right camera
+      //   c. pose from left camera mount to target mount
+
+    // read initial stereo pose
+    std::string null_string("");
+    all_cameras_[1]->transform_interface_->loadPose(0,null_string);
+    Pose6d initial_stereo_cal = all_cameras_[1]->transform_interface_->getCurrentPose();
+
+    bool data_read_ok=true;
+    while(data_read_ok){ //read all the scene data from image_directory
+      data_read_ok &= all_cameras_[0]->camera_observer_->load_current_image(scene_, null_string);
+      data_read_ok &= all_cameras_[1]->camera_observer_->load_current_image(scene_, null_string);
+      data_read_ok &= all_targets_[0]->transform_interface_->loadPose(scene_, null_string);
+      scene_++;
+      if(data_read_ok)
+	{
+	  // add the target to each camera's observer
+	  Roi roi;    
+	  roi.x_min = 0;
+	  roi.y_min = 0;
+	  
+	  roi.x_max = all_cameras_[0]->camera_parameters_.width;
+	  roi.y_max = all_cameras_[0]->camera_parameters_.height;
+	  all_cameras_[0]->camera_observer_->clearTargets();
+	  all_cameras_[0]->camera_observer_->clearObservations();
+	  all_cameras_[0]->camera_observer_->addTarget(all_targets_[0], roi, industrial_extrinsic_cal::cost_functions::WristStereoCal);
+
+	  roi.x_max = all_cameras_[1]->camera_parameters_.width;
+	  roi.y_max = all_cameras_[1]->camera_parameters_.height;
+	  all_cameras_[1]->camera_observer_->clearTargets();
+	  all_cameras_[1]->camera_observer_->clearObservations();
+	  all_cameras_[1]->camera_observer_->addTarget(all_targets_[0], roi, industrial_extrinsic_cal::cost_functions::WristStereoCal);
+
+	  // wait for both observers to get their images
+	  while (!all_cameras_[0]->camera_observer_->observationsDone());
+	  while (!all_cameras_[1]->camera_observer_->observationsDone());
+
+	  // get the observations from left and right cameras
+	  CameraObservations left_camera_observations;
+	  CameraObservations right_camera_observations;
+	  all_cameras_[0]->camera_observer_->getObservations(left_camera_observations);
+	  all_cameras_[1]->camera_observer_->getObservations(right_camera_observations);
+
+	  // only add if there are enough observations in both
+	  int num_observations = (int)left_camera_observations.size() + (int)right_camera_observations.size();
+
+	
+	  if(left_camera_observations.size() == all_targets_[0]->num_points_ && right_camera_observations.size() == all_targets_[0]->num_points_){
+	    ROS_INFO("Found %d left camera observations and %d right camera observations", (int)left_camera_observations.size(), (int) right_camera_observations.size());
+
+	    // add the moving target to the blocks
+	    shared_ptr<Target> target = left_camera_observations[0].target;
+	    ceres_blocks_.addMovingTarget(all_targets_[0], scene_);
+	    P_BLOCK left_intrinsics  = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[0]->camera_name_);
+	    P_BLOCK right_intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[1]->camera_name_);
+	    P_BLOCK right_extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(all_cameras_[1]->camera_name_);
+	    P_BLOCK target_pb        = ceres_blocks_.getMovingTargetPoseParameterBlock(target->target_name_,scene_);
+	    double lfx = left_intrinsics[0];
+	    double lfy = left_intrinsics[1];
+	    double lcx = left_intrinsics[2];
+	    double lcy = left_intrinsics[3];
+	    double rfx = right_intrinsics[0];
+	    double rfy = right_intrinsics[1];
+	    double rcx = right_intrinsics[2];
+	    double rcy = right_intrinsics[3];
+	  
+	    // add observations from left and right camera to problem
+	    for (int k = 0; k < all_targets_[0]->num_points_; k++)
+	      {
+		total_observations_ += 2;
+		double left_image_x = left_camera_observations[k].image_loc_x;
+		double left_image_y = left_camera_observations[k].image_loc_y;
+		Point3d left_point  = target->pts_[left_camera_observations[k].point_id];
+		double right_image_x = right_camera_observations[k].image_loc_x;
+		double right_image_y = right_camera_observations[k].image_loc_y;
+		Point3d right_point  = target->pts_[right_camera_observations[k].point_id];
+		CostFunction* cost_function = industrial_extrinsic_cal::WristStereoCal::Create(left_image_x,  left_image_y,  left_point,
+											       right_image_x, right_image_y, right_point,
+											       lfx, lfy, lcx, lcy,
+											       rfx, rfy, rcx, rcy);
+		P_->AddResidualBlock(cost_function, NULL, target_pb, right_extrinsics);
+	      }  // for each point on the target
+	  }// end if enough observations, must have found the target in both images 
+	}// end if data_read_ok
+    }
+  }
+
+  bool covCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
+  {
+    std::string covariance_file_name("/home/clewis/junk.txt");
+    if(!computeCovariance(covariance_file_name)){
+      ROS_ERROR("could not compute covariance");
+      res.success = false;
+      res.message = "failure";
+    }
+    else{
+      res.message = "good job";
+      res.success = true;
+    }
+    return(true);
+  };
+
+  bool computeCovariance(std::string& covariance_file_name)
+  {
+    FILE* fp;
+    if ((fp = fopen(covariance_file_name.c_str(), "w")) != NULL)
     {
-      std::map<std::string, Pose6d> transforms;
-      sensor_msgs::Image left_image, right_image;
-      if (loadSceneData(scene_idx, directory.string(), left_image, right_image, transforms))
+      ceres::Covariance::Options covariance_options;
+      covariance_options.algorithm_type = ceres::DENSE_SVD;
+      ceres::Covariance covariance(covariance_options);
+
+      P_BLOCK extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(all_cameras_[1]->camera_name_);
+
+      std::vector<std::pair<const double*, const double*> > covariance_pairs;
+      covariance_pairs.push_back(std::make_pair(extrinsics, extrinsics));
+
+      if(covariance.Compute(covariance_pairs, P_))
       {
-        ROS_INFO_STREAM("Loaded scene " << scene_idx);
-	//        observeScene(img_srv_data, transforms);
-        scene_idx++;
+        fprintf(fp, "stereo covariance block:\n");
+        double cov[6*6];
+        if(covariance.GetCovarianceBlock(extrinsics, extrinsics, cov)){
+          fprintf(fp, "cov is 6x6\n");
+          for(int i=0;i<6;i++){
+            double sigma_i = sqrt(fabs(cov[i*6+i]));
+            for(int j=0;j<6;j++){
+              double sigma_j = sqrt(fabs(cov[j*6+j]));
+              double value;
+              if(i==j){
+                value = sigma_i;
+              }
+              else{
+                if(sigma_i==0) sigma_i = 1;
+                if(sigma_j==0) sigma_j = 1;
+                value = cov[i * 6 + j]/(sigma_i*sigma_j);
+              }
+              fprintf(fp, "%16.5f ", value);
+            }  // end of j loop
+            fprintf(fp, "\n");
+          }  // end of i loop
+        }// end if success getting covariance
+        fclose(fp);
+        return(true);
+      }// end if covariances could be computed
+      else{
+        ROS_ERROR("could not compute covariance");
       }
-      else
-        finished = true;
-    }
-    std::string res_str = boost::format("Loaded data from %d scenes") % (scene_idx-1);
-    resp.result = res_str.str();
-    */
-    return true;
-    
-  }
+    }// end if file opens
+    ROS_ERROR("could not open covariance file %s", covariance_file_name.c_str());
+    return (false);
+  };  // end computeCovariance()
 
-  bool loadSceneData(
-
-      int scene_idx,
-      const std::string dir,
-      sensor_msgs::Image &left_image,
-      sensor_msgs::Image &right_image,
-      std::map<std::string, Pose6d> &transforms)
-  {
-    /*
-    // read the left and right images from the provided directory along with the transform
-    char tmp_name[255];
-    sprintf(tmp_name,"%scapture_%03d_left.jpg",dir.c_str(), scene_idx);
-    std::string left_image_file(tmp_name);
-    sprintf(tmp_name,"%scapture_%03d_right.jpg",dir.c_str(), scene_idx);
-    std::string right_image_file(tmp_name);
-    sprintf(tmp_name,"%scapture%03d_transform", dir.c_str(), scene_idx);
-    std::string left_camera_to_target_transform_file(tmp_name);
-
-    if (! boost::filesystem::is_regular_file(left_image_file))
-    {
-      ROS_ERROR("left image file doesn't exists: %s", left_image_file.c_str());
-      return false;
-    }
-    if (! boost::filesystem::is_regular_file(right_image_file))
-    {
-      ROS_ERROR("right image file doesn't exists: %s", right_image_file.c_str());
-      return false;
-    }
-    if (! boost::filesystem::is_regular_file(left_camera_to_target_transform_file.c_str()))
-    {
-      ROS_ERROR("left_camera_to_target_tranform file doesn't exists: %s", left_camera_to_target_transform_file.c_str());
-      return false;
-    }
-
-    if(!loadImage( left_image_file,  left_image)){
-      ROS_ERROR_STREAM("Problem loading left_image file at scene " << scene_idx);
-    }
-    if(!loadImage(right_image_file, right_image){
-      ROS_ERROR_STREAM("Problem loading right_image file at scene " << scene_idx);
-      }
-    if (! loadTransformYAML(tf_file_path, transforms))
-    {
-      ROS_ERROR_STREAM("Problem loading transform yaml file at scene " << scene_idx);
-      return false;
-    }
-    */	
-    return true;
-  }
-
-  void saveObservationData(
-      int scene_idx,
-      const sensor_msgs::Image &left_image,
-      const sensor_msgs::Image &right_image,
-      const std::map<std::string, Pose6d> &transforms)
-  {
-    if (save_subdir_.empty())
-    {
-      ROS_WARN("No calibration data subdir set, cannot save observation data");
-      return;
-    }
-
-    path save_dir = path(data_directory_) / save_subdir_;
-    if (! boost::filesystem::is_directory(save_dir))
-    {
-      try
-      {
-        boost::filesystem::create_directories(save_dir);
-      }
-      catch (boost::filesystem::filesystem_error &ex)
-      {
-        ROS_ERROR_STREAM("Could not create subdir for calibration data: " << save_dir.string());
-        save_subdir_ = "";
-        return;
-      }
-    }
-
-    boost::format left_image_name = boost::format("capture_%03d_left.jpg") % scene_idx;
-    path left_image_path = path(data_directory_) / save_subdir_ / left_image_name.str();
-    writeImage(left_image, left_image_path);
-
-    boost::format right_image_name = boost::format("capture_%03d_right.jpg") % scene_idx;
-    path right_image_path = path(data_directory_) / save_subdir_ / right_image_name.str();
-    writeImage(right_image, right_image_path);
-
-    boost::format transform_file_name = boost::format("capture_%03d_transform.yaml") % scene_idx;
-    path transform_path = path(data_directory_) / save_subdir_ / transform_file_name.str();
-    writeTransformYAML(transforms, transform_path);
-  }
-
-  /**
-   * \brief Creates and sets a new timestamp-based subdirectory to store calibration data.
-   */
-  void setNewSaveSubdir(const std::string &base_dir)
-  {
-    auto t = std::time(nullptr);
-    auto tm = std::localtime(&t);
-    std::ostringstream ss;
-    ss << std::put_time(tm, "%y%m%d_%H%M%S");
-    save_subdir_ = ss.str();
-
-    //This directory gets created only when we need to write the first observation into it
-    path data_dir = path(base_dir) / save_subdir_;
-    ROS_INFO_STREAM("Storing calibration info in new directory: " << data_dir.string());
-  }
-
-  void loadImage(path &file, sensor_msgs::Image &output)
-  {
-    ROS_INFO_STREAM("Loading image from file: " << file);
-    cv_bridge::CvImage::Ptr cv_img(new cv_bridge::CvImage);
-    cv_img->image = cv::imread(file.string(), CV_LOAD_IMAGE_GRAYSCALE);
-    cv_img->encoding = "mono8";
-    cv_img->toImageMsg(output);
-  }
-
-  void writeImage(const sensor_msgs::Image &img, path &file)
-  {
-    cv_bridge::CvImage::Ptr cv_img = cv_bridge::toCvCopy(img, "mono8");
-    cv::imwrite(file.string(), cv_img->image);
-  }
-
-  bool loadTransformYAML(path &file, std::map<std::string, Pose6d> &transforms)
-  {
-    ROS_INFO_STREAM("Loading yaml from file: " << file);
-    auto load_transform_from_yaml = [](const YAML::Node &n) -> Pose6d
-    {
-      Pose6d t;
-      t.x = n["x"].as<double>();
-      t.y = n["y"].as<double>();
-      t.z = n["z"].as<double>();
-      t.ax = n["ax"].as<double>();
-      t.ay = n["ay"].as<double>();
-      t.az = n["az"].as<double>();
-      return t;
-    };
-
-    try
-    {
-      YAML::Node n = YAML::LoadFile(file.string());
-      for (auto it = n.begin(); it != n.end(); ++it)
-      {
-        transforms[it->first.as<std::string>()] = load_transform_from_yaml(it->second);
-      }
-    }
-    catch (YAML::Exception &ex)
-    {
-      ROS_ERROR_STREAM("YAML exception: " << ex.what());
-      return false;
-    }
-    return true;
-  }
-
-  void writeTransformYAML(const std::map<std::string, Pose6d> &transforms, path &file)
-  {
-    std::ofstream outfile(file.string());
-    auto write_transform = [&](const std::string &name, const Pose6d &transform)
-    {
-      outfile << name << ":" << std::endl;
-      outfile << "  x: " << transform.x << std::endl;
-      outfile << "  y: " << transform.y << std::endl;
-      outfile << "  z: " << transform.z << std::endl;
-      outfile << "  ax: " << transform.ax << std::endl;
-      outfile << "  ay: " << transform.ay << std::endl;
-      outfile << "  az: " << transform.az << std::endl;
-    };
-
-    for (auto it = transforms.begin(); it != transforms.end(); ++it)
-      write_transform(it->first, it->second);
-    outfile.close();
-  }
 
 private:
   ros::NodeHandle nh_;
@@ -681,7 +628,8 @@ private:
   ros::ServiceServer observation_server_;
   ros::ServiceServer run_server_;
   ros::ServiceServer save_server_;
-  ros::ServiceServer import_server_;
+  ros::ServiceServer load_server_;
+  ros::ServiceServer covariance_server_;
   ceres::Problem *P_;
   bool problem_initialized_;
 

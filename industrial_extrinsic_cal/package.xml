@@ -26,7 +26,7 @@
   <depend>rosconsole</depend>
   <depend>roscpp</depend>
   <depend>roslib</depend>
-  <depend>applicable_pose_generator</depend>
+#  <depend>applicable_pose_generator</depend>
   <depend>roslint</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>

@@ -67,6 +67,7 @@ public:
     std::string camera_file, target_file;
     priv_nh.getParam("camera_file", camera_file);
     priv_nh.getParam("target_file", target_file);
+    priv_nh.getParam("save_data", save_data_);
     camera_file_ = yaml_file_path_ + camera_file ;
     target_file_ = yaml_file_path_ + target_file ;
     ROS_INFO("yaml_file_path: %s", yaml_file_path_.c_str());
@@ -83,6 +84,14 @@ public:
       exit(1);
     }
 
+    // set all the data directories to the first camera's image_directory_
+    for(int i=1; i<all_cameras_.size(); i++){
+      all_cameras_[i].set_image_directory(all_cameras_[0].get_image_directory());
+    }
+    for(int i=0; i<all_targets_.size(); i++){
+      all_targets_[i].setDataDirectory(all_cameras_[0].get_image_directory());
+    }
+
     // load cameras, targets and intiialize ceres blocks
     init_blocks();
 
@@ -91,6 +100,9 @@ public:
     observation_server_ = nh_.advertiseService( "ICalSrvObs", &icalServiceNode::observationCallBack, this);
     run_server_         = nh_.advertiseService( "ICalSrvRun", &icalServiceNode::runCallBack, this);
     save_server_        = nh_.advertiseService( "ICalSrvSave", &icalServiceNode::saveCallBack, this);
+    load_server_        = nh_.advertiseService( "StereoCalSrvImport", &icalServiceNode::loadCallBack, this);
+    covariance_server_  = nh_.advertiseService( "ICalSrvCov",        &icalCalServiceNode::covCallBack, this);
+
   };// end of constructor
 
   void init_blocks()
@@ -184,7 +196,7 @@ public:
   bool observationCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
     char msg[100];
-    
+    std::string null_string("");
     if(problem_initialized_ != true ){
       ROS_INFO("calling start");
       std_srvs::TriggerRequest  sreq;
@@ -194,8 +206,11 @@ public:
 
     for(int i=0; i<all_targets_.size(); i++){
       all_targets_[i]->pullTransform();
+      if(save_data_){
+	all_targets_[i]->transform_interface_->saveCurrentPose(scene_, null_string);
+      }
     }
-    
+
     for(int i=0; i<all_cameras_.size(); i++){
       // set the roi to the whole image
       Roi roi;
@@ -214,6 +229,11 @@ public:
 	total_pts += all_targets_[j]->num_points_;
       }
       all_cameras_[i]->camera_observer_->triggerCamera();
+
+      if(save_data_){
+	all_camera_[i]->camera_observer_->saveCurrentImage(scene_, null_string);
+      }
+
       while (!all_cameras_[i]->camera_observer_->observationsDone());
       CameraObservations camera_observations;
       all_cameras_[i]->camera_observer_->getObservations(camera_observations);
@@ -240,12 +260,11 @@ public:
 	      P_BLOCK intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[i]->camera_name_);
 	      P_BLOCK target_pb  = ceres_blocks_.getMovingTargetPoseParameterBlock(target->target_name_,scene_);
 	      if(k==0){
-    ROS_ERROR("target_pb = %ld intrinsics = %ld",(long int ) &(target_pb[0]), (long int ) &intrinsics[0]);
+		ROS_ERROR("target_pb = %ld intrinsics = %ld",(long int ) &(target_pb[0]), (long int ) &intrinsics[0]);
 		Pose6d P(target_pb[3],target_pb[4],target_pb[5],target_pb[0],target_pb[1],target_pb[2]);
 		P.show("Pose of Target");
 	      }
 	      cost_function[k] = industrial_extrinsic_cal::CameraReprjErrorWithDistortionPK::Create(image_x, image_y, point);
-	      //	      cost_function[k] = industrial_extrinsic_cal::CircleCameraReprjErrorWithDistortionPK::Create(image_x, image_y, target->circle_grid_parameters_.circle_diameter, point);
 	      P_->AddResidualBlock(cost_function[k], NULL, target_pb, intrinsics);
 	    }  // for each observation at this camera_location
 	} // end of else (there are some observations to add)
@@ -260,6 +279,158 @@ public:
     return(true);
 
   }; // end observation service};
+
+  /**
+   * \brief Load and set the calibration data from a previous job.
+   */
+  bool loadCallBack(industrial_extrinsic_cal::FileOp::Request &req, industrial_extrinsic_cal::FileOp::Response &resp)
+  {
+    if(problem_initialized_ != true ){ // scene_id=0, problem re-initialized
+      ROS_INFO("calling start");
+      std_srvs::TriggerRequest  sreq;
+      std_srvs::TriggerResponse sres;
+      startCallBack(sreq,sres);
+    }
+
+
+    // for each scene data includes
+    //   a. image from each camera
+    //   b. pose of each target
+    // Note that the target's transform interface should provide the pose between the target and the camera that observes it
+    // usually there is only one camera, and one target
+    
+    
+    bool data_read_ok=true;
+    while(data_read_ok){ //read all the scene data from image_directory
+      for(int i=0; i<all_cameras_.size(); i++){
+	data_read_ok &= all_cameras_[0]->camera_observer_->load_current_image(scene_, null_string);
+      }
+      for(int i=0; i<all_targets_.size(); i++){
+	data_read_ok &= all_targets_[0]->transform_interface_->loadPose(scene_, null_string);
+      }
+
+      scene_++;
+
+      if(data_read_ok)
+	{
+	  for(int i=0; i<all_cameras_.size(); i++){
+	    // add the target to each camera's observer
+	    Roi roi;    
+	    roi.x_min = 0;
+	    roi.y_min = 0;
+	    
+	    roi.x_max = all_cameras_[i]->camera_parameters_.width;
+	    roi.y_max = all_cameras_[i]->camera_parameters_.height;
+	    all_cameras_[i]->camera_observer_->clearTargets();
+	    all_cameras_[i]->camera_observer_->clearObservations();
+	    for(int j=0; j<all_targets_.size(); j++){
+	      all_cameras_[i]->camera_observer_->addTarget(all_targets_[j], roi, industrial_extrinsic_cal::cost_functions::CameraReprjErrorWithDistortionPK);
+	    }
+	    
+	    // wait for observers to do its work
+	    while (!all_cameras_[i]->camera_observer_->observationsDone());
+
+
+	    // get the observations from left and right cameras
+	    CameraObservations camera_observations;
+	    all_cameras_[i]->camera_observer_->getObservations(camera_observations);
+	    
+	    // only add if there are enough observations in both
+	    int num_observations = (int)camera_observations.size();
+	    
+	    if(camera_observations.size() == all_targets_[0]->num_points_);
+	    ROS_INFO("Found %d camera observations", (int)left_camera_observations.size());
+	    
+	    // add the moving target to the blocks
+	    shared_ptr<Target> target = camera_observations[0].target;
+	    ceres_blocks_.addMovingTarget(all_targets_[0], scene_);
+	    P_BLOCK intrinsics  = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[i]->camera_name_);
+	    P_BLOCK target_pb   = ceres_blocks_.getMovingTargetPoseParameterBlock(target->target_name_,scene_);
+	  
+	    for (int k = 0; k < num_observations; k++)
+	      {
+		shared_ptr<Target> target = camera_observations[k].target;
+		double image_x = camera_observations[k].image_loc_x;
+		double image_y = camera_observations[k].image_loc_y;
+		Point3d point  = target->pts_[k];
+		P_BLOCK intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[i]->camera_name_);
+		P_BLOCK target_pb  = ceres_blocks_.getMovingTargetPoseParameterBlock(target->target_name_,scene_);
+		if(k==0){
+		  ROS_ERROR("target_pb = %ld intrinsics = %ld",(long int ) &(target_pb[0]), (long int ) &intrinsics[0]);
+		  Pose6d P(target_pb[3],target_pb[4],target_pb[5],target_pb[0],target_pb[1],target_pb[2]);
+		  P.show("Pose of Target");
+		}
+		cost_function[k] = industrial_extrinsic_cal::CameraReprjErrorWithDistortionPK::Create(image_x, image_y, point);
+		P_->AddResidualBlock(cost_function[k], NULL, target_pb, intrinsics);
+	      }  // for each observation at this camera_location
+	  }// end for each camera
+	}// end if data_read_ok
+    }
+  }
+
+  bool covCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
+  {
+    std::string covariance_file_name("/home/clewis/junk.txt");
+    if(!computeCovariance(covariance_file_name)){
+      ROS_ERROR("could not compute covariance");
+      res.success = false;
+      res.message = "failure";
+    }
+    else{
+      res.message = "good job";
+      res.success = true;
+    }
+    return(true);
+  };
+
+  bool computeCovariance(std::string& covariance_file_name)
+  {
+    FILE* fp;
+    if ((fp = fopen(covariance_file_name.c_str(), "w")) != NULL)
+    {
+      ceres::Covariance::Options covariance_options;
+      covariance_options.algorithm_type = ceres::DENSE_SVD;
+      ceres::Covariance covariance(covariance_options);
+
+      P_BLOCK extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(all_cameras_[1]->camera_name_);
+
+      std::vector<std::pair<const double*, const double*> > covariance_pairs;
+      covariance_pairs.push_back(std::make_pair(extrinsics, extrinsics));
+
+      if(covariance.Compute(covariance_pairs, P_))
+      {
+        fprintf(fp, "stereo covariance block:\n");
+        double cov[6*6];
+        if(covariance.GetCovarianceBlock(extrinsics, extrinsics, cov)){
+          fprintf(fp, "cov is 6x6\n");
+          for(int i=0;i<6;i++){
+            double sigma_i = sqrt(fabs(cov[i*6+i]));
+            for(int j=0;j<6;j++){
+              double sigma_j = sqrt(fabs(cov[j*6+j]));
+              double value;
+              if(i==j){
+                value = sigma_i;
+              }
+              else{
+                if(sigma_i==0) sigma_i = 1;
+                if(sigma_j==0) sigma_j = 1;
+                value = cov[i * 6 + j]/(sigma_i*sigma_j);
+              }
+              fprintf(fp, "%16.5f ", value);
+            }  // end of j loop
+            fprintf(fp, "\n");
+          }  // end of i loop
+        }// end if success getting covariance
+        fclose(fp);
+        return(true);
+      }// end if covariances could be computed
+      else{
+        ROS_ERROR("could not compute covariance");
+      }
+    }// end if file opens
+    ROS_ERROR("could not open covariance file %s", covariance_file_name.c_str());
+    return (false);
+  };  // end computeCovariance()
 
   bool runCallBack( industrial_extrinsic_cal::cal_srv_solveRequest &req, industrial_extrinsic_cal::cal_srv_solveResponse &res)
   {
@@ -376,6 +547,8 @@ private:
   ros::ServiceServer observation_server_;
   ros::ServiceServer run_server_;
   ros::ServiceServer save_server_;
+  ros::ServiceServer load_server_;
+  ros::ServiceServer covariance_server_;
   ceres::Problem *P_;
   bool problem_initialized_;
   int total_observations_;
