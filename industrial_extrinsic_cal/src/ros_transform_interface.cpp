@@ -404,7 +404,7 @@ ROSSimpleCalTInterface::ROSSimpleCalTInterface(const string& transform_frame, co
   }
   else
   {
-    ROS_ERROR("get_client_ returned false");
+    ROS_ERROR("ros_scti get_client_ returned false, looking for %s", transform_frame_.c_str());
   }
 }
 
