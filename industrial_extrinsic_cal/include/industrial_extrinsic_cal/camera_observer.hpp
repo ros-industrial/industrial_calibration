@@ -23,6 +23,7 @@
 #include <industrial_extrinsic_cal/target.h>      /* Roi,Observation,CameraObservations */
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
 #include <opencv2/opencv.hpp>
+#include <sys/stat.h>
 
 namespace industrial_extrinsic_cal
 {
@@ -146,6 +147,37 @@ public:
     return(cv::imwrite(full_file_path_name, getCurrentImage()));
   };
 
+  /** @brief loads the latest image from the image_directory_ with the provided filename
+   *  if the filename is a null string, the filename is checked
+   *  to see if it exists under image_directory_
+  */
+  /** @param scene, the scene number */
+  /** @param filename, the file name */
+  bool load_current_image(int scene, std::string& filename)
+  {
+    std::string full_image_file_path_name;
+    char scene_chars[8];
+    sprintf(scene_chars,"_%03d.jpg",scene);
+    if(filename == ""){ // build file name from image_directory_,
+      full_image_file_path_name  = image_directory_ + std::string("/") +  camera_name_ + std::string(scene_chars);
+    }
+    else{
+      full_image_file_path_name  = image_directory_ + "/" +  filename;
+    }
+    if(exists_test(full_image_file_path_name)){
+      setCurrentImage(cv::imread(full_image_file_path_name));
+      return(true);
+    }
+    else{
+      ROS_ERROR("failed to find %s", full_image_file_path_name.c_str());
+      return (false);
+    }
+  };
+  inline bool exists_test (const std::string& name) {
+    struct stat buffer;
+    return (stat (name.c_str(), &buffer) == 0);
+  }; //end exists_test
+
   /** @brief load image from the image_directory_ with the provided filename
    *  if the filename is a null string, the name is built 
    *  from the image_directory_/camera_name_ + underscore + scene_number.jpg
@@ -179,9 +211,10 @@ public:
    *  @brief set current image
    *  @param image set the current image to this one
    */
-  void setCurrentImage(const cv::Mat image)
+  virtual void setCurrentImage(const cv::Mat &image)
   {
     last_raw_image_ = image.clone();
+    new_image_collected_ = true;
   }
 
   bool checkObservationProclivity(CameraObservations& CO)
@@ -291,6 +324,7 @@ public:
   cv::Mat last_raw_image_; /**< the image last received */
   std::string image_directory_; /*!< string directory for saving and loading images */
   std::string camera_name_; /*!< string camera_name_ unique name of a camera */
+  bool new_image_collected_; /*!< flag indicating that there is a new image ready for processing */
 
   /** @brief print this object TODO */
   //    virtual ::std::ostream& operator<<(::std::ostream& os, const CameraObserver& camera);

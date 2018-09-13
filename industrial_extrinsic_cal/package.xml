@@ -26,6 +26,7 @@
   <depend>rosconsole</depend>
   <depend>roscpp</depend>
   <depend>roslib</depend>
+  <depend>applicable_pose_generator</depend>
   <depend>roslint</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
@@ -34,6 +35,7 @@
   <depend>tf_conversions</depend>
   <depend>yaml-cpp</depend>
   <depend>ceres-solver</depend>
+
 
   <build_depend>boost</build_depend>
   <build_depend>message_generation</build_depend>
@@ -46,6 +48,9 @@
   <exec_depend>openni2_launch</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>rviz</exec_depend>
+  <exec_depend>ros_pcl</exec_depend>
+  <exec_depend>pcl_ros</exec_depend>
+  <exec_depend>pcl_conversions</exec_depend>
 
   <test_depend>rosunit</test_depend>
 

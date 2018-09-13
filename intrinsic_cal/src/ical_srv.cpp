@@ -240,7 +240,7 @@ public:
 	      P_BLOCK intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[i]->camera_name_);
 	      P_BLOCK target_pb  = ceres_blocks_.getMovingTargetPoseParameterBlock(target->target_name_,scene_);
 	      if(k==0){
-		ROS_ERROR("target_pb = %ld intrinsics = %ld",(long int * ) &(target_pb[0]), (long int *) &intrinsics[0]);
+    ROS_ERROR("target_pb = %ld intrinsics = %ld",(long int ) &(target_pb[0]), (long int ) &intrinsics[0]);
 		Pose6d P(target_pb[3],target_pb[4],target_pb[5],target_pb[0],target_pb[1],target_pb[2]);
 		P.show("Pose of Target");
 	      }

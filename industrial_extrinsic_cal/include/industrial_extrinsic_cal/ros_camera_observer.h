@@ -110,6 +110,9 @@ public:
   /** @brief tells when camera has completed its observations */
   bool observationsDone();
 
+  /** @brief sets current image and the bridge images whereas the base class just set the last_raw_image_ */
+  void setCurrentImage(const cv::Mat &image);
+
 private:
   /**
    * @brief name of pattern being looked for
@@ -217,11 +220,6 @@ private:
    *  @brief blob_detector_ptr_ is a simple blob detector
    */
   cv::Ptr<cv::FeatureDetector> blob_detector_ptr_;
-
-  /**
-   *  @brief new_image_collected, set after the trigger is done
-   */
-  bool new_image_collected_;
 
   /**
    *  @brief store_observation_images_ flag to save images for later use
