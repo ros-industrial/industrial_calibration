@@ -12,15 +12,16 @@
 #include <QtGui>
 #include <QMessageBox>
 #include <iostream>
-#include "../include/calibration_guis/icalgui_main_window.hpp"
-#include "std_srvs/Trigger.h"
-#include "industrial_extrinsic_cal/cal_srv_solve.h"
+#include <stand_alone_gui/icalgui_main_window.hpp>
+#include <std_srvs/Trigger.h>
+#include <industrial_extrinsic_cal/cal_srv_solve.h>
 
 /*****************************************************************************
  ** Namespaces
  *****************************************************************************/
 
-namespace calibration_guis {
+namespace stand_alone_gui {
+
 
   /*****************************************************************************
    ** Implementation [MainWindow]
@@ -30,7 +31,7 @@ namespace calibration_guis {
     : QMainWindow(parent)
     , qnode(argc,argv)
   {
-    ros::init(argc,argv,"calibration_guis");
+    ros::init(argc,argv,"stand_alone_gui");
     nh_= new ros::NodeHandle;
 
     std::string startService   = "ICalSrvStart";
@@ -97,23 +98,22 @@ namespace calibration_guis {
    ** Implementation [Configuration]
    *****************************************************************************/
 
+
   void MainWindow::ReadSettings() {
-    QSettings settings("Qt-Ros Package", "calibration_guis");
+    QSettings settings("Qt-Ros Package", "stand_alone_gui");
     restoreGeometry(settings.value("geometry").toByteArray());
     restoreState(settings.value("windowState").toByteArray());
-    //QString master_url = settings.value("master_url",QString("http://192.168.1.2:11311/")).toString();
-    //QString host_url = settings.value("host_url", QString("192.168.1.3")).toString();
-    //bool remember = settings.value("remember_settings", false).toBool();
     bool checked = settings.value("use_environment_variables", false).toBool();
     if ( checked ) {
     }
   }
 
   void MainWindow::WriteSettings() {
-    QSettings settings("Qt-Ros Package", "calibration_guis");
+    QSettings settings("Qt-Ros Package", "stand_alone_gui");
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
   }
+
 
   void MainWindow::closeEvent(QCloseEvent *event)
   {
@@ -121,7 +121,7 @@ namespace calibration_guis {
     QMainWindow::closeEvent(event);
   }
 
-  void calibration_guis::MainWindow::on_startButton_clicked()
+  void stand_alone_gui::MainWindow::on_startButton_clicked()
   {
     std_srvs::Trigger srv;
     if (start_client_.call(srv))
@@ -132,10 +132,9 @@ namespace calibration_guis {
       {
 	ROS_ERROR("Failed to call start service Trigger");
       }
-
   }
 
-  void calibration_guis::MainWindow::on_obsButton_clicked()
+  void stand_alone_gui::MainWindow::on_obsButton_clicked()
   {
     std_srvs::Trigger srv;
     if (obs_client_.call(srv))
@@ -148,7 +147,7 @@ namespace calibration_guis {
       }
   }
 
-  void calibration_guis::MainWindow::on_saveButton_clicked()
+  void stand_alone_gui::MainWindow::on_saveButton_clicked()
   {
     std_srvs::Trigger srv;
     if (save_client_.call(srv))
@@ -161,7 +160,8 @@ namespace calibration_guis {
       }
   }
 
-  void calibration_guis::MainWindow::on_covButton_clicked()
+
+  void stand_alone_gui::MainWindow::on_covButton_clicked()
   {
     std_srvs::Trigger srv;
     if (cov_client_.call(srv))
@@ -173,7 +173,7 @@ namespace calibration_guis {
 	ROS_ERROR("Failed to call covariance service Trigger");
       }
   }
-  void calibration_guis::MainWindow::on_loadButton_clicked()
+  void stand_alone_gui::MainWindow::on_loadButton_clicked()
   {
     std_srvs::Trigger srv;
     if (load_client_.call(srv))
@@ -184,11 +184,9 @@ namespace calibration_guis {
       {
 	ROS_ERROR("Failed to call Load Service Trigger");
       }
+  }// end on_loadButton_clicked()
 
-  }
-
-
-  void calibration_guis::MainWindow::on_runButton_clicked()
+  void stand_alone_gui::MainWindow::on_runButton_clicked()
   {
     industrial_extrinsic_cal::cal_srv_solve srv;
     float allowed_residual_num =0;
@@ -196,7 +194,7 @@ namespace calibration_guis {
     std::istringstream iss(allowed_residual_string);
     iss >> allowed_residual_num;
     srv.request.allowable_cost_per_observation = allowed_residual_num;
-
+    
     if (run_client_.call(srv))
       {
         ROS_INFO("Output %s",srv.response.message.c_str());
@@ -216,8 +214,9 @@ namespace calibration_guis {
       {
         ROS_ERROR("Failed to call service Trigger");
       }
-  }
-}  // namespace calibration_guis
+  }// end on_run_button_clicked()
+}  // namespace stand_alone_gui
+
 
 
 

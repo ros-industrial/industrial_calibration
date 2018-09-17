@@ -1,5 +1,5 @@
 /**
- * @file /include/calibration_guis/qnode.hpp
+ * @file /include/stand_alone_gui/qnode.hpp
  *
  * @brief Communications central!
  *
@@ -9,8 +9,8 @@
 ** Ifdefs
 *****************************************************************************/
 
-#ifndef CALIBRATION_GUIS_QNODE_HPP_
-#define CALIBRATION_GUIS_QNODE_HPP_
+#ifndef STAND_ALONE_GUI_QNODE_HPP_
+#define STAND_ALONE_GUI_QNODE_HPP_
 
 /*****************************************************************************
 ** Includes
@@ -30,7 +30,7 @@
 ** Namespaces
 *****************************************************************************/
 
-namespace calibration_guis {
+namespace stand_alone_gui {
 
 /*****************************************************************************
 ** Class
@@ -68,6 +68,6 @@ private:
   QStringListModel logging_model;
 };
 
-}  // namespace calibration_guis
+}  // namespace stand_alone_gui
 
-#endif /* calibration_guis_QNODE_HPP_ */
+#endif /* STAND_ALONE_GUI_QNODE_HPP_ */

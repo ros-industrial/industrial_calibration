@@ -11,7 +11,7 @@
 
 #include <QtGui>
 #include <QApplication>
-#include "../include/calibration_guis/icalgui_main_window.hpp"
+#include <stand_alone_gui/icalgui_main_window.hpp>
 
 /*****************************************************************************
 ** Main
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     ** Qt
     **********************/
     QApplication app(argc, argv);
-    calibration_guis::MainWindow w(argc,argv);
+    stand_alone_gui::MainWindow w(argc,argv);
     w.show();
     app.connect(&app, SIGNAL(lastWindowClosed()), &app, SLOT(quit()));
     int result = app.exec();

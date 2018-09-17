@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(calibration_guis)
+project(stand_alone_gui)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
@@ -28,7 +28,7 @@ find_package(Qt5 COMPONENTS Core Gui Widgets PrintSupport REQUIRED)
 
 file(GLOB QT_FORMS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ui/*.ui)
 file(GLOB QT_RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} resources/*.qrc)
-file(GLOB_RECURSE QT_MOC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/calibration_guis/*.h)
+file(GLOB_RECURSE QT_MOC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/stand_alone_gui/*.hpp)
 file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS src/*.cpp)
 
 qt5_add_resources(RESOURCES resources/images.qrc)
@@ -43,41 +43,32 @@ include_directories(
     ${Qt5PrintSupport_INCLUDE_DIRS}
 )
 
-add_definitions( -DQT_NO_KEYWORDS -std=c++11 -fPIC)
+add_definitions( -std=c++11 -fPIC)
 
-set(SRC_FILES
-  src/drive_widget.cpp
-  src/traj_panel.cpp
-  src/calibration_gui.cpp
-  include/calibration_guis/drive_widget.h
-  include/calibration_guis/traj_panel.h
-  include/calibration_guis/calibration_gui.h
-)
 
-add_library(cal_gui ${SRC_FILES} )
-target_link_libraries(cal_gui
+# Add compiler flags for building executables (-fPIE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS} -std=c++11")
+
+add_executable(ical_gui ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
+target_link_libraries(ical_gui
   ${QT_LIBRARIES}
   ${catkin_LIBRARIES}
   Qt5::Core
   Qt5::Widgets
   Qt5::Gui
   Qt5::PrintSupport
-  )
-
-# Add compiler flags for building executables (-fPIE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS} -std=c++11")
+)
 
 install(TARGETS
-  cal_gui
+  ical_gui
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(FILES
-  trajec_plugin_description.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  )
+  ical_gui
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 install(DIRECTORY media/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/media)
