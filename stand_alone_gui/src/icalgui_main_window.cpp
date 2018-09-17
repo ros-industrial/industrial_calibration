@@ -12,15 +12,15 @@
 #include <QtGui>
 #include <QMessageBox>
 #include <iostream>
-#include "../include/calibration_guis/icalgui_main_window.hpp"
-#include "std_srvs/Trigger.h"
-#include "industrial_extrinsic_cal/cal_srv_solve.h"
+#include <stand_alone_gui/icalgui_main_window.hpp>
+#include <std_srvs/Trigger.h>
+#include <industrial_extrinsic_cal/cal_srv_solve.h>
 
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
 
-namespace calibration_guis {
+namespace stand_alone_gui {
 
 /*****************************************************************************
 ** Implementation [MainWindow]
@@ -30,7 +30,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
   : QMainWindow(parent)
 	, qnode(argc,argv)
 {
-  ros::init(argc,argv,"calibration_guis");
+  ros::init(argc,argv,"stand_alone_gui");
  nh_= new ros::NodeHandle;
 
  std::string startService = "ICalSrvStart";
@@ -91,7 +91,7 @@ void MainWindow::on_actionAbout_triggered() {
 *****************************************************************************/
 
 void MainWindow::ReadSettings() {
-    QSettings settings("Qt-Ros Package", "calibration_guis");
+    QSettings settings("Qt-Ros Package", "stand_alone_gui");
     restoreGeometry(settings.value("geometry").toByteArray());
     restoreState(settings.value("windowState").toByteArray());
     //QString master_url = settings.value("master_url",QString("http://192.168.1.2:11311/")).toString();
@@ -103,7 +103,7 @@ void MainWindow::ReadSettings() {
 }
 
 void MainWindow::WriteSettings() {
-    QSettings settings("Qt-Ros Package", "calibration_guis");
+    QSettings settings("Qt-Ros Package", "stand_alone_gui");
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
 
@@ -116,7 +116,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
   QMainWindow::closeEvent(event);
 }
 
-void calibration_guis::MainWindow::on_startButton_clicked()
+void stand_alone_gui::MainWindow::on_startButton_clicked()
 {
   std_srvs::Trigger srv;
   if (start_client1_.call(srv))
@@ -130,7 +130,7 @@ void calibration_guis::MainWindow::on_startButton_clicked()
 
 }
 
-void calibration_guis::MainWindow::on_obsButton_clicked()
+void stand_alone_gui::MainWindow::on_obsButton_clicked()
 {
   std_srvs::Trigger srv;
   if (obs_client2_.call(srv))
@@ -143,7 +143,7 @@ void calibration_guis::MainWindow::on_obsButton_clicked()
   }
 }
 
-void calibration_guis::MainWindow::on_saveButton_clicked()
+void stand_alone_gui::MainWindow::on_saveButton_clicked()
 {
   std_srvs::Trigger srv;
   if (save_client4_.call(srv))
@@ -156,7 +156,7 @@ void calibration_guis::MainWindow::on_saveButton_clicked()
   }
 }
 
-void calibration_guis::MainWindow::on_covButton_clicked()
+void stand_alone_gui::MainWindow::on_covButton_clicked()
 {
   std_srvs::Trigger srv;
   if (cov_client5_.call(srv))
@@ -169,7 +169,7 @@ void calibration_guis::MainWindow::on_covButton_clicked()
   }
 }
 
-void calibration_guis::MainWindow::on_runButton_clicked()
+void stand_alone_gui::MainWindow::on_runButton_clicked()
 {
   industrial_extrinsic_cal::cal_srv_solve srv;
       float allowed_residual_num =0;
@@ -199,7 +199,7 @@ void calibration_guis::MainWindow::on_runButton_clicked()
         ROS_ERROR("Failed to call service Trigger");
       }
 }
-}  // namespace calibration_guis
+}  // namespace stand_alone_gui
 
 
 

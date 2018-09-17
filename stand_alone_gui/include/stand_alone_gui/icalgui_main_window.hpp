@@ -1,18 +1,19 @@
 /**
- * @file /include/calibration_guis/main_window.hpp
+ * @file /include/stand_alone_gui/main_window.hpp
  *
- * @brief Qt based gui for calibration_guis.
+ * @brief Qt based gui for stand_alone_gui
  *
  * @date November 2010
  **/
-#ifndef calibration_guis_MAIN_WINDOW_H
-#define calibration_guis_MAIN_WINDOW_H
+#ifndef STAND_ALONE_GUI_MAIN_WINDOW_H
+#define STAND_ALONE_GUI_MAIN_WINDOW_H
 
 /*****************************************************************************
 ** Includes
 *****************************************************************************/
 
-#include <QtGui/QMainWindow>
+//#include <QtGui/QMainWindow>
+#include <QtWidgets/QMainWindow>
 #include "ui_main_window.h"
 #include "qnode.hpp"
 
@@ -20,7 +21,7 @@
 ** Namespace
 *****************************************************************************/
 
-namespace calibration_guis {
+namespace stand_alone_gui {
 
 
 /*****************************************************************************
@@ -69,6 +70,6 @@ private:
   QNode qnode;
 };
 
-}  // namespace calibration_guis
+}  // namespace stand_alone_gui
 
-#endif // calibration_guis_MAIN_WINDOW_H
+#endif // stand_alone_gui_MAIN_WINDOW_H

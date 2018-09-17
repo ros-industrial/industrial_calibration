@@ -15,13 +15,12 @@
 #include <string>
 #include <std_msgs/String.h>
 #include <sstream>
-#include "../include/calibration_guis/qnode.hpp"
-
+#include <stand_alone_gui/qnode.hpp>
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
 
-namespace calibration_guis {
+namespace stand_alone_gui {
 
 /*****************************************************************************
 ** Implementation
@@ -41,7 +40,7 @@ QNode::~QNode() {
 }
 
 bool QNode::init() {
-	ros::init(init_argc,init_argv,"calibration_guis");
+	ros::init(init_argc,init_argv,"stand_alone_gui");
 	if ( ! ros::master::check() ) {
 		return false;
 	}
@@ -56,7 +55,7 @@ bool QNode::init(const std::string &master_url, const std::string &host_url) {
 	std::map<std::string,std::string> remappings;
 	remappings["__master"] = master_url;
 	remappings["__hostname"] = host_url;
-	ros::init(remappings,"calibration_guis");
+	ros::init(remappings,"stand_alone_gui");
 	if ( ! ros::master::check() ) {
 		return false;
 	}
@@ -118,4 +117,4 @@ void QNode::log( const LogLevel &level, const std::string &msg) {
 	Q_EMIT loggingUpdated(); // used to readjust the scrollbar
 }
 
-}  // namespace calibration_guis
+}  // namespace stand_alone_gui
