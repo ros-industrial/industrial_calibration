@@ -23,9 +23,9 @@
 
 	<link name="${prefix}_link">
 		<visual>
-			<origin rpy="0 0 0" xyz="0 0 -${astra_lengthD2}"/>
+			<origin rpy="0 0 0" xyz="0 -${astra_lengthD2} 0 "/>
 			<geometry>
-				<box size="${astra_width} ${astra_height} ${astra_length}"/>
+				<box size="${astra_width} ${astra_length} ${astra_height} "/>
 			</geometry>
 			<material name="${prefix}dark_silver"/>
 		</visual>

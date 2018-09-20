@@ -39,15 +39,18 @@ namespace calibration_guis
     std::string run_service_name   = bcn + "Run";
     std::string obs_service_name   = bcn + "Obs";
     std::string save_service_name  = bcn + "Save";
+    std::string load_service_name  = bcn + "Load";
+    std::string cov_service_name   = bcn + "Cov";
 
-    client1_ = pnh.serviceClient<std_srvs::Trigger>(start_service_name);
-    client2_ = pnh.serviceClient<std_srvs::Trigger>(obs_service_name);
+    start_client_ = pnh.serviceClient<std_srvs::Trigger>(start_service_name);
+    obs_client_   = pnh.serviceClient<std_srvs::Trigger>(obs_service_name);
+    run_client_   = pnh.serviceClient<industrial_extrinsic_cal::cal_srv_solve>(run_service_name);
+    save_client_  = pnh.serviceClient<std_srvs::Trigger>(save_service_name);
+    load_client_  = pnh.serviceClient<std_srvs::Trigger>(load_service_name);
+    cov_client_   = pnh.serviceClient<std_srvs::Trigger>(cov_service_name);
     ROS_INFO("%s", obs_service_name.c_str());
-    client3_ = pnh.serviceClient<industrial_extrinsic_cal::cal_srv_solve>(run_service_name);
-    client4_ = pnh.serviceClient<std_srvs::Trigger>(save_service_name);
 
     allowed_residual_ = new QLineEdit(parent);
-
 
     QPushButton* call_service_btn_1 = new QPushButton( "Start" , parent );
     QPushButton* call_service_btn_2 = new QPushButton( "OBS" , parent );
@@ -57,55 +60,60 @@ namespace calibration_guis
     QPushButton* call_service_btn_6 = new QPushButton( "Cov" , parent );
 
     QLabel* allowed_resid_lb = new QLabel( "Allowed Residal" );
-    final_resid_lb_ = new QLabel( "Final Residal: " );
+    final_resid_lb_ = new QLabel( "Final Residal " );
     obs_msg_lb_ = new QLabel("Observation Message: ");
-    QLabel* bcn_name_lb = new QLabel(bcn.c_str());
+    std::string base_label = "Calibration Type:  " + bcn;
+    QLabel* bcn_name_lb = new QLabel(base_label.c_str());
 
     QGridLayout* controls_layout = new QGridLayout();
 
     controls_layout->addWidget( call_service_btn_1, 1, 0 );
-    controls_layout->addWidget( bcn_name_lb       , 0, 1);
     controls_layout->addWidget( call_service_btn_2, 2, 0 );
-    controls_layout->addWidget( obs_msg_lb_       , 2, 1 );
     controls_layout->addWidget( call_service_btn_3, 3, 0 );
-    controls_layout->addWidget( allowed_resid_lb  , 3, 1 );
-    controls_layout->addWidget( allowed_residual_ , 3, 2 );
-    controls_layout->addWidget( final_resid_lb_   , 4, 2 );
     controls_layout->addWidget( call_service_btn_4, 5, 0 );
+    controls_layout->addWidget( call_service_btn_5, 5, 1 );
+    controls_layout->addWidget( call_service_btn_6, 5, 2 );
+    controls_layout->addWidget( bcn_name_lb       , 0, 1 );
+    controls_layout->addWidget( obs_msg_lb_       , 2, 1 );
+    controls_layout->addWidget( allowed_resid_lb  , 4, 1 );
+    controls_layout->addWidget( allowed_residual_ , 3, 1 );
+    controls_layout->addWidget( final_resid_lb_   , 4, 2 );
 
     setLayout( controls_layout );
 
-    connect( call_service_btn_1, SIGNAL( clicked( bool )), this, SLOT( setbutton1Clicked()));
-    connect( call_service_btn_2, SIGNAL( clicked( bool )), this, SLOT( setbutton2Clicked()));
-    connect( call_service_btn_3, SIGNAL( clicked( bool )), this, SLOT( setbutton3Clicked()));
-    connect( call_service_btn_4, SIGNAL( clicked( bool )), this, SLOT( setbutton4Clicked()));
+    connect( call_service_btn_1, SIGNAL( clicked( bool )), this, SLOT( setbutton1Clicked())); // start
+    connect( call_service_btn_2, SIGNAL( clicked( bool )), this, SLOT( setbutton2Clicked())); // observe
+    connect( call_service_btn_3, SIGNAL( clicked( bool )), this, SLOT( setbutton3Clicked())); // run
+    connect( call_service_btn_4, SIGNAL( clicked( bool )), this, SLOT( setbutton4Clicked())); // save
+    connect( call_service_btn_5, SIGNAL( clicked( bool )), this, SLOT( setbutton5Clicked())); // load
+    connect( call_service_btn_6, SIGNAL( clicked( bool )), this, SLOT( setbutton6Clicked())); // cov
 
   }
 
   void calPanel::setbutton1Clicked ()
   {
     std_srvs::Trigger srv;
-    if (client1_.call(srv))
+    if (start_client_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call start Trigger");
     }
   }
 
   void calPanel::setbutton2Clicked ()
   {
     std_srvs::Trigger srv;
-    if (client2_.call(srv))
+    if (obs_client_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
       obs_msg_lb_->setText(srv.response.message.c_str());
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call observe Trigger");
     }
   }
 
@@ -118,7 +126,7 @@ namespace calibration_guis
     iss >> allowed_residual_num;
     srv.request.allowable_cost_per_observation = allowed_residual_num;
 
-    if (client3_.call(srv))
+    if (run_client_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
       char temp_char[100];
@@ -137,20 +145,46 @@ namespace calibration_guis
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call run Trigger");
     }
   }
 
   void calPanel::setbutton4Clicked ()
   {
     std_srvs::Trigger srv;
-    if (client4_.call(srv))
+    if (save_client_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call save Trigger");
+    }
+  }
+
+  void calPanel::setbutton5Clicked ()
+  {
+    std_srvs::Trigger srv;
+    if (load_client_.call(srv))
+    {
+      ROS_INFO("Output %s",srv.response.message.c_str());
+    }
+    else
+    {
+      ROS_ERROR("Failed to call load Trigger");
+    }
+  }
+
+  void calPanel::setbutton6Clicked ()
+  {
+    std_srvs::Trigger srv;
+    if (cov_client_.call(srv))
+    {
+      ROS_INFO("Output %s",srv.response.message.c_str());
+    }
+    else
+    {
+      ROS_ERROR("Failed to call covariance Trigger");
     }
   }
 } // end of calibration_guis namespace

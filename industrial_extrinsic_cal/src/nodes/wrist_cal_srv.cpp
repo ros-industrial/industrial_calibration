@@ -230,11 +230,10 @@ public:
     TtoC.show("TtoC");
     
     if(problem_initialized_ != true ){
-      sprintf(msg, "must call start service");
-      ROS_ERROR("%s",msg);
-      res.message = std::string(msg);
-      res.success = false;
-      return(true);
+      std_srvs::TriggerRequest  sreq;
+      std_srvs::TriggerResponse sres;
+      ROS_INFO("Problem not yet initialized, calling start service");
+      startCallBack(sreq, sres);
     }
 
     for(int i=0; i<all_targets_.size(); i++){

@@ -236,6 +236,7 @@ private:
    */
   bool normalize_calibration_image_;
 
+  dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>::CallbackType f_;
 
   /**
    *  @brief getImageNumber

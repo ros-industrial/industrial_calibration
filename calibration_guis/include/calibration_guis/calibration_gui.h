@@ -18,15 +18,19 @@ namespace calibration_guis
        QLabel* final_resid_lb_;
        calPanel( QWidget* parent = 0 );
 
-       ros::ServiceClient client1_;
-       ros::ServiceClient client2_;
-       ros::ServiceClient client3_;
-       ros::ServiceClient client4_;
+       ros::ServiceClient start_client_;
+       ros::ServiceClient run_client_;
+       ros::ServiceClient obs_client_;
+       ros::ServiceClient save_client_;
+       ros::ServiceClient load_client_;
+       ros::ServiceClient cov_client_;
     public Q_SLOTS:
       void setbutton1Clicked ();
       void setbutton2Clicked ();
       void setbutton3Clicked ();
       void setbutton4Clicked ();
+      void setbutton5Clicked ();
+      void setbutton6Clicked ();	    
     private:
       QLineEdit* allowed_residual_;
 

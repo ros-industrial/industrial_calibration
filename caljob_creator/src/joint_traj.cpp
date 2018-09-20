@@ -40,6 +40,7 @@ public:
     nh_.param<std::string>("motion_server", motion_server_name_, "rosRobotSceneTrigger_joint_values");
     nh_.param<std::string>("trigger_server", trigger_server_name_, "IcalSrvObs");
     nh_.param<std::string>("joints_topic", joints_topic_name_, "/joint_states");
+    nh_.param<double>("pause_time", pause_time_, 0.0);
     joint_trajectory_data.clear();
 
     ofile_.open(out_file_name_.c_str());
@@ -82,7 +83,6 @@ public:
     motion_client_ = new RobotJointValuesClient(motion_server_name_.c_str(), true);
     trigger_client_ = nh_.serviceClient<std_srvs::Trigger>(trigger_server_name_.c_str());
 
-
     // advertise services
     move_to_start_srv  = nh_.advertiseService( "JTrajMoveStart",   &JointTraj::MoveStartCallBack, this);
     move_to_next_srv   = nh_.advertiseService( "JTrajMoveNext",    &JointTraj::MoveNextCallBack, this);
@@ -110,7 +110,7 @@ private:
   std::string motion_server_name_;
   std::string trigger_server_name_;
   std::string joints_topic_name_;
-
+  double pause_time_;
   std::ofstream ofile_;
 
   std::vector< sensor_msgs::JointState > joint_trajectory_data;
@@ -144,6 +144,7 @@ private:
     {
       ofile_ << "        - " << joints[i] << '\n';
     }
+    ofile_.flush();
     return;
   } // end of write_joint_scene()
 
@@ -156,6 +157,7 @@ private:
     }      
     industrial_extrinsic_cal::robot_joint_values_triggerGoal goal;
     motion_client_->waitForServer();
+
 
     goal.joint_values.clear();
     for (int j = 0; j < (int)joint_trajectory_data[goal_index].position.size(); j++)
@@ -170,6 +172,9 @@ private:
 	ROS_INFO("Current State: %s", motion_client_->getState().toString().c_str());
       } while (motion_client_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED &&
 	       motion_client_->getState() != actionlib::SimpleClientGoalState::ABORTED);
+    if(pause_time_>0.01){
+      sleep(pause_time_);
+    }
     return(true);
   }
   
