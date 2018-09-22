@@ -31,13 +31,13 @@ class TrajectoryPanel: public rviz::Panel
   // widget as they normally would with Qt.
   TrajectoryPanel( QWidget* parent = 0 );
 
-  ros::ServiceClient client1_;
-  ros::ServiceClient client2_;
-  ros::ServiceClient client3_;
-  ros::ServiceClient client4_;
-  ros::ServiceClient client5_;
-  ros::ServiceClient client6_;
-  ros::ServiceClient client7_;
+  ros::ServiceClient captureClient_;
+  ros::ServiceClient executeClient_;
+  ros::ServiceClient moveNextClient_;
+  ros::ServiceClient moveStartClient_;
+  ros::ServiceClient executeWCallClient_;
+  ros::ServiceClient movePrevClient_;
+  ros::ServiceClient moveEndClient_;
   // Now we declare overrides of rviz::Panel functions for saving and
   // loading data from the config file.  Here the data is the
   // topic name.

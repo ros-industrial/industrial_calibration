@@ -17,9 +17,6 @@
 #include <yaml-cpp/yaml.h>
 
 
-
-
-
 typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_joint_values_triggerAction>
     RobotJointValuesClient;
 
