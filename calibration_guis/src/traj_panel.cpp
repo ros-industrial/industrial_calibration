@@ -42,7 +42,6 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
     layout->addLayout( topic_layout );
     layout->addWidget( drive_widget_ );
 
-
     QPushButton* call_service_btn_1 = new QPushButton( "Capture" , parent );
     QPushButton* call_service_btn_2 = new QPushButton( "Execute" , parent );
     QPushButton* call_service_btn_3 = new QPushButton( "ExecuteWCall" , parent );
@@ -86,13 +85,13 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
 
     ros::NodeHandle n("~");
 
-    client1_ = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajCapture");
-    client2_ = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajExecute");
-    client3_ = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajExecuteWCall");
-    client4_ = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveEnd");
-    client5_ = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveNext");
-    client6_ = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMovePrev");
-    client7_ = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveStart");
+    captureClient_      = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajCapture");
+    executeClient_      = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajExecute");
+    executeWCallClient_ = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajExecuteWCall");
+    moveEndClient_      = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveEnd");
+    moveNextClient_     = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveNext");
+    movePrevClient_     = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMovePrev");
+    moveStartClient_    = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveStart");
 
   }
 
@@ -188,91 +187,91 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
   void TrajectoryPanel::setbutton1Clicked ()
   {
     std_srvs::Trigger srv;
-    if (client1_.call(srv))
+    if (captureClient_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call capture Trigger");
     }
   }
 
   void TrajectoryPanel::setbutton2Clicked ()
   {
     std_srvs::Trigger srv;
-    if (client2_.call(srv))
+    if (executeClient_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call execute Trigger");
     }
   }
 
   void TrajectoryPanel::setbutton3Clicked ()
   {
     std_srvs::Trigger srv;
-    if (client3_.call(srv))
+    if (executeWCallClient_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call execute with call Trigger");
     }
   }
 
   void TrajectoryPanel::setbutton4Clicked ()
   {
     std_srvs::Trigger srv;
-    if (client4_.call(srv))
+    if (moveEndClient_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call Move End Trigger");
     }
   }
 
   void TrajectoryPanel::setbutton5Clicked ()
   {
     std_srvs::Trigger srv;
-    if (client5_.call(srv))
+    if (moveNextClient_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call Move Next Trigger");
     }
   }
 
   void TrajectoryPanel::setbutton6Clicked ()
   {
     std_srvs::Trigger srv;
-    if (client6_.call(srv))
+    if (movePrevClient_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call Move Previous Trigger");
     }
   }
 
   void TrajectoryPanel::setbutton7Clicked ()
   {
     std_srvs::Trigger srv;
-    if (client7_.call(srv))
+    if (moveStartClient_.call(srv))
     {
       ROS_INFO("Output %s",srv.response.message.c_str());
     }
     else
     {
-      ROS_ERROR("Failed to call service Trigger");
+      ROS_ERROR("Failed to call Move Start Trigger");
     }
   }
 

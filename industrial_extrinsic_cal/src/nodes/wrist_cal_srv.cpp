@@ -502,8 +502,9 @@ public:
     ceres::Solve(options, P_, &summary);
     if (summary.termination_type != ceres::NO_CONVERGENCE)
       {
-	double initial_cost = summary.initial_cost / total_observations_;
-	double final_cost = summary.final_cost / total_observations_;
+	double initial_cost = sqrt(2*summary.initial_cost / total_observations_);
+	double final_cost = sqrt(2*summary.final_cost / total_observations_);
+	res.final_cost_per_observation = final_cost;
 
 	ROS_INFO("Problem solved, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
 	if (final_cost <= req.allowable_cost_per_observation)
@@ -512,7 +513,6 @@ public:
 	  }
 	else
 	  {
-	    res.final_cost_per_observation = final_cost;
 	    ROS_ERROR("allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
 	    sprintf(msg, "allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
 	    Pose6d Pf(all_cameras_[0]->camera_parameters_.pb_extrinsics[3],

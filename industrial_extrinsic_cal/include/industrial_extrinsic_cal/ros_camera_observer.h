@@ -127,11 +127,6 @@ private:
   std::string image_topic_;
 
   /**
-   * @brief topic name for camera_info which is input at constructor
-   */
-  std::string camera_name_;
-
-  /**
    *  @brief cropped image based on original image and region of interest
    */
   cv::Mat image_roi_;
