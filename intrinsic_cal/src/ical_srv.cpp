@@ -74,7 +74,12 @@ public:
     ROS_INFO("yaml_file_path: %s", yaml_file_path_.c_str());
     ROS_INFO("camera_file: %s",  camera_file_.c_str());
     ROS_INFO("target_file: %s",  target_file_.c_str());
-
+    if(save_data_) {
+      ROS_INFO("saving data");
+    }
+    else{
+      ROS_INFO("NOT saving data");
+    }
     if(!load_camera()){
       ROS_ERROR("can't load the camera from %s", (yaml_file_path_+camera_file_).c_str());
       exit(1);
@@ -92,6 +97,7 @@ public:
     for(int i=0; i<all_targets_.size(); i++){
       all_targets_[i]->transform_interface_->setDataDirectory(all_cameras_[0]->camera_observer_->get_image_directory());
     }
+    ROS_ERROR("image_directory = %s", all_cameras_[0]->camera_observer_->get_image_directory().c_str());
 
     // load cameras, targets and intiialize ceres blocks
     init_blocks();
@@ -261,7 +267,6 @@ public:
 	      P_BLOCK intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[i]->camera_name_);
 	      P_BLOCK target_pb  = ceres_blocks_.getMovingTargetPoseParameterBlock(target->target_name_,scene_);
 	      if(k==0){
-		ROS_ERROR("target_pb = %ld intrinsics = %ld",(long int ) &(target_pb[0]), (long int ) &intrinsics[0]);
 		Pose6d P(target_pb[3],target_pb[4],target_pb[5],target_pb[0],target_pb[1],target_pb[2]);
 		P.show("Pose of Target");
 	      }
@@ -475,7 +480,9 @@ public:
     if (summary.termination_type != ceres::NO_CONVERGENCE)
       {
 	double initial_cost = summary.initial_cost / total_observations_;
-	double final_cost = summary.final_cost / total_observations_;
+	double final_cost = sqrt( 2*summary.final_cost   / total_observations_);
+	res.final_cost_per_observation = final_cost;
+
 
 	ROS_INFO("Problem solved, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
 	for(int i=0; i<all_cameras_.size(); i++){
@@ -495,7 +502,6 @@ public:
 	  }
 	else
 	  {
-	    res.final_cost_per_observation = final_cost;
 	    ROS_ERROR("allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
 	    sprintf(msg, "allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
 	    res.message = string(msg);

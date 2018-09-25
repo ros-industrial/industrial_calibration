@@ -484,8 +484,8 @@ public:
     ceres::Solve(options, P_, &summary);
     if (summary.termination_type != ceres::NO_CONVERGENCE)
       {
-	double initial_cost = summary.initial_cost / total_observations_;
-	double final_cost = summary.final_cost / total_observations_;
+	double initial_cost = sqrt(2*summary.initial_cost / total_observations_);
+	double final_cost = sqrt(2*summary.final_cost / total_observations_);
 	res.final_cost_per_observation = final_cost;
 
 	ROS_INFO("Problem solved, initial cost = %lf, final cost = %lf", initial_cost, final_cost);

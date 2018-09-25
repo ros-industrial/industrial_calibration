@@ -32,8 +32,9 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   , load_observation_images_(false)
   , normalize_calibration_image_(false)
   , image_number_(0)
-  , camera_name_(camera_name)
+
 {
+  camera_name_ = camera_name;
   new_image_collected_ = false;
   image_topic_ = camera_topic;
   ros::NodeHandle pnh("~");
@@ -923,7 +924,6 @@ bool ROSCameraObserver::pullCameraInfo(double& fx, double& fy, double& cx, doubl
 
 void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig& config, uint32_t level)
 {
-    printf("****************************************************************       min area = %d\n",config.min_area);
   CircleDetector::Params circle_params;
   circle_params.thresholdStep = 10;
   circle_params.minThreshold = config.min_threshold;
@@ -952,11 +952,9 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   circle_params.filterByConvexity = false;
   circle_params.minConvexity = 0.95f;
   circle_params.maxConvexity = std::numeric_limits<float>::max();
-  printf("on creation\n");
 
   circle_detector_ptr_ = cv::CircleDetector::create(circle_params);
 
-  printf("on to blob\n");
   cv::SimpleBlobDetector::Params blob_params;
   blob_params.thresholdStep = 10;
   blob_params.minThreshold = config.min_threshold;
@@ -983,7 +981,6 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   blob_params.filterByConvexity = false;
   blob_params.minConvexity = 0.95f;
   blob_params.maxConvexity = std::numeric_limits<float>::max();
-  printf("create on blob\n");
   blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
 }
 

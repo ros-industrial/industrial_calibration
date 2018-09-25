@@ -144,7 +144,14 @@ public:
     else{
       full_file_path_name  = image_directory_ + "/" +  filename;
     }
-    return(cv::imwrite(full_file_path_name, getCurrentImage()));
+    ROS_INFO("saving camera: %s image with filepath %s",camera_name_.c_str(),full_file_path_name.c_str());
+    if(!cv::imwrite(full_file_path_name, getCurrentImage()))
+      {
+	ROS_ERROR("couldn't save camera %s image with filepath %s",camera_name_.c_str(),full_file_path_name.c_str());
+	return(false);
+      }
+      return(true);
+
   };
 
   /** @brief loads the latest image from the image_directory_ with the provided filename
