@@ -76,7 +76,9 @@ public:
   /**
    * @brief Default destructor
    */
-  ~ROSCameraObserver(){};
+  ~ROSCameraObserver(){
+    ROS_ERROR("~CameraObserver");
+  };
 
   /**
    * @brief add a target to look for and region to look in
@@ -236,8 +238,6 @@ private:
    */
   bool normalize_calibration_image_;
 
-  dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>::CallbackType f_;
-
   /**
    *  @brief getImageNumber
    */
@@ -318,8 +318,8 @@ private:
   bool white_blobs_;
   ros::ServiceClient client_;
   sensor_msgs::SetCameraInfo srv_;
-  ros::NodeHandle* rnh_;
-  dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>* server_;
+  ros::NodeHandle rnh_;
+  boost::shared_ptr<dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig> > server_;
 };
 
 }  // end industrial_extrinsic_cal namespace

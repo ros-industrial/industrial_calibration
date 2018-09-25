@@ -476,6 +476,24 @@ public:
       all_cameras_[i]->pullTransform();
     }
 
+    // Set intitial conditions of target poses
+    for(int i=0; i<all_targets_.size(); i++){
+      all_targets_[i]->pullTransform();
+    }
+
+    // output initial conditions
+    Pose6d P(all_cameras_[0]->camera_parameters_.pb_extrinsics[3],
+	     all_cameras_[0]->camera_parameters_.pb_extrinsics[4],
+	     all_cameras_[0]->camera_parameters_.pb_extrinsics[5],
+	     all_cameras_[0]->camera_parameters_.pb_extrinsics[0],
+	     all_cameras_[0]->camera_parameters_.pb_extrinsics[1],
+	     all_cameras_[0]->camera_parameters_.pb_extrinsics[2]);
+    P.show("initial camera_extrinsics");
+    P_BLOCK target_pb  = ceres_blocks_.getStaticTargetPoseParameterBlock(all_targets_[0]->target_name_);
+    Pose6d TP(target_pb[3],target_pb[4],target_pb[5],target_pb[0],target_pb[1],target_pb[2]);
+    TP.show("initial target extrinsics");
+
+
     Solver::Options options;
     Solver::Summary summary;
     options.linear_solver_type = ceres::DENSE_SCHUR;
@@ -497,16 +515,16 @@ public:
 	    res.final_cost_per_observation = final_cost;
 	    ROS_ERROR("allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
 	    sprintf(msg, "allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
-	    Pose6d P(all_cameras_[0]->camera_parameters_.pb_extrinsics[3],
+	    Pose6d Pf(all_cameras_[0]->camera_parameters_.pb_extrinsics[3],
 		     all_cameras_[0]->camera_parameters_.pb_extrinsics[4],
 		     all_cameras_[0]->camera_parameters_.pb_extrinsics[5],
 		     all_cameras_[0]->camera_parameters_.pb_extrinsics[0],
 		     all_cameras_[0]->camera_parameters_.pb_extrinsics[1],
 		     all_cameras_[0]->camera_parameters_.pb_extrinsics[2]);
-	    P.show("final camera_extrinsics");
-	    P_BLOCK target_pb  = ceres_blocks_.getStaticTargetPoseParameterBlock(all_targets_[0]->target_name_);
-	    Pose6d TP(target_pb[3],target_pb[4],target_pb[5],target_pb[0],target_pb[1],target_pb[2]);
-	    TP.show("tool0 to Target final conditions");
+	    Pf.show("final camera_extrinsics");
+	    P_BLOCK target_fpb  = ceres_blocks_.getStaticTargetPoseParameterBlock(all_targets_[0]->target_name_);
+	    Pose6d FTP(target_fpb[3],target_fpb[4],target_fpb[5],target_fpb[0],target_fpb[1],target_fpb[2]);
+	    FTP.show("final target extrinsics");
 
 	    res.message = std::string(msg);
 	    res.success = false;

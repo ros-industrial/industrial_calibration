@@ -111,8 +111,9 @@ shared_ptr<Camera> parseSingleCamera(const Node& node)
       temp_parameters.position[1] = pose.y;
       temp_parameters.position[2] = pose.z;
     }
-    ROSCameraObserver camera_observer(temp_topic, temp_name);
-    if (!camera_observer.pullCameraInfo(temp_parameters.focal_length_x, temp_parameters.focal_length_y,
+    boost::shared_ptr<ROSCameraObserver> camera_observer = boost::make_shared<ROSCameraObserver>(temp_topic, temp_name);
+
+    if (!camera_observer->pullCameraInfo(temp_parameters.focal_length_x, temp_parameters.focal_length_y,
                                         temp_parameters.center_x, temp_parameters.center_y,
                                         temp_parameters.distortion_k1, temp_parameters.distortion_k2,
                                         temp_parameters.distortion_k3, temp_parameters.distortion_p1,
@@ -152,7 +153,7 @@ shared_ptr<Camera> parseSingleCamera(const Node& node)
     {
       temp_camera->pullTransform();
     }
-    temp_camera->camera_observer_ = boost::make_shared<ROSCameraObserver>(camera_observer);
+    temp_camera->camera_observer_ = camera_observer; 
     temp_camera->camera_observer_->image_directory_ = image_directory;
   }
   catch (YAML::ParserException& e)

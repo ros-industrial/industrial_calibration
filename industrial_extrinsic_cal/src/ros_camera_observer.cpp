@@ -62,8 +62,8 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   blob_detector_ptr_ = cv::SimpleBlobDetector::create(simple_blob_params);
 
   std::string recon_node_name = "~/" + camera_name;
-  rnh_ = new ros::NodeHandle(recon_node_name.c_str());
-  server_ = new dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>(*rnh_);
+  rnh_ = ros::NodeHandle(recon_node_name.c_str());
+  server_.reset(new dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>(rnh_));
 
   dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>::CallbackType f;
 
