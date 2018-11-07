@@ -48,7 +48,7 @@ namespace industrial_extrinsic_cal
      */
     bool waitForTrigger()
     {
-      ROS_ERROR("ROSParamTrigger:  waiting for %s to be true",parameter_name_.c_str());
+      ROS_INFO("ROSParamTrigger:  waiting for %s to be true",parameter_name_.c_str());
       bool pval = false;
       while(!pval){
 	nh_.getParam(parameter_name_.c_str(),pval);
