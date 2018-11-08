@@ -32,6 +32,10 @@ namespace industrial_extrinsic_cal
 class ObservationScene
 {
 public:
+  /*! \brief Constructor with no inputs */
+  ObservationScene() : scene_id_(-1)
+  {};
+  
   /*! \brief Constructor,
    *   \param Trigger the type of trigger to initiate this observation
    */
@@ -41,7 +45,7 @@ public:
   };
 
   /*! \brief destructor, clears observation command list*/
-  ObservationScene()
+  ~ObservationScene()
   {
     observation_command_list_.clear();
     cameras_in_scene_.clear();
