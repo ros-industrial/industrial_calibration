@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   std_srvs
   robo_cylinder
+  dynamic_reconfigure
 )
 
 find_package(Ceres REQUIRED)
@@ -50,6 +51,9 @@ generate_messages(
     std_msgs
 )
 
+generate_dynamic_reconfigure_options(
+  cfg/observe.cfg
+)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -83,14 +87,14 @@ add_dependencies(rail_ical ${PROJECT_NAME}_generate_messages_cpp)
 add_dependencies(robocyl_ical ${PROJECT_NAME}_generate_messages_cpp)
 add_dependencies(robocyl_vcal ${PROJECT_NAME}_generate_messages_cpp)
 add_dependencies(robocyl_scal ${PROJECT_NAME}_generate_messages_cpp)
-add_dependencies(robocyl_ical_8D ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(robocyl_ical_8D ${PROJECT_NAME}_generate_messages_cpp ${PROJECT_NAME}_gencfg)
 add_dependencies(robot_ical ${PROJECT_NAME}_generate_messages_cpp)
 add_dependencies(ical_srv ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(rail_ical ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(robocyl_ical ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(robocyl_vcal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(robocyl_scal ${catkin_LIBRARIES} ${CERES_LIBRARIES})
-target_link_libraries(robocyl_ical_8D ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(robocyl_ical_8D ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 target_link_libraries(robot_ical ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${yaml_cpp_LIBRARY})
 target_link_libraries(ical_srv ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${yaml_cpp_LIBRARY})
  

@@ -56,6 +56,7 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   }
   if (!pnh.getParam("use_circle_detector", use_circle_detector_))
   {
+    ROS_ERROR("not using circle detector");
     use_circle_detector_ = false;
   }
 
@@ -924,6 +925,7 @@ bool ROSCameraObserver::pullCameraInfo(double& fx, double& fy, double& cx, doubl
 
 void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig& config, uint32_t level)
 {
+  ROS_ERROR("in dynamic reconfigure callback");
   CircleDetector::Params circle_params;
   circle_params.thresholdStep = 10;
   circle_params.minThreshold = config.min_threshold;
@@ -939,19 +941,18 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   circle_params.filterByArea = config.filter_by_area;
   circle_params.minArea = config.min_area;
   circle_params.maxArea = config.max_area;
-
   
   circle_params.filterByCircularity = config.filter_by_circularity;
   circle_params.minCircularity = config.min_circularity;
   circle_params.maxCircularity = config.max_circularity;
 
-  circle_params.filterByInertia = false;
-  circle_params.minInertiaRatio = 0.1f;
-  circle_params.maxInertiaRatio = std::numeric_limits<float>::max();
+  circle_params.filterByInertia = config.filter_by_inertia;
+  circle_params.minInertiaRatio = config.min_inertia_ratio;
+  circle_params.maxInertiaRatio = config.max_inertia_ratio;
 
-  circle_params.filterByConvexity = false;
-  circle_params.minConvexity = 0.95f;
-  circle_params.maxConvexity = std::numeric_limits<float>::max();
+  circle_params.filterByConvexity = config.filter_by_convexity;
+  circle_params.minConvexity = config.min_convexity;
+  circle_params.maxConvexity = config.max_convexity;
 
   circle_detector_ptr_ = cv::CircleDetector::create(circle_params);
 
@@ -974,13 +975,13 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   blob_params.minCircularity = config.min_circularity;
   blob_params.maxCircularity = config.max_circularity;
 
-  blob_params.filterByInertia = false;
-  blob_params.minInertiaRatio = 0.1f;
-  blob_params.maxInertiaRatio = std::numeric_limits<float>::max();
+  blob_params.filterByInertia = config.filter_by_inertia;
+  blob_params.minInertiaRatio = config.min_inertia_ratio;
+  blob_params.maxInertiaRatio = config.max_inertia_ratio;
 
-  blob_params.filterByConvexity = false;
-  blob_params.minConvexity = 0.95f;
-  blob_params.maxConvexity = std::numeric_limits<float>::max();
+  blob_params.filterByConvexity = config.filter_by_convexity;
+  blob_params.minConvexity = config.min_convexity;
+  blob_params.maxConvexity = config.max_convexity;
   blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
 }
 

@@ -8,6 +8,8 @@
 #include <ros/package.h>
 #include <ros/console.h>
 #include <std_srvs/Trigger.h>
+#include <dynamic_reconfigure/server.h>
+#include <intrinsic_cal/observeConfig.h>
 
 // ros actionlib includes
 #include <actionlib/server/simple_action_server.h>
@@ -72,6 +74,29 @@ using std::string;
 class robocyl_ical_8D
 {
 public:
+  void dynReConfCallBack(intrinsic_cal::observeConfig& config, uint32_t level)
+  {
+    // get ready for taking images
+    camera_->camera_observer_->clearTargets();
+    camera_->camera_observer_->clearObservations();
+    
+    Roi roi;
+    roi.x_min = 0;
+    roi.y_min = 0;
+    roi.x_max = image_width_;
+    roi.y_max = image_height_;
+
+    industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::RailICal5;
+    
+    camera_->camera_observer_->addTarget(target_, roi, cost_type);
+    // collect images/observations
+    camera_->camera_observer_->triggerCamera();
+    while (!camera_->camera_observer_->observationsDone());
+    CameraObservations camera_observations;
+    camera_->camera_observer_->getObservations(camera_observations);
+    ROS_ERROR("done");
+  }
+
   robocyl_ical_8D(const  ros::NodeHandle& nh)
     :nh_(nh), P_(NULL), problem_initialized_(false), total_observations_(0), scene_(0)
   {
@@ -182,7 +207,18 @@ public:
     run_server_         = nh_.advertiseService( "ICalSrvRun",   &robocyl_ical_8D::runCallBack, this);
     save_server_        = nh_.advertiseService( "ICalSrvSave",  &robocyl_ical_8D::saveCallBack, this);
     covariance_server_  = nh_.advertiseService( "ICalSrvCov",   &robocyl_ical_8D::covCallBack, this);
+
+
+    std::string recon_node_name = "~/observe";
+    pnh_ = ros::NodeHandle(recon_node_name.c_str());
+    server_.reset(new dynamic_reconfigure::Server<intrinsic_cal::observeConfig>(pnh_));
+
+    dynamic_reconfigure::Server<intrinsic_cal::observeConfig>::CallbackType f;
+    
+    f = boost::bind(&robocyl_ical_8D::dynReConfCallBack, this, _1, _2);
+    server_->setCallback(f);
   };// end of constructor
+
 
   // initialize all the points in the target 
   void initMCircleTarget(int rows, int cols, double circle_dia, double spacing)
@@ -227,7 +263,7 @@ public:
   bool loadCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
     char msg[100];
-    industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::RailICal4;
+    industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::RailICal5;
 
     char current_image_scene_chars[255];
     sprintf(current_image_scene_chars,"_%03d_%03d.jpg",scene_,0); // add rail distance index to image, scene_ will automatically be added by camera_observer.save_current_image()
@@ -329,7 +365,7 @@ public:
   bool observationCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
     char msg[100];
-    industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::RailICal4;
+    industrial_extrinsic_cal::Cost_function cost_type = industrial_extrinsic_cal::cost_functions::RailICal5;
 
     if(problem_initialized_ != true ){
       ROS_INFO("calling start");
@@ -412,7 +448,6 @@ public:
           double image_y = camera_observations[k].image_loc_y;
           Point3d point  = camera_observations[k].target->pts_[camera_observations[k].point_id];
           if(k==10) ROS_ERROR("target point %d = %8.3lf %8.3lf %8.3lf observed at %8.3lf %8.3lf",camera_observations[k].point_id, point.x, point.y, point.z, image_x, image_y);
-          //	 CostFunction *cost_function = industrial_extrinsic_cal::RailICal4::Create(image_x, image_y, -Dist, point);
           CostFunction *cost_function = industrial_extrinsic_cal::RailICal5::Create(image_x, image_y, Dist, point);
           P_->AddResidualBlock(cost_function, NULL, intrinsics, extrinsics, ax_ay_);
         }  // for each observation at this camera_location
@@ -656,6 +691,8 @@ public:
   }; // end of current_image_file()
 
 private:
+  boost::shared_ptr<dynamic_reconfigure::Server<intrinsic_cal::observeConfig> > server_;
+  ros::NodeHandle pnh_;
   ros::NodeHandle nh_;
   double ax_ay_[2];                           /*!< The ax and ay parameters defining the axis of motion relative to optical axis */ 
   ros::ServiceServer start_server_;
