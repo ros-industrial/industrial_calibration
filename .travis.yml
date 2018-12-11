@@ -1,17 +1,15 @@
 sudo: required
-dist: xenial
+dist: trusty
 language: generic
+
 compiler:
   - gcc
+
 notifications:
   email:
-    on_success: change
-    on_failure: always
+    on_failure: never
+
 env:
-  global:
-    - ROS_DISTRO=kinetic
-    - UPSTREAM_WORKSPACE=file
-    - NOT_TEST_INSTALL=true
   matrix:
     - USE_DEB=true
       ROS_DISTRO="indigo"
@@ -30,6 +28,6 @@ matrix:
     - env: ROS_DISTRO="indigo" PRERELEASE=true
 install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
+
 script:
   - source .ci_config/travis.sh
-
