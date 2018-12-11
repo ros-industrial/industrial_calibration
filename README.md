@@ -25,32 +25,38 @@ Status: [![Build Status](https://travis-ci.org/ros-industrial/industrial_calibra
 
 Contains libraries/algorithms for calibration industrial systems
 
-# Requires
-# install ceres-solver(Note, there might be a .deb that works)
-#    follow instructions on http://ceres-solver.org/installation.html#linux
+## Requires
 
-# install openni2
+### Ceres Optimizer
+
+- With apt: `sudo apt install libceres-dev`
+- With [rosdep](http://docs.ros.org/independent/api/rosdep/html/):
+  `rosdep install industrial_extrinsic_cal` or
+  `rosdep install --from-paths industrial_calibration/`
+
+### Openni2
+```
 sudo apt-get install ros-kinetic-openni2-camera
 sudo apt-get install ros-kinetic-openni2-launch
+```
 
-# install moveit
-sudo apt-get install ros-kinetic-moveit
+### Moveit
+`sudo apt-get install ros-kinetic-moveit`
 
 # Examples
+
 ## Single Basler on a rail
 ```
 roslaunch robocyl_ical.launch
 roslaunch robo_cylinder.launch
 rosservice call /RobocylCalService "allowable_cost_per_observation: 0.25"
+```
 
 # Build
-Requires [wstool](http://wiki.ros.org/wstool)
 ```
 mkdir -p cal_ws/src
 cd cal_ws/src
-git clone -b kinetic https://github.com/ros-industrial/industrial_calibration.git
-wstool merge industrial_calibration/industrial_calibration.rosinstall
-wstool update
+git clone -b kinetic-devel https://github.com/ros-industrial/industrial_calibration.git
 cd ..
 catkin build
 ```

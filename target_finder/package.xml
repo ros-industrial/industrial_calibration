@@ -26,7 +26,7 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>tf</depend>
-  <depend>ceres-solver</depend>
+  <depend>libceres-dev</depend>
 
   <build_depend>boost</build_depend>
   <build_depend>message_generation</build_depend>
