@@ -1,6 +1,6 @@
-sudo: required 
-dist: xenial 
-language: generic 
+sudo: required
+dist: xenial
+language: generic
 compiler:
   - gcc
 notifications:
@@ -11,7 +11,6 @@ env:
   global:
     - ROS_DISTRO=kinetic
     - UPSTREAM_WORKSPACE=file
-    - ROSINSTALL_FILENAME=industrial_calibration.rosinstall
     - NOT_TEST_INSTALL=true
   matrix:
     - USE_DEB=true
@@ -31,6 +30,6 @@ matrix:
     - env: ROS_DISTRO="indigo" PRERELEASE=true
 install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
-script: 
+script:
   - source .ci_config/travis.sh
 

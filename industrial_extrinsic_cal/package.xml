@@ -34,7 +34,7 @@
   <depend>tf</depend>
   <depend>tf_conversions</depend>
   <depend>yaml-cpp</depend>
-  <depend>ceres-solver</depend>
+  <depend>libceres-dev</depend>
 
 
   <build_depend>boost</build_depend>

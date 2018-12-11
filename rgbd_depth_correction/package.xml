@@ -34,7 +34,7 @@
   <depend>tf_conversions</depend>
   <depend>target_finder</depend>
   <depend>yaml-cpp</depend>
-  <depend>ceres-solver</depend>
+  <depend>libceres-dev</depend>
 
   <exec_depend>image_view</exec_depend>
   <exec_depend>joint_state_publisher</exec_depend>
