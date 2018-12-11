@@ -75,7 +75,7 @@ install(TARGETS
 )
 
 install(FILES
-  trajec_plugin_description.xml
+  calibration_guis_plugin_description.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   )
 
@@ -85,5 +85,3 @@ install(DIRECTORY media/
 install(DIRECTORY icons/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/icons)
 
-install(PROGRAMS scripts/send_test_msgs.py
-DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

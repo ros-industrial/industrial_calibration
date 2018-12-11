@@ -22,7 +22,6 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   pcl_conversions
   dynamic_reconfigure
-#  applicable_pose_generator
 )
 
 find_package(Boost REQUIRED)
