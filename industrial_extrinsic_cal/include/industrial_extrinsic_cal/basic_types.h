@@ -227,5 +227,16 @@ typedef struct
   int width;
 } CameraParameters;
 
+
+/** @brief Parameters defining Denavit-Hartenberg parameters for links of a robot  */
+typedef struct
+{
+  double a;  
+  double alpha;
+  double d;
+  double theta;
+} DHParameters;
+
+ 
 }  // end namespace industrial_extrinsiac_cal
 #endif

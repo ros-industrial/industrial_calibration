@@ -23,10 +23,10 @@
 #include <industrial_extrinsic_cal/camera_observer.hpp>
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/trigger.h>
-#include <industrial_extrinsic_cal/transform_interface.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
+#include <industrial_extrinsic_cal/transform_interface.hpp>
 
 namespace industrial_extrinsic_cal
 {
@@ -92,8 +92,11 @@ public:
   CameraParameters camera_parameters_;                        /*!< The intrinsic and extrinsic parameters */
   std::string camera_name_;                                   /*!< string camera_name_ unique name of a camera */
   boost::shared_ptr<TransformInterface> transform_interface_; /**< interface to transform, tf for example  */
-  Pose6d intermediate_frame_; /**< Sometimes there is an intermediate transform from ref to origin of intrinsics */
+  Pose6d intermediate_camera_frame_; /**< transform from camera_mounting_frame_ to ref_frame_ */
   bool is_moving_;            /*!< bool is_moving_  false for static cameras */
+  bool is_right_stereo_camera_; /*!< set to indicate that this is the right side of a pair */
+  std::string left_stereo_camera_name_; /*!< name of left stereo camera of pair to which this camera belongs */
+  boost::shared_ptr<Camera> left_stereo_camera_; /*!< points toward left half of pair to which this camera belongs */
 };
 // end of class Camera
 

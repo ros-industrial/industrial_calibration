@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<launch>
+    <arg name="camera_number" default="21511083"/>
+    <arg name="yaml_file_path" default="$(find intrinsic_cal)/yaml"/>
+    <arg name="camera_config_file" default="$(arg yaml_file_path)/ACA1920_25gc_$(arg camera_number).yaml"/>
+    <arg name="image_directory" default="/home/lawrencelewis/ical_data"/>
+
+    <!-- the camera node -->
+    <include  file="$(find industrial_extrinsic_cal)/launch/basler_camera.launch" >
+       <arg name="camera_number" value="$(arg camera_number)"/>
+       <arg name="config_file" value="$(arg camera_config_file)"/>
+       <arg name="view_cameras" value="false"/> <!-- this one would display the raw image, we want the rectified image -->
+    </include>
+
+     <!-- this node advertises a service that when called, takes next image and computes the target's pose in camera frame -->
+     <node pkg="target_finder" type="target_locator_srv" name="target_locator" output="screen" >
+          <param name="image_topic" value="Basler$(arg camera_number)/image_rect" />
+          <param name="camera_name" value="Basler$(arg camera_number)" />
+          <param name="target_type" value="2" />
+          <param name="target_rows" value="7" />
+          <param name="target_cols" value="7" />
+          <param name="target_circle_dia" value="0.012" />
+          <param name="target_spacing" value="0.026" />
+          <param name="use_circle_detector" value="false"/>
+     </node>
+ 
+     <node pkg="target_finder" type="call_service" name="call_service" output="screen" >
+           <param name="roi_width" value="1920"/>
+           <param name="roi_height" value="1080"/>
+           <param name="optical_frame" value="basler$(arg camera_number)_optical_frame"/>
+     </node>
+ 
+     <node pkg="image_view" type="image_view" name="circle_grid_finder_results" >
+          <remap from="image" to="observer_raw_image"/>
+     </node>
+
+      <node pkg="image_view" type="image_view" name="rectified_image" >
+          <remap from="image" to="Basler$(arg camera_number)/image_rect" />
+     </node>
+
+     <node pkg="tf" type="static_transform_publisher" name="target_frame" args="0.1 0.0 1.0 0.0 1.5708 0.0 world basler$(arg camera_number)_optical_frame 100" />
+     <!--node pkg="tf" type="static_transform_publisher" name="target_frame" args="0.1 0.0 1.0 0.0 1.5708 0.0 world asus_rgb_optical_frame 100" /-->
+
+     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find target_finder)/config/target_finder.rviz" required="true" />
+
+</launch>

@@ -34,6 +34,7 @@ namespace industrial_extrinsic_cal
       TargetCameraReprjErrorPK,
       LinkTargetCameraReprjError,
       LinkTargetCameraReprjErrorPK,
+      wristCal,
       PosedTargetCameraReprjErrorPK,
       LinkCameraTargetReprjError,
       LinkCameraTargetReprjErrorPK,
@@ -54,11 +55,19 @@ namespace industrial_extrinsic_cal
       FixedCircleTargetCameraReprjErrorPK,
       RailICal,
       RailICal3,
+      RailICal4,
+      RailICal5,
       RailSCal,
       StereoTargetLocator,
+      TargetOnLinkRtStereo,
+      TargetOnLinkLtStereo,
+      WristStereoCal,
+      StereoOnLinkRt,
+      StereoOnLinkLt,
       DistortedCameraFinder,
       RailICalNoDistortion,
       RangeSensorExtrinsicCal,
+      CameraOnWristWithJointOffsets,
       NullCostType
     };
   }// end of namespace cost_functions

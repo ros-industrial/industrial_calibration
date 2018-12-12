@@ -32,12 +32,6 @@ boost::shared_ptr<TransformInterface> parseTransformInterface(const YAML::Node& 
  *   @return shared pointer to the trigger parsed
  **/
 boost::shared_ptr<Trigger> parseTrigger(const YAML::Node& node, std::string& name);
-/** @brief parses a Pose6d
- *   @param node, the yaml node
- *   @param pose as 6dof pose from parsed position and angle axis parameters xyz,wx,wy,wz
- *   @return true if sucessful
- **/
-bool parsePose(const YAML::Node& node, Pose6d& pose);
 /** @brief parse all the cameras, the main function of this module
  *   @param camera_input_file path/file from which to parse a vector of cameras
  *   @param returned vector of shared pointers to cameras

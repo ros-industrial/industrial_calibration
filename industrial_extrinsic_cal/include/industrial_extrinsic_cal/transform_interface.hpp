@@ -19,6 +19,7 @@
 #ifndef TRANSFORM_INTERFACE_HPP_
 #define TRANSFORM_INTERFACE_HPP_
 
+
 #include <industrial_extrinsic_cal/basic_types.h> /* Pose6d,Roi,Observation,CameraObservations */
 #include <ros/ros.h>
 namespace industrial_extrinsic_cal
@@ -85,58 +86,52 @@ public:
     return (ref_frame_initialized_);
   }
 
-protected:
-  std::string ref_frame_;       /*!< name of reference frame for transform (parent frame_id in  Rviz) */
-  std::string transform_frame_; /*!< name of frame being defined (frame_id in Rviz) */
-  bool ref_frame_initialized_;  /*!< can't interact with a transform interface until the reference frame is set */
-};
+  /** @brief saves the latest image to the image_directory_ with the provided filename
+   *  if the filename is a null string, the name is built 
+   *  from the image_directory_/transform_frame_ + underscore + scene_number.jpg
+  */
+  /** @param scene, the scene number */
+  /** @param filename, the file name */
+  bool saveCurrentPose(int scene, std::string& filename);
 
-class DefaultTransformInterface : public TransformInterface
-{
-public:
-  /** @brief  constructor
-   *   @param pose the pose associated with the transform interface
+  /** @brief load pose from the data_directory_ with the provided filename
+   *  if the filename is a null string, the name is built 
+   *  from the data_directory_/transform_frame_ + underscore + scene_number.yaml
+  */
+  /** @param scene, the scene number */
+  /** @param filename, the file name */
+  bool loadPose(int scene, std::string& filename);
+
+  bool loadPoseYAML(std::string &file);
+  /**
+   *  @brief get current Pose
+   *  @return the current Pose
    */
-  DefaultTransformInterface(){};
+  Pose6d getCurrentPose();
 
-  /** @brief  destructor */
-  ~DefaultTransformInterface(){};
-
-  /** @brief push the transform to the hardware or display
-   *   @param pose the pose associated with the transform interface
+  /**
+   *  @brief sets Pose
+   *  @param P set the current pose to P
    */
-  bool pushTransform(Pose6d& pose)
-  {
-    pose_ = pose;
-  };
+  void setCurrentPose(const Pose6d P);
 
-  /** @brief get the transform from the hardware or display
-   *    @return the pose
-   */
-  Pose6d pullTransform()
-  {
-    return (pose_);
-  };
+  /** @brief sets directory for saving and restoring images */
+  /** @param dir_name, the directory path */
+  void setDataDirectory(std::string dir_name);
 
-  /** @brief typically outputs the results to a file, but here does nothing
-   *    @param the file path name, a dummy argument in this case
-   *    @return   always true
-   */
-  bool store(std::string& filePath)
-  {
-    return (true);
-  };
+  /** @brief gets directory for saving and restoring images */
+  /** @param dir_name, the directory path */
+  std::string getDataDirectory();
 
-  /** @brief sets the reference frame of the transform interface, sometimes not used */
-  void setReferenceFrame(std::string& ref_frame)
-  {
-    ref_frame_ = ref_frame;
-    ref_frame_initialized_ = true;
-  }
 
 protected:
   Pose6d pose_; /*!< 6dof pose  */
-};              // end of default tranform interface
+  std::string data_directory_; /*! directory for storing and retrieving transform information for each scene */
+  std::string ref_frame_;       /*!< name of reference frame for transform (parent frame_id in  Rviz) */
+  std::string transform_frame_; /*!< name of frame being defined (frame_id in Rviz) */
+  bool ref_frame_initialized_;  /*!< can't interact with a transform interface until the reference frame is set */
+
+};
 
 }  // end of namespace
 #endif

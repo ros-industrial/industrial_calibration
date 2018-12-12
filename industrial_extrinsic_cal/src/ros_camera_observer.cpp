@@ -28,14 +28,14 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   , pattern_(pattern_options::Chessboard)
   , pattern_rows_(0)
   , pattern_cols_(0)
-  , new_image_collected_(false)
   , store_observation_images_(false)
   , load_observation_images_(false)
   , normalize_calibration_image_(false)
-  , image_directory_("")
   , image_number_(0)
-  , camera_name_(camera_name)
+
 {
+  camera_name_ = camera_name;
+  new_image_collected_ = false;
   image_topic_ = camera_topic;
   ros::NodeHandle pnh("~");
   results_pub_ = nh_.advertise<sensor_msgs::Image>(camera_name_+"/observer_results_image", 100);
@@ -43,7 +43,6 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   std::string set_camera_info_service = camera_name_ + "/set_camera_info";
   client_ = nh_.serviceClient<sensor_msgs::SetCameraInfo>(set_camera_info_service);
 
-  pnh.getParam("image_directory", image_directory_);
   pnh.getParam("store_observation_images", store_observation_images_);
   pnh.getParam("load_observation_images", load_observation_images_);
   pnh.getParam("normalize_calibration_image", normalize_calibration_image_);
@@ -57,6 +56,7 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   }
   if (!pnh.getParam("use_circle_detector", use_circle_detector_))
   {
+    ROS_ERROR("not using circle detector");
     use_circle_detector_ = false;
   }
 
@@ -64,8 +64,8 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   blob_detector_ptr_ = cv::SimpleBlobDetector::create(simple_blob_params);
 
   std::string recon_node_name = "~/" + camera_name;
-  rnh_ = new ros::NodeHandle(recon_node_name.c_str());
-  server_ = new dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>(*rnh_);
+  rnh_ = ros::NodeHandle(recon_node_name.c_str());
+  server_.reset(new dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>(rnh_));
 
   dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>::CallbackType f;
 
@@ -141,6 +141,30 @@ void ROSCameraObserver::clearObservations()
 {
   camera_obs_.clear();
   new_image_collected_ = false;
+}
+
+void ROSCameraObserver::setCurrentImage(const cv::Mat &image)
+{
+  // TODO pass the color image, and convert to mono where necessar
+
+  last_raw_image_       = image.clone();
+  std::string encoding = "mono8";
+  std_msgs::Header header;
+  if(!input_bridge_){
+    input_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header,encoding,image));
+  }
+  encoding = "bgr8";
+  if(!output_bridge_){
+    output_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header, encoding, image));
+  }
+  encoding = "mono8";
+  if(!out_bridge_){
+    out_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header,encoding,image));
+  }
+  output_bridge_->image = image.clone();
+  input_bridge_ ->image = image.clone();
+  out_bridge_   ->image = image.clone();
+  new_image_collected_ = true;
 }
 
 int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
@@ -762,10 +786,7 @@ bool ROSCameraObserver::observationsDone()
   }
   return true;
 }
-cv::Mat ROSCameraObserver::getLastImage()
-{
-  return (last_raw_image_);
-}
+
 bool ROSCameraObserver::pushCameraInfo(double& fx, double& fy, double& cx, double& cy, double& k1, double& k2,
                                        double& k3, double& p1, double& p2)
 
@@ -904,6 +925,7 @@ bool ROSCameraObserver::pullCameraInfo(double& fx, double& fy, double& cx, doubl
 
 void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig& config, uint32_t level)
 {
+  ROS_ERROR("in dynamic reconfigure callback");
   CircleDetector::Params circle_params;
   circle_params.thresholdStep = 10;
   circle_params.minThreshold = config.min_threshold;
@@ -919,18 +941,18 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   circle_params.filterByArea = config.filter_by_area;
   circle_params.minArea = config.min_area;
   circle_params.maxArea = config.max_area;
-
+  
   circle_params.filterByCircularity = config.filter_by_circularity;
   circle_params.minCircularity = config.min_circularity;
   circle_params.maxCircularity = config.max_circularity;
 
-  circle_params.filterByInertia = false;
-  circle_params.minInertiaRatio = 0.1f;
-  circle_params.maxInertiaRatio = std::numeric_limits<float>::max();
+  circle_params.filterByInertia = config.filter_by_inertia;
+  circle_params.minInertiaRatio = config.min_inertia_ratio;
+  circle_params.maxInertiaRatio = config.max_inertia_ratio;
 
-  circle_params.filterByConvexity = false;
-  circle_params.minConvexity = 0.95f;
-  circle_params.maxConvexity = std::numeric_limits<float>::max();
+  circle_params.filterByConvexity = config.filter_by_convexity;
+  circle_params.minConvexity = config.min_convexity;
+  circle_params.maxConvexity = config.max_convexity;
 
   circle_detector_ptr_ = cv::CircleDetector::create(circle_params);
 
@@ -953,17 +975,15 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   blob_params.minCircularity = config.min_circularity;
   blob_params.maxCircularity = config.max_circularity;
 
-  blob_params.filterByInertia = false;
-  blob_params.minInertiaRatio = 0.1f;
-  blob_params.maxInertiaRatio = std::numeric_limits<float>::max();
+  blob_params.filterByInertia = config.filter_by_inertia;
+  blob_params.minInertiaRatio = config.min_inertia_ratio;
+  blob_params.maxInertiaRatio = config.max_inertia_ratio;
 
-  blob_params.filterByConvexity = false;
-  blob_params.minConvexity = 0.95f;
-  blob_params.maxConvexity = std::numeric_limits<float>::max();
-
-  blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
-
+  blob_params.filterByConvexity = config.filter_by_convexity;
+  blob_params.minConvexity = config.min_convexity;
+  blob_params.maxConvexity = config.max_convexity;
   blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
 }
+
 
 }  // industrial_extrinsic_cal

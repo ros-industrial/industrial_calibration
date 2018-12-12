@@ -1,0 +1,35 @@
+<launch>
+  <arg name="camera_number" default="21511083"/>
+  <arg name="yaml_file_path" default="$(find intrinsic_cal)/yaml"/>
+  <arg name="camera_config_file" default="$(arg yaml_file_path)/ACA1920_25gc_$(arg camera_number).yaml"/>
+  <arg name="image_directory" default="/home/lawrencelewis/ical_data"/>
+
+  <include  file="$(find industrial_extrinsic_cal)/launch/basler_camera.launch" >
+     <arg name="camera_number" value="$(arg camera_number)"/>
+     <arg name="config_file" value="$(arg camera_config_file)"/>
+  </include>
+
+  <node pkg="intrinsic_cal" type="robocyl_ical_8D" name="robocyl_intrinsic_calibration" output="screen" >
+          <param name="target_rows" value="20" />
+          <param name="target_cols" value="30" />
+          <param name="target_circle_dia" value="0.0015" />
+          <param name="target_spacing" value="0.0146" />
+          <param name="camera_name" value="Basler$(arg camera_number)" />
+          <param name="image_topic" value="Basler$(arg camera_number)/image_raw" />
+          <param name="image_height" value="1920" />
+          <param name="image_width" value="1080" />
+          <param name="num_camera_locations" value="16" />
+          <param name="camera_spacing" value=".050" />
+          <param name="rail_start_position" value=".050" />
+          <param name="move_client" value="/move_meters"/>
+          <param name="power_client" value="/power_io"/>
+          <param name="home_client" value="/home"/>
+          <param name="image_directory" value="$(arg image_directory)"/>
+          <param name="save_data" value="true"/>
+  </node>
+
+  <node name="observation_view" pkg="image_view" type="image_view" >
+      <remap to="Basler$(arg camera_number)/observer_results_image" from="image"/>
+  </node>
+
+</launch>

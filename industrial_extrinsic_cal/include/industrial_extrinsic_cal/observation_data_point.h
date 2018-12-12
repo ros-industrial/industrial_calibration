@@ -50,7 +50,8 @@ public:
   ObservationDataPoint(const std::string& c_name, const std::string& t_name, const int& t_type, const int s_id,
                        const P_BLOCK& c_intrinsics, const P_BLOCK& c_extrinsics, const int& point_id,
                        const P_BLOCK& t_pose, const P_BLOCK& p_position, const double& image_x, const double& image_y,
-                       const Cost_function cost_type, const Pose6d& intermediate_frame, const double& circle_dia = 0.0)
+                       const Cost_function cost_type, const Pose6d& intermediate_camera_frame, Pose6d& intermediate_target_frame,
+		       const double& circle_dia = 0.0)
   {
     camera_name_ = c_name;
     target_name_ = t_name;
@@ -65,7 +66,8 @@ public:
     image_y_ = image_y;
     cost_type_ = cost_type;
     circle_dia_ = circle_dia;
-    intermediate_frame_ = intermediate_frame;
+    intermediate_camera_frame_ = intermediate_camera_frame; // from camera_mounting_frame_ to ref_frame_
+    intermediate_target_frame_ = intermediate_target_frame; // from ref_frame_ to target_mounting_frame_
   };
 
   /** @brief Destructor */
@@ -84,7 +86,8 @@ public:
   double image_y_;            /**< location of point in image (observation) */
   Cost_function cost_type_;   /**< type of cost function */
   double circle_dia_;         /**< diameter of circle being observed (only appies to circular fiducials) */
-  Pose6d intermediate_frame_; /**< indentity unless camera was mounted on robot link */
+  Pose6d intermediate_camera_frame_; /**< from camera_mounting_frame_ to ref_frame_ */
+  Pose6d intermediate_target_frame_; /**< from ref_frame_ to target_mounting_frame_ */
 };
 // end of class ObservationDataPoint
 

@@ -361,9 +361,11 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
   options.max_num_iterations = 2000;
   ceres::Solve(options, &problem, &summary);
   if(summary.termination_type != ceres::NO_CONVERGENCE){
-    double initial_cost = summary.initial_cost/total_observations;
-    double final_cost = summary.final_cost/total_observations;
+    double initial_cost = sqrt( 2*summary.initial_cost/total_observations);
+    double final_cost = sqrt( 2*summary.final_cost   / total_observations);
     ROS_INFO("Problem solved, initial cost = %lf, final cost = %lf", initial_cost, final_cost);
+    res.final_cost_per_observation  = final_cost;
+
     target_->pose_.show("target_pose");
     ROS_INFO("camera_matrix data: [ %lf, 0.0, %lf, 0.0, %lf, %lf, 0.0, 0.0, 1.0]", 
 	     camera_->camera_parameters_.focal_length_x,
@@ -385,7 +387,6 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
       res.final_pose.position.x = target_->pose_.x;
       res.final_pose.position.y = target_->pose_.y;
       res.final_pose.position.z = target_->pose_.z;
-      res.final_cost_per_observation  = final_cost;
       target_->pose_.getQuaternion(res.final_pose.orientation.x,
 				   res.final_pose.orientation.y, 
 				   res.final_pose.orientation.z,
@@ -403,7 +404,6 @@ bool RobocylCalService::executeCallBack( intrinsic_cal::rail_ical_run::Request &
       return true;
     }
     else{
-      res.final_cost_per_observation  = final_cost;
       ROS_ERROR("allowable cost exceeded %f > %f", final_cost, req.allowable_cost_per_observation);
       return(false);
     }

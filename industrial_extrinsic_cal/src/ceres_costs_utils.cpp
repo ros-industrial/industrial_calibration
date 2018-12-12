@@ -60,8 +60,15 @@ Cost_function string2CostType(std::string& cost_type_str)
   if (cost_type_str == "LinkCameraCircleTargetReprjError") return (cost_functions::LinkCameraCircleTargetReprjError);
   if (cost_type_str == "LinkCameraCircleTargetReprjErrorPK")
     return (cost_functions::LinkCameraCircleTargetReprjErrorPK);
-  if (cost_type_str == "FixedCircleTargetCameraReprjErrorPK")
-    return (cost_functions::FixedCircleTargetCameraReprjErrorPK);
+
+  if (cost_type_str == "TargetOnLinkRtStereo")
+    return (cost_functions::TargetOnLinkRtStereo);
+  if (cost_type_str == "TargetOnLinkLtStereo")
+    return (cost_functions::TargetOnLinkLtStereo);
+  if (cost_type_str == "StereoOnLinkRt")
+    return (cost_functions::StereoOnLinkRt);
+  if (cost_type_str == "StereoOnLinkLt")
+    return (cost_functions::StereoOnLinkLt);
   return (cost_functions::NullCostType);
 }
 

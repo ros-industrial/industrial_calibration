@@ -76,7 +76,9 @@ public:
   /**
    * @brief Default destructor
    */
-  ~ROSCameraObserver(){};
+  ~ROSCameraObserver(){
+    ROS_ERROR("~CameraObserver");
+  };
 
   /**
    * @brief add a target to look for and region to look in
@@ -110,6 +112,9 @@ public:
   /** @brief tells when camera has completed its observations */
   bool observationsDone();
 
+  /** @brief sets current image and the bridge images whereas the base class just set the last_raw_image_ */
+  void setCurrentImage(const cv::Mat &image);
+
 private:
   /**
    * @brief name of pattern being looked for
@@ -120,11 +125,6 @@ private:
    * @brief topic name for image which is input at constructor
    */
   std::string image_topic_;
-
-  /**
-   * @brief topic name for camera_info which is input at constructor
-   */
-  std::string camera_name_;
 
   /**
    *  @brief cropped image based on original image and region of interest
@@ -219,11 +219,6 @@ private:
   cv::Ptr<cv::FeatureDetector> blob_detector_ptr_;
 
   /**
-   *  @brief new_image_collected, set after the trigger is done
-   */
-  bool new_image_collected_;
-
-  /**
    *  @brief store_observation_images_ flag to save images for later use
    */
   bool store_observation_images_;
@@ -237,11 +232,6 @@ private:
    *  @brief Flag to indicate if the image used in pattern detection should be normalized.
    */
   bool normalize_calibration_image_;
-
-  /**
-   *  @brief image_directory_ place to save images
-   */
-  std::string image_directory_;
 
   /**
    *  @brief getImageNumber
@@ -258,11 +248,6 @@ private:
     image_number_ = image_number;
   }
 
-  /**
-   *  @brief get last image
-   *  @return the most recent image
-   */
-  cv::Mat getLastImage();
 
 public:
   /**
@@ -314,15 +299,22 @@ public:
 
   void dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig& config, uint32_t level);
 
+  /**
+   * @brief compute the proclivity for the observations, and verify the observataions make sense
+   * @param CO the camera observations
+   * @return true of all observations check out
+   */
+  bool checkObservationProclivity(CameraObservations& CO);
+  
+  
 private:
   int image_number_;       /**< a counter of images recieved */
-  cv::Mat last_raw_image_; /**< the image last received */
   bool use_circle_detector_;
   bool white_blobs_;
   ros::ServiceClient client_;
   sensor_msgs::SetCameraInfo srv_;
-  ros::NodeHandle* rnh_;
-  dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig>* server_;
+  ros::NodeHandle rnh_;
+  boost::shared_ptr<dynamic_reconfigure::Server<industrial_extrinsic_cal::circle_grid_finderConfig> > server_;
 };
 
 }  // end industrial_extrinsic_cal namespace

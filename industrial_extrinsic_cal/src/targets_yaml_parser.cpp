@@ -8,7 +8,8 @@
 #include <yaml-cpp/yaml.h>
 #include <industrial_extrinsic_cal/ros_transform_interface.h>
 #include <industrial_extrinsic_cal/targets_yaml_parser.h>
-#include <industrial_extrinsic_cal/camera_yaml_parser.h>   // for parse_pose() and parse_transform_interface()
+#include <industrial_extrinsic_cal/camera_yaml_parser.h>   
+#include <industrial_extrinsic_cal/pose_yaml_parser.h>   
 #include <industrial_extrinsic_cal/ros_camera_observer.h>  // for pattern options
 
 using std::ifstream;
@@ -196,7 +197,7 @@ int parseTargetPoints(const Node& node, std::vector<Point3d>& points)
     temp_pnt3d.z = temp_pnt[2];
     points.push_back(temp_pnt3d);
   }
-  return (node.size());
+  return(node.size());
 }
 
 }  // end of industrial_extrinsic_cal namespace

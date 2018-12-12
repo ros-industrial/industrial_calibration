@@ -72,5 +72,25 @@ void Target::generatePoints()
       }
     }
 }// end of Target::generatePoints()
+
+bool Target::getRowsCols(int &rows, int &cols)
+{
+  bool rtn=true;
+  switch(target_type_){
+  case pattern_options::Chessboard:
+    rows    = checker_board_parameters_.pattern_rows;
+    cols    = checker_board_parameters_.pattern_cols;
+    break;
+  case pattern_options::CircleGrid:
+  case pattern_options::ModifiedCircleGrid:
+    rows    = circle_grid_parameters_.pattern_rows;
+    cols    = circle_grid_parameters_.pattern_cols;
+    break;
+  default:
+    rtn=false;
+    break;
+  }// end switch for target type
+  return(rtn);
+}// end of Target::getRowsCols()
   
 }  // end of namespace

@@ -234,7 +234,7 @@ bool RangeExCalService::executeCallBack( industrial_extrinsic_cal::calibrate::Re
     double pcty = image_y - fy;
     pcl::PointXYZ pt1(pff.x + pctx*(pfc.x-pff.x), pff.y + pctx*(pfc.y-pff.y), pff.z+ pctx*(pfc.z-pff.z)); // interpolate along x with y low
     pcl::PointXYZ pt2(pfc.x + pctx*(pcf.x-pcc.x), pfc.y + pctx*(pcf.y-pcc.y), pfc.z+ pctx*(pcf.z-pcc.z)); // interpolate along x with y low
-    pcl::PointXYZ pt3(pt1.x + pcty*(pt2.x-pt1.x), pt1.y + pcty*(pt2.y-pt1.y), pt1.z+ pcty*(pt2.z-pt1.z)); // interp along y between p1&p2
+    pcl::PointXYZ pt3(pt1.x + pctx*(pt2.x-pt1.x), pt1.y + pcty*(pt2.y-pt1.y), pt1.z+ pcty*(pt2.z-pt1.z)); // interp along y between p1&p2
     
     ROS_INFO("image(%f %f) pff(%f %f %f), tpt(%f %f %f)", image_x, image_y, pff.x, pff.y, pff.z, tpoint.x, tpoint.y, tpoint.z);
     // using the image_location x and y, determine the best estimate of x,y,z

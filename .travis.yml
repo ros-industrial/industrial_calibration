@@ -10,12 +10,13 @@ notifications:
 env:
   global:
     - ROS_DISTRO=kinetic
-    - UPSTREAM_WORKSPACE=file
+    - UPSTREAM_WORKSPACE=debian
     - NOT_TEST_INSTALL=true
   matrix:
     - ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
 install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
+  - git clone https://github.com/ros-industrial/intelligent_actuator.git 
 script:
   - source .ci_config/travis.sh
 

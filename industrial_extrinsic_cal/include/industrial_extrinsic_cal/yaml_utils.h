@@ -6,7 +6,6 @@
 #include <iostream>
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/camera_definition.h>
-#include <industrial_extrinsic_cal/transform_interface.hpp>
 #include <industrial_extrinsic_cal/trigger.h>
 
 namespace industrial_extrinsic_cal

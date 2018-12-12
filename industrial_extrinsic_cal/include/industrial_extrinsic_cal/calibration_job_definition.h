@@ -28,6 +28,7 @@
 #include <industrial_extrinsic_cal/ros_camera_observer.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
 #include <industrial_extrinsic_cal/circle_cost_utils.hpp>
+#include <industrial_extrinsic_cal/transform_interface.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include "ceres/ceres.h"
