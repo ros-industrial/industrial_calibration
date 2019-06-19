@@ -316,7 +316,7 @@ private:
       for(current_index_ = 0; current_index_ < (int) joint_trajectory_data.size(); current_index_++){
 	if(!moveIndex(current_index_)) break;
 	trigger_client_.waitForExistence(ros::Duration(-1));
-qq	if(!trigger_client_.call(srv_)){
+    if(!trigger_client_.call(srv_)){
 	  ROS_ERROR("call to %s failed", trigger_server_name_.c_str());
 	}
       }
