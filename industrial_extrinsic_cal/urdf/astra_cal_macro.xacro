@@ -19,7 +19,7 @@
 
 	<!-- links: one for the optical frame and one for defining the link geometry -->
 	<link name="${prefix}"/>
-	<link name="${prefix}_optical_frame"/>
+        <!-- <link name="${prefix}_optical_frame"/>-->
 
 	<link name="${prefix}_link">
 		<visual>
@@ -50,11 +50,11 @@
 	</joint>
 
 	<!-- joint to attach the camera geometry to the optical frame -->
-	<joint name="${prefix}_optical_joint" type="fixed">
+        <!--<joint name="${prefix}_optical_joint" type="fixed">
 		<parent link="${prefix}"/>
 		<child link="${prefix}_link"/>
 		<origin rpy="0 0 0" xyz="0 0 0"/>
-	</joint>
+        </joint>-->
 
 
      </xacro:macro>

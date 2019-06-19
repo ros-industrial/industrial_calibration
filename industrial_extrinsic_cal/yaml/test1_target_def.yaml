@@ -4,8 +4,9 @@ static_targets:
 -
     target_name: CircleGrid
     target_type: 1
-    target_frame: target_frame
+    target_frame: base
     target_rows: 7
+    transform_interface: ros_camera_lti
     target_cols: 5
     angle_axis_ax: 0.0
     angle_axis_ay: 0.0
