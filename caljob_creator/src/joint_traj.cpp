@@ -14,10 +14,11 @@
 #include <industrial_extrinsic_cal/robot_joint_values_triggerAction.h>
 #include <industrial_extrinsic_cal/yaml_utils.h>
 
+#include "fanuc_msgs/fanuc_motionAction.h"
 #include <yaml-cpp/yaml.h>
 
 
-typedef actionlib::SimpleActionClient<industrial_extrinsic_cal::robot_joint_values_triggerAction>
+typedef actionlib::SimpleActionClient<fanuc_msgs::fanuc_motionAction>
     RobotJointValuesClient;
 
 using industrial_extrinsic_cal::yamlNodeFromFileName;
@@ -34,8 +35,8 @@ public:
   {
     nh_.param<std::string>("input_file", in_file_name_, "joint_traj.yaml");
     nh_.param<std::string>("output_file", out_file_name_, "joint_traj2.yaml");
-    nh_.param<std::string>("motion_server", motion_server_name_, "rosRobotSceneTrigger_joint_values");
-    nh_.param<std::string>("trigger_server", trigger_server_name_, "IcalSrvObs");
+    nh_.param<std::string>("motion_server", motion_server_name_, "fanuc_motion");
+    nh_.param<std::string>("trigger_server", trigger_server_name_, "/WristCalSrvObs");
     nh_.param<std::string>("joints_topic", joints_topic_name_, "/joint_states");
     nh_.param<double>("pause_time", pause_time_, 0.0);
     joint_trajectory_data.clear();
@@ -152,26 +153,39 @@ private:
       ROS_ERROR("goal_index = %d but trajectory size = %d", goal_index, (int) joint_trajectory_data.size());
       return(false);
     }      
-    industrial_extrinsic_cal::robot_joint_values_triggerGoal goal;
+    //industrial_extrinsic_cal::robot_joint_values_triggerGoal goal;
+    fanuc_msgs::fanuc_motionGoal goal;
     motion_client_->waitForServer();
 
 
-    goal.joint_values.clear();
+
     for (int j = 0; j < (int)joint_trajectory_data[goal_index].position.size(); j++)
-      {
-	goal.joint_values.push_back(joint_trajectory_data[goal_index].position[j]);
-      }
+    {
+      goal.joint_states[j] = (joint_trajectory_data[goal_index].position[j]);
+    }
     ROS_INFO("SENDING GOAL");
     motion_client_->sendGoal(goal);
     do
       {
-	motion_client_->waitForResult(ros::Duration(5.0));
-	ROS_INFO("Current State: %s", motion_client_->getState().toString().c_str());
+       motion_client_->waitForResult(ros::Duration(5.0));
+       ROS_INFO("Current State: %s", motion_client_->getState().toString().c_str());
       } while (motion_client_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED &&
-	       motion_client_->getState() != actionlib::SimpleClientGoalState::ABORTED);
+           motion_client_->getState() != actionlib::SimpleClientGoalState::ABORTED);
     if(pause_time_>0.01){
       sleep(pause_time_);
     }
+
+    if (motion_client_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+    {
+      ROS_INFO("Moved to joint position: ");
+      std::cout << joint_trajectory_data[goal_index];
+    }
+    else
+    {
+      ROS_ERROR("Failed to call service motion_client");
+      return false;
+    }
+
     return(true);
   }
   
@@ -302,7 +316,7 @@ private:
       for(current_index_ = 0; current_index_ < (int) joint_trajectory_data.size(); current_index_++){
 	if(!moveIndex(current_index_)) break;
 	trigger_client_.waitForExistence(ros::Duration(-1));
-	if(!trigger_client_.call(srv_)){
+qq	if(!trigger_client_.call(srv_)){
 	  ROS_ERROR("call to %s failed", trigger_server_name_.c_str());
 	}
       }
@@ -327,17 +341,18 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "joint_traj");
   ros::NodeHandle nh("~");
-  
+  ros::AsyncSpinner async_spinner(3);
+  async_spinner.start();
   JointTraj traj(nh);
 
   // Main 50hz loop
   ros::Rate r(50); 
-  while (ros::ok())
-  {
-    ros::spinOnce();
-    r.sleep();
-  }
-
+//  while (ros::ok())
+//  {
+//    ros::spinOnce();
+//    r.sleep();
+//  }
+  ros::waitForShutdown();
   ROS_INFO("Terminating joint_traj node");
   return 0;
 }

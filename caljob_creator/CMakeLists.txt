@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   industrial_extrinsic_cal
+  fanuc_msgs
 )
 
 find_package(OpenCV REQUIRED)
