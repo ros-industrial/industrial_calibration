@@ -1,0 +1,12 @@
+---
+
+static_cameras:
+ -
+    camera_name: astra/rgb
+    trigger: NO_WAIT_TRIGGER
+    image_topic: /astra/rgb/image_rect_color
+    camera_optical_frame: astra_rgb_optical_frame
+    transform_interface: ros_camera_housing_cti
+    camera_housing_frame: astra
+    camera_mounting_frame: tool0
+    image_directory: /home/jeritgeorge/Documents/images

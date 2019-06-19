@@ -1,0 +1,14 @@
+---
+
+static_targets:
+-
+     target_name: target
+     target_type: 1
+     circle_dia:  0.045
+     spacing:  0.06
+     target_frame: target_frame
+     transform_interface: ros_scti
+     parent_frame: world
+     target_rows: 7
+     target_cols: 5
+     publish_vis_marker: True

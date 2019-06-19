@@ -1,0 +1,12 @@
+astra_pitch_joint: -1.5
+astra_roll_joint: -3.300000000000002
+astra_x_joint: -0.04504916537339514
+astra_y_joint: -0.09009833074679022
+astra_yaw_joint: 0
+astra_z_joint: 0.08709505305523055
+target_frame_pitch_joint: -0.1015926535897942
+target_frame_roll_joint: 0.1274604944624207
+target_frame_x_joint: 0.7650810927544168
+target_frame_y_joint: 0.1749798302594913
+target_frame_yaw_joint: -4.893975656236139
+target_frame_z_joint: 0.1019345484417233
