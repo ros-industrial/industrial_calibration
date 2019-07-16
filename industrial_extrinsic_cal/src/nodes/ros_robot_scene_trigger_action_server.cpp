@@ -19,7 +19,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <ros/console.h>
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <actionlib/server/simple_action_server.h>
 #include <industrial_extrinsic_cal/robot_joint_values_triggerAction.h>  // one of the ros action messages
 #include <industrial_extrinsic_cal/robot_pose_triggerAction.h>          // the other ros action message
@@ -40,7 +40,7 @@ public:
   {
     joint_value_server_.start();
     pose_server_.start();
-    move_group_ = new moveit::planning_interface::MoveGroup("manipulator");
+    move_group_ = new moveit::planning_interface::MoveGroupInterface("manipulator");
     move_group_->setPlanningTime(10.0);                     // give it 10 seconds to plan
     move_group_->setNumPlanningAttempts(30.0);              // Allow parallel planner to hybridize this many plans
     move_group_->setPlannerId("RRTConnectkConfigDefault");  // use this planner
@@ -124,7 +124,7 @@ public:
     poses.push_back(target_pose);
     move_group_->setPoseTargets(poses, end_effector_link_name_.c_str());
 
-    moveit::planning_interface::MoveGroup::Plan plan;
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
     if (move_group_->plan(plan))
     {
       if (move_group_->execute(plan))
@@ -146,7 +146,7 @@ private:
   JointValuesServer joint_value_server_;
   PoseServer pose_server_;
   std::string action_name_;
-  moveit::planning_interface::MoveGroup* move_group_;
+  moveit::planning_interface::MoveGroupInterface* move_group_;
   std::string end_effector_link_name_;
   std::string pose_ref_frame_name_;
 };
