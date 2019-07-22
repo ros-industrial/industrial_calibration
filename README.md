@@ -106,6 +106,15 @@ sudo apt-get install ros-kinetic-openni2-launch
 ### Moveit
 `sudo apt-get install ros-kinetic-moveit`
 
+### Install other source dependencies
+This requires using [wstool](http://wiki.ros.org/wstool) and the [.rosinstall](.rosinstall) file. From the workspace top level directory run the following
+```
+wstool init src src/industrial_calibration/.rosinstall
+wstool update -t src
+
+```
+
+
 # Examples
 
 ## Single Basler on a rail
