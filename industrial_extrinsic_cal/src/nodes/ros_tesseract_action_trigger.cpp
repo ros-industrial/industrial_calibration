@@ -43,36 +43,44 @@
 #include <tesseract_rosutils/utils.h>
 
 
-class FanucJointActionServer
+class TesseractActionServer
 {
   typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_joint_values_triggerAction> JointValuesServer;
+  typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_pose_triggerAction> PoseServer;
 
 protected:
 
   ros::NodeHandle nh_;
   JointValuesServer jvs_;
-  std::string action_server_name_;
+  PoseServer ps_;
+  std::string joint_action_server_name_;
+  std::string pose_action_server_name_;
   std::string robot_joint_state_topic_;
   std::string manipulator_name_;
   trajectory_msgs::JointTrajectory robot_traj_;
 
-  industrial_extrinsic_cal::robot_joint_values_triggerResult result_;
-  industrial_extrinsic_cal::robot_joint_values_triggerFeedback feedback_;
-  
+  industrial_extrinsic_cal::robot_joint_values_triggerResult joint_result_;
+  industrial_extrinsic_cal::robot_joint_values_triggerFeedback joint_feedback_;
+
+    industrial_extrinsic_cal::robot_pose_triggerResult pose_result_;
+  industrial_extrinsic_cal::robot_pose_triggerFeedback pose_feedback_;
+
   tesseract_monitoring::EnvironmentMonitorPtr env_monitor_;
   tesseract_motion_planners::TrajOptFreespacePlanner freespace_trajopt_planner_;
   
 public:
-    FanucJointActionServer(ros::NodeHandle& nh, std::string action_server_name)
+  TesseractActionServer(ros::NodeHandle& nh, std::string joint_action_server_name, std::string pose_action_server_name)
       : nh_(nh),
-        jvs_(nh_, action_server_name, boost::bind(&FanucJointActionServer::move, this, _1), false),
-        action_server_name_(action_server_name)
+        jvs_(nh_, joint_action_server_name, boost::bind(&TesseractActionServer::joint_move, this, _1), false),
+        ps_( nh_, pose_action_server_name, boost::bind(&TesseractActionServer::pose_move, this, _1), false),
+        joint_action_server_name_(joint_action_server_name),
+        pose_action_server_name_(pose_action_server_name)
     {
 
       // Get ROS params
       std::string robot_description, srdf_xml_string;
       if(!nh_.getParam("robot_description", robot_description)){
-	ROS_ERROR("For FanucJointActionServer, must set robot_description parameter");
+	ROS_ERROR("For TesseractActionServer, must set robot_description parameter");
       }
       if(!nh_.getParam("manipulator_name", manipulator_name_))  manipulator_name_ = "manipulator";
       if(!nh_.getParam("robot_joint_state_topic", robot_joint_state_topic_)) robot_joint_state_topic_ = "/joint_states";
@@ -86,10 +94,68 @@ public:
 
       jvs_.start();
 
-      ROS_INFO("Ready to move the fanuc.");
+      ROS_INFO("Ready to move the robot.");
     }
 
-    bool move(const industrial_extrinsic_cal::robot_joint_values_triggerGoalConstPtr& goal)
+    bool pose_move(const industrial_extrinsic_cal::robot_pose_triggerGoalConstPtr& goal)
+    {
+      tesseract_motion_planners::PlannerResponse planner_response;
+      tesseract_motion_planners::TrajOptFreespacePlannerConfig config;
+      // find start_waypoint by listening to joint states
+      boost::shared_ptr<sensor_msgs::JointState const> joint_start;
+      joint_start = ros::topic::waitForMessage<sensor_msgs::JointState>(robot_joint_state_topic_, nh_, ros::Duration(1));
+
+      // configure for planning
+      config.start_waypoint_ = std::make_shared<tesseract_motion_planners::JointWaypoint>(joint_start->position,joint_start->name);
+      Eigen::Vector3d position(goal->pose.position.x, goal->pose.position.y, goal->pose.position.z);
+      Eigen::Quaterniond quat(goal->pose.orientation.x, goal->pose.orientation.y, goal->pose.orientation.z, goal->pose.orientation.w);
+      config.end_waypoint_ = std::make_shared<tesseract_motion_planners::CartesianWaypoint>(position,quat);
+      config.num_steps_ = 20;
+      config.tesseract_ = env_monitor_->getTesseractConst();
+      config.link_ = config.tesseract_->getFwdKinematicsManagerConst()->getFwdKinematicSolver(manipulator_name_)->getTipLinkName();
+      config.tcp_ = Eigen::Isometry3d::Identity();
+      config.manipulator_ = manipulator_name_;
+      config.init_type_ = trajopt::InitInfo::STATIONARY;
+      config.collision_check_ = true;
+      config.collision_continuous_ = false;
+
+      // solve/plan for a joint trajectory
+      freespace_trajopt_planner_.clear();
+      freespace_trajopt_planner_.setConfiguration(config);
+      freespace_trajopt_planner_.solve(planner_response);
+
+      if (!planner_response.status)
+	{
+	  ROS_ERROR("Free Space Plan Unsuccessful");
+	  return false;
+	}
+
+
+      // a planner response has a tesseract_common::JointTrajectory joint_trajectory
+      // a planner response has a tesseract_common::StatusCode  status
+      // trajectory_msgs::JointTrajectory robot_traj_ has a Header header
+      // trajectory_msgs::JointTrajectory robot_traj_ has a string[] joint_names
+      // trajectory_msgs::JointTrajectory robot_traj_ has a JointTrajectory[] points
+      // here's the signature: inline void toMsg(trajectory_msgs::JointTrajectory& traj_msg, const tesseract_common::JointTrajectory& traj)
+      tesseract_rosutils::toMsg(robot_traj_, planner_response.joint_trajectory);
+
+      // stream to robot
+      if (!this->motion_streaming(robot_traj_))
+        {
+          ROS_ERROR("Motion Failed");
+          return false;
+        }
+
+      ROS_INFO("%s: Succeeded", joint_action_server_name_.c_str());
+
+      // set the action state to succeeded
+      pose_result_.result = 1;
+      ps_.setSucceeded(pose_result_);
+      
+      return true;
+
+    }
+    bool joint_move(const industrial_extrinsic_cal::robot_joint_values_triggerGoalConstPtr& goal)
     {
       tesseract_motion_planners::PlannerResponse planner_response;
       tesseract_motion_planners::TrajOptFreespacePlannerConfig config;
@@ -142,11 +208,11 @@ public:
           return false;
         }
 
-      ROS_INFO("%s: Succeeded", action_server_name_.c_str());
+      ROS_INFO("%s: Succeeded", joint_action_server_name_.c_str());
 
       // set the action state to succeeded
-      result_.result = 1;
-      jvs_.setSucceeded(result_);
+      joint_result_.result = 1;
+      jvs_.setSucceeded(joint_result_);
       
       return true;
       
@@ -201,14 +267,14 @@ int main(int argc, char **argv)
     /// Initialization ///
     //////////////////////
 
-    ros::init(argc, argv, "fanuc_joint_motion_action_server");
+    ros::init(argc, argv, "ros_tesseract_action_trigger");
     ros::NodeHandle nh;
     ros::AsyncSpinner async_spinner(3);
     async_spinner.start();
 
-    ROS_INFO("Getting ready to move the FANUC.");
+    ROS_INFO("Getting ready to move the robot.");
 
-    FanucJointActionServer mover(nh, "fanuc_motion");
+    TesseractActionServer mover(nh, "tesseract_joint_motion", "tesseract_pose_motion");
 
     // Set Log Level
     util::gLogLevel = util::LevelInfo;
