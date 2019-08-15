@@ -124,7 +124,7 @@ public:
     observation_server_ = nh_.advertiseService( "WristCalSrvObs",    &wristCalServiceNode::observationCallBack, this);
     run_server_         = nh_.advertiseService( "WristCalSrvRun",    &wristCalServiceNode::runCallBack, this);
     save_server_        = nh_.advertiseService( "WristCalSrvSave",   &wristCalServiceNode::saveCallBack, this);
-    covariance_server_  = nh_.advertiseService( "ICalSrvCov",        &wristCalServiceNode::covCallBack, this);
+    covariance_server_  = nh_.advertiseService( "WristCalSrvCov",    &wristCalServiceNode::covCallBack, this);
 
   };// end of constructor
 
