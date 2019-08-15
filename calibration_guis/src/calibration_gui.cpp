@@ -41,6 +41,8 @@ namespace calibration_guis
     std::string save_service_name  = bcn + "Save";
     std::string load_service_name  = bcn + "Load";
     std::string cov_service_name   = bcn + "Cov";
+    std::string ec_perm_srv_name   = "store_mutable_joint_states";
+
 
     start_client_ = pnh.serviceClient<std_srvs::Trigger>(start_service_name);
     obs_client_   = pnh.serviceClient<std_srvs::Trigger>(obs_service_name);
@@ -48,16 +50,26 @@ namespace calibration_guis
     save_client_  = pnh.serviceClient<std_srvs::Trigger>(save_service_name);
     load_client_  = pnh.serviceClient<std_srvs::Trigger>(load_service_name);
     cov_client_   = pnh.serviceClient<std_srvs::Trigger>(cov_service_name);
+    ecp_client_   = pnh.serviceClient<std_srvs::Trigger>(ec_perm_srv_name);
     ROS_INFO("%s", obs_service_name.c_str());
 
     allowed_residual_ = new QLineEdit(parent);
 
-    QPushButton* call_service_btn_1 = new QPushButton( "Start" , parent );
+    QPushButton* call_service_btn_1 = new QPushButton( "Reset" , parent );
     QPushButton* call_service_btn_2 = new QPushButton( "OBS" , parent );
     QPushButton* call_service_btn_3 = new QPushButton( "Run" , parent );
     QPushButton* call_service_btn_4 = new QPushButton( "Save" , parent );
     QPushButton* call_service_btn_5 = new QPushButton( "Load" , parent );
     QPushButton* call_service_btn_6 = new QPushButton( "Cov" , parent );
+    QPushButton* call_service_btn_7 = new QPushButton( "Install EX-cal" , parent );
+
+    call_service_btn_1->setToolTip("Forget all past observations");
+    call_service_btn_2->setToolTip("Take an observation");
+    call_service_btn_3->setToolTip("Run the Ceres-Solver Optimization");
+    call_service_btn_4->setToolTip("Push the resulting solution (only permanent for intrinsic calibration)");
+    call_service_btn_5->setToolTip("Load previous observations, enabling additional observations");
+    call_service_btn_6->setToolTip("Compute the covariance matrix, output will be on terminal");
+    call_service_btn_7->setToolTip("calls store_mutable_joint_states to install the extrinsic cal results");
 
     QLabel* allowed_resid_lb = new QLabel( "Allowed Residal" );
     final_resid_lb_ = new QLabel( "Final Residal " );
@@ -73,6 +85,7 @@ namespace calibration_guis
     controls_layout->addWidget( call_service_btn_4, 5, 0 );
     controls_layout->addWidget( call_service_btn_5, 5, 1 );
     controls_layout->addWidget( call_service_btn_6, 5, 2 );
+    controls_layout->addWidget( call_service_btn_7, 6, 0 );
     controls_layout->addWidget( bcn_name_lb       , 0, 1 );
     controls_layout->addWidget( obs_msg_lb_       , 2, 1 );
     controls_layout->addWidget( allowed_resid_lb  , 4, 1 );
@@ -87,7 +100,7 @@ namespace calibration_guis
     connect( call_service_btn_4, SIGNAL( clicked( bool )), this, SLOT( setbutton4Clicked())); // save
     connect( call_service_btn_5, SIGNAL( clicked( bool )), this, SLOT( setbutton5Clicked())); // load
     connect( call_service_btn_6, SIGNAL( clicked( bool )), this, SLOT( setbutton6Clicked())); // cov
-
+    connect( call_service_btn_7, SIGNAL( clicked( bool )), this, SLOT( setbutton7Clicked())); // make extrinsics permanent
   }
 
   void calPanel::setbutton1Clicked ()
@@ -187,4 +200,18 @@ namespace calibration_guis
       ROS_ERROR("Failed to call covariance Trigger");
     }
   }
+
+  void calPanel::setbutton7Clicked ()
+  {
+    std_srvs::Trigger srv;
+    if (ecp_client_.call(srv))
+    {
+      ROS_INFO("Output %s",srv.response.message.c_str());
+    }
+    else
+    {
+      ROS_ERROR("Failed to call store_mutable_joint_states");
+    }
+  }
+
 } // end of calibration_guis namespace
