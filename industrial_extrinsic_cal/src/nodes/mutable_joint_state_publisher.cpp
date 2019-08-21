@@ -185,7 +185,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "mutable_joint_state_publisher");
   ros::NodeHandle nh;
   industrial_extrinsic_cal::MutableJointStatePublisher MJSP(nh);
-  ros::Rate loop_rate(1);
+  ros::Rate loop_rate(5);
   while (ros::ok())
   {
     MJSP.publishJointStates();
