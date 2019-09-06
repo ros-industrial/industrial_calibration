@@ -3,15 +3,8 @@
 
 #include <ros/ros.h>
 #include <QLabel>
+#include <QLineEdit>
 #include <rviz/panel.h>
-#include <calibration_guis/drive_widget.h>
-
-/*
-#ifndef Q_MOC_RUN
-# include <ros/ros.h>
-# include <rviz/panel.h>
-#endif
-*/
 
 namespace calibration_guis
 {
@@ -53,9 +46,6 @@ class TrajectoryPanel: public rviz::Panel
     void setbutton5Clicked ();
     void setbutton6Clicked ();
     void setbutton7Clicked ();
-    // The control area, DriveWidget, sends its output to a Qt signal
-    // for ease of re-use, so here we declare a Qt slot to receive it.
-    void setVel( float linear_velocity_, float angular_velocity_ );
 
     // In this example setTopic() does not get connected to any signal
     // (it is called directly), but it is easy to define it as a public
@@ -63,24 +53,12 @@ class TrajectoryPanel: public rviz::Panel
     // some other user.
     void setTopic( const QString& topic );
 
-    /*    // Here we declare some internal slots.
-    protected Q_SLOTS:
-    */
-    // sendvel() publishes the current velocity values to a ROS
-    // topic.  Internally this is connected to a timer which calls it 10
-    // times per second.
-    void sendVel();
-    
     // updateTopic() reads the topic name from the QLineEdit and calls
     // setTopic() with the result.
     void updateTopic();
     
     // Then we finish up with protected member variables.
  private:
-      // The control-area widget which turns mouse events into command
-      // velocities.
-      DriveWidget* drive_widget_;
-
       // One-line text editor for entering the outgoing ROS topic name.
       QLineEdit* output_topic_editor_;
 
@@ -92,11 +70,6 @@ class TrajectoryPanel: public rviz::Panel
 
       // The ROS node handle.
       ros::NodeHandle nh_;
-
-      // The latest velocity values from the drive widget.
-      float linear_velocity_;
-      float angular_velocity_;
-      // END_TUTORIAL
 };
 
 } // end namespace calibration_guis
