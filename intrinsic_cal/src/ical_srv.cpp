@@ -253,7 +253,7 @@ public:
 	{
 	  ROS_ERROR("Target Locator could not find all targets found %d out of %d", num_observations, total_pts);
 	}
-      else if(!camera_->camera_observer_->checkObservationProclivity(camera_observations))
+      else if(!all_cameras_[i]->camera_observer_->checkObservationProclivity(camera_observations))
         {
           ROS_ERROR("Proclivities Check not successful");
         }
