@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <QLabel>
 #include <QLineEdit>
+#include <QComboBox>
 #include <rviz/panel.h>
 
 namespace calibration_guis
@@ -39,14 +40,14 @@ class TrajectoryPanel: public rviz::Panel
 
   // Next come a couple of public Qt slots.
   public Q_SLOTS:
-    void setbutton1Clicked ();
-    void setbutton2Clicked ();
-    void setbutton3Clicked ();
-    void setbutton4Clicked ();
-    void setbutton5Clicked ();
-    void setbutton6Clicked ();
-    void setbutton7Clicked ();
-
+    void captureClicked ();
+    void executeClicked ();
+    void executeWCallClicked ();
+    void moveEndClicked ();
+    void moveNextClicked ();
+    void movePrevClicked ();
+    void moveStartClicked ();
+    
     // In this example setTopic() does not get connected to any signal
     // (it is called directly), but it is easy to define it as a public
     // slot instead of a private function in case it would be useful to

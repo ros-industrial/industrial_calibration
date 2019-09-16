@@ -27,58 +27,55 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
   : rviz::Panel( parent )
 {
   QHBoxLayout* topic_layout = new QHBoxLayout;
+  output_topic_editor_           = new QLineEdit;
   topic_layout->addWidget( new QLabel( "Output Topic:" ));
-  output_topic_editor_ = new QLineEdit;
   topic_layout->addWidget( output_topic_editor_ );
-
 
   // Lay out the topic field above the control widget.
   QVBoxLayout* layout = new QVBoxLayout;
-    layout->addLayout( topic_layout );
+  layout->addLayout( topic_layout );
 
-    QPushButton* call_service_btn_1 = new QPushButton( "Capture" , parent );
-    QPushButton* call_service_btn_2 = new QPushButton( "Execute" , parent );
-    QPushButton* call_service_btn_3 = new QPushButton( "ExecuteWCall" , parent );
-    QPushButton* call_service_btn_4 = new QPushButton( "MoveEnd" , parent );
-    QPushButton* call_service_btn_5 = new QPushButton( "MoveNext" , parent );
-    QPushButton* call_service_btn_6 = new QPushButton( "MovePrev" , parent );
-    QPushButton* call_service_btn_7 = new QPushButton( "MoveStart" , parent );
-
-    QGridLayout* controls_layout = new QGridLayout();
-    controls_layout->addWidget( call_service_btn_1, 0, 0 );
-    controls_layout->addWidget( call_service_btn_2, 1, 0 );
-    controls_layout->addWidget( call_service_btn_3, 1, 1 );
-    controls_layout->addWidget( call_service_btn_4, 3, 1 );
-    controls_layout->addWidget( call_service_btn_5, 2, 0 );
-    controls_layout->addWidget( call_service_btn_6, 2, 1 );
-    controls_layout->addWidget( call_service_btn_7, 3, 0 );
-
-    setLayout( controls_layout );
-
-
-    // Next we make signal/slot connections.
-    connect( call_service_btn_1, SIGNAL( clicked( bool )), this, SLOT( setbutton1Clicked()));
-    connect( call_service_btn_2, SIGNAL( clicked( bool )), this, SLOT( setbutton2Clicked()));
-    connect( call_service_btn_3, SIGNAL( clicked( bool )), this, SLOT( setbutton3Clicked()));
-    connect( call_service_btn_4, SIGNAL( clicked( bool )), this, SLOT( setbutton4Clicked()));
-    connect( call_service_btn_5, SIGNAL( clicked( bool )), this, SLOT( setbutton5Clicked()));
-    connect( call_service_btn_6, SIGNAL( clicked( bool )), this, SLOT( setbutton6Clicked()));
-    connect( call_service_btn_7, SIGNAL( clicked( bool )), this, SLOT( setbutton7Clicked()));
-
-    connect( output_topic_editor_, SIGNAL( editingFinished() ), this, SLOT( updateTopic() ));
-
-
-    ros::NodeHandle n("~");
-
-    captureClient_      = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajCapture");
-    executeClient_      = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajExecute");
-    executeWCallClient_ = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajExecuteWCall");
-    moveEndClient_      = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveEnd");
-    moveNextClient_     = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveNext");
-    movePrevClient_     = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMovePrev");
-    moveStartClient_    = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveStart");
-
-  }
+  QPushButton* capture_btn           = new QPushButton( "Capture" , parent );
+  QPushButton* execute_btn          = new QPushButton( "Execute" , parent );
+  QPushButton* execute_wcall_btn = new QPushButton( "ExecuteWCall" , parent );
+  QPushButton* move_end_btn       = new QPushButton( "MoveEnd" , parent );
+  QPushButton* move_next_btn      = new QPushButton( "MoveNext" , parent );
+  QPushButton* move_prev_btn      = new QPushButton( "MovePrev" , parent );
+  QPushButton* move_start_btn      = new QPushButton( "MoveStart" , parent );
+  
+  QGridLayout* controls_layout = new QGridLayout();
+  controls_layout->addWidget( capture_btn,           0, 0 );
+  controls_layout->addWidget( execute_btn,           1, 0 );
+  controls_layout->addWidget( execute_wcall_btn,  1, 1 );
+  controls_layout->addWidget( move_end_btn,        3, 1 );
+  controls_layout->addWidget( move_next_btn,       2, 0 );
+  controls_layout->addWidget( move_prev_btn,       2, 1 );
+  controls_layout->addWidget( move_start_btn,       3, 0 );
+  
+  setLayout( controls_layout );
+  
+  
+  // Next we make signal/slot connections.
+  connect( capture_btn, SIGNAL( clicked( bool )), this, SLOT( captureClicked()));
+  connect( execute_btn, SIGNAL( clicked( bool )), this, SLOT( executeClicked()));
+  connect( execute_wcall_btn, SIGNAL( clicked( bool )), this, SLOT( executeWCallClicked()));
+  connect( move_end_btn, SIGNAL( clicked( bool )), this, SLOT( moveEndClicked()));
+  connect( move_next_btn, SIGNAL( clicked( bool )), this, SLOT( moveNextClicked()));
+  connect( move_prev_btn, SIGNAL( clicked( bool )), this, SLOT( movePrevClicked()));
+  connect( move_start_btn, SIGNAL( clicked( bool )), this, SLOT( moveStartClicked()));
+  connect( output_topic_editor_, SIGNAL( editingFinished() ), this, SLOT( updateTopic() ));
+    
+  ros::NodeHandle n("~");
+  
+  captureClient_      = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajCapture");
+  executeClient_      = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajExecute");
+  executeWCallClient_ = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajExecuteWCall");
+  moveEndClient_      = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveEnd");
+  moveNextClient_     = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveNext");
+  movePrevClient_     = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMovePrev");
+  moveStartClient_    = n.serviceClient<std_srvs::Trigger>("/joint_traj/JTrajMoveStart");
+  
+}
 
 
   // Read the topic name from the QLineEdit and call setTopic() with the
@@ -141,7 +138,7 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
       updateTopic();
     }
   }
-  void TrajectoryPanel::setbutton1Clicked ()
+  void TrajectoryPanel::captureClicked ()
   {
     std_srvs::Trigger srv;
     if (captureClient_.call(srv))
@@ -154,7 +151,7 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
     }
   }
 
-  void TrajectoryPanel::setbutton2Clicked ()
+  void TrajectoryPanel::executeClicked ()
   {
     std_srvs::Trigger srv;
     if (executeClient_.call(srv))
@@ -167,7 +164,7 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
     }
   }
 
-  void TrajectoryPanel::setbutton3Clicked ()
+  void TrajectoryPanel::executeWCallClicked ()
   {
     std_srvs::Trigger srv;
     if (executeWCallClient_.call(srv))
@@ -180,7 +177,7 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
     }
   }
 
-  void TrajectoryPanel::setbutton4Clicked ()
+  void TrajectoryPanel::moveEndClicked ()
   {
     std_srvs::Trigger srv;
     if (moveEndClient_.call(srv))
@@ -193,7 +190,7 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
     }
   }
 
-  void TrajectoryPanel::setbutton5Clicked ()
+  void TrajectoryPanel::moveNextClicked ()
   {
     std_srvs::Trigger srv;
     if (moveNextClient_.call(srv))
@@ -206,7 +203,7 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
     }
   }
 
-  void TrajectoryPanel::setbutton6Clicked ()
+  void TrajectoryPanel::movePrevClicked ()
   {
     std_srvs::Trigger srv;
     if (movePrevClient_.call(srv))
@@ -219,7 +216,7 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
     }
   }
 
-  void TrajectoryPanel::setbutton7Clicked ()
+  void TrajectoryPanel::moveStartClicked ()
   {
     std_srvs::Trigger srv;
     if (moveStartClient_.call(srv))
