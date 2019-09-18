@@ -406,7 +406,7 @@ void CircleDetectorImpl::detect(InputArray _image, std::vector<KeyPoint>& keypoi
   Mat outImg = image.clone();
   for (size_t i = 0; i < keypoints.size(); i++)
   {
-    circle(outImg, keypoints[i].pt, keypoints[i].size, Scalar(255, 0, 255), -1);
+    circle(outImg, keypoints[i].pt, keypoints[i].size, Scalar(params.circleColor, 0, params.circleColor), -1);
   }
   // drawKeypoints(image, keypoints, outImg);
   imshow("keypoints", outImg);
