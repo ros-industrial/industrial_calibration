@@ -780,8 +780,8 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   circle_params.minRepeatability = config.min_repeatability;
   circle_params.minDistBetweenCircles = config.min_distance;
   circle_params.minRadiusDiff = config.min_radius_diff;
-
   circle_params.filterByColor = config.filter_by_color;
+
   if (white_blobs_) circle_params.circleColor = 255;
   if (!white_blobs_) circle_params.circleColor = 0;
 
