@@ -783,7 +783,7 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   circle_params.minRadiusDiff = 10;
 
   circle_params.filterByColor = false;
-  if (white_blobs_) circle_params.circleColor = 200;
+  if (white_blobs_) circle_params.circleColor = 255;
   if (!white_blobs_) circle_params.circleColor = 0;
 
   circle_params.filterByArea = config.filter_by_area;
@@ -812,7 +812,7 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   blob_params.minDistBetweenBlobs = config.min_distance;
 
   blob_params.filterByColor = true;
-  if (white_blobs_) blob_params.blobColor = 200;
+  if (white_blobs_) blob_params.blobColor = 255;
   if (!white_blobs_) blob_params.blobColor = 0;
 
   blob_params.filterByArea = config.filter_by_area;
