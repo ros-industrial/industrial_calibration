@@ -34,9 +34,7 @@ namespace industrial_extrinsic_cal
     else{
       full_file_path_name  = data_directory_ + "/" +  filename;
     }
-    ROS_ERROR("saving pose to %s",full_file_path_name.c_str());
     writePoseYAML(full_file_path_name, pose_);
-    ROS_ERROR("done with writePoseYAML");
     return(true);
   }// end saveCurrentPose()
 
