@@ -26,15 +26,17 @@ namespace industrial_extrinsic_cal
   bool TransformInterface::saveCurrentPose(int scene, std::string& filename)
   {
     std::string full_file_path_name;
-    char scene_chars[8];
-    sprintf(scene_chars,"_%03d.jpg",scene);
+    char scene_chars[9];
+    sprintf(scene_chars,"_%03d.yaml",scene);
     if(filename == ""){ // build file name from data_directory_, 
       full_file_path_name  = data_directory_ + "/" +  transform_frame_ + std::string(scene_chars);
     }
     else{
       full_file_path_name  = data_directory_ + "/" +  filename;
     }
+    ROS_ERROR("saving pose to %s",full_file_path_name.c_str());
     writePoseYAML(full_file_path_name, pose_);
+    ROS_ERROR("done with writePoseYAML");
     return(true);
   }// end saveCurrentPose()
 

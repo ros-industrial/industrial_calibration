@@ -62,6 +62,10 @@ bool parsePose(const YAML::Node& node, Pose6d& pose)
  {
    
    std::ofstream fout(file.c_str());
+   if(!fout.is_open()){
+     ROS_ERROR("writePoseYaml: Could not open %s", file.c_str());
+     return;
+   }
    YAML::Emitter yaml_emitter;
    yaml_emitter << YAML::BeginMap;
    yaml_emitter << YAML::Key << "xyz_aaxis_pose";
