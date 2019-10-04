@@ -97,7 +97,6 @@ public:
     for(int i=0; i<all_targets_.size(); i++){
       all_targets_[i]->transform_interface_->setDataDirectory(all_cameras_[0]->camera_observer_->get_image_directory());
     }
-    ROS_ERROR("image_directory = %s", all_cameras_[0]->camera_observer_->get_image_directory().c_str());
 
     // load cameras, targets and intiialize ceres blocks
     init_blocks();
