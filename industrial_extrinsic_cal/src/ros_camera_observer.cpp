@@ -56,7 +56,7 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   }
   if (!pnh.getParam("use_circle_detector", use_circle_detector_))
   {
-    ROS_ERROR("not using circle detector");
+    ROS_INFO("not using circle detector");
     use_circle_detector_ = false;
   }
 
@@ -773,7 +773,6 @@ bool ROSCameraObserver::pullCameraInfo(double& fx, double& fy, double& cx, doubl
 
 void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig& config, uint32_t level)
 {
-  ROS_ERROR("in dynamic reconfigure callback");
   CircleDetector::Params circle_params;
   circle_params.thresholdStep = 10;
   circle_params.minThreshold = config.min_threshold;
