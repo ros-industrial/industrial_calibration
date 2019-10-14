@@ -77,7 +77,7 @@ robot_ical      -- intrinsic calibration on a robot. This is very useful if you 
 
 ## Travis - Continuous Integration
 
-Status: [![Build Status](https://travis-ci.org/ros-industrial/industrial_calibration.svg?branch=kinetic-devel)](https://travis-ci.org/ros-industrial/industrial_calibration)
+Status: [![Build Status](https://travis-ci.com/ros-industrial/industrial_calibration.svg?branch=kinetic-devel)](https://travis-ci.com/ros-industrial/industrial_calibration)
 
 ## ROS Buildfarm
 
