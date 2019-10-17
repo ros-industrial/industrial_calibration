@@ -117,6 +117,7 @@ catkin_package(
     CERES
     EIGEN3
 )
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
