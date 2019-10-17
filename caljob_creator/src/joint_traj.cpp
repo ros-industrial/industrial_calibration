@@ -34,8 +34,8 @@ public:
   {
     nh_.param<std::string>("input_file", in_file_name_, "joint_traj.yaml");
     nh_.param<std::string>("output_file", out_file_name_, "joint_traj2.yaml");
-    nh_.param<std::string>("motion_server", motion_server_name_, "rosRobotSceneTrigger_joint_values");
-    nh_.param<std::string>("trigger_server", trigger_server_name_, "IcalSrvObs");
+    nh_.param<std::string>("motion_server", motion_server_name_, "/rosRobotSceneTrigger_joint_values");
+    nh_.param<std::string>("trigger_server", trigger_server_name_, "/ICalSrvObs");
     nh_.param<std::string>("joints_topic", joints_topic_name_, "/joint_states");
     nh_.param<double>("pause_time", pause_time_, 0.0);
     joint_trajectory_data.clear();

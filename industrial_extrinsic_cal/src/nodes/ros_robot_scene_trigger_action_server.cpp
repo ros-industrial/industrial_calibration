@@ -21,6 +21,8 @@
 #include <ros/console.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <actionlib/server/simple_action_server.h>
+#include <control_msgs/JointTrajectoryAction.h>
+#include <control_msgs/FollowJointTrajectoryAction.h>
 #include <industrial_extrinsic_cal/robot_joint_values_triggerAction.h>  // one of the ros action messages
 #include <industrial_extrinsic_cal/robot_pose_triggerAction.h>          // the other ros action message
 
@@ -28,7 +30,6 @@ class ServersNode
 {
 protected:
   ros::NodeHandle nh_;
-
 public:
   typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_joint_values_triggerAction> JointValuesServer;
   typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_pose_triggerAction> PoseServer;
