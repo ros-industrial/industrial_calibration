@@ -107,7 +107,7 @@ public:
     observation_server_ = nh_.advertiseService( "ICalSrvObs",         &icalServiceNode::observationCallBack, this);
     run_server_         = nh_.advertiseService( "ICalSrvRun",         &icalServiceNode::runCallBack, this);
     save_server_        = nh_.advertiseService( "ICalSrvSave",        &icalServiceNode::saveCallBack, this);
-    load_server_        = nh_.advertiseService( "StereoCalSrvImport", &icalServiceNode::loadCallBack, this);
+    load_server_        = nh_.advertiseService( "ICalSrvLoad",      &icalServiceNode::loadCallBack, this);
     covariance_server_  = nh_.advertiseService( "ICalSrvCov",         &icalServiceNode::covCallBack, this);
 
   };// end of constructor

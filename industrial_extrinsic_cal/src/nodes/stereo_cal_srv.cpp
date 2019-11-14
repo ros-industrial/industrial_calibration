@@ -106,8 +106,8 @@ public:
     observation_server_ = nh_.advertiseService( "StereoCalSrvObs", &stereoCalServiceNode::observationCallBack, this);
     run_server_         = nh_.advertiseService( "StereoCalSrvRun", &stereoCalServiceNode::runCallBack, this);
     save_server_        = nh_.advertiseService( "StereoCalSrvSave", &stereoCalServiceNode::saveCallBack, this);
-    load_server_        = nh_.advertiseService( "StereoCalSrvImport", &stereoCalServiceNode::loadCallBack, this);
-    covariance_server_  = nh_.advertiseService( "ICalSrvCov",        &stereoCalServiceNode::covCallBack, this);
+    load_server_        = nh_.advertiseService( "StereoCalSrvLoad", &stereoCalServiceNode::loadCallBack, this);
+    covariance_server_  = nh_.advertiseService( "StereoCalSrvCov",    &stereoCalServiceNode::covCallBack, this);
 
   };// end of constructor
 

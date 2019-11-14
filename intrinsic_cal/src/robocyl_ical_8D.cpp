@@ -201,12 +201,12 @@ public:
     home_client_.call(hc_request_, hc_response_);
 
     // advertise services
-    start_server_       = nh_.advertiseService( "ICalSrvStart", &robocyl_ical_8D::startCallBack, this);
-    load_server_        = nh_.advertiseService( "ICalSrvLoad",  &robocyl_ical_8D::loadCallBack, this);
-    observation_server_ = nh_.advertiseService( "ICalSrvObs",   &robocyl_ical_8D::observationCallBack, this);
-    run_server_         = nh_.advertiseService( "ICalSrvRun",   &robocyl_ical_8D::runCallBack, this);
-    save_server_        = nh_.advertiseService( "ICalSrvSave",  &robocyl_ical_8D::saveCallBack, this);
-    covariance_server_  = nh_.advertiseService( "ICalSrvCov",   &robocyl_ical_8D::covCallBack, this);
+    start_server_       = nh_.advertiseService( "RailICalSrvStart", &robocyl_ical_8D::startCallBack, this);
+    load_server_        = nh_.advertiseService( "RailICalSrvLoad",  &robocyl_ical_8D::loadCallBack, this);
+    observation_server_ = nh_.advertiseService( "RailICalSrvObs",   &robocyl_ical_8D::observationCallBack, this);
+    run_server_         = nh_.advertiseService( "RailICalSrvRun",   &robocyl_ical_8D::runCallBack, this);
+    save_server_        = nh_.advertiseService( "RailICalSrvSave",  &robocyl_ical_8D::saveCallBack, this);
+    covariance_server_  = nh_.advertiseService( "RailICalSrvCov",   &robocyl_ical_8D::covCallBack, this);
 
 
     std::string recon_node_name = "~/observe";
@@ -353,7 +353,7 @@ public:
       image_file_currently = camera_->camera_name_ + std::string(current_image_scene_chars);
       image_file_now = current_image_file(scene_,image_file_currently);
     }
-    sprintf(msg, "Ical_srv now has %d observations after scene %d",total_observations_, scene_);
+    sprintf(msg, "RailIcal_srv now has %d observations after scene %d",total_observations_, scene_);
 
     res.message = string(msg);
     res.success = true;
@@ -461,7 +461,7 @@ public:
     mm_request_.meters = 0.8;// note the length of stage is 0.8, so this moves from front to back
     move_client_.call(mm_request_, mm_response_); // this call blocks until camera is moved
 
-    sprintf(msg, "Ical_srv now has %d observations after scene %d",total_observations_, scene_);
+    sprintf(msg, "RailIcal_srv now has %d observations after scene %d",total_observations_, scene_);
 
     res.message = string(msg);
     res.success = true;

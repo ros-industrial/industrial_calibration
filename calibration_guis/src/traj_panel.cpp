@@ -14,11 +14,10 @@
 #include <QTimer>
 #include <geometry_msgs/Twist.h>
 #include <std_srvs/Trigger.h>
-#include <calibration_guis/drive_widget.h>
 #include <calibration_guis/traj_panel.h>
 #include <pluginlib/class_list_macros.h>
 
-PLUGINLIB_EXPORT_CLASS(calibration_guis::TrajectoryPanel,rviz::Panel )
+
 
 namespace calibration_guis
 {
@@ -27,20 +26,15 @@ namespace calibration_guis
 TrajectoryPanel::TrajectoryPanel( QWidget* parent )
   : rviz::Panel( parent )
 {
-  linear_velocity_ = 0;
-  angular_velocity_ = 0;
   QHBoxLayout* topic_layout = new QHBoxLayout;
   topic_layout->addWidget( new QLabel( "Output Topic:" ));
   output_topic_editor_ = new QLineEdit;
   topic_layout->addWidget( output_topic_editor_ );
 
-  // Then create the control widget.
-  drive_widget_ = new DriveWidget;
 
   // Lay out the topic field above the control widget.
   QVBoxLayout* layout = new QVBoxLayout;
     layout->addLayout( topic_layout );
-    layout->addWidget( drive_widget_ );
 
     QPushButton* call_service_btn_1 = new QPushButton( "Capture" , parent );
     QPushButton* call_service_btn_2 = new QPushButton( "Execute" , parent );
@@ -62,8 +56,6 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
     setLayout( controls_layout );
 
 
-    QTimer* output_timer = new QTimer( this );
-
     // Next we make signal/slot connections.
     connect( call_service_btn_1, SIGNAL( clicked( bool )), this, SLOT( setbutton1Clicked()));
     connect( call_service_btn_2, SIGNAL( clicked( bool )), this, SLOT( setbutton2Clicked()));
@@ -73,15 +65,8 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
     connect( call_service_btn_6, SIGNAL( clicked( bool )), this, SLOT( setbutton6Clicked()));
     connect( call_service_btn_7, SIGNAL( clicked( bool )), this, SLOT( setbutton7Clicked()));
 
-    connect( drive_widget_, SIGNAL( outputVelocity( float, float )), this, SLOT( setVel( float, float )));
     connect( output_topic_editor_, SIGNAL( editingFinished() ), this, SLOT( updateTopic() ));
-    connect( output_timer, SIGNAL( timeout() ), this, SLOT( sendVel() ));
 
-    // Start the timer.
-    output_timer->start( 100 );
-
-    // Make the control widget start disabled, since we don't start with an output topic.
-    drive_widget_->setEnabled( false );
 
     ros::NodeHandle n("~");
 
@@ -95,15 +80,6 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
 
   }
 
-  // setVel() is connected to the DriveWidget's output, which is sent
-  // whenever it changes due to a mouse event.  This just records the
-  // values it is given.  The data doesn't actually get sent until the
-  // next timer callback.
-  void TrajectoryPanel::setVel( float lin, float ang )
-  {
-    linear_velocity_ = lin;
-    angular_velocity_ = ang;
-  }
 
   // Read the topic name from the QLineEdit and call setTopic() with the
   // results.  This is connected to QLineEdit::editingFinished() which
@@ -143,25 +119,6 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
       Q_EMIT configChanged();
     }
 
-    // Gray out the control widget when the output topic is empty.
-    drive_widget_->setEnabled( output_topic_ != "" );
-  }
-
-  // Publish the control velocities if ROS is not shutting down and the
-  // publisher is ready with a valid topic name.
-  void TrajectoryPanel::sendVel()
-  {
-    if( ros::ok() && velocity_publisher_ )
-    {
-      geometry_msgs::Twist msg;
-      msg.linear.x = linear_velocity_;
-      msg.linear.y = 0;
-      msg.linear.z = 0;
-      msg.angular.x = 0;
-      msg.angular.y = 0;
-      msg.angular.z = angular_velocity_;
-      velocity_publisher_.publish( msg );
-    }
   }
 
   // Save all configuration data from this panel to the given
@@ -279,4 +236,4 @@ TrajectoryPanel::TrajectoryPanel( QWidget* parent )
 } // end namespace calibration_guis
 
 
-
+PLUGINLIB_EXPORT_CLASS(calibration_guis::TrajectoryPanel,rviz::Panel)
