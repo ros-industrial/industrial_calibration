@@ -258,7 +258,8 @@ public:
     // only add if there are enough observations in both
     int num_observations = (int)left_camera_observations.size() + (int)right_camera_observations.size();
 
-	
+    // TODO add check proclivities if(!camera_->camera_observer_->checkObservationProclivity(camera_observations))
+
     if(left_camera_observations.size() == all_targets_[0]->num_points_ && right_camera_observations.size() == all_targets_[0]->num_points_){
       ROS_INFO("Found %d left camera observations and %d right camera observations", (int)left_camera_observations.size(), (int) right_camera_observations.size());
 
