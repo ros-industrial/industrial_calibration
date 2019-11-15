@@ -152,7 +152,6 @@ add_library(
 add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 target_link_libraries(
   industrial_extrinsic_cal
-#  tesseract::tesseract_collision_core
   ${yaml_cpp_LIBRARY}
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
