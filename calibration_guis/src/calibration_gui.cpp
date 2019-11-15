@@ -40,6 +40,7 @@ namespace calibration_guis
     calibration_selection_->addItem("WristCalSrv"); // Either Camera or Target on EOAT, uses TF to get IC for Camera to Target Transform
     calibration_selection_->addItem("ICalSrv");     // Either Camera or Target on EOAT, uses TF to get IC for Camera to Target Transform
     calibration_selection_->addItem("StereoCalSrv");// Either Cameras or Target on EOAT, uses TF to get IC for Camera to Target Transform
+    calibration_selection_->addItem("GantryCalSrv");     // Calibrate the mount of a manipulator to a gantry's tool plate
     calibration_selection_->addItem("RailICalSrv"); // uses the 8D method where target to rail is changed after each sweep of rail, must happen at least once
     calibration_selection_->setCurrentIndex(0);
     reset_services();		// setup the services to use the default calibration type
