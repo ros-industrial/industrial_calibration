@@ -22,11 +22,11 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   pcl_conversions
   dynamic_reconfigure
-  tesseract_monitoring
-  tesseract_rosutils
+#  tesseract_monitoring
+#  tesseract_rosutils
 )
 
-find_package(tesseract_motion_planners REQUIRED)
+#find_package(tesseract_motion_planners REQUIRED)
 
 find_package(Boost REQUIRED)
 
@@ -120,7 +120,7 @@ catkin_package(
     Boost
     CERES
     EIGEN3
-    tesseract_motion_planners
+#    tesseract_motion_planners
 )
 include_directories(
   include
@@ -167,7 +167,7 @@ add_executable(camera_observer_scene_trigger    src/nodes/camera_observer_scene_
 add_executable(manual_calt_adjust               src/nodes/manual_calt_adjuster.cpp)
 add_executable(mutable_joint_state_publisher    src/nodes/mutable_joint_state_publisher.cpp)
 add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
-add_executable(ros_tesseract_action_trigger     src/nodes/ros_tesseract_action_trigger.cpp)
+#add_executable(ros_tesseract_action_trigger     src/nodes/ros_tesseract_action_trigger.cpp)
 add_executable(service_node                     src/nodes/calibration_service.cpp)
 add_executable(trigger_service                  src/nodes/ros_scene_trigger_server.cpp)
 add_executable(range_excal                      src/nodes/range_camera_excal.cpp)
@@ -180,7 +180,7 @@ add_executable(stereo_cal_srv                   src/nodes/stereo_cal_srv.cpp)
 add_dependencies(camera_observer_scene_trigger    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(mutable_joint_state_publisher    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(ros_robot_trigger_action_service ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
-add_dependencies(ros_tesseract_action_trigger     ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+#add_dependencies(ros_tesseract_action_trigger     ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(service_node                     ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(trigger_service                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(range_excal                      ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
@@ -194,7 +194,7 @@ target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${c
 target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES})
 target_link_libraries(mutable_joint_state_publisher ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY})
 target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES})
-target_link_libraries(ros_tesseract_action_trigger ${catkin_LIBRARIES} tesseract::tesseract_motion_planners_trajopt_freespace)
+#target_link_libraries(ros_tesseract_action_trigger ${catkin_LIBRARIES} tesseract::tesseract_motion_planners_trajopt_freespace)
 target_link_libraries(service_node industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(target_display industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(trigger_service ${catkin_LIBRARIES})
@@ -211,7 +211,7 @@ install(
     manual_calt_adjust
     mutable_joint_state_publisher
     ros_robot_trigger_action_service
-    ros_tesseract_action_trigger
+#    ros_tesseract_action_trigger
     service_node
     trigger_service
     range_excal
