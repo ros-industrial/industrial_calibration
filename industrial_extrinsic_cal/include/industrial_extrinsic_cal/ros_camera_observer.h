@@ -55,9 +55,6 @@ enum pattern_options_
   Chessboard = 0,
   CircleGrid = 1,
   ModifiedCircleGrid = 2,
-  ARtag = 3,
-  Balls = 4,
-  SingleBall = 5
 };
 }
 typedef pattern_options::pattern_options_ PatternOption;

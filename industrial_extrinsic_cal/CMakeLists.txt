@@ -117,6 +117,7 @@ catkin_package(
     CERES
     EIGEN3
 )
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -151,7 +152,6 @@ add_library(
 add_dependencies(industrial_extrinsic_cal ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 target_link_libraries(
   industrial_extrinsic_cal
-
   ${yaml_cpp_LIBRARY}
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}

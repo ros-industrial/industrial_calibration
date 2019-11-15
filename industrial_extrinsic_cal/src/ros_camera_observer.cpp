@@ -19,7 +19,7 @@
 #include <industrial_extrinsic_cal/ros_camera_observer.h>
 #include <industrial_extrinsic_cal/circle_detector.hpp>
 #include <image_transport/image_transport.h>
-
+#define MODIFIED_CIRCLE_SIZE_RATIO (0.10)
 using cv::CircleDetector;
 namespace industrial_extrinsic_cal
 {
@@ -56,7 +56,7 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   }
   if (!pnh.getParam("use_circle_detector", use_circle_detector_))
   {
-    ROS_ERROR("not using circle detector");
+    ROS_INFO("not using circle detector");
     use_circle_detector_ = false;
   }
 
@@ -102,23 +102,8 @@ bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi& roi, Cost
       pattern_cols_ = targ->circle_grid_parameters_.pattern_cols;
       sym_circle_ = targ->circle_grid_parameters_.is_symmetric;
       break;
-    case pattern_options::ARtag:
-      pattern_ = pattern_options::ARtag;
-      ROS_ERROR_STREAM("AR Tag recognized but pattern not supported yet");
-      break;
-    case pattern_options::Balls:
-      pattern_ = pattern_options::Balls;
-      pattern_rows_ = 1;
-      pattern_cols_ = targ->num_points_;
-      break;
-    case pattern_options::SingleBall:
-      pattern_ = pattern_options::SingleBall;
-      pattern_rows_ = 1;
-      pattern_cols_ = 1;
-      break;
     default:
-      ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid, Balls, "
-                       "SingleBall or ARTag)");
+      ROS_ERROR_STREAM("target_type does not correlate to a known pattern option (Chessboard, CircleGrid, ModifiedCircleGrid)");
       return false;
       break;
   }
@@ -198,10 +183,14 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
 
   cv::Point large_point;
   cv::Size pattern_size(pattern_cols_, pattern_rows_);  // note they use cols then rows for some unknown reason
-  int start_1st_row = 0;
-  int end_1st_row = pattern_cols_ - 1;
-  int start_last_row = pattern_rows_ * pattern_cols_ - pattern_cols_;
-  int end_last_row = pattern_rows_ * pattern_cols_ - 1;
+  int start_1st_row           = 0;
+  int start_1st_row_neighbor  = 1;
+  int end_1st_row             = pattern_cols_ - 1;
+  int end_1st_row_neighbor    = pattern_cols_ - 2;
+  int start_last_row          = pattern_rows_ * pattern_cols_ - pattern_cols_;
+  int start_last_row_neighbor = pattern_rows_ * pattern_cols_ - pattern_cols_ + 1;
+  int end_last_row            = pattern_rows_ * pattern_cols_ - 1;
+  int end_last_row_neighbor   = pattern_rows_ * pattern_cols_ - 2;
 
   cv::Size pattern_size_flipped(pattern_rows_, pattern_cols_);  // note they use cols then rows for some unknown reason
   switch (pattern_)
@@ -323,36 +312,49 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
         int temp_cols = flipped_successful_find ? pattern_rows_ : pattern_cols_;
 
         // determine which circle is the largest,
-        double start_last_row_size = -1.0;
-        double start_1st_row_size = -1.0;
-        double end_1st_row_size = -1.0;
-        double end_last_row_size = -1.0;
-        for (int i = 0; i < (int)keypoints.size(); i++)
-        {
-          double x = keypoints[i].pt.x;
-          double y = keypoints[i].pt.y;
-          double ksize = keypoints[i].size;
-          if (x == centers[start_last_row].x && y == centers[start_last_row].y) start_last_row_size = ksize;
-          if (x == centers[end_last_row].x && y == centers[end_last_row].y) end_last_row_size = ksize;
-          if (x == centers[start_1st_row].x && y == centers[start_1st_row].y) start_1st_row_size = ksize;
-          if (x == centers[end_1st_row].x && y == centers[end_1st_row].y) end_1st_row_size = ksize;
-        }
+        double start_last_row_size    = -1.0;
+        double start_1st_row_size     = -1.0;
+        double end_1st_row_size       = -1.0;
+        double end_last_row_size      = -1.0;
+	double start_last_row_n_size  = -1.0;
+	double start_1st_row_n_size   = -1.0;
+	double end_1st_row_n_size     = -1.0;
+	double end_last_row_n_size    = -1.0;
 
-        ROS_DEBUG("start_last_row  %f %f %f", centers[start_last_row].x, centers[start_last_row].y,
-                  start_last_row_size);
+        for (int i = 0; i < (int)keypoints.size(); i++)
+	  {
+	    double x = keypoints[i].pt.x;
+	    double y = keypoints[i].pt.y;
+	    double ksize = keypoints[i].size;
+	    if (x == centers[start_last_row].x && y == centers[start_last_row].y) start_last_row_size = ksize;
+	    if (x == centers[end_last_row].x && y == centers[end_last_row].y) end_last_row_size = ksize;
+	    if (x == centers[start_1st_row].x && y == centers[start_1st_row].y) start_1st_row_size = ksize;
+	    if (x == centers[end_1st_row].x && y == centers[end_1st_row].y) end_1st_row_size = ksize;
+	    if (x == centers[start_last_row_neighbor].x && y == centers[start_last_row_neighbor].y) start_last_row_n_size = ksize;
+	    if (x == centers[end_last_row_neighbor].x   && y == centers[end_last_row_neighbor].y)   end_last_row_n_size   = ksize;
+	    if (x == centers[start_1st_row_neighbor].x  && y == centers[start_1st_row_neighbor].y)  start_1st_row_n_size  = ksize;
+	    if (x == centers[end_1st_row_neighbor].x    && y == centers[end_1st_row_neighbor].y)    end_1st_row_n_size    = ksize;
+	  }
+
+        ROS_DEBUG("start_last_row  %f %f %f", centers[start_last_row].x, centers[start_last_row].y, start_last_row_size);
         ROS_DEBUG("end_last_row %f %f %f", centers[end_last_row].x, centers[end_last_row].y, end_last_row_size);
         ROS_DEBUG("start_1st_row %f %f %f", centers[start_1st_row].x, centers[start_1st_row].y, start_1st_row_size);
         ROS_DEBUG("end_1st_row %f %f %f", centers[end_1st_row].x, centers[end_1st_row].y, end_1st_row_size);
         if (start_last_row_size < 0.0 || start_1st_row_size < 0.0 || end_1st_row_size < 0.0 || end_last_row_size < 0.0)
-        {
-          ROS_ERROR("No keypoint match for one or more corners");
-          return (false);
-        }
+	  {
+	    ROS_ERROR("No keypoint match for one or more corners");
+	    return (false);
+	  }
+        if (start_last_row_n_size < 0.0 || start_1st_row_n_size < 0.0 || end_1st_row_n_size < 0.0 || end_last_row_n_size < 0.0)
+	  {
+	    ROS_ERROR("No keypoint match for one or more corner neigbors");
+	    return (false);
+	  }
 
         // determine if ordering is usual by computing cross product of two vectors normal ordering has z axis positive
         // in cross
         bool usual_ordering =
-            true;  // the most common ordering is with points going from left to right then top to bottom
+											      true;  // the most common ordering is with points going from left to right then top to bottom
         double v1x, v1y, v2x, v2y;
         v1x = centers[end_last_row].x - centers[start_last_row].x;
         v1y = -centers[end_last_row].y + centers[start_last_row].y;  // reverse because y is positive going down
@@ -360,288 +362,134 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
         v2y = -centers[end_1st_row].y + centers[end_last_row].y;
         double cross = v1x * v2y - v1y * v2x;
         if (cross < 0.0)
-        {
-          usual_ordering = false;
-        }
+	  {
+	    usual_ordering = false;
+	  }
         observation_pts_.clear();
 
         // largest circle at start of last row
         //       ......   This is a simple picture of the grid with the largest circle indicated by the letter o
         //       o....
-        if (start_last_row_size > start_1st_row_size && start_last_row_size > end_1st_row_size &&
-            start_last_row_size > end_last_row_size)
-        {
-          ROS_DEBUG("large circle at start of last row");
-          large_point.x = centers[start_last_row].x;
-          large_point.y = centers[start_last_row].y;
-          if (usual_ordering)
-          {  // right side up, no rotation, order is natural, starting from upper left, reads like book
-            for (int i = 0; i < (int)centers.size(); i++)
-              observation_pts_.push_back(centers[i]);
-          }
-          else
-          {  // unusual ordering
-            for (int c = temp_cols - 1; c >= 0; c--)
-            {
-              for (int r = temp_rows - 1; r >= 0; r--)
-              {
-                observation_pts_.push_back(centers[r * temp_cols + c]);
-              }
-            }
-          }  // end unusual ordering
-        }    // end largest circle at start
+	if((start_last_row_size - start_last_row_n_size) / start_last_row_n_size > MODIFIED_CIRCLE_SIZE_RATIO)
+	  {
+	    ROS_DEBUG("large circle at start of last row");
+	    large_point.x = centers[start_last_row].x;
+	    large_point.y = centers[start_last_row].y;
+	    if (usual_ordering)
+	      {  // right side up, no rotation, order is natural, starting from upper left, reads like book
+		for (int i = 0; i < (int)centers.size(); i++)
+		  observation_pts_.push_back(centers[i]);
+	      }
+	    else
+	      {  // unusual ordering 99 89 87 86...9 then 98 88 78... 8 
+		for (int c = temp_cols - 1; c >= 0; c--)
+		  {
+		    for (int r = temp_rows - 1; r >= 0; r--)
+		      {
+			observation_pts_.push_back(centers[r * temp_cols + c]);
+		      }
+		  }
+	      }  // end unusual ordering
+	  }    // end largest circle at start
         // largest circle at end of 1st row
         //       .....o
         //       ......
-        else if (end_1st_row_size > end_last_row_size && end_1st_row_size > start_last_row_size &&
-                 end_1st_row_size > start_1st_row_size)
-        {
-          ROS_DEBUG("large circle at end of 1st row");
-          large_point.x = centers[end_1st_row].x;
-          large_point.y = centers[end_1st_row].y;
-          if (usual_ordering)
-          {  // reversed points
-            for (int i = (int)centers.size() - 1; i >= 0; i--)
-            {
-              observation_pts_.push_back(centers[i]);
-            }
-          }
-          else
-          {  // unusual ordering
-            for (int c = 0; c < temp_cols; c++)
-            {
-              for (int r = 0; r < temp_rows; r++)
-              {
-                observation_pts_.push_back(centers[r * temp_cols + c]);
-              }
-            }
-          }  // end unusual ordering
-        }    // end largest circle at end of 1st row
+	else if( (end_1st_row_size - end_1st_row_n_size) / end_1st_row_n_size > MODIFIED_CIRCLE_SIZE_RATIO)
+	  {
+	    ROS_DEBUG("large circle at end of 1st row");
+	    large_point.x = centers[end_1st_row].x;
+	    large_point.y = centers[end_1st_row].y;
+	    if (usual_ordering)
+	      {  // reversed points
+		for (int i = (int)centers.size() - 1; i >= 0; i--)
+		  {
+		    observation_pts_.push_back(centers[i]);
+		  }
+	      }
+	    else
+	      {  // unusual ordering
+		for (int c = 0; c < temp_cols; c++)
+		  {
+		    for (int r = 0; r < temp_rows; r++)
+		      {
+			observation_pts_.push_back(centers[r * temp_cols + c]);
+		      }
+		  }
+	      }  // end unusual ordering
+	  }    // end largest circle at end of 1st row
 
         // largest_circle at end of last row
         //       ......
         //       ....o
-        else if (end_last_row_size > start_last_row_size && end_last_row_size > end_1st_row_size &&
-                 end_last_row_size > start_1st_row_size)
-        {
-          ROS_DEBUG("large circle at end of last row");
-          large_point.x = centers[end_last_row].x;
-          large_point.y = centers[end_last_row].y;
+	else if( (end_last_row_size - end_last_row_n_size) / end_last_row_n_size > MODIFIED_CIRCLE_SIZE_RATIO)
+	  {
+	    ROS_DEBUG("large circle at end of last row");
+	    large_point.x = centers[end_last_row].x;
+	    large_point.y = centers[end_last_row].y;
 
-          if (usual_ordering)
-          {  // 90 80 ... 0, 91 81 ... 1
-            for (int c = 0; c < temp_cols; c++)
-            {
-              for (int r = temp_rows - 1; r >= 0; r--)
-              {
-                observation_pts_.push_back(centers[r * temp_cols + c]);
-              }
-            }
-          }  // end normal ordering
-          else
-          {  // unusual ordering 9 8 7 .. 0, 19 18 17 10, 29 28
-            for (int c = 0; c < temp_cols; c++)
-            {
-              for (int r = 0; r < temp_rows; r++)
-              {
-                observation_pts_.push_back(centers[r * temp_cols + c]);
-              }
-            }
-          }  // end unusual ordering
-        }    // end large at end of last row
-
-        // largest circle at start of first row
-        // largest_circle at end of last row
-        //       o.....
-        //       .......
-        else if (start_1st_row_size > end_last_row_size && start_1st_row_size > end_1st_row_size &&
-                 start_1st_row_size > start_last_row_size)
-        {
-          ROS_DEBUG("large circle at start of 1st row");
-          large_point.x = centers[start_1st_row].x;
-          large_point.y = centers[start_1st_row].y;
-          if (usual_ordering)
-          {  // 9 19 29 ... 99, 8 18 ... 98,
-            for (int c = temp_cols - 1; c >= 0; c--)
-            {
-              for (int r = 0; r < temp_rows; r++)
-              {
-                observation_pts_.push_back(centers[r * temp_cols + c]);
-              }
-            }
-          }  // end normal ordering
-          else
-          {  // unusual ordering  90 91 92 ... 99, 80 81 ... 89
-            for (int c = temp_cols - 1; c >= 0; c--)
-            {
-              for (int r = temp_rows - 1; r >= 0; r--)
-              {
-                observation_pts_.push_back(centers[r * temp_cols + c]);
-              }
-            }
-          }
-        }  // end large at start of 1st row
-        else
-        {
-          ROS_ERROR("None of the observed corner circles are bigger than all the others");
-          successful_find = false;
-        }
+	    if (usual_ordering)
+	      {  // 90 80 ... 0, 91 81 ... 1
+		for (int c = 0; c < temp_cols; c++)
+		  {
+		    for (int r = temp_rows - 1; r >= 0; r--)
+		      {
+			observation_pts_.push_back(centers[r * temp_cols + c]);
+		      }
+		  }
+	      }  // end normal ordering
+	    else
+	      {  // unusual ordering 9 8 7 .. 0, 19 18 17 10, 29 28
+		for (int r = 0; r < temp_rows; r++)
+		  {
+		    for (int c = temp_cols -1; c >= 0; c--)
+		      {
+			observation_pts_.push_back(centers[r * temp_cols + c]);
+		      }
+		  }
+	      }  // end unusual ordering
+	  }    // end large at end of last row
+	  // largest circle at start of first row
+	  // largest_circle at end of last row
+	  //       o.....
+	  //       .......
+	else if((start_1st_row_size - start_1st_row_n_size) / start_1st_row_n_size> MODIFIED_CIRCLE_SIZE_RATIO)
+	  {
+	    ROS_DEBUG("large circle at start of 1st row");
+	    large_point.x = centers[start_1st_row].x;
+	    large_point.y = centers[start_1st_row].y;
+	    if (usual_ordering)
+	      {  // 9 19 29 ... 99, 8 18 ... 98,
+		for (int c = temp_cols - 1; c >= 0; c--)
+		  {
+		    for (int r = 0; r < temp_rows; r++)
+		      {
+			observation_pts_.push_back(centers[r * temp_cols + c]);
+		      }
+		  }
+	      }  // end normal ordering
+	    else
+	      {  // unusual ordering  90 91 92 ... 99, 80 81 ... 89
+		for (int r = temp_rows - 1; r >= 0; r--)
+		  {
+		    for (int c = 0; c < temp_cols; c++)
+		      {
+			observation_pts_.push_back(centers[r * temp_cols + c]);
+		      }
+		  }
+	      }
+	  }  // end large at start of 1st row
+	else
+	  {
+	    ROS_ERROR("None of the observed corner circles are bigger than all the others");
+	    successful_find = false;
+	  }
       }
     }
     break;  // end modified circle grid case
-    case pattern_options::ARtag:
-    {
-      ROS_ERROR_STREAM("AR Tag recognized but pattern not supported yet");
-    }
+  default:
+    ROS_ERROR_STREAM("target_type does not correlate to a known pattern option ");
+    return false;
     break;
-    case pattern_options::Balls:
-    {  // needed to contain scope of automatic variables to this case
-      int rows = last_raw_image_.rows;
-      int cols = last_raw_image_.cols;
-      const cv::Mat sub_image = last_raw_image_(input_roi_);
-      cv::Mat hsv_image;
-      cv::cvtColor(sub_image, hsv_image, CV_BGR2HSV);
-      cv::Mat red_binary_image(rows, cols, CV_8UC1);
-      cv::Mat green_binary_image(rows, cols, CV_8UC1);
-      cv::Mat yellow_binary_image(rows, cols, CV_8UC1);
-      ros::NodeHandle pnh("~");
-      int red_h_max, red_h_min;
-      int red_s_min, red_s_max;
-      int red_v_min, red_v_max;
-      int yellow_h_max, yellow_h_min;
-      int yellow_s_min, yellow_s_max;
-      int yellow_v_min, yellow_v_max;
-      int green_h_max, green_h_min;
-      int green_s_min, green_s_max;
-      int green_v_min, green_v_max;
-      pnh.getParam("red_h_max", red_h_max);
-      pnh.getParam("red_h_min", red_h_min);
-      pnh.getParam("red_s_min", red_s_min);
-      pnh.getParam("red_s_max", red_s_max);
-      pnh.getParam("red_v_min", red_v_min);
-      pnh.getParam("red_v_max", red_v_max);
-      pnh.getParam("yellow_h_max", yellow_h_max);
-      pnh.getParam("yellow_h_min", yellow_h_min);
-      pnh.getParam("yellow_s_min", yellow_s_min);
-      pnh.getParam("yellow_s_max", yellow_s_max);
-      pnh.getParam("yellow_v_min", yellow_v_min);
-      pnh.getParam("yellow_v_max", yellow_v_max);
-      pnh.getParam("green_h_max", green_h_max);
-      pnh.getParam("green_h_min", green_h_min);
-      pnh.getParam("green_s_min", green_s_min);
-      pnh.getParam("green_s_max", green_s_max);
-      pnh.getParam("green_v_min", green_v_min);
-      pnh.getParam("green_v_max", green_v_max);
-      cv::Scalar R_min(red_h_min, red_s_min, red_v_min);
-      cv::Scalar R_max(red_h_max, red_s_max, red_v_max);
-      cv::Scalar Y_min(yellow_h_min, yellow_s_min, yellow_v_min);
-      cv::Scalar Y_max(yellow_h_max, yellow_s_max, yellow_v_max);
-      cv::Scalar G_min(green_h_min, green_s_min, green_v_min);
-      cv::Scalar G_max(green_h_max, green_s_max, green_v_max);
-      cv::inRange(sub_image, R_min, R_max, red_binary_image);
-      cv::inRange(sub_image, Y_min, Y_max, yellow_binary_image);
-      cv::inRange(sub_image, G_min, G_max, green_binary_image);
-
-      int erosion_type = cv::MORPH_RECT;   // MORPH_RECT MORPH_CROSS MORPH_ELLIPSE
-      int dilation_type = cv::MORPH_RECT;  // MORPH_RECT MORPH_CROSS MORPH_ELLIPSE
-      int morph_size;
-      pnh.getParam("morph_size", morph_size);
-      int erosion_size = morph_size;
-      int dilation_size = morph_size;
-      cv::Mat erosion_element = getStructuringElement(
-          erosion_type, cv::Size(2 * erosion_size + 1, 2 * erosion_size + 1), cv::Point(erosion_size, erosion_size));
-      cv::Mat dilation_element = getStructuringElement(
-          erosion_type, cv::Size(2 * erosion_size + 1, 2 * erosion_size + 1), cv::Point(erosion_size, erosion_size));
-
-      // Apply the erosion operation
-      erode(red_binary_image, red_binary_image, erosion_element);
-      erode(yellow_binary_image, yellow_binary_image, erosion_element);
-      erode(green_binary_image, green_binary_image, erosion_element);
-      dilate(red_binary_image, red_binary_image, dilation_element);
-      dilate(yellow_binary_image, yellow_binary_image, dilation_element);
-      dilate(green_binary_image, green_binary_image, dilation_element);
-      std::vector<cv::Point2f> centers;
-      std::vector<cv::KeyPoint> keypoints;
-      if (!use_circle_detector_) blob_detector_ptr_->detect(red_binary_image, keypoints);
-      if (use_circle_detector_) circle_detector_ptr_->detect(red_binary_image, keypoints);
-      ROS_ERROR("Red keypoints: %d", (int)keypoints.size());
-      if (keypoints.size() == 1)
-      {
-        observation_pts_.push_back(keypoints[0].pt);
-        large_point.x = keypoints[0].pt.x;
-        large_point.y = keypoints[0].pt.y;
-      }
-      else
-      {
-        ROS_ERROR("found %d red blobs, expected one", (int)keypoints.size());
-      }
-      if (!use_circle_detector_) blob_detector_ptr_->detect(green_binary_image, keypoints);
-      if (use_circle_detector_) circle_detector_ptr_->detect(green_binary_image, keypoints);
-      ROS_ERROR("Green keypoints: %d", (int)keypoints.size());
-      if (keypoints.size() == 1)
-      {
-        observation_pts_.push_back(keypoints[0].pt);
-      }  // end of outer loop
-      else
-      {
-        ROS_ERROR("found %d green blobs, expected one", (int)keypoints.size());
-      }
-      if (!use_circle_detector_) blob_detector_ptr_->detect(yellow_binary_image, keypoints);
-      if (use_circle_detector_) circle_detector_ptr_->detect(yellow_binary_image, keypoints);
-      ROS_ERROR("Blue keypoints: %d", (int)keypoints.size());
-      if (keypoints.size() == 1)
-      {
-        observation_pts_.push_back(keypoints[0].pt);
-      }  // end of outer loop
-      else
-      {
-        ROS_ERROR("found %d yellow blobs, expected  one", (int)keypoints.size());
-      }
-      if (observation_pts_.size() != 3)
-      {
-        bool debug_green, debug_red, debug_yellow;
-        pnh.getParam("debug_red", debug_red);
-        pnh.getParam("debug_green", debug_green);
-        pnh.getParam("debug_yellow", debug_yellow);
-        if (debug_yellow && debug_red && debug_green)
-        {
-          out_bridge_->image = yellow_binary_image | red_binary_image | green_binary_image;
-        }
-        else if (debug_yellow && debug_red)
-        {
-          out_bridge_->image = yellow_binary_image | red_binary_image;
-        }
-        else if (debug_yellow && debug_green)
-        {
-          out_bridge_->image = yellow_binary_image | green_binary_image;
-        }
-        else if (debug_red && debug_green)
-        {
-          out_bridge_->image = red_binary_image | green_binary_image;
-        }
-        else if (debug_red)
-          out_bridge_->image = red_binary_image;
-        else if (debug_green)
-          out_bridge_->image = green_binary_image;
-        else if (debug_yellow)
-          out_bridge_->image = yellow_binary_image;
-        if (debug_red | debug_green | debug_yellow) debug_pub_.publish(out_bridge_->toImageMsg());
-        return false;
-      }
-      else
-      {
-        successful_find = true;
-      }
-    }
-
-    break;
-    case pattern_options::SingleBall:
-    {  // needed to contain scope of automatic variables to this case
-    }
-    default:
-      ROS_ERROR_STREAM("target_type does not correlate to a known pattern option ");
-      return false;
-      break;
   }  // end of main switch
 
   ROS_DEBUG("Number of keypoints found: %d ", (int)observation_pts_.size());
@@ -925,17 +773,16 @@ bool ROSCameraObserver::pullCameraInfo(double& fx, double& fy, double& cx, doubl
 
 void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_finderConfig& config, uint32_t level)
 {
-  ROS_ERROR("in dynamic reconfigure callback");
   CircleDetector::Params circle_params;
   circle_params.thresholdStep = 10;
   circle_params.minThreshold = config.min_threshold;
   circle_params.maxThreshold = config.max_threshold;
-  circle_params.minRepeatability = 2;
+  circle_params.minRepeatability = config.min_repeatability;
   circle_params.minDistBetweenCircles = config.min_distance;
-  circle_params.minRadiusDiff = 10;
+  circle_params.minRadiusDiff = config.min_radius_diff;
+  circle_params.filterByColor = config.filter_by_color;
 
-  circle_params.filterByColor = false;
-  if (white_blobs_) circle_params.circleColor = 200;
+  if (white_blobs_) circle_params.circleColor = 255;
   if (!white_blobs_) circle_params.circleColor = 0;
 
   circle_params.filterByArea = config.filter_by_area;
@@ -960,11 +807,11 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   blob_params.thresholdStep = 10;
   blob_params.minThreshold = config.min_threshold;
   blob_params.maxThreshold = config.max_threshold;
-  blob_params.minRepeatability = 2;
+  blob_params.minRepeatability = config.min_repeatability;
   blob_params.minDistBetweenBlobs = config.min_distance;
 
   blob_params.filterByColor = true;
-  if (white_blobs_) blob_params.blobColor = 200;
+  if (white_blobs_) blob_params.blobColor = 255;
   if (!white_blobs_) blob_params.blobColor = 0;
 
   blob_params.filterByArea = config.filter_by_area;
@@ -985,5 +832,9 @@ void ROSCameraObserver::dynReConfCallBack(industrial_extrinsic_cal::circle_grid_
   blob_detector_ptr_ = cv::SimpleBlobDetector::create(blob_params);
 }
 
+bool ROSCameraObserver::checkObservationProclivity(CameraObservations& CO)
+{
+  return CameraObserver::checkObservationProclivity(CO);
+}
 
 }  // industrial_extrinsic_cal

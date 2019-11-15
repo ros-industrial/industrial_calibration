@@ -97,7 +97,6 @@ public:
     for(int i=0; i<all_targets_.size(); i++){
       all_targets_[i]->transform_interface_->setDataDirectory(all_cameras_[0]->camera_observer_->get_image_directory());
     }
-    ROS_ERROR("image_directory = %s", all_cameras_[0]->camera_observer_->get_image_directory().c_str());
 
     // load cameras, targets and intiialize ceres blocks
     init_blocks();
@@ -217,7 +216,6 @@ public:
 	all_targets_[i]->transform_interface_->saveCurrentPose(scene_, null_string);
       }
     }
-
     for(int i=0; i<all_cameras_.size(); i++){
       // set the roi to the whole image
       Roi roi;
@@ -275,6 +273,14 @@ public:
 		P.show("Pose of Target");
 	      }
 	      cost_function[k] = industrial_extrinsic_cal::CameraReprjErrorWithDistortionPK::Create(image_x, image_y, point);
+	      if(target_pb == NULL){
+		ROS_ERROR("ical_srv attempting to add cost with target_pb = NULL perhaps you don't have a moving target defined");
+		continue;
+	      }
+	      else if(intrinsics == NULL) {
+		ROS_ERROR("ical_srv attmpting to add cost with intrinsics = NULL, perhaps you don't have a static camera defined");
+		continue;
+	      }
 	      P_->AddResidualBlock(cost_function[k], NULL, target_pb, intrinsics);
 	    }  // for each observation at this camera_location
 	} // end of else (there are some observations to add)

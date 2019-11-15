@@ -83,16 +83,19 @@ shared_ptr<Camera> parseSingleCamera(const Node& node)
   try
   {
     string temp_name, temp_topic, camera_optical_frame, camera_housing_frame, camera_mounting_frame, parent_frame;
-    string trigger_name, transform_interface, image_directory;
+    string trigger_name, transform_interface, image_directory, temp_image_directory;
     CameraParameters temp_parameters;
     string temp_left_stereo_camera;
     bool temp_is_right_stereo_camera=false;
     if (!parseString(node, "camera_name", temp_name)) ROS_ERROR("Can't read camera_name");
     if (!parseString(node, "trigger", trigger_name)) ROS_ERROR("Can't read trigger");
     if (!parseString(node, "image_topic", temp_topic)) ROS_ERROR("Can't read image_topic");
-    if (!parseString(node, "image_directory", image_directory)){
+    if (!parseString(node, "image_directory", temp_image_directory)){
       image_directory = "";
       ROS_ERROR("Can't read image_directory, using null for camera %s", temp_name.c_str());
+    }
+    else{
+      image_directory = locateResource(temp_image_directory);
     }
     if (!parseString(node, "camera_optical_frame", camera_optical_frame)) ROS_ERROR("Can't read camera_optical_frame");
     if (!parseString(node, "transform_interface", transform_interface)) ROS_ERROR("Can't read transform_interface");

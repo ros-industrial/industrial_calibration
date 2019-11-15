@@ -129,14 +129,8 @@ shared_ptr<Target> parseSingleTarget(const Node& node)
         temp_target->circle_grid_parameters_.is_symmetric = true;
         ROS_DEBUG_STREAM("TargetRows: " << temp_target->circle_grid_parameters_.pattern_rows);
         break;
-      case pattern_options::ARtag:
-        // no parameters yet
-        break;
-      case pattern_options::Balls:
-        // no parameters yet
-        break;
       default:
-        ROS_ERROR("unknown pattern option %d (Chessboard, CircleGrid, or ModifiedCircleGrid, Balls)",
+        ROS_ERROR("unknown pattern option %d (Chessboard, CircleGrid, or ModifiedCircleGrid)",
                   (int)temp_target->target_type_);
         break;
     }  // end of target type

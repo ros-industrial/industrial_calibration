@@ -4,6 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <yaml-cpp/yaml.h>
 #include <iostream>
+#include <ros/package.h>
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/camera_definition.h>
 #include <industrial_extrinsic_cal/trigger.h>
@@ -105,6 +106,42 @@ inline bool yamlNodeFromFileName(std::string filename, YAML::Node& ynode)
     rtn = false;
   }
   return (rtn);
+}
+
+inline std::string locateResource(const std::string& url)
+{
+  std::string mod_url = url;
+  if (url.find("package://") == 0)
+  {
+    mod_url.erase(0, strlen("package://"));
+    size_t pos = mod_url.find("/");
+    if (pos == std::string::npos)
+    {
+      return std::string();
+    }
+
+    std::string package = mod_url.substr(0, pos);
+    mod_url.erase(0, pos);
+    std::string package_path = ros::package::getPath(package);
+
+    if (package_path.empty())
+    {
+      return std::string();
+    }
+
+    mod_url = package_path + mod_url;
+  }
+  else if (url.find("file://") == 0)
+  {
+    mod_url.erase(0, strlen("file://"));
+    size_t pos = mod_url.find("/");
+    if (pos == std::string::npos)
+    {
+      return std::string();
+    }
+  }
+
+  return mod_url;
 }
 
 }  // end namespace

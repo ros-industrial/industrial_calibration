@@ -50,7 +50,6 @@ public:
   ~TargetLocatorService(){};
   bool executeCallBack(target_locator::Request& req, target_locator::Response& res);
   void initMCircleTarget(int rows, int cols, double circle_dia, double spacing);
-  void initBallsTarget();
 
 private:
   ros::NodeHandle nh_;
@@ -87,12 +86,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   }
   camera_observer_ = new ROSCameraObserver(image_topic_, camera_name_);
 
-  if (target_type_ == pattern_options::Balls)
-  {
-    ROS_ERROR("initializing balls target");
-    initBallsTarget();
-  }
-  else if (target_type_ == pattern_options::ModifiedCircleGrid)
+  if (target_type_ == pattern_options::ModifiedCircleGrid)
   {
     if (!pnh.getParam("target_rows", target_rows_))
     {
@@ -114,7 +108,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   }
   else
   {
-    ROS_ERROR("Target type not supported, check your launch file, only 2, and 4 for MCircle, and Balls type targets");
+    ROS_ERROR("Only target_type = 2 ModifiedCircleGrid targets supported");
   }
 
   std::string service_name;
@@ -239,35 +233,6 @@ void TargetLocatorService::initMCircleTarget(int rows, int cols, double circle_d
   }
 }
 
-void TargetLocatorService::initBallsTarget()
-{
-  target_ = make_shared<industrial_extrinsic_cal::Target>();
-  target_->target_name_ = "four_ball_target";
-  target_->target_frame_ = "target_frame";
-  target_->target_type_ = 4;
-  // create 4 points
-  target_->pts_.clear();
-  Point3d point_1, point_2, point_3, point_4, point_5;
-  point_1.x = 0.09;
-  point_2.x = 0.0;
-  point_3.x = -0.057;
-  point_4.x = 0.0;
-  point_5.x = 0.0;
-  point_1.y = 0.0;
-  point_2.y = -0.133;
-  point_3.y = 0.0;
-  point_4.y = 0.0;
-  point_4.y = 0.043;
-  point_1.z = 0.0;
-  point_2.z = 0.0;
-  point_3.z = 0.0;
-  point_4.z = 0.058;
-  point_5.z = 0.0;
-  target_->pts_.push_back(point_1);
-  target_->pts_.push_back(point_2);
-  target_->pts_.push_back(point_3);
-  target_->pts_.push_back(point_4);
-}
 
 int main(int argc, char** argv)
 {
