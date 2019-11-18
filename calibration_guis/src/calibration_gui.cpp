@@ -30,7 +30,7 @@ namespace calibration_guis
 
     // this client does not change with the type of calibration
     ros::NodeHandle pnh("~");
-    ecp_client_   = pnh.serviceClient<std_srvs::Trigger>("store_mutable_joint_states");
+    ecp_client_   = pnh.serviceClient<std_srvs::Trigger>("/store_mutable_joint_states");
 
     // these are the currently implemented types of service defined calibration routines
     // Note, WristCal, ICal and StereoCal expect a robot moves to change the scene

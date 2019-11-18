@@ -533,7 +533,6 @@ public:
   bool saveCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
     char msg[100];
-    ROS_ERROR("inside saveCallBack()");
     for(int i=0; i<all_cameras_.size(); i++){
       all_cameras_[i]->camera_observer_->pushCameraInfo(
 							all_cameras_[i]->camera_parameters_.focal_length_x, all_cameras_[i]->camera_parameters_.focal_length_y,

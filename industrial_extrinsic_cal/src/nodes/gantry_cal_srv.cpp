@@ -410,7 +410,7 @@ public:
 
   bool saveCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
-    ROS_ERROR("it is expected that the pose computed by gantrycal is part of a urdf, please copy this info ther");
+    ROS_ERROR("it is expected that the pose computed by gantrycal is part of a urdf, please copy this info there");
     gantrycal_pose_.show("final gantrycal pose");
     res.success = true;
     return(true);
