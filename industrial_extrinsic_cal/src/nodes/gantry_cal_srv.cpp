@@ -79,6 +79,15 @@ public:
     if(!priv_nh.getParam("target_file_name", target_file_)){
       ROS_ERROR("Must set param: target_file, this defines the target used for calibration");
     }
+    // load frame parameters
+    if(!priv_nh.getParam("robot_mount_frame", robot_mount_frame_)){
+      ROS_ERROR("Must set param: robot_mount_frame, this defines the tf-frame on which the robot base is mounted");
+    }
+    if(!priv_nh.getParam("robot_base_frame", robot_base_frame_)){
+      ROS_ERROR("Must set param: robot_base_frame, this defines the tf-frame the robot base");
+    }
+
+
     priv_nh.getParam("save_data", save_data_);
     priv_nh.getParam("data_directory", data_directory_);
     
@@ -90,15 +99,14 @@ public:
     else{
       ROS_WARN("Not saving data for gantry calibration");
     }
-    
+
     // Load cameras from yaml file. There should only be one static camera
-    std::string camera_optical_frame;
     if(!load_camera()){
       ROS_ERROR("can't load the camera from %s", camera_file_.c_str());
       exit(1);
     }
     else{ // get camera's optical frame for a transform listener
-      camera_optical_frame = all_cameras_[0]->transform_interface_->getTransformFrame();    
+      camera_optical_frame_ = all_cameras_[0]->transform_interface_->getTransformFrame();    
       fx_ = all_cameras_[0]->camera_parameters_.focal_length_x;
       fy_ = all_cameras_[0]->camera_parameters_.focal_length_y;
       cx_ = all_cameras_[0]->camera_parameters_.center_x;
@@ -109,7 +117,7 @@ public:
       roi_.y_max = all_cameras_[0]->camera_parameters_.height;
 
       ROS_INFO("loaded camera from %s with optical_frame = %s intrinsics:[ %f %f %f %f ]", camera_file_.c_str(),
-	       camera_optical_frame.c_str(),
+	       camera_optical_frame_.c_str(),
 	       fx_, fy_, cx_, cy_);
     }
     
@@ -119,30 +127,15 @@ public:
       exit(1);
     }
 
-    // load local parameters
-    std::string target_frame;             // frame of the target points
-    std::string robot_mount_frame;        // frame where the robot is mounted
-    std::string robot_base_frame;         // robot base frame
 
-    // load frame parameters
-    if(!priv_nh.getParam("target_frame", target_frame)){
-      ROS_ERROR("Must set param: target_frame, this defines the tf-frame of the target");
-    }
-    if(!priv_nh.getParam("robot_mount_frame", robot_mount_frame)){
-      ROS_ERROR("Must set param: robot_mount_frame, this defines the tf-frame on which the robot base is mounted");
-    }
-    if(!priv_nh.getParam("robot_base_frame", robot_base_frame)){
-      ROS_ERROR("Must set param: robot_mount_frame, this defines the tf-frame the robot base");
-    }
-    
     // initialize the target to robot_mount transform listener
-    target_to_robotm_TI_ = new industrial_extrinsic_cal::ROSListenerTransInterface(target_frame);
-    target_to_robotm_TI_->setReferenceFrame(robot_mount_frame);
+    target_to_robotm_TI_ = new industrial_extrinsic_cal::ROSListenerTransInterface(all_targets_[0]->target_frame_);
+    target_to_robotm_TI_->setReferenceFrame(robot_mount_frame_);
     target_to_robotm_TI_->setDataDirectory(data_directory_);
 
     // initialize the target to robot_mount transform listener
-    robot_base_to_optical_TI_ = new industrial_extrinsic_cal::ROSListenerTransInterface(camera_optical_frame);
-    robot_base_to_optical_TI_->setReferenceFrame(robot_base_frame);
+    robot_base_to_optical_TI_ = new industrial_extrinsic_cal::ROSListenerTransInterface(robot_base_frame_);
+    robot_base_to_optical_TI_->setReferenceFrame(camera_optical_frame_);
     robot_base_to_optical_TI_->setDataDirectory(data_directory_);
 
     // advertise services
@@ -167,6 +160,7 @@ public:
       }
     for(int i=0;i<(int)all_cameras_.size();i++){
       all_cameras_[i]->transform_interface_->setDataDirectory(data_directory_);
+      all_cameras_[i]->transform_interface_->setReferenceFrame(robot_mount_frame_);
     }
     return rtn;
   };// end of load_camera()
@@ -499,7 +493,11 @@ private:
   std::string yaml_file_path_;
   std::string camera_file_;
   std::string target_file_;
-  CeresBlocks ceres_blocks_;                 /*!< This structure maintains the parameter sets for ceres */
+  std::string robot_mount_frame_;        // frame where the robot is mounted
+  std::string robot_base_frame_;         // robot base frame
+  std::string camera_optical_frame_;
+
+
   ros::ServiceServer start_server_;
   ros::ServiceServer observation_server_;
   ros::ServiceServer run_server_;
