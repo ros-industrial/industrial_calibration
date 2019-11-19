@@ -1,7 +1,7 @@
 industrial_calibration
 ======================
 
-:warning: EXPERIMENTAL KINETIC-DEVEL branch :warning:
+:warning: EXPERIMENTAL MELODIC-DEVEL branch :warning:
 ===
 
 Contains libraries/algorithms for calibration industrial systems.
@@ -10,6 +10,7 @@ extrinsic_cal calibration nodes:
 service_node   -- peforms quiet a number of calbirations using very complex yaml files
 range_excal    -- performs extrinsic calibration of a 3D camera by finding the target points in the image and the xyz values from the depth image.
 wrist_cal_srv  -- performs extrinsic calibration when either the target or the camera is mounted on the end of arm tooling
+gantry_cal_srv -- performs extrinsic calibration to refine the transform between the gantry_tool and the robot_base
 stereo_cal_srv -- performs stereo extrinsic cal using a robot (target or pair mounted on end of arm tooling)
 
 extrinsic_cal helper nodes:
