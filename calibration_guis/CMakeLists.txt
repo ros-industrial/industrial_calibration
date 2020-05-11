@@ -127,20 +127,12 @@ install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
 )
-
-foreach(dir config launch)
-   install(DIRECTORY ${dir}/
-      DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
-endforeach()
   
 install(
   FILES
     cal_gui_plugin_description.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
-
-install(DIRECTORY ui/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/ui)
 
 install(DIRECTORY media/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/media)
