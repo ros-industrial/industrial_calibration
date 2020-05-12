@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  control_msgs
   tf
   industrial_extrinsic_cal
 )
@@ -41,6 +42,7 @@ catkin_package(
     roscpp
     sensor_msgs
     std_msgs
+    control_msgs
     tf
     industrial_extrinsic_cal
   DEPENDS

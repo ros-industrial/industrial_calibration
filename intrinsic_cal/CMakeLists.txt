@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(Ceres REQUIRED)
-message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
+message(STATUS "-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
 #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-fPIC")
 find_package(PkgConfig REQUIRED)

@@ -27,11 +27,10 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Boost REQUIRED)
 
 find_package(Ceres REQUIRED)
-message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
+message(STATUS "-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
 find_package(OpenCV REQUIRED)
-
-message("-- Found OpenCV version ${OpenCV_VERSION}: ${OpenCV_INCLUDE_DIRS}")
+message(STATUS "-- Found OpenCV version ${OpenCV_VERSION}: ${OpenCV_INCLUDE_DIRS}")
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(yaml_cpp REQUIRED yaml-cpp)
