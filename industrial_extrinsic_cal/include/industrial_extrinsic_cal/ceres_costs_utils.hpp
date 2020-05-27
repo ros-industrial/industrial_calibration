@@ -1323,7 +1323,6 @@ public:
 };
 
 // used whenever the target or camera is on the wrist of a robot while the camera or target is in the workcell
-// The 
 class WristCal
 {
 public:
@@ -1367,8 +1366,7 @@ public:
                                      const double cx, const double cy, Pose6d pose, Point3d point)
 
   {
-    return (new ceres::AutoDiffCostFunction<LinkTargetCameraReprjErrorPK, 2, 6, 6>(
-        new LinkTargetCameraReprjErrorPK(o_x, o_y, fx, fy, cx, cy, pose, point)));
+    return (new ceres::AutoDiffCostFunction<WristCal, 2, 6, 6>(new WristCal(o_x, o_y, fx, fy, cx, cy, pose, point)));
   }
   double ox_;                 /** observed x location of object in image */
   double oy_;                 /** observed y location of object in image */
@@ -1383,6 +1381,73 @@ public:
 				 in the camera attached to tool0 case, 
                                  the transform takes points in the world frame and expresses them in tool0 frame
 			      */
+};
+
+// used to calibrate a robot slung from a gantry, must first have performed wrist calibration (eye-hand calibration)
+class GantryCal
+{
+public:
+ GantryCal(double ob_x, double ob_y, double fx, double fy, double cx, double cy,
+	   Pose6d target_to_robotm,
+	   Pose6d robot_base_to_optical,
+	   Point3d point)
+    : ox_(ob_x), oy_(ob_y), fx_(fx), fy_(fy), cx_(cx), cy_(cy),
+      target_to_robotm_(target_to_robotm),
+      robot_base_to_optical_(robot_base_to_optical),
+      point_(point)
+  {
+  }
+
+  template <typename T>
+  bool operator()(const T* const p1, /** mount transform parameters */
+                  T* residual) const
+  {
+    const T* mount_T(&p1[0]);
+    T robot_mount_point[3];   /** point in robot mount frame */
+    T robot_base_point[3];  /** point in robot base frame */
+    T camera_point[3]; /** point in camera frame */
+    T point[3];
+    point[0] = T(point_.x);
+    point[1] = T(point_.y);
+    point[2] = T(point_.z);
+
+    /** transform point into camera coordinates */
+    poseTransformPoint(target_to_robotm_, point, robot_mount_point);
+    eTransformPoint(mount_T, robot_mount_point, robot_base_point);
+    poseTransformPoint(robot_base_to_optical_, robot_base_point, camera_point);
+
+    /** compute project point into image plane and compute residual */
+    T fx = T(fx_);
+    T fy = T(fy_);
+    T cx = T(cx_);
+    T cy = T(cy_);
+    T ox = T(ox_);
+    T oy = T(oy_);
+    cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy, residual);
+
+    return true;
+  } /** end of operator() */
+
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y,
+				     const double fx, const double fy,
+                                     const double cx, const double cy,
+				     const Pose6d pose1, const Pose6d pose2,
+				     const Point3d point)
+
+  {
+    return (new ceres::AutoDiffCostFunction<GantryCal, 2, 6>(new GantryCal(o_x, o_y, fx, fy, cx, cy, pose1, pose2, point)));
+  }
+  double ox_;                    /** observed x location of object in image */
+  double oy_;                    /** observed y location of object in image */
+  double fx_;                    /*!< known focal length of camera in x */
+  double fy_;                    /*!< known focal length of camera in y */
+  double cx_;                    /*!< known optical center of camera in x */
+  double cy_;                    /*!< known optical center of camera in y */
+  Point3d point_;                /*! location of point in target coordinates */
+  Pose6d target_to_robotm_;      /*!< transform from target to robot's mounting frame */
+  Pose6d robot_base_to_optical_; /*!< transform from robot_base to optical frame */
 };
 
 // reprojection error of a single point attatched to a target observed by a camera with NO lens distortion

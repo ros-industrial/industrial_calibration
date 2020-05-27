@@ -217,7 +217,7 @@ void Pose6d::show(std::string message)
   this->getEulerZYX(ez_yaw, ey_pitch, ex_roll);
   this->getQuaternion(qx, qy, qz, qw);
   printf("%s =[\n %6.4lf  %6.4lf  %6.4lf  %6.4lf\n  %6.4lf  %6.4lf  %6.4lf  %6.4lf\n  %6.4lf  %6.4lf %6.4lf  %6.4lf\n  "
-         "%6.4lf  %6.4lf %6.4lf  %6.4lf];\n rpy= %6.4lf %6.4lf %6.4lf\n quat= %6.4lf  %6.4lf  %6.4lf %6.4lf\n ",
+         "%6.4lf  %6.4lf %6.4lf  %6.4lf];\n rpy= %6.4lf %6.4lf %6.4lf\n xyzw= %6.4lf  %6.4lf  %6.4lf %6.4lf\n ",
          message.c_str(), basis[0][0], basis[0][1], basis[0][2], this->x, basis[1][0], basis[1][1], basis[1][2],
          this->y, basis[2][0], basis[2][1], basis[2][2], this->z, 0.0, 0.0, 0.0, 1.0, ez_yaw, ey_pitch, ex_roll, qx, qy,
          qz, qw);

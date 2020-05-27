@@ -30,7 +30,7 @@ namespace calibration_guis
 
     // this client does not change with the type of calibration
     ros::NodeHandle pnh("~");
-    ecp_client_   = pnh.serviceClient<std_srvs::Trigger>("store_mutable_joint_states");
+    ecp_client_   = pnh.serviceClient<std_srvs::Trigger>("/store_mutable_joint_states");
 
     // these are the currently implemented types of service defined calibration routines
     // Note, WristCal, ICal and StereoCal expect a robot moves to change the scene
@@ -40,6 +40,7 @@ namespace calibration_guis
     calibration_selection_->addItem("WristCalSrv"); // Either Camera or Target on EOAT, uses TF to get IC for Camera to Target Transform
     calibration_selection_->addItem("ICalSrv");     // Either Camera or Target on EOAT, uses TF to get IC for Camera to Target Transform
     calibration_selection_->addItem("StereoCalSrv");// Either Cameras or Target on EOAT, uses TF to get IC for Camera to Target Transform
+    calibration_selection_->addItem("GantryCalSrv");     // Calibrate the mount of a manipulator to a gantry's tool plate
     calibration_selection_->addItem("RailICalSrv"); // uses the 8D method where target to rail is changed after each sweep of rail, must happen at least once
     calibration_selection_->setCurrentIndex(0);
     reset_services();		// setup the services to use the default calibration type

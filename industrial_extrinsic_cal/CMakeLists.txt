@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(industrial_extrinsic_cal)
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
   actionlib
@@ -167,6 +167,7 @@ add_executable(range_excal                      src/nodes/range_camera_excal.cpp
 add_executable(rangeNmono                       src/nodes/rangeNmono_excal.cpp)
 add_executable(target_display                   src/nodes/target_display_node.cpp)
 add_executable(wrist_cal_srv                    src/nodes/wrist_cal_srv.cpp)
+add_executable(gantry_cal_srv                    src/nodes/gantry_cal_srv.cpp)
 add_executable(stereo_cal_srv                   src/nodes/stereo_cal_srv.cpp)
 #add_executable(check_visible                    src/check_if_points_in_pic.cpp)
 
@@ -179,6 +180,7 @@ add_dependencies(range_excal                      ${catkin_EXPORTED_TARGETS} ${i
 add_dependencies(rangeNmono                       ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(target_display                   ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(wrist_cal_srv                    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+add_dependencies(gantry_cal_srv                    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(stereo_cal_srv                   ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 #add_dependencies(check_visible                    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 
@@ -192,6 +194,7 @@ target_link_libraries(trigger_service ${catkin_LIBRARIES})
 target_link_libraries(range_excal industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(rangeNmono industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(wrist_cal_srv industrial_extrinsic_cal ${CERES_LIBRARIES})
+target_link_libraries(gantry_cal_srv industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(stereo_cal_srv industrial_extrinsic_cal ${CERES_LIBRARIES})
 #target_link_libraries(check_visible industrial_extrinsic_cal ${CERES_LIBRARIES})
 
@@ -208,6 +211,7 @@ install(
     rangeNmono
     target_display
     wrist_cal_srv
+    gantry_cal_srv
     stereo_cal_srv
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

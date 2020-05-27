@@ -548,7 +548,6 @@ public:
 
   bool saveCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
-    ROS_ERROR("inside saveCallBack()");
     for(int i=0; i<all_cameras_.size(); i++){
       all_cameras_[i]->pushTransform();
     }

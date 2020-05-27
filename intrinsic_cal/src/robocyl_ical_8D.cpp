@@ -679,7 +679,7 @@ public:
   //construct image file from scene name
   std::string current_image_file (int scene, std::string& filename){
     std::string present_image_file_path_name;
-    char scene_chars[8];
+    char scene_chars[30];
     sprintf(scene_chars,"_%03d.jpg",scene);
     if(filename == ""){ // build file name from image_directory_,
       present_image_file_path_name  = image_directory_ + std::string("/") +  camera_name_ + std::string(scene_chars);

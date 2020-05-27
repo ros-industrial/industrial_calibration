@@ -26,7 +26,7 @@ namespace industrial_extrinsic_cal
   bool TransformInterface::saveCurrentPose(int scene, std::string& filename)
   {
     std::string full_file_path_name;
-    char scene_chars[9];
+    char scene_chars[30];
     sprintf(scene_chars,"_%03d.yaml",scene);
     if(filename == ""){ // build file name from data_directory_, 
       full_file_path_name  = data_directory_ + "/" +  transform_frame_ + std::string(scene_chars);
@@ -41,7 +41,7 @@ namespace industrial_extrinsic_cal
   bool TransformInterface::loadPose(int scene, std::string& filename)
   {
     std::string full_file_path_name;
-    char scene_chars[8];
+    char scene_chars[30];
     sprintf(scene_chars,"_%03d.yaml",scene);
     if(filename == ""){ // build file name from data_directory_, 
       full_file_path_name  = data_directory_ + "/" +  transform_frame_ + std::string(scene_chars);
