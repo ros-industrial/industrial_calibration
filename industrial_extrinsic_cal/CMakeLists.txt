@@ -9,7 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   image_transport
   message_generation
-  moveit_ros_planning_interface
+#  moveit_ros_planning_interface
   rosconsole
   roscpp
   roslib
