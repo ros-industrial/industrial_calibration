@@ -217,7 +217,7 @@ void CircleDetectorImpl::findCircles(InputArray _image, InputArray _binaryImage,
 
   vector<vector<Point> > contours;
   Mat tmpBinaryImage = binaryImage.clone();
-  findContours(tmpBinaryImage, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+  findContours(tmpBinaryImage, contours, RETR_LIST, CHAIN_APPROX_NONE);
 
   // loop on all contours
   for (size_t contourIdx = 0; contourIdx < contours.size(); contourIdx++)
@@ -325,7 +325,7 @@ void CircleDetectorImpl::detect(InputArray _image, std::vector<KeyPoint>& keypoi
   keypoints.clear();
   Mat grayscaleImage;
   if (image.channels() == 3)
-    cvtColor(image, grayscaleImage, CV_BGR2GRAY);
+    cvtColor(image, grayscaleImage, cv::COLOR_BGR2GRAY);
   else
     grayscaleImage = image;
 
