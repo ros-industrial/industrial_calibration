@@ -1,7 +1,7 @@
 industrial_calibration
 ======================
 
-:warning: EXPERIMENTAL KINETIC-DEVEL branch :warning:
+:warning: EXPERIMENTAL MELODIC-DEVEL branch :warning:
 ===
 
 Contains libraries/algorithms for calibration industrial systems.
@@ -17,6 +17,7 @@ camera_observer_scene_trigger    -- provides a trigger for a scene when the came
 manual_calt_adjust               -- Allows using the keyboard to adjust a mutable transform. typing x or X increases or decreases translation in x etc
 mutable_joint_state_publisher    -- Publishes the joint states for all joints defined in the input yaml file, allows update and save.
 ros_robot_trigger_action_service -- Service which triggers a scene by moving a robot (using Moveit!) to a new pose
+TO COMPILE THIS NODE use >>  catkin build --cmake-args -DUSE_MOVEIT="True"
 trigger_serice                   -- A very simple example of a scene trigger. Set a parameter to trigger a scene
 target_display_node              -- publishes a marker array that looks like a modified circle grid target (no stl required)
 
