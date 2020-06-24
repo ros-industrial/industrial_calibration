@@ -198,12 +198,13 @@ add_executable(stereo_cal_srv                   src/nodes/stereo_cal_srv.cpp)
 #add_executable(check_visible                    src/check_if_points_in_pic.cpp)
 if(USE_MOVEIT)
   add_executable(ros_robot_trigger_action_service src/nodes/ros_robot_scene_trigger_action_server.cpp)
+  add_dependencies(ros_robot_trigger_action_service ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
+  target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES})
 endif()
 
 
 add_dependencies(camera_observer_scene_trigger    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(mutable_joint_state_publisher    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
-
 add_dependencies(service_node                     ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(trigger_service                  ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(range_excal                      ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
@@ -212,10 +213,6 @@ add_dependencies(target_display                   ${catkin_EXPORTED_TARGETS} ${i
 add_dependencies(wrist_cal_srv                    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 add_dependencies(stereo_cal_srv                   ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
 #add_dependencies(check_visible                    ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
-if(USE_MOVEIT)
-  add_dependencies(ros_robot_trigger_action_service ${catkin_EXPORTED_TARGETS} ${industrial_extrinsic_cal_EXPORTED_TARGETS})
-endif()
-
 
 target_link_libraries(camera_observer_scene_trigger industrial_extrinsic_cal ${catkin_LIBRARIES} ${yaml_cpp_LIBRARY} ${CERES_LIBRARIES})
 target_link_libraries(manual_calt_adjust industrial_extrinsic_cal ${catkin_LIBRARIES})
@@ -228,10 +225,6 @@ target_link_libraries(rangeNmono industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(wrist_cal_srv industrial_extrinsic_cal ${CERES_LIBRARIES})
 target_link_libraries(stereo_cal_srv industrial_extrinsic_cal ${CERES_LIBRARIES})
 #target_link_libraries(check_visible industrial_extrinsic_cal ${CERES_LIBRARIES})
-if(USE_MOVEIT)
-  target_link_libraries(ros_robot_trigger_action_service ${catkin_LIBRARIES})
-endif()
-
 
 set (MY_STANDARD_TARGETS 
     camera_observer_scene_trigger
