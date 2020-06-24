@@ -22,7 +22,7 @@
   <depend>cv_bridge</depend>
   <depend>geometry_msgs</depend>
   <depend>image_transport</depend>
-<!--  <depend>moveit_ros_planning_interface</depend>-->
+  <depend>moveit_ros_planning_interface</depend>
   <depend>rosconsole</depend>
   <depend>roscpp</depend>
   <depend>roslib</depend>

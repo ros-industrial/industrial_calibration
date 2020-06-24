@@ -2,14 +2,13 @@ cmake_minimum_required(VERSION 2.8.3)
 project(industrial_extrinsic_cal)
 add_compile_options(-std=c++14)
 
-find_package(catkin REQUIRED COMPONENTS
+set(STD_FPKG_LIST
   actionlib
   actionlib_msgs
   cv_bridge
   geometry_msgs
   image_transport
   message_generation
-#  moveit_ros_planning_interface
   rosconsole
   roscpp
   roslib
@@ -22,6 +21,21 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   pcl_conversions
   dynamic_reconfigure
+)  
+
+if(USE_MOVEIT) 
+  set (FPKG_LIST
+    ${STD_FPKG_LIST}
+    moveit_ros_planning_interface
+    )
+else()
+  set (FPKG_LIST
+    ${STD_FPKG_LIST}
+    )  
+endif()
+
+find_package(catkin REQUIRED COMPONENTS
+  ${FPKG_LIST}
 )
 
 find_package(Boost REQUIRED)
