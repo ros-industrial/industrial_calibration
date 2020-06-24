@@ -18,6 +18,7 @@ manual_calt_adjust               -- Allows using the keyboard to adjust a mutabl
 mutable_joint_state_publisher    -- Publishes the joint states for all joints defined in the input yaml file, allows update and save.
 ros_robot_trigger_action_service -- Service which triggers a scene by moving a robot (using Moveit!) to a new pose
 TO COMPILE THIS NODE use >>  catkin build --cmake-args -DUSE_MOVEIT="True"
+Moveit! must also be installed because this node uses moveit! to move the robot to a new pose before the pictures are taken
 trigger_serice                   -- A very simple example of a scene trigger. Set a parameter to trigger a scene
 target_display_node              -- publishes a marker array that looks like a modified circle grid target (no stl required)
 
