@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   std_srvs
   tf
+  dynamic_reconfigure
 )
 
 
@@ -35,6 +36,10 @@ generate_messages(
     geometry_msgs
     sensor_msgs
     std_msgs
+)
+
+generate_dynamic_reconfigure_options(
+  cfg/target_finder.cfg
 )
 
 
@@ -72,7 +77,7 @@ add_executable(stereo_pose_stats src/nodes/stereo_pose_stats.cpp)
 
 add_dependencies(call_service ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
 add_dependencies(dual_call_service ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
-add_dependencies(target_locator_srv ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
+add_dependencies(target_locator_srv ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 add_dependencies(stereo_locator_srv ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
 add_dependencies(stereo_pose_stats ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
 

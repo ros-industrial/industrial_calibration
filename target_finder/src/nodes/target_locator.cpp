@@ -19,6 +19,8 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <ros/console.h>
+#include <dynamic_reconfigure/server.h>
+#include <target_finder/target_finderConfig.h>
 #include <industrial_extrinsic_cal/camera_observer_trigger.h>
 #include <industrial_extrinsic_cal/user_accept.h>
 #include <industrial_extrinsic_cal/ros_camera_observer.h>
@@ -60,6 +62,8 @@ private:
   int target_type_;
   int target_rows_;
   int target_cols_;
+  dynamic_reconfigure::Server<target_finder::target_fingerConfig> reconf_srv_;
+  dynamic_reconfigure::Server<target_finder::target_fingerConfig>::CallbackType reconf_CB_;
   ROSCameraObserver *camera_observer_;
 };
 
@@ -116,15 +120,26 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   {
     service_name = "TargetLocateService";
   }
+
   target_locate_server_ = nh_.advertiseService(service_name.c_str(), &TargetLocatorService::executeCallBack, this);
+
+  reconf_srv_.reset(new dynamic_reconfigure::Server<target_finder::target_finderConfig>(nh_));
+  dynamic_reconfigure::Server<target_finder::target_finderConfig>::CallbackType f;
+  f = boost::bind(&TargetLocatorService::dynReConfCallBack, this, _1, _2);
+  reconf_srv_->setCallback(f);
+
+}
+
+void TargetLocatorService::dynReConfCallBack(target_finder::target_finderConfig& config, uint32_t level)
+{
+  // resize target
+  initMCircleTarget(config.target_rows, config.target_cols, config.target_circle_diameter, config.target_spacing);
 }
 
 bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_locator::Response& res)
 {
   ros::NodeHandle nh;
   CameraObservations camera_observations;
-
-
 
   // get the focal length and optical center
   double fx, fy, cx, cy;
