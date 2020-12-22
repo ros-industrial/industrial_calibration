@@ -29,6 +29,8 @@ add_service_files(
   FILES
   target_locator.srv
   stereo_locator.srv
+  target_verify.srv
+  target_save_location.srv
 )
 
 generate_messages(

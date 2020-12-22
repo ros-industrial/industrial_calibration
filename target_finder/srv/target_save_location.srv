@@ -1,0 +1,8 @@
+sensor_msgs/RegionOfInterest roi # leave blank to use whole image
+float64 allowable_cost_per_observation
+std_msgs/String file_name
+geometry_msgs/Pose initial_pose	
+---
+float64 position_error
+float64 cost_per_observation
+bool success

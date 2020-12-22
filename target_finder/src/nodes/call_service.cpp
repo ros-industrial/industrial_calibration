@@ -91,7 +91,7 @@ bool callService::callTheService()
              srv_.response.final_pose.position.x, srv_.response.final_pose.position.y,
              srv_.response.final_pose.position.z, srv_.response.final_pose.orientation.x,
              srv_.response.final_pose.orientation.y, srv_.response.final_pose.orientation.z,
-             srv_.response.final_pose.orientation.w, srv_.response.final_cost_per_observation);
+             srv_.response.final_pose.orientation.w, srv_.response.cost_per_observation);
     tf::Transform camera_to_target;
     tf::Quaternion quat(qx, qy, qz, qw);
     camera_to_target.setOrigin(tf::Vector3(x, y, z));

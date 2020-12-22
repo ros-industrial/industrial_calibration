@@ -85,5 +85,6 @@ int Camera::getObservations(CameraObservations& camera_observations)
     camera_observations[i].intermediate_camera_frame = transform_interface_->getIntermediateFrame();
     camera_observations[i].intermediate_target_frame = camera_observations[i].target->transform_interface_->getIntermediateFrame();
   }
+  return(1);
 }
 }  // end namespace industrial_extrinsic_cal

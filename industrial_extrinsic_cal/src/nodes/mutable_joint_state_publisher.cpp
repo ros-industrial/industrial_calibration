@@ -177,6 +177,7 @@ bool MutableJointStatePublisher::publishJointStates()
     joint_states.effort.push_back(0.0);
   }
   joint_state_pub_.publish(joint_states);
+  return(true);
 }
 }  // end namespace mutable_joint_state_publisher
 
