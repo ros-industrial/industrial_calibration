@@ -129,8 +129,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   target_to_camera_TI_->setDataDirectory(data_directory_);
 
   target_type_ = pattern_options::ModifiedCircleGrid;
-  // assume these are found in the cfg file, and loaded at startup. 
-  /*
+  // these are found in the cfg file
   if (!pnh.getParam("target_rows", target_rows_))
     {
       ROS_ERROR("Must set param:  target_rows");
@@ -148,7 +147,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
       ROS_ERROR("Must set param:  target_spacing");
     }
     initMCircleTarget(target_rows_, target_cols_, diameter, spacing);
-  */
+
   target_locate_server_ = nh_.advertiseService("target_locate_srv", &TargetLocatorService::executeCallBack, this);
   target_verify_server_ = nh_.advertiseService("target_verify_srv", &TargetLocatorService::verifyCallBack, this);
   target_savelo_server_ = nh_.advertiseService("target_save_location_srv", &TargetLocatorService::saveLocCallBack, this);
@@ -157,20 +156,25 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   dynamic_reconfigure::Server<target_finder::target_finderConfig>::CallbackType f;
   f = boost::bind(&TargetLocatorService::dynReConfCallBack, this, _1, _2);
   reconf_srv_->setCallback(f);
-
 }
 
 void TargetLocatorService::dynReConfCallBack(target_finder::target_finderConfig& config, uint32_t level)
 {
   // resize target
-  initMCircleTarget(config.target_rows, config.target_cols, config.target_circle_diameter, config.target_spacing);
+  target_rows_ = config.target_rows;
+  target_cols_ = config.target_cols;
+  initMCircleTarget(config.target_rows, config.target_cols, config.target_circle_dia, config.target_spacing);
+  ROS_INFO("reconfigured to %dx%d with %lf spacing and %lf diameter",
+	    config.target_rows,
+	    config.target_cols,
+	    config.target_spacing,
+	    config.target_circle_dia);
 }
 
 bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_locator::Response& res)
 {
   ros::NodeHandle nh;
   CameraObservations camera_observations;
-
   // get the focal length and optical center
   double fx, fy, cx, cy;
   double k1, k2, k3, p1, p2;  // unused
@@ -215,7 +219,6 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
     res.success = false;
     return (true);
   }
-
   // set initial conditions
   target_->pose_.setQuaternion(req.initial_pose.orientation.x, req.initial_pose.orientation.y,
                                req.initial_pose.orientation.z, req.initial_pose.orientation.w);
@@ -240,7 +243,6 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
 
   double error_per_observation = summary.final_cost / num_observations;
   res.cost_per_observation = error_per_observation;
-
   if (summary.termination_type != ceres::NO_CONVERGENCE)
     {
       if (error_per_observation <= req.allowable_cost_per_observation)
@@ -264,7 +266,7 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
     {
       ROS_ERROR("allowable cost exceeded %f > %f", error_per_observation, req.allowable_cost_per_observation);
     }
-
+  ROS_ERROR("NO CONVERGENCE");
   res.success = false;
   return(true);
 }
@@ -302,6 +304,7 @@ bool TargetLocatorService::verifyCallBack(target_verify::Request& req, target_ve
 
   if(!executeCallBack(tl_req, tl_res))
     {
+      ROS_ERROR("Pose Estimation of Target Failed");
       res.position_error = -1.0; // set to negative 1 since the pose is not computed
       res.cost_per_observation = tl_res.cost_per_observation;
       res.success = false;
@@ -311,14 +314,28 @@ bool TargetLocatorService::verifyCallBack(target_verify::Request& req, target_ve
       res.cost_per_observation = tl_res.cost_per_observation;
       // compare to saved position
       std::string file_name = req.file_name.data;
-      target_to_camera_TI_->loadPose(0, file_name);
+      if(!target_to_camera_TI_->loadPose(0, file_name))
+	{
+	  ROS_ERROR("could not load the pose from %s",file_name.c_str());
+	}
       Pose6d P = target_to_camera_TI_->getCurrentPose();
-      double position_error = sqrt((P.x - tl_res.final_pose.position.x)*(P.x - tl_res.final_pose.position.x) +
-				(P.y - tl_res.final_pose.position.y)*(P.y - tl_res.final_pose.position.y) +
-				(P.z - tl_res.final_pose.position.z)*(P.z - tl_res.final_pose.position.z) );
+      double sqd = (P.x - tl_res.final_pose.position.x)*(P.x - tl_res.final_pose.position.x) +
+	(P.y - tl_res.final_pose.position.y)*(P.y - tl_res.final_pose.position.y) +
+	(P.z - tl_res.final_pose.position.z)*(P.z - tl_res.final_pose.position.z);
+      double position_error = sqrt(sqd);
       res.position_error = position_error;
-      res.success = false;
-      if(position_error < req.max_error) res.success = true;
+      if(position_error < req.max_error)
+	{
+	  res.success = true;
+	}
+      else
+	{
+	  ROS_ERROR("Validation Failed old position:[%6.3lf %6.3lf %6.3lf], new [%6.3lf %6.3lf %6.3lf] error = %6.3lf max error=%6.3lf ",
+		    P.x, P.y, P.z,
+		    tl_res.final_pose.position.x, tl_res.final_pose.position.y, tl_res.final_pose.position.z,
+		    position_error, req.max_error);
+	  res.success = false;
+	}
     }
   return true;
 }
@@ -405,7 +422,7 @@ void TargetLocatorService::initMCircleTarget(int rows, int cols, double circle_d
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "target_locator_service");
-  ros::NodeHandle node_handle;
+  ros::NodeHandle node_handle("~/target_locator");
   TargetLocatorService target_locator(node_handle);
   ros::spin();
   ros::waitForShutdown();
