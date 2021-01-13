@@ -178,6 +178,13 @@ bool callService::callTheService()
 	{
 	  ROS_ERROR("One or more values of returned transform are NAN");
 	  setRequest();// resetting the initial conditions of the request
+	  return(false);
+	}
+      else if(srv_.response.cost_per_observation == 0)
+	{
+	  ROS_ERROR("could not find target");
+	  setRequest();// resetting the initial conditions of the request
+	  return(false);
 	}
       else
 	{
@@ -195,7 +202,7 @@ bool callService::callTheService()
 	}
       return (true);
       }
-  ROS_ERROR("Target Location Failure");
+  ROS_ERROR("Couldn't call service");
   return (false);
 }
 
