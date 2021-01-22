@@ -108,6 +108,9 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   }
   camera_observer_ = new ROSCameraObserver(image_topic_, camera_name_);
 
+  camera_observer_->use_circle_detector_ = true;
+  pnh.getParam("use_circle_detector",  camera_observer_->use_circle_detector_);
+  
   if (!pnh.getParam("target_frame", target_frame_)) // need this to get the intrinsics 
   {
     ROS_ERROR("Must set param: target_frame");

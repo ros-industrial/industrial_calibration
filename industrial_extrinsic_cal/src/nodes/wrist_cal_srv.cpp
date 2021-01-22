@@ -90,6 +90,10 @@ public:
       ROS_ERROR("Must set param: target_mount_frame, this defines the tf-frame on which the target is mounted");
     }
 
+    if(!priv_nh.getParam("camera_mount_frame", camera_mount_frame)){
+      ROS_ERROR("Must set param: camera_mount_frame, this defines the tf-frame on which the camera is mounted");
+    }
+
     // use this parameter if you want to get the intrinsics from a camera who's driver is slow to come up.
     std::string camera_info_wait_topic;
     if(priv_nh.getParam("camera_info_wait_topic", camera_info_wait_topic)){
