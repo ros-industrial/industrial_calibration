@@ -20,6 +20,11 @@
 #include <ros/package.h>
 #include <ros/console.h>
 #include <dynamic_reconfigure/server.h>
+#include <dynamic_reconfigure/BoolParameter.h>
+#include <dynamic_reconfigure/IntParameter.h>
+#include <dynamic_reconfigure/DoubleParameter.h>
+#include <dynamic_reconfigure/Reconfigure.h>
+#include <dynamic_reconfigure/Config.h>
 #include <target_finder/target_finderConfig.h>
 #include <industrial_extrinsic_cal/camera_observer_trigger.h>
 #include <industrial_extrinsic_cal/user_accept.h>
@@ -65,7 +70,7 @@ public:
   void initMCircleTarget(int rows, int cols, double circle_dia, double spacing);
   void dynReConfCallBack(target_finder::target_finderConfig& config, uint32_t level);
   Pose6d loadPose(std::string filepath);
-
+  
 private:
   ros::NodeHandle nh_;
   ros::ServiceServer target_locate_server_; // provides the location of the target as a service
@@ -95,8 +100,12 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   nh_ = nh;
   ros::NodeHandle pnh("~");
 
-  int rows, cols;
-  double diameter, spacing;
+  // In launch you may also set the dynamic reconfigure variables of:
+  // target_locator/target_rows
+  // target_locator/target_cols
+  // target_locator/target_circle_dia
+  // target_locator/target_spacing
+
   if (!pnh.getParam("image_topic", image_topic_))
   {
     ROS_ERROR("Must set param:  image_topic");
@@ -130,27 +139,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   target_to_camera_TI_ = new industrial_extrinsic_cal::ROSListenerTransInterface(target_frame_);
   target_to_camera_TI_->setReferenceFrame(camera_frame_);
   target_to_camera_TI_->setDataDirectory(data_directory_);
-
   target_type_ = pattern_options::ModifiedCircleGrid;
-  // these are found in the cfg file
-  if (!pnh.getParam("target_rows", target_rows_))
-    {
-      ROS_ERROR("Must set param:  target_rows");
-    }
-  if (!pnh.getParam("target_cols", target_cols_))
-    {
-      ROS_ERROR("Must set param:  target_cols");
-    }
-  if (!pnh.getParam("target_circle_dia", diameter))
-    {
-      ROS_ERROR("Must set param:  target_circle_dia");
-    }
-  if (!pnh.getParam("target_spacing", spacing))
-    {
-      ROS_ERROR("Must set param:  target_spacing");
-    }
-    initMCircleTarget(target_rows_, target_cols_, diameter, spacing);
-
   target_locate_server_ = nh_.advertiseService("target_locate_srv", &TargetLocatorService::executeCallBack, this);
   target_verify_server_ = nh_.advertiseService("target_verify_srv", &TargetLocatorService::verifyCallBack, this);
   target_savelo_server_ = nh_.advertiseService("target_save_location_srv", &TargetLocatorService::saveLocCallBack, this);
@@ -159,6 +148,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   dynamic_reconfigure::Server<target_finder::target_finderConfig>::CallbackType f;
   f = boost::bind(&TargetLocatorService::dynReConfCallBack, this, _1, _2);
   reconf_srv_->setCallback(f);
+
 }
 
 void TargetLocatorService::dynReConfCallBack(target_finder::target_finderConfig& config, uint32_t level)
@@ -167,11 +157,6 @@ void TargetLocatorService::dynReConfCallBack(target_finder::target_finderConfig&
   target_rows_ = config.target_rows;
   target_cols_ = config.target_cols;
   initMCircleTarget(config.target_rows, config.target_cols, config.target_circle_dia, config.target_spacing);
-  ROS_INFO("reconfigured to %dx%d with %lf spacing and %lf diameter",
-	    config.target_rows,
-	    config.target_cols,
-	    config.target_spacing,
-	    config.target_circle_dia);
 }
 
 bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_locator::Response& res)
@@ -210,7 +195,6 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
 
   camera_observer_->clearTargets();
   camera_observer_->clearObservations();
-
   camera_observer_->addTarget(target_, roi, cost_type);
   camera_observer_->triggerCamera();
   while (!camera_observer_->observationsDone());
@@ -420,7 +404,6 @@ void TargetLocatorService::initMCircleTarget(int rows, int cols, double circle_d
     }
   }
 }
-
 
 int main(int argc, char** argv)
 {
