@@ -35,20 +35,24 @@ bool parsePose(const YAML::Node& node, Pose6d& pose)
       rtn = false;
     }  // right number of values
   }    // "xyz_quat_pose" exists in yaml node
-  else if (parseVectorD(node, "xyz_aaxis_pose", temp_values))
+  else  if (node["xyz_aaxis_pose"])
   {
-    if (temp_values.size() == 6)
-    {
-      pose.x = temp_values[0];
-      pose.y = temp_values[1];
-      pose.z = temp_values[2];
-      pose.setAngleAxis(temp_values[3], temp_values[4], temp_values[5]);
-    }  // got 6 values
+    const YAML::Node& node2 = parseNode(node,"xyz_aaxis_pose");
+    double x,y,z,ax,ay,az;
+    rtn &= parseDouble(node2, "x", x);
+    rtn &= parseDouble(node2, "y", y);
+    rtn &= parseDouble(node2, "z", z);
+    rtn &= parseDouble(node2, "ax", ax);
+    rtn &= parseDouble(node2, "ay", ay);
+    rtn &= parseDouble(node2, "az", az);
+    if(rtn)
+      {
+	pose.setOrigin(x,y,z);
+	pose.setAngleAxis(ax,ay,az);
+      }
     else
     {  // can't find xyz_aaxis_pose
-      ROS_ERROR("did not read xyz_aaxis_pose correctly, %d values, 6 required v[0] = %lf", (int)temp_values.size(),
-                temp_values[0]);
-      rtn = false;
+      ROS_ERROR("did not read xyz_aaxis_pose correctly");
     }
   }
   else

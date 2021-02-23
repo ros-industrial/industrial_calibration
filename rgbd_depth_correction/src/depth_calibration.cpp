@@ -567,9 +567,9 @@ bool DepthCalibrator::findTarget(const double& final_cost, geometry_msgs::Pose& 
     ROS_ERROR("Failed to get target pose.");
     rtn = false;
   }
-  else if (target_response.final_cost_per_observation > final_cost)
+  else if (target_response.cost_per_observation > final_cost)
   {
-    ROS_ERROR("Target pose error too large (%.3f).", target_response.final_cost_per_observation);
+    ROS_ERROR("Target pose error too large (%.3f).", target_response.cost_per_observation);
     rtn = false;
   }
 

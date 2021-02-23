@@ -634,6 +634,7 @@ private:
     bool pushTransform(Pose6d& pose)
     {
       pose_ = pose;
+      return(true);
     };
 
     /** @brief get the transform from the hardware or display

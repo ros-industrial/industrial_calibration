@@ -1,36 +1,37 @@
 <?xml version="1.0" ?>
 <launch>
-     <arg name="view_cameras" default="false"/>
+       <arg name="image_topic" default="/camera/rgb/image_rect_color"/>
+       <arg name="camera_name" default="/camera/rgb"/>
+       <arg name="camera_frame" default="camera_rgb_optical_frame"/>
+       <arg name="target_frame" default="target_frame"/>
+       <arg name="data_directory" default="/home/clewis/data"/>
+       <arg name="pose_file_name" default="verify_pose.yaml"/>
 
-     <include file="$(find astra_camera)/launch/astra.launch" />
-     
-     <node pkg="target_finder" type="target_locator_srv" name="target_locator" output="screen" >
-          <param name="camera_name" value="camera/rgb"/>
-          <param name="image_topic" value="camera/rgb/image_rect_color" />
-          <param name="target_type" value="2" />
-          <param name="target_rows" value="12" />
-          <param name="target_cols" value="9" />
-          <param name="target_circle_dia" value="0.0125" />
-          <param name="target_spacing" value="0.020" />
-          <param name="focal_length_x" value="570" />
-          <param name="focal_length_y" value="570"/>
-          <param name="center_x" value="319.5" />
-          <param name="center_y" value="239.5" />
-          <param name="use_circle_detector" value="true"/>
-	  <param name="publish_target_marker" value="true"/>
-     </node>
- 
-     <node pkg="target_finder" type="call_service" name="call_service" output="screen" >
-           <param name="roi_width" value="640"/>
-           <param name="roi_height" value="480"/>
-           <param name="optical_frame" value="camera_rgb_optical_frame"/>
-     </node>
- 
-     <node pkg="image_view" type="image_view" name="debug_view" >
-          <remap from="image" to="observer_raw_image"/>
-     </node>
+       <include file="$(find astra_camera)/launch/astra.launch"/>
 
-     <node pkg="tf" type="static_transform_publisher" name="target_frame" args="0.1 0.0 1.0 0.0 1.5708 0.0 world camera_rgb_optical_frame 100" />
-     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find target_finder)/config/target_finder_astra.rviz" required="true" />
+       <node pkg="target_finder" type="target_locator_srv" name="target_locator_srv" >
+	       <param name="image_topic" value="$(arg image_topic)" />
+	       <param name="camera_name" value="$(arg camera_name)" />	        
+         <param name="camera_frame" value="$(arg camera_frame)" />
+         <param name="target_frame" value="$(arg target_frame)" />
+	       <param name="data_directory" value="$(arg data_directory)" />
+	       <param name="target_locator/target_spacing" value=".02"/>
+	       <param name="target_locator/target_circle_dia" value=".002"/>
+	       <param name="target_locator/target_rows" value="7"/>
+	       <param name="target_locator/target_cols" value="5"/>
+	       <param name="camera/rgb/max_area" value="1000.0"/>
+	       <param name="camera/rgb/min_area" value="100.0"/>
+       </node>
+       
+       <node pkg="target_finder" type="call_service" name="call_service" output="screen" >
+         <param name="roi_width" value="640"/>
+         <param name="roi_height" value="480"/>
+         <param name="optical_frame" value="$(arg camera_frame)"/>
+	       <param name="pose_file_name" value="$(arg pose_file_name)"/>
+       </node>
+       
+       <node pkg="tf" type="static_transform_publisher" name="camera_tf_pub" args="0.1 0.0 1.0 0.0 1.5708 0.0 world $(arg camera_frame) 100" />
 
+       <node name="rviz" pkg="rviz" type="rviz" args="-d $(find target_finder)/config/target_finder_astra.rviz" required="true" />
+	 
 </launch>

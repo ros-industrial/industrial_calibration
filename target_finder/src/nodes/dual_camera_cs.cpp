@@ -140,7 +140,7 @@ bool callService::callTheService()
              c1_srv_.response.final_pose.position.x, c1_srv_.response.final_pose.position.y,
              c1_srv_.response.final_pose.position.z, c1_srv_.response.final_pose.orientation.x,
              c1_srv_.response.final_pose.orientation.y, c1_srv_.response.final_pose.orientation.z,
-             c1_srv_.response.final_pose.orientation.w, c1_srv_.response.final_cost_per_observation);
+             c1_srv_.response.final_pose.orientation.w, c1_srv_.response.cost_per_observation);
     tf::Transform camera_to_target;
     tf::Quaternion quat(qx, qy, qz, qw);
     camera_to_target.setOrigin(tf::Vector3(x, y, z));
@@ -164,7 +164,7 @@ bool callService::callTheService()
              c2_srv_.response.final_pose.position.x, c2_srv_.response.final_pose.position.y,
              c2_srv_.response.final_pose.position.z, c2_srv_.response.final_pose.orientation.x,
              c2_srv_.response.final_pose.orientation.y, c2_srv_.response.final_pose.orientation.z,
-             c2_srv_.response.final_pose.orientation.w, c2_srv_.response.final_cost_per_observation);
+             c2_srv_.response.final_pose.orientation.w, c2_srv_.response.cost_per_observation);
     tf::Transform camera_to_target;
     tf::Quaternion quat(qx, qy, qz, qw);
     camera_to_target.setOrigin(tf::Vector3(x, y, z));

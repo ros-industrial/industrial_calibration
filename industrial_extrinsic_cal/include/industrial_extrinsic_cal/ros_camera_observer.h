@@ -303,10 +303,10 @@ public:
    */
   bool checkObservationProclivity(CameraObservations& CO);
   
-  
+  bool use_circle_detector_;  
+
 private:
   int image_number_;       /**< a counter of images recieved */
-  bool use_circle_detector_;
   bool white_blobs_;
   ros::ServiceClient client_;
   sensor_msgs::SetCameraInfo srv_;

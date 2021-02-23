@@ -89,8 +89,15 @@ public:
     if(!priv_nh.getParam("target_mount_frame", target_mount_frame)){
       ROS_ERROR("Must set param: target_mount_frame, this defines the tf-frame on which the target is mounted");
     }
+
     if(!priv_nh.getParam("camera_mount_frame", camera_mount_frame)){
-      ROS_ERROR("Must set param: target_mount_frame, this defines the tf-frame on which the target is mounted");
+      ROS_ERROR("Must set param: camera_mount_frame, this defines the tf-frame on which the camera is mounted");
+    }
+
+    // use this parameter if you want to get the intrinsics from a camera who's driver is slow to come up.
+    std::string camera_info_wait_topic;
+    if(priv_nh.getParam("camera_info_wait_topic", camera_info_wait_topic)){
+      ros::topic::waitForMessage<sensor_msgs::CameraInfo>(camera_info_wait_topic.c_str());
     }
     
     priv_nh.getParam("save_data", save_data_);
@@ -278,7 +285,8 @@ public:
 	{	 // add a new cost to the problem for each observation
 	  // CostFunction* cost_function[num_observations];  
 	  total_observations_ += num_observations;
-	  ceres_blocks_.addMovingTarget(camera_observations[0].target, scene_);
+	  // TODO, Test to see if removing this has any affect whatso ever. It should not. 
+	  //	  ceres_blocks_.addMovingTarget(camera_observations[0].target, scene_);
 	  for (int k = 0; k < num_observations; k++)
 	    {
 	      shared_ptr<Target> target = camera_observations[k].target;

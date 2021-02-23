@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<launch>
+
+     <node pkg="target_finder" type="target_locator_srv" name="target_locator" output="screen" >
+       <param name="camera_name" value="camera/color"/>
+       <param name="target_frame" value="ftarget_frame"/>
+       <param name="camera_frame" value="camera_color_optical_frame"/>
+       <param name="data_directory" value="/home/rars/junk"/>
+       <param name="image_topic" value="camera/color/image_rect_color" />
+       <param name="target_type" value="2" />
+       <param name="target_rows" value="9" />
+       <param name="target_cols" value="7" />
+       <param name="target_circle_dia" value="0.0635" />
+       <param name="target_spacing" value="0.078581" />
+       <param name="focal_length_x" value="612.4743041992188" />
+       <param name="focal_length_y" value="611.85498046875"/>
+       <param name="center_x" value="319.309" />
+       <param name="center_y" value="251.939" />
+       <param name="use_circle_detector" value="true"/>
+     </node>
+ 
+     <node pkg="target_finder" type="call_service" name="call_service" output="screen" >
+       <param name="roi_width" value="640"/>
+       <param name="roi_height" value="480"/>
+       <param name="target_frame" value="ftarget_frame"/>
+       <param name="optical_frame" value="camera_color_optical_frame"/>
+     </node>
+ 
+     <node pkg="image_view" type="image_view" name="debug_view" >
+          <remap from="image" to="observer_raw_image"/>
+     </node>
+<!--
+     <node pkg="tf" type="static_transform_publisher" name="ftarget_frame" args="0.1 0.0 1.0 0.0 1.5708 0.0 world camera_color_optical_frame 100" />
+
+     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find target_finder)/config/target_finder_framos.rviz" required="true" />
+-->
+
+</launch>
