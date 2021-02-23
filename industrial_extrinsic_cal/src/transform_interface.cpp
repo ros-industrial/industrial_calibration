@@ -29,7 +29,7 @@ namespace industrial_extrinsic_cal
     char scene_chars[30];
     sprintf(scene_chars,"_%03d.yaml",scene);
     if(filename == ""){ // build file name from data_directory_, 
-      full_file_path_name  = data_directory_ + "/" +  transform_frame_ + std::string(scene_chars);<<<<<<< target_finder_imps
+      full_file_path_name  = data_directory_ + "/" +  transform_frame_ + std::string(scene_chars);
     }
     else{
       full_file_path_name  = data_directory_ + "/" +  filename;
