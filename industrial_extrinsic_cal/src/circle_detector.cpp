@@ -101,8 +101,8 @@ protected:
 };
 
 /*
-*  CircleDetector
-*/
+ *  CircleDetector
+ */
 CircleDetector::Params::Params()
 {
   thresholdStep = 10;

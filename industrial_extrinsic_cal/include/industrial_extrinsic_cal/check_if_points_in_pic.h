@@ -36,7 +36,7 @@ public:
   double cy_;
   double fy;
   double fx;
-  int numberOfStopsForPhotos; // controlls amount of stops for each ring
+  int numberOfStopsForPhotos;  // controlls amount of stops for each ring
   double poseHeight;
   double angleOfCone;
   double spacing_in_z;
@@ -45,19 +45,24 @@ public:
   Eigen::Vector2d center_point_of_target;
   tf::StampedTransform tf_transform;
   tf::TransformListener tf_listener;
-  double xMax,yMax,xMin,yMin;
+  double xMax, yMax, xMin, yMin;
   std::string from_frame_param_;
   std::string to_frame_param_;
   Eigen::Vector3d corner_points_[4];
 
   void create_rviz_target(geometry_msgs::PoseArray& msg);
   void create_transform_listener(tf::StampedTransform& tf_transform, tf::TransformListener& tf_listen);
-  geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform, int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,double fx, double fy, double cx, double cy );
-  void imagePoint(Eigen::Vector3d TargetPoint, double fx, double fy, double cx, double cy, double &u, double &v,const Eigen::Affine3d &cameraPose);
-  geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone, int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target );
+  geometry_msgs::PoseArray pose_filters(geometry_msgs::PoseArray msg2, tf::StampedTransform tf_transform,
+                                        int image_width, int image_height, EigenSTL::vector_Affine3d AllcameraPoses,
+                                        double fx, double fy, double cx, double cy);
+  void imagePoint(Eigen::Vector3d TargetPoint, double fx, double fy, double cx, double cy, double& u, double& v,
+                  const Eigen::Affine3d& cameraPose);
+  geometry_msgs::PoseArray create_all_poses(double poseHeight, double spacing_in_z, double angleOfCone,
+                                            int numberOfStopsForPhotos, Eigen::Vector2d center_point_of_target);
   int addingFactorial(int lastAdded);
   Eigen::Vector2d finds_middle_of_target(double center_Of_TargetX, double center_Of_TargetY);
   check_if_point_in_pic(ros::NodeHandle pivnh);
+
 private:
 };
 #endif

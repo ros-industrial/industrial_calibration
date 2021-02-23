@@ -34,21 +34,21 @@
 #include "ceres/rotation.h"
 #include "ceres/types.h"
 
-using std::string;
-using boost::shared_ptr;
 using boost::make_shared;
+using boost::shared_ptr;
 using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solver;
-using industrial_extrinsic_cal::Target;
-using industrial_extrinsic_cal::CameraObservations;
-using industrial_extrinsic_cal::ROSCameraObserver;
-using industrial_extrinsic_cal::Roi;
-using industrial_extrinsic_cal::Pose6d;
-using industrial_extrinsic_cal::Point3d;
 using industrial_extrinsic_cal::Camera;
+using industrial_extrinsic_cal::CameraObservations;
 using industrial_extrinsic_cal::CameraParameters;
 using industrial_extrinsic_cal::NoWaitTrigger;
+using industrial_extrinsic_cal::Point3d;
+using industrial_extrinsic_cal::Pose6d;
+using industrial_extrinsic_cal::Roi;
+using industrial_extrinsic_cal::ROSCameraObserver;
+using industrial_extrinsic_cal::Target;
+using std::string;
 
 class RailCalService
 {
@@ -171,17 +171,13 @@ RailCalService::RailCalService(ros::NodeHandle nh)
   camera_ = boost::make_shared<industrial_extrinsic_cal::Camera>("my_camera", camera_parameters_, is_moving);
   camera_->trigger_ = boost::make_shared<NoWaitTrigger>();
   camera_->camera_observer_ = boost::make_shared<ROSCameraObserver>(image_topic_, camera_name_);
-  if(!camera_->camera_observer_->pullCameraInfo(camera_->camera_parameters_.focal_length_x,
-                                           camera_->camera_parameters_.focal_length_y,
-                                           camera_->camera_parameters_.center_x,
-                                           camera_->camera_parameters_.center_y,
-                                           camera_->camera_parameters_.distortion_k1,
-                                           camera_->camera_parameters_.distortion_k2,
-                                           camera_->camera_parameters_.distortion_k3,
-                                           camera_->camera_parameters_.distortion_p1,
-                                           camera_->camera_parameters_.distortion_p2,
-                                           image_width_, image_height_))
-    {
+  if (!camera_->camera_observer_->pullCameraInfo(
+          camera_->camera_parameters_.focal_length_x, camera_->camera_parameters_.focal_length_y,
+          camera_->camera_parameters_.center_x, camera_->camera_parameters_.center_y,
+          camera_->camera_parameters_.distortion_k1, camera_->camera_parameters_.distortion_k2,
+          camera_->camera_parameters_.distortion_k3, camera_->camera_parameters_.distortion_p1,
+          camera_->camera_parameters_.distortion_p2, image_width_, image_height_))
+  {
     ROS_FATAL("Could not get camera information for %s from topic %s. Shutting down node.", camera_name_.c_str(),
               image_topic_.c_str());
     ros::shutdown();
@@ -204,7 +200,8 @@ void RailCalService::cameraCallback(const sensor_msgs::Image& image)
 
   cv::Mat mod_img = bridge->image;
 
-  cv::circle(mod_img, cv::Point2d(image.width / 2.0, image.height / 2.0), image.width / 30.0, cv::Scalar(175,0,0), image.width / 40.0);
+  cv::circle(mod_img, cv::Point2d(image.width / 2.0, image.height / 2.0), image.width / 30.0, cv::Scalar(175, 0, 0),
+             image.width / 40.0);
   bridge->image = mod_img;
   sensor_msgs::Image out_img;
   bridge->toImageMsg(out_img);

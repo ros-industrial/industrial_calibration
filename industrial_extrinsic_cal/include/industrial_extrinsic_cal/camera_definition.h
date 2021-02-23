@@ -77,7 +77,7 @@ public:
 
   /*! \brief get the observations from the observer
    *  @param camera_observations a vector of observations
-     * @return 0 if failed to get observations, 1 if successful
+   * @return 0 if failed to get observations, 1 if successful
    */
   int getObservations(CameraObservations& camera_observations);
 
@@ -92,10 +92,10 @@ public:
   CameraParameters camera_parameters_;                        /*!< The intrinsic and extrinsic parameters */
   std::string camera_name_;                                   /*!< string camera_name_ unique name of a camera */
   boost::shared_ptr<TransformInterface> transform_interface_; /**< interface to transform, tf for example  */
-  Pose6d intermediate_camera_frame_; /**< transform from camera_mounting_frame_ to ref_frame_ */
-  bool is_moving_;            /*!< bool is_moving_  false for static cameras */
-  bool is_right_stereo_camera_; /*!< set to indicate that this is the right side of a pair */
-  std::string left_stereo_camera_name_; /*!< name of left stereo camera of pair to which this camera belongs */
+  Pose6d intermediate_camera_frame_;             /**< transform from camera_mounting_frame_ to ref_frame_ */
+  bool is_moving_;                               /*!< bool is_moving_  false for static cameras */
+  bool is_right_stereo_camera_;                  /*!< set to indicate that this is the right side of a pair */
+  std::string left_stereo_camera_name_;          /*!< name of left stereo camera of pair to which this camera belongs */
   boost::shared_ptr<Camera> left_stereo_camera_; /*!< points toward left half of pair to which this camera belongs */
 };
 // end of class Camera

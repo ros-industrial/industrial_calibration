@@ -37,11 +37,13 @@ class callService
 public:
   callService(ros::NodeHandle nh) : nh_(nh)
   {
-    save_service_ = nh_.advertiseService( "save_pose", &callService::saveCallBack, this);
-    verify_service_ = nh_.advertiseService( "verify_pose", &callService::verifyCallBack, this);
+    save_service_ = nh_.advertiseService("save_pose", &callService::saveCallBack, this);
+    verify_service_ = nh_.advertiseService("verify_pose", &callService::verifyCallBack, this);
     client_ = nh_.serviceClient<target_finder::target_locator>("/target_locator_srv/target_locator/target_locate_srv");
-    save_client_ = nh_.serviceClient<target_finder::target_save_location>("/target_locator_srv/target_locator/target_save_location_srv");
-    verify_client_ = nh_.serviceClient<target_finder::target_verify>("/target_locator_srv/target_locator/target_verify_srv");
+    save_client_ = nh_.serviceClient<target_finder::target_save_location>("/target_locator_srv/target_locator/"
+                                                                          "target_save_location_srv");
+    verify_client_ = nh_.serviceClient<target_finder::target_verify>("/target_locator_srv/target_locator/"
+                                                                     "target_verify_srv");
     ros::NodeHandle pnh("~");
     if (!pnh.getParam("roi_width", roi_width_))
     {
@@ -64,8 +66,8 @@ public:
   bool callTheService();
   void copyResponseToRequest();
   void setRequest();
-  bool saveCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res);
-  bool verifyCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res);
+  bool saveCallBack(std_srvs::TriggerRequest& req, std_srvs::TriggerResponse& res);
+  bool verifyCallBack(std_srvs::TriggerRequest& req, std_srvs::TriggerResponse& res);
 
 private:
   ros::NodeHandle nh_;
@@ -84,9 +86,9 @@ private:
   std::string pose_file_name_;
 };
 
-bool callService::saveCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
+bool callService::saveCallBack(std_srvs::TriggerRequest& req, std_srvs::TriggerResponse& res)
 {
-  setRequest(); // copies default initial conditions
+  setRequest();  // copies default initial conditions
   save_srv_.request.initial_pose.position.x = srv_.request.initial_pose.position.x;
   save_srv_.request.initial_pose.position.y = srv_.request.initial_pose.position.y;
   save_srv_.request.initial_pose.position.z = srv_.request.initial_pose.position.z;
@@ -97,29 +99,29 @@ bool callService::saveCallBack( std_srvs::TriggerRequest &req, std_srvs::Trigger
   save_srv_.request.allowable_cost_per_observation = 7.0;
   save_srv_.request.file_name.data = pose_file_name_;
   if (save_client_.call(save_srv_))
+  {
+    if (save_srv_.response.success)
     {
-      if(save_srv_.response.success)
-	{
-	  res.success = true;
-	  res.message = std::string("Pose computed and saved");
-	}
-      else
-	{
-	  res.success = false;
-	  res.message = std::string("Pose not successfuly computed");
-	}
+      res.success = true;
+      res.message = std::string("Pose computed and saved");
     }
-  else
+    else
     {
       res.success = false;
-      res.message = std::string("Couldn't make the call to the save client");
+      res.message = std::string("Pose not successfuly computed");
     }
-  return(true);
+  }
+  else
+  {
+    res.success = false;
+    res.message = std::string("Couldn't make the call to the save client");
+  }
+  return (true);
 }
 
-bool callService::verifyCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
+bool callService::verifyCallBack(std_srvs::TriggerRequest& req, std_srvs::TriggerResponse& res)
 {
-  setRequest(); // copies default initial conditions
+  setRequest();  // copies default initial conditions
   verify_srv_.request.initial_pose.position.x = srv_.request.initial_pose.position.x;
   verify_srv_.request.initial_pose.position.y = srv_.request.initial_pose.position.y;
   verify_srv_.request.initial_pose.position.z = srv_.request.initial_pose.position.z;
@@ -131,24 +133,24 @@ bool callService::verifyCallBack( std_srvs::TriggerRequest &req, std_srvs::Trigg
   verify_srv_.request.allowable_cost_per_observation = 7.0;
   verify_srv_.request.max_error = 0.005;
   if (verify_client_.call(verify_srv_))
+  {
+    if (verify_srv_.response.success)
     {
-      if(verify_srv_.response.success)
-	{
-	  res.success = true;
-	  res.message = std::string("Pose verified");
-	}
-      else
-	{
-	  res.success = false;
-	  res.message = std::string("Pose verification failed");
-	}
+      res.success = true;
+      res.message = std::string("Pose verified");
     }
-  else
+    else
     {
       res.success = false;
-      res.message = std::string("Couldn't make the call to the verify client");
+      res.message = std::string("Pose verification failed");
     }
-  return(true);
+  }
+  else
+  {
+    res.success = false;
+    res.message = std::string("Couldn't make the call to the verify client");
+  }
+  return (true);
 }
 void callService::copyResponseToRequest()
 {
@@ -165,43 +167,44 @@ void callService::copyResponseToRequest()
 bool callService::callTheService()
 {
   if (client_.call(srv_))
+  {
+    double x, y, z, qx, qy, qz, qw;
+    x = srv_.response.final_pose.position.x;
+    y = srv_.response.final_pose.position.y;
+    z = srv_.response.final_pose.position.z;
+    qx = srv_.response.final_pose.orientation.x;
+    qy = srv_.response.final_pose.orientation.y;
+    qz = srv_.response.final_pose.orientation.z;
+    qw = srv_.response.final_pose.orientation.w;
+    if (std::isnan(x) || std::isnan(y) || std::isnan(z) || std::isnan(qx) || std::isnan(qy) || std::isnan(qz) ||
+        std::isnan(qw))
     {
-      double x, y, z, qx, qy, qz, qw;
-      x = srv_.response.final_pose.position.x;
-      y = srv_.response.final_pose.position.y;
-      z = srv_.response.final_pose.position.z;
-      qx = srv_.response.final_pose.orientation.x;
-      qy = srv_.response.final_pose.orientation.y;
-      qz = srv_.response.final_pose.orientation.z;
-      qw = srv_.response.final_pose.orientation.w;
-      if(std::isnan(x) || std::isnan(y) || std::isnan(z) || std::isnan(qx) || std::isnan(qy) ||std::isnan(qz) ||std::isnan(qw))
-	{
-	  ROS_ERROR("One or more values of returned transform are NAN");
-	  setRequest();// resetting the initial conditions of the request
-	  return(false);
-	}
-      else if(srv_.response.cost_per_observation == 0)
-	{
-	  ROS_ERROR("could not find target");
-	  setRequest();// resetting the initial conditions of the request
-	  return(false);
-	}
-      else
-	{
-	  ROS_INFO("Pose: tx= %5.4lf  %5.4lf  %5.4lf quat= %5.3lf  %5.3lf  %5.3lf %5.3lf, cost= %5.3lf",
-		   srv_.response.final_pose.position.x, srv_.response.final_pose.position.y,
-		   srv_.response.final_pose.position.z, srv_.response.final_pose.orientation.x,
-		   srv_.response.final_pose.orientation.y, srv_.response.final_pose.orientation.z,
-		   srv_.response.final_pose.orientation.w, srv_.response.cost_per_observation);
-	  tf::Transform camera_to_target;
-	  tf::Quaternion quat(qx, qy, qz, qw);
-	  camera_to_target.setOrigin(tf::Vector3(x, y, z));
-	  camera_to_target.setRotation(quat);
-	  tf::StampedTransform stf(camera_to_target, ros::Time::now(), optical_frame_.c_str(), "target_frame");
-	  tf_broadcaster_.sendTransform(stf);
-	}
-      return (true);
-      }
+      ROS_ERROR("One or more values of returned transform are NAN");
+      setRequest();  // resetting the initial conditions of the request
+      return (false);
+    }
+    else if (srv_.response.cost_per_observation == 0)
+    {
+      ROS_ERROR("could not find target");
+      setRequest();  // resetting the initial conditions of the request
+      return (false);
+    }
+    else
+    {
+      ROS_INFO("Pose: tx= %5.4lf  %5.4lf  %5.4lf quat= %5.3lf  %5.3lf  %5.3lf %5.3lf, cost= %5.3lf",
+               srv_.response.final_pose.position.x, srv_.response.final_pose.position.y,
+               srv_.response.final_pose.position.z, srv_.response.final_pose.orientation.x,
+               srv_.response.final_pose.orientation.y, srv_.response.final_pose.orientation.z,
+               srv_.response.final_pose.orientation.w, srv_.response.cost_per_observation);
+      tf::Transform camera_to_target;
+      tf::Quaternion quat(qx, qy, qz, qw);
+      camera_to_target.setOrigin(tf::Vector3(x, y, z));
+      camera_to_target.setRotation(quat);
+      tf::StampedTransform stf(camera_to_target, ros::Time::now(), optical_frame_.c_str(), "target_frame");
+      tf_broadcaster_.sendTransform(stf);
+    }
+    return (true);
+  }
   ROS_ERROR("Couldn't call service");
   return (false);
 }

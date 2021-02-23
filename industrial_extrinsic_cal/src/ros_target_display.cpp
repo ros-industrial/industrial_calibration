@@ -15,20 +15,20 @@ void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> targe
 {
   ros::NodeHandle pnh("~");
   std::string myns = target->target_name_ + "_ns";
-  ros::Publisher vis_pub = pnh.advertise<visualization_msgs::MarkerArray>(target->target_name_.c_str(),0,true);
+  ros::Publisher vis_pub = pnh.advertise<visualization_msgs::MarkerArray>(target->target_name_.c_str(), 0, true);
   vis_pubs.push_back(vis_pub);
-  double diameter       = target->circle_grid_parameters_.circle_diameter;
-  double target_length  = (target->circle_grid_parameters_.pattern_cols+1) *  target->circle_grid_parameters_.spacing;
-  double target_width   = (target->circle_grid_parameters_.pattern_rows+1) *  target->circle_grid_parameters_.spacing;
-  double target_height  = 0.001;
+  double diameter = target->circle_grid_parameters_.circle_diameter;
+  double target_length = (target->circle_grid_parameters_.pattern_cols + 1) * target->circle_grid_parameters_.spacing;
+  double target_width = (target->circle_grid_parameters_.pattern_rows + 1) * target->circle_grid_parameters_.spacing;
+  double target_height = 0.001;
   board.header.frame_id = target->target_frame_.c_str();
   board.header.stamp = ros::Time();
   board.ns = myns;
   board.id = 0;
   board.type = visualization_msgs::Marker::CUBE;
   board.action = visualization_msgs::Marker::ADD;
-  board.pose.position.x = target_length/2.0 -  target->circle_grid_parameters_.spacing;
-  board.pose.position.y = target_width/2.0 -  target->circle_grid_parameters_.spacing;
+  board.pose.position.x = target_length / 2.0 - target->circle_grid_parameters_.spacing;
+  board.pose.position.y = target_width / 2.0 - target->circle_grid_parameters_.spacing;
   board.pose.position.z = 0.0;
   board.pose.orientation.x = 0.0;
   board.pose.orientation.y = 0.0;
@@ -37,7 +37,7 @@ void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> targe
   board.scale.x = target_length;
   board.scale.y = target_width;
   board.scale.z = target_height;
-  board.color.a = 1.0; // Don't forget to set the alpha!
+  board.color.a = 1.0;  // Don't forget to set the alpha!
   board.color.r = 1.0;
   board.color.g = 1.0;
   board.color.b = 1.0;
@@ -64,7 +64,8 @@ void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> targe
   c.g = 0.01;
   c.b = 0.01;
   c.a = 1.0;
-  for(int i=0;i<target->num_points_;i++){
+  for (int i = 0; i < target->num_points_; i++)
+  {
     geometry_msgs::Point pt;
     pt.x = target->pts_[i].x;
     pt.y = target->pts_[i].y;
@@ -86,10 +87,10 @@ void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> targe
   zero_dot.pose.orientation.y = 0.0;
   zero_dot.pose.orientation.z = 0.0;
   zero_dot.pose.orientation.w = 1.0;
-  zero_dot.scale.x = diameter*3.0;
-  zero_dot.scale.y = diameter*3.0;
+  zero_dot.scale.x = diameter * 3.0;
+  zero_dot.scale.y = diameter * 3.0;
   zero_dot.scale.z = 0.001;
-  zero_dot.color.a = 1.0; // Don't forget to set the alpha!
+  zero_dot.color.a = 1.0;  // Don't forget to set the alpha!
   zero_dot.color.r = 0.01;
   zero_dot.color.g = 0.01;
   zero_dot.color.b = 0.01;

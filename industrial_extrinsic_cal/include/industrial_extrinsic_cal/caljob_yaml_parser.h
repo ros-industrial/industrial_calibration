@@ -31,6 +31,6 @@ bool parseCaljob(std::string& caljob_input_file, std::vector<ObservationScene>& 
  *   @return an observation scene
  **/
 ObservationScene parseSingleScene(const YAML::Node& node, int scene_id, CeresBlocks& blocks);
-}  // end industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal
 
 #endif

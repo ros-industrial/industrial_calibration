@@ -137,6 +137,6 @@ public:
   tf::TransformListener listener_;
 };
 
-}  // end industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal
 
 #endif /* RUNTIME_UTILS_H_ */

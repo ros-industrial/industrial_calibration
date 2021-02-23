@@ -21,7 +21,6 @@
 #include <fstream>
 namespace industrial_extrinsic_cal
 {
-
 using std::string;
 
 ROSListenerTransInterface::ROSListenerTransInterface(const string& transform_frame)
@@ -46,8 +45,9 @@ Pose6d ROSListenerTransInterface::pullTransform()
   }
 }
 
-ROSCameraListenerTransInterface::ROSCameraListenerTransInterface(const string& transform_frame, const string& camera_mounting_frame):
-  ROSCameraTransformInterface(transform_frame, camera_mounting_frame, "")
+ROSCameraListenerTransInterface::ROSCameraListenerTransInterface(const string& transform_frame,
+                                                                 const string& camera_mounting_frame)
+  : ROSCameraTransformInterface(transform_frame, camera_mounting_frame, "")
 {
   transform_.child_frame_id_ = transform_frame_;
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
@@ -55,8 +55,8 @@ ROSCameraListenerTransInterface::ROSCameraListenerTransInterface(const string& t
 
 Pose6d ROSCameraListenerTransInterface::pullTransform()
 {
-    pose_ = getPoseFromTF(transform_frame_, mounting_frame_, tf_listener_);
-    return (pose_);
+  pose_ = getPoseFromTF(transform_frame_, mounting_frame_, tf_listener_);
+  return (pose_);
 }
 
 /** @brief this object is intened to be used for cameras not targets
@@ -66,17 +66,17 @@ Pose6d ROSCameraListenerTransInterface::pullTransform()
  *            store does nothing
  */
 ROSCameraHousingListenerTInterface::ROSCameraHousingListenerTInterface(const string& transform_frame,
-								       const string& mounting_frame,
-                                                                       const string& housing_frame):
-  ROSCameraTransformInterface(transform_frame, mounting_frame, housing_frame)
+                                                                       const string& mounting_frame,
+                                                                       const string& housing_frame)
+  : ROSCameraTransformInterface(transform_frame, mounting_frame, housing_frame)
 {
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
 }
 
 Pose6d ROSCameraHousingListenerTInterface::pullTransform()
 {
-    pose_ = getPoseFromTF(transform_frame_, mounting_frame_, tf_listener_);
-    return (pose_);
+  pose_ = getPoseFromTF(transform_frame_, mounting_frame_, tf_listener_);
+  return (pose_);
 }
 
 ROSBroadcastTransInterface::ROSBroadcastTransInterface(const string& transform_frame)
@@ -138,8 +138,9 @@ void ROSBroadcastTransInterface::timerCallback(const ros::TimerEvent& timer_even
   tf_broadcaster_.sendTransform(tf::StampedTransform(transform_, ros::Time::now(), ref_frame_, transform_frame_));
 }
 
-ROSCameraBroadcastTransInterface::ROSCameraBroadcastTransInterface(const string& transform_frame, const string& mounting_frame) :
-  ROSCameraTransformInterface(transform_frame, mounting_frame, "")
+ROSCameraBroadcastTransInterface::ROSCameraBroadcastTransInterface(const string& transform_frame,
+                                                                   const string& mounting_frame)
+  : ROSCameraTransformInterface(transform_frame, mounting_frame, "")
 {
   transform_.child_frame_id_ = transform_frame_;
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
@@ -199,10 +200,10 @@ void ROSCameraBroadcastTransInterface::timerCallback(const ros::TimerEvent& time
 }
 
 ROSCameraHousingBroadcastTInterface::ROSCameraHousingBroadcastTInterface(const string& transform_frame,
-									 const string& mounting_frame,
-									 const string& housing_frame,
-                                                                         const Pose6d& pose) :
-  ROSCameraTransformInterface( transform_frame, mounting_frame, housing_frame)
+                                                                         const string& mounting_frame,
+                                                                         const string& housing_frame,
+                                                                         const Pose6d& pose)
+  : ROSCameraTransformInterface(transform_frame, mounting_frame, housing_frame)
 {
   pose_ = pose;
   transform_.child_frame_id_ = transform_frame_;
@@ -211,7 +212,7 @@ ROSCameraHousingBroadcastTInterface::ROSCameraHousingBroadcastTInterface(const s
 
 bool ROSCameraHousingBroadcastTInterface::pushTransform(Pose6d& pose)
 {
-  pose_ = pose;			// store the pose from transform_frame to mounting_frame
+  pose_ = pose;  // store the pose from transform_frame to mounting_frame
   return (true);
 }
 
@@ -224,19 +225,16 @@ bool ROSCameraHousingBroadcastTInterface::store(string& filePath)
     // Camer housing to camera optical frame is specified by urdf   optical2housing
     // Desired ref2optical = optical2ref^-1 * optical2housing
 
-
     // compute pose from mounting to transform_frame
     Pose6d mounting2transform = pose_.getInverse();
-    Pose6d transform2housing  = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
-    Pose6d mounting2housing  = mounting2transform * transform2housing;
-    
+    Pose6d transform2housing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
+    Pose6d mounting2housing = mounting2transform * transform2housing;
+
     if (!ref_frame_initialized_)
-      {
-	return (false);  // timer won't start publishing until ref_frame_ is defined
-      }
+    {
+      return (false);  // timer won't start publishing until ref_frame_ is defined
+    }
 
-
-    
     // append the transform to a launch file
     double qx, qy, qz, qw;
     mounting2housing.getQuaternion(qx, qy, qz, qw);
@@ -271,9 +269,8 @@ void ROSCameraHousingBroadcastTInterface::timerCallback(const ros::TimerEvent& t
 
   // compute pose from mounting to transform_frame
   Pose6d mounting2transform = pose_.getInverse();
-  Pose6d transform2housing  = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
-  Pose6d mounting2housing  = mounting2transform * transform2housing;
-
+  Pose6d transform2housing = getPoseFromTF(transform_frame_, housing_frame_, tf_listener_);
+  Pose6d mounting2housing = mounting2transform * transform2housing;
 
   transform_.setBasis(mounting2housing.getBasis());
   transform_.setOrigin(mounting2housing.getOrigin());
@@ -286,17 +283,16 @@ Pose6d ROSCameraHousingBroadcastTInterface::pullTransform()
 }
 
 ROSCameraHousingCalTInterface::ROSCameraHousingCalTInterface(const string& transform_frame,
-							     const string& mounting_frame,
-							     const string& housing_frame):
-  ROSCameraTransformInterface(transform_frame, mounting_frame, housing_frame)
+                                                             const string& mounting_frame, const string& housing_frame)
+  : ROSCameraTransformInterface(transform_frame, mounting_frame, housing_frame)
 {
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
   nh_ = new ros::NodeHandle;
 
   get_client_ = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
   set_client_ = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
-  store_client_ =
-      nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
+  store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_"
+                                                                                           "states");
 
   get_request_.joint_names.push_back(housing_frame + "_x_joint");
   get_request_.joint_names.push_back(housing_frame + "_y_joint");
@@ -378,8 +374,8 @@ ROSSimpleCalTInterface::ROSSimpleCalTInterface(const string& transform_frame, co
 
   get_client_ = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
   set_client_ = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
-  store_client_ =
-      nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
+  store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_"
+                                                                                           "states");
 
   get_request_.joint_names.push_back(transform_frame + "_x_joint");
   get_request_.joint_names.push_back(transform_frame + "_y_joint");
@@ -466,16 +462,17 @@ Pose6d ROSSimpleCalTInterface::getIntermediateFrame()
   return (pose);
 }
 
-ROSSimpleCameraCalTInterface::ROSSimpleCameraCalTInterface(const string& transform_frame, const string& camera_mounting_frame):
-  ROSCameraTransformInterface(transform_frame, camera_mounting_frame, "")
+ROSSimpleCameraCalTInterface::ROSSimpleCameraCalTInterface(const string& transform_frame,
+                                                           const string& camera_mounting_frame)
+  : ROSCameraTransformInterface(transform_frame, camera_mounting_frame, "")
 {
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
   nh_ = new ros::NodeHandle;
 
   get_client_ = nh_->serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
   set_client_ = nh_->serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
-  store_client_ =
-      nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_states");
+  store_client_ = nh_->serviceClient<industrial_extrinsic_cal::store_mutable_joint_states>("store_mutable_joint_"
+                                                                                           "states");
 
   get_request_.joint_names.push_back(transform_frame + "_x_joint");
   get_request_.joint_names.push_back(transform_frame + "_y_joint");

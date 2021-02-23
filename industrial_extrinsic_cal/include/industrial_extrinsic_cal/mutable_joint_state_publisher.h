@@ -85,5 +85,5 @@ private:
   std::string node_name_;
 };
 
-}  // end industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal
 #endif /* ROS_CAMERA_OBSERVER_H_ */

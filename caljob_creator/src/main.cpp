@@ -16,8 +16,8 @@
 class CalJob
 {
 public:
-  CalJob(const std::string& outfile, const std::string& camera_name,
-	 const std::string& target_name, const std::string& cost_type)
+  CalJob(const std::string& outfile, const std::string& camera_name, const std::string& target_name,
+         const std::string& cost_type)
     : file_(outfile.c_str()), camera_name_(camera_name), target_name_(target_name), cost_type_(cost_type)
   {
     if (!file_) throw std::runtime_error("Could not open outfile");
@@ -68,7 +68,7 @@ private:
     os << "          roi_x_max: " << image_height_ << "\n";
     os << "          roi_y_min: 0\n";
     os << "          roi_y_max: " << image_width_ << "\n";
-    os << "          cost_type: " << cost_type_   << "\n";
+    os << "          cost_type: " << cost_type_ << "\n";
 
     return;
   }
@@ -95,7 +95,7 @@ private:
     os << "          roi_x_max: " << image_width_ << "\n";
     os << "          roi_y_min: 0\n";
     os << "          roi_y_max: " << image_height_ << "\n";
-    os << "          cost_type: " << cost_type_   << "\n";
+    os << "          cost_type: " << cost_type_ << "\n";
 
     return;
   }

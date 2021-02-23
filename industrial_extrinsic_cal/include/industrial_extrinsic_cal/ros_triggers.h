@@ -277,6 +277,6 @@ private:
   industrial_extrinsic_cal::Roi roi_; /**< region to find the target */
 };
 
-}  // end of namespace
+}  // namespace industrial_extrinsic_cal
 
 #endif

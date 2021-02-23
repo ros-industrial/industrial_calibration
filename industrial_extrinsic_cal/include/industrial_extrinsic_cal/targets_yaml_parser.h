@@ -20,6 +20,6 @@ bool parseTargets(std::string& targets_input_file, std::vector<boost::shared_ptr
  *    @param node, the yaml node from which to parse the target
  */
 boost::shared_ptr<Target> parseSingleTarget(const YAML::Node& node);
-}  // end industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal
 
 #endif

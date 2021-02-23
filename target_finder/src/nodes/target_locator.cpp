@@ -43,22 +43,22 @@
 #include "ceres/rotation.h"
 #include "ceres/types.h"
 
-using std::string;
-using boost::shared_ptr;
 using boost::make_shared;
+using boost::shared_ptr;
 using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solver;
-using industrial_extrinsic_cal::Target;
 using industrial_extrinsic_cal::CameraObservations;
-using industrial_extrinsic_cal::ROSCameraObserver;
-using industrial_extrinsic_cal::Roi;
-using industrial_extrinsic_cal::Pose6d;
 using industrial_extrinsic_cal::Point3d;
+using industrial_extrinsic_cal::Pose6d;
+using industrial_extrinsic_cal::Roi;
+using industrial_extrinsic_cal::ROSCameraObserver;
 using industrial_extrinsic_cal::ROSListenerTransInterface;
+using industrial_extrinsic_cal::Target;
+using std::string;
 using target_finder::target_locator;
-using target_finder::target_verify;
 using target_finder::target_save_location;
+using target_finder::target_verify;
 
 class TargetLocatorService
 {
@@ -66,8 +66,8 @@ public:
   TargetLocatorService(ros::NodeHandle nh);
   ~TargetLocatorService()
   {
-	  delete camera_observer_;
-	  delete target_to_camera_TI_;
+    delete camera_observer_;
+    delete target_to_camera_TI_;
   };
   bool executeCallBack(target_locator::Request& req, target_locator::Response& res);
   bool verifyCallBack(target_verify::Request& req, target_verify::Response& res);
@@ -75,12 +75,12 @@ public:
   void initMCircleTarget(int rows, int cols, double circle_dia, double spacing);
   void dynReConfCallBack(target_finder::target_finderConfig& config, uint32_t level);
   Pose6d loadPose(std::string filepath);
-  
+
 private:
   ros::NodeHandle nh_;
-  ros::ServiceServer target_locate_server_; // provides the location of the target as a service
-  ros::ServiceServer target_verify_server_; // verifies the location matches stored location
-  ros::ServiceServer target_savelo_server_; // saves the location of the target to a file
+  ros::ServiceServer target_locate_server_;  // provides the location of the target as a service
+  ros::ServiceServer target_verify_server_;  // verifies the location matches stored location
+  ros::ServiceServer target_savelo_server_;  // saves the location of the target to a file
   shared_ptr<Target> target_;
   string image_topic_;
   string camera_name_;
@@ -92,8 +92,8 @@ private:
   int target_cols_;
   boost::shared_ptr<dynamic_reconfigure::Server<target_finder::target_finderConfig> > reconf_srv_;
   dynamic_reconfigure::Server<target_finder::target_finderConfig>::CallbackType reconf_CB_;
-  ROSCameraObserver *camera_observer_;
-  ROSListenerTransInterface *target_to_camera_TI_;
+  ROSCameraObserver* camera_observer_;
+  ROSListenerTransInterface* target_to_camera_TI_;
   // listen:pullTransform(), read:loadPose(scene_, file) and write:saveCurrentPose(scene, file)
   // scene is optional if file is not ""
   // otherwise scene is used to create the name of the file
@@ -116,7 +116,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
     ROS_ERROR("Must set param:  image_topic");
   }
 
-  if (!pnh.getParam("camera_name", camera_name_)) // need this to get the intrinsics 
+  if (!pnh.getParam("camera_name", camera_name_))  // need this to get the intrinsics
   {
     ROS_ERROR("Must set param: camera_name");
   }
@@ -124,19 +124,19 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   camera_observer_ = new ROSCameraObserver(image_topic_, camera_name_);
 
   camera_observer_->use_circle_detector_ = true;
-  pnh.getParam("use_circle_detector",  camera_observer_->use_circle_detector_);
-  
-  if (!pnh.getParam("target_frame", target_frame_)) // need this to get the intrinsics 
+  pnh.getParam("use_circle_detector", camera_observer_->use_circle_detector_);
+
+  if (!pnh.getParam("target_frame", target_frame_))  // need this to get the intrinsics
   {
     ROS_ERROR("Must set param: target_frame");
   }
 
-  if (!pnh.getParam("camera_frame", camera_frame_)) // need this to get the intrinsics 
+  if (!pnh.getParam("camera_frame", camera_frame_))  // need this to get the intrinsics
   {
     ROS_ERROR("Must set param: camera_frame");
   }
 
-  if (!pnh.getParam("data_directory", data_directory_)) // need this to get the intrinsics 
+  if (!pnh.getParam("data_directory", data_directory_))  // need this to get the intrinsics
   {
     ROS_ERROR("Must set param: data_directory");
   }
@@ -148,13 +148,13 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   target_type_ = pattern_options::ModifiedCircleGrid;
   target_locate_server_ = nh_.advertiseService("target_locate_srv", &TargetLocatorService::executeCallBack, this);
   target_verify_server_ = nh_.advertiseService("target_verify_srv", &TargetLocatorService::verifyCallBack, this);
-  target_savelo_server_ = nh_.advertiseService("target_save_location_srv", &TargetLocatorService::saveLocCallBack, this);
+  target_savelo_server_ =
+      nh_.advertiseService("target_save_location_srv", &TargetLocatorService::saveLocCallBack, this);
 
   reconf_srv_.reset(new dynamic_reconfigure::Server<target_finder::target_finderConfig>(nh_));
   dynamic_reconfigure::Server<target_finder::target_finderConfig>::CallbackType f;
   f = boost::bind(&TargetLocatorService::dynReConfCallBack, this, _1, _2);
   reconf_srv_->setCallback(f);
-
 }
 
 void TargetLocatorService::dynReConfCallBack(target_finder::target_finderConfig& config, uint32_t level)
@@ -182,20 +182,20 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
 
   // set the roi to whole image, lets keep this simple
   Roi roi;
-  if(req.roi.height==0 || req.roi.width==0)// both must be non-zero otherwise use whole image
-    {
-      roi.x_min = 0;
-      roi.y_min = 0;
-      roi.x_max = width;
-      roi.y_max = height;
-    }
+  if (req.roi.height == 0 || req.roi.width == 0)  // both must be non-zero otherwise use whole image
+  {
+    roi.x_min = 0;
+    roi.y_min = 0;
+    roi.x_max = width;
+    roi.y_max = height;
+  }
   else
-    {
-      roi.x_min = req.roi.x_offset;
-      roi.y_min = req.roi.y_offset;
-      roi.x_max = req.roi.x_offset + req.roi.width;
-      roi.y_max = req.roi.y_offset + req.roi.height;
-    }
+  {
+    roi.x_min = req.roi.x_offset;
+    roi.y_min = req.roi.y_offset;
+    roi.x_max = req.roi.x_offset + req.roi.width;
+    roi.y_max = req.roi.y_offset + req.roi.height;
+  }
 
   industrial_extrinsic_cal::Cost_function cost_type;
 
@@ -203,8 +203,9 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
   camera_observer_->clearObservations();
   camera_observer_->addTarget(target_, roi, cost_type);
   camera_observer_->triggerCamera();
-  
-  while (!camera_observer_->observationsDone());
+
+  while (!camera_observer_->observationsDone())
+    ;
 
   camera_observer_->getObservations(camera_observations);
   int num_observations = (int)camera_observations.size();
@@ -239,31 +240,31 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
   double error_per_observation = summary.final_cost / num_observations;
   res.cost_per_observation = error_per_observation;
   if (summary.termination_type != ceres::NO_CONVERGENCE)
+  {
+    if (error_per_observation <= req.allowable_cost_per_observation)
     {
-      if (error_per_observation <= req.allowable_cost_per_observation)
-	{
-	  res.final_pose.position.x = target_->pose_.x;
-	  res.final_pose.position.y = target_->pose_.y;
-	  res.final_pose.position.z = target_->pose_.z;
-	  target_->pose_.getQuaternion(res.final_pose.orientation.x, res.final_pose.orientation.y,
-				       res.final_pose.orientation.z, res.final_pose.orientation.w);
-	  res.success = true;
-	  return (true);
-	}
-      else
-	{
-	  ROS_ERROR("allowable cost exceeded %f > %f", error_per_observation, req.allowable_cost_per_observation);
-	  res.success = false;
-	  return (true);
-	}
+      res.final_pose.position.x = target_->pose_.x;
+      res.final_pose.position.y = target_->pose_.y;
+      res.final_pose.position.z = target_->pose_.z;
+      target_->pose_.getQuaternion(res.final_pose.orientation.x, res.final_pose.orientation.y,
+                                   res.final_pose.orientation.z, res.final_pose.orientation.w);
+      res.success = true;
+      return (true);
     }
-  else
+    else
     {
       ROS_ERROR("allowable cost exceeded %f > %f", error_per_observation, req.allowable_cost_per_observation);
+      res.success = false;
+      return (true);
     }
+  }
+  else
+  {
+    ROS_ERROR("allowable cost exceeded %f > %f", error_per_observation, req.allowable_cost_per_observation);
+  }
   ROS_ERROR("NO CONVERGENCE");
   res.success = false;
-  return(true);
+  return (true);
 }
 
 bool TargetLocatorService::verifyCallBack(target_verify::Request& req, target_verify::Response& res)
@@ -274,64 +275,57 @@ bool TargetLocatorService::verifyCallBack(target_verify::Request& req, target_ve
   tl_req.allowable_cost_per_observation = req.allowable_cost_per_observation;
   tl_req.roi = req.roi;
 
-  if(req.initial_pose.orientation.x == 0 &&
-     req.initial_pose.orientation.y == 0 &&
-     req.initial_pose.orientation.z == 0 &&
-     req.initial_pose.orientation.w == 0 &&
-     req.initial_pose.position.x == 0 &&
-     req.initial_pose.position.y == 0 &&
-     req.initial_pose.position.z == 0 
-     )
-    {
-      Pose6d TtoC = target_to_camera_TI_->pullTransform(); // this listens to the transform from TF
-      TtoC.getQuaternion(tl_req.initial_pose.orientation.x,
-			 tl_req.initial_pose.orientation.y,
-			 tl_req.initial_pose.orientation.z,
-			 tl_req.initial_pose.orientation.w);
-      tl_req.initial_pose.position.x = TtoC.x;
-      tl_req.initial_pose.position.y = TtoC.y;
-      tl_req.initial_pose.position.z = TtoC.z;
-    }
+  if (req.initial_pose.orientation.x == 0 && req.initial_pose.orientation.y == 0 &&
+      req.initial_pose.orientation.z == 0 && req.initial_pose.orientation.w == 0 && req.initial_pose.position.x == 0 &&
+      req.initial_pose.position.y == 0 && req.initial_pose.position.z == 0)
+  {
+    Pose6d TtoC = target_to_camera_TI_->pullTransform();  // this listens to the transform from TF
+    TtoC.getQuaternion(tl_req.initial_pose.orientation.x, tl_req.initial_pose.orientation.y,
+                       tl_req.initial_pose.orientation.z, tl_req.initial_pose.orientation.w);
+    tl_req.initial_pose.position.x = TtoC.x;
+    tl_req.initial_pose.position.y = TtoC.y;
+    tl_req.initial_pose.position.z = TtoC.z;
+  }
   else
-    {
-      tl_req.initial_pose = req.initial_pose;
-    }
+  {
+    tl_req.initial_pose = req.initial_pose;
+  }
 
-  if(!executeCallBack(tl_req, tl_res))
+  if (!executeCallBack(tl_req, tl_res))
+  {
+    ROS_ERROR("Pose Estimation of Target Failed");
+    res.position_error = -1.0;  // set to negative 1 since the pose is not computed
+    res.cost_per_observation = tl_res.cost_per_observation;
+    res.success = false;
+  }
+  else
+  {
+    res.cost_per_observation = tl_res.cost_per_observation;
+    // compare to saved position
+    std::string file_name = req.file_name.data;
+    if (!target_to_camera_TI_->loadPose(0, file_name))
     {
-      ROS_ERROR("Pose Estimation of Target Failed");
-      res.position_error = -1.0; // set to negative 1 since the pose is not computed
-      res.cost_per_observation = tl_res.cost_per_observation;
+      ROS_ERROR("could not load the pose from %s", file_name.c_str());
+    }
+    Pose6d P = target_to_camera_TI_->getCurrentPose();
+    double sqd = (P.x - tl_res.final_pose.position.x) * (P.x - tl_res.final_pose.position.x) +
+                 (P.y - tl_res.final_pose.position.y) * (P.y - tl_res.final_pose.position.y) +
+                 (P.z - tl_res.final_pose.position.z) * (P.z - tl_res.final_pose.position.z);
+    double position_error = sqrt(sqd);
+    res.position_error = position_error;
+    if (position_error < req.max_error)
+    {
+      res.success = true;
+    }
+    else
+    {
+      ROS_ERROR("Validation Failed old position:[%6.3lf %6.3lf %6.3lf], new [%6.3lf %6.3lf %6.3lf] error = %6.3lf max "
+                "error=%6.3lf ",
+                P.x, P.y, P.z, tl_res.final_pose.position.x, tl_res.final_pose.position.y, tl_res.final_pose.position.z,
+                position_error, req.max_error);
       res.success = false;
     }
-  else
-    {
-      res.cost_per_observation = tl_res.cost_per_observation;
-      // compare to saved position
-      std::string file_name = req.file_name.data;
-      if(!target_to_camera_TI_->loadPose(0, file_name))
-	{
-	  ROS_ERROR("could not load the pose from %s",file_name.c_str());
-	}
-      Pose6d P = target_to_camera_TI_->getCurrentPose();
-      double sqd = (P.x - tl_res.final_pose.position.x)*(P.x - tl_res.final_pose.position.x) +
-	(P.y - tl_res.final_pose.position.y)*(P.y - tl_res.final_pose.position.y) +
-	(P.z - tl_res.final_pose.position.z)*(P.z - tl_res.final_pose.position.z);
-      double position_error = sqrt(sqd);
-      res.position_error = position_error;
-      if(position_error < req.max_error)
-	{
-	  res.success = true;
-	}
-      else
-	{
-	  ROS_ERROR("Validation Failed old position:[%6.3lf %6.3lf %6.3lf], new [%6.3lf %6.3lf %6.3lf] error = %6.3lf max error=%6.3lf ",
-		    P.x, P.y, P.z,
-		    tl_res.final_pose.position.x, tl_res.final_pose.position.y, tl_res.final_pose.position.z,
-		    position_error, req.max_error);
-	  res.success = false;
-	}
-    }
+  }
   return true;
 }
 
@@ -344,47 +338,37 @@ bool TargetLocatorService::saveLocCallBack(target_save_location::Request& req, t
   tl_req.allowable_cost_per_observation = req.allowable_cost_per_observation;
   tl_req.roi = req.roi;
 
-  if(req.initial_pose.orientation.x == 0 &&
-     req.initial_pose.orientation.y == 0 &&
-     req.initial_pose.orientation.z == 0 &&
-     req.initial_pose.orientation.w == 0 &&
-     req.initial_pose.position.x == 0 &&
-     req.initial_pose.position.y == 0 &&
-     req.initial_pose.position.z == 0 
-     )
-    {
-      Pose6d TtoC = target_to_camera_TI_->pullTransform(); // this listens to the transform from TF
-      TtoC.getQuaternion(tl_req.initial_pose.orientation.x,
-			 tl_req.initial_pose.orientation.y,
-			 tl_req.initial_pose.orientation.z,
-			 tl_req.initial_pose.orientation.w);
-      tl_req.initial_pose.position.x = TtoC.x;
-      tl_req.initial_pose.position.y = TtoC.y;
-      tl_req.initial_pose.position.z = TtoC.z;
-    }
+  if (req.initial_pose.orientation.x == 0 && req.initial_pose.orientation.y == 0 &&
+      req.initial_pose.orientation.z == 0 && req.initial_pose.orientation.w == 0 && req.initial_pose.position.x == 0 &&
+      req.initial_pose.position.y == 0 && req.initial_pose.position.z == 0)
+  {
+    Pose6d TtoC = target_to_camera_TI_->pullTransform();  // this listens to the transform from TF
+    TtoC.getQuaternion(tl_req.initial_pose.orientation.x, tl_req.initial_pose.orientation.y,
+                       tl_req.initial_pose.orientation.z, tl_req.initial_pose.orientation.w);
+    tl_req.initial_pose.position.x = TtoC.x;
+    tl_req.initial_pose.position.y = TtoC.y;
+    tl_req.initial_pose.position.z = TtoC.z;
+  }
   else
-    {
-      tl_req.initial_pose = req.initial_pose;
-    }
-  
-  if(executeCallBack(tl_req, tl_res))
-    {
-      res.success = true;
-      Pose6d P;
-      P.x = tl_res.final_pose.position.x;
-      P.y = tl_res.final_pose.position.y;
-      P.z = tl_res.final_pose.position.z;
-      P.setQuaternion(tl_res.final_pose.orientation.x,
-		      tl_res.final_pose.orientation.y,
-		      tl_res.final_pose.orientation.z,
-		      tl_res.final_pose.orientation.w);
-      target_to_camera_TI_->setCurrentPose(P);
-      target_to_camera_TI_->saveCurrentPose(0, req.file_name.data);
-    }
+  {
+    tl_req.initial_pose = req.initial_pose;
+  }
+
+  if (executeCallBack(tl_req, tl_res))
+  {
+    res.success = true;
+    Pose6d P;
+    P.x = tl_res.final_pose.position.x;
+    P.y = tl_res.final_pose.position.y;
+    P.z = tl_res.final_pose.position.z;
+    P.setQuaternion(tl_res.final_pose.orientation.x, tl_res.final_pose.orientation.y, tl_res.final_pose.orientation.z,
+                    tl_res.final_pose.orientation.w);
+    target_to_camera_TI_->setCurrentPose(P);
+    target_to_camera_TI_->saveCurrentPose(0, req.file_name.data);
+  }
   res.cost_per_observation = tl_res.cost_per_observation;
   return true;
 }
-
 
 void TargetLocatorService::initMCircleTarget(int rows, int cols, double circle_dia, double spacing)
 {

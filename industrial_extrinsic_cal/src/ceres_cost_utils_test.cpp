@@ -466,4 +466,4 @@ void printCameraParameters(CameraParameters C, std::string words)
   printf("p1 = %8.3lf p2 = %8.3lf\n", C.p1, C.p2);
   printf("cx = %8.3lf cy = %8.3lf\n", C.cx, C.cy);
 }
-}  // end of namespace
+}  // namespace industrial_extrinsic_cal

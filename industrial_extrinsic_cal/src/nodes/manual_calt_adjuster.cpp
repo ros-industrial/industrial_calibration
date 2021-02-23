@@ -40,8 +40,8 @@ int main(int argc, char** argv)
                                                                                   mutable set */
   industrial_extrinsic_cal::store_mutable_joint_states::Request store_request; /**< request to store when  part of a
                                                                                   mutable set */
-  industrial_extrinsic_cal::store_mutable_joint_states::Response
-      store_response; /**< response to store when  part of a mutable set */
+  industrial_extrinsic_cal::store_mutable_joint_states::Response store_response; /**< response to store when  part of a
+                                                                                    mutable set */
 
   get_client = nh.serviceClient<industrial_extrinsic_cal::get_mutable_joint_states>("get_mutable_joint_states");
   set_client = nh.serviceClient<industrial_extrinsic_cal::set_mutable_joint_states>("set_mutable_joint_states");
@@ -181,12 +181,12 @@ int main(int argc, char** argv)
         delta_t = delta_t * 1.05;
         break;
       case 's':
-	store_client.call(store_request, store_response);
-	break;
+        store_client.call(store_request, store_response);
+        break;
       case 'q':
-	system ("/bin/stty cooked");
-	exit(0);
-	break;
+        system("/bin/stty cooked");
+        exit(0);
+        break;
       default:
         break;
     }  // end switch

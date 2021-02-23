@@ -14,7 +14,6 @@
 #ifndef POSE_REACHABILITY_FILTER_H_
 #define POSE_REACHABILITY_FILTER_H_
 
-
 #include <kdl/chainiksolverpos_lma.hpp>
 #include <kdl_parser/kdl_parser.hpp>
 #include <eigen_conversions/eigen_kdl.h>
@@ -30,23 +29,24 @@
  */
 namespace CreateChain
 {
-  class chain_creation
-  {
-    public:
-    std::string robot_urdf_;
-    std::string tool0_param_;
-    std::string base_link_param_;
-    //loads urdf that discribes the chain
-    chain_creation();
-    bool chain_Parse(Eigen::Affine3d ei_transform_to_check);
-  private:
-    KDL::JntArray robot_joints;
-    KDL::JntArray return_joint_values;
-    urdf::Model Mymodel;
-    tesseract::tesseract_ros::KDLChainKin CK;
-    KDL::Tree robot_tree;
-    KDL::Chain robot_chain;
-    KDL::Frame transform_goal_kdl;
-  };
-}
+class chain_creation
+{
+public:
+  std::string robot_urdf_;
+  std::string tool0_param_;
+  std::string base_link_param_;
+  // loads urdf that discribes the chain
+  chain_creation();
+  bool chain_Parse(Eigen::Affine3d ei_transform_to_check);
+
+private:
+  KDL::JntArray robot_joints;
+  KDL::JntArray return_joint_values;
+  urdf::Model Mymodel;
+  tesseract::tesseract_ros::KDLChainKin CK;
+  KDL::Tree robot_tree;
+  KDL::Chain robot_chain;
+  KDL::Frame transform_goal_kdl;
+};
+}  // namespace CreateChain
 #endif

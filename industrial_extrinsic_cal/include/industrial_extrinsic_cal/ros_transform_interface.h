@@ -33,16 +33,17 @@
 
 namespace industrial_extrinsic_cal
 {
-  // A transform interface is a mechanism for getting, updating, broadcasting,
-  // listening and storing a transform between two coordinate frames
-  // inherently, there is also a reference frame
-  // For calibration purposes, we want to transform points from the target frame and into the camera frame
-  // Therefore, the transform pulled or pushed to and from a camera transform interface is from the camera's optical frame to the other frame
-  // while the transform pushed or pulled to and from a standard(target) transform interface is from the other frame to the target frame
+// A transform interface is a mechanism for getting, updating, broadcasting,
+// listening and storing a transform between two coordinate frames
+// inherently, there is also a reference frame
+// For calibration purposes, we want to transform points from the target frame and into the camera frame
+// Therefore, the transform pulled or pushed to and from a camera transform interface is from the camera's optical frame
+// to the other frame while the transform pushed or pulled to and from a standard(target) transform interface is from
+// the other frame to the target frame
 
 class ROSTransformInterface : public TransformInterface
 {
- public:
+public:
   /*! @brief uses tf listener to get a Pose6d. The pose returned transform points in the to_frame into the from_frame.
    *   @param from_frame the starting frame
    *   @param to_frame  the ending frame
@@ -50,24 +51,24 @@ class ROSTransformInterface : public TransformInterface
    *   Intermediate_transform is identity
    */
   Pose6d getPoseFromTF(const std::string& from_frame, const std::string& to_frame,
-		       const tf::TransformListener& tf_listener)
+                       const tf::TransformListener& tf_listener)
   {
     // get all the information from tf and from the mutable joint state publisher
     tf::StampedTransform tf_transform;
     ros::Time now = ros::Time::now();
     while (!tf_listener.waitForTransform(from_frame, to_frame, now, ros::Duration(1.0)))
-      {
-	now = ros::Time::now();
-	ROS_INFO("waiting for tranform from %s to %s", from_frame.c_str(), to_frame.c_str());
-      }
+    {
+      now = ros::Time::now();
+      ROS_INFO("waiting for tranform from %s to %s", from_frame.c_str(), to_frame.c_str());
+    }
     try
-      {
-	tf_listener.lookupTransform(from_frame, to_frame, now, tf_transform);
-      }
+    {
+      tf_listener.lookupTransform(from_frame, to_frame, now, tf_transform);
+    }
     catch (tf::TransformException& ex)
-      {
-	ROS_ERROR("%s", ex.what());
-      }
+    {
+      ROS_ERROR("%s", ex.what());
+    }
     Pose6d pose;
     pose.setBasis(tf_transform.getBasis());
     pose.setOrigin(tf_transform.getOrigin());
@@ -77,41 +78,41 @@ class ROSTransformInterface : public TransformInterface
   // transform_frame_
   // ref_frame_
   // ref_frame_initialized_
-  // no argument default constructor 
+  // no argument default constructor
   tf::TransformListener tf_listener_;
   std::string mounting_frame_;
 };
-
 
 // this class is meant to be a base class for cameras
 // when a camera is mounted to some frame besides the ref_frame_
 // the intermediate transform is from mounting_frame_ to the ref_frame_
 class ROSCameraTransformInterface : public ROSTransformInterface
 {
- public:
+public:
   /* constructor */
- ROSCameraTransformInterface(const std::string& transform_frame, const std::string& mounting_frame, const std::string& housing_frame) 
-   {
-     transform_frame_ = transform_frame;
-     mounting_frame_ = mounting_frame;
-     housing_frame_ = housing_frame;
-   };
+  ROSCameraTransformInterface(const std::string& transform_frame, const std::string& mounting_frame,
+                              const std::string& housing_frame)
+  {
+    transform_frame_ = transform_frame;
+    mounting_frame_ = mounting_frame;
+    housing_frame_ = housing_frame;
+  };
 
   Pose6d getIntermediateFrame()
   {
     /* the intermediate frame is inverted from the standard */
     Pose6d pose(0, 0, 0, 0, 0, 0);
     if (ref_frame_initialized_)
-      {
-	pose = getPoseFromTF(mounting_frame_, ref_frame_, tf_listener_);
-      }
+    {
+      pose = getPoseFromTF(mounting_frame_, ref_frame_, tf_listener_);
+    }
     else
-      {
-	ROS_ERROR("ref_frame_ must be initialized before calling getIntermediateFrame()");
-      }
+    {
+      ROS_ERROR("ref_frame_ must be initialized before calling getIntermediateFrame()");
+    }
     return (pose);
-  } ;
-  std::string housing_frame_;               /**< frame name for the housing : not all mounted cameras have a housing frame. */
+  };
+  std::string housing_frame_; /**< frame name for the housing : not all mounted cameras have a housing frame. */
 };
 
 /** @brief this object simply listens to a pose from ref_frame_ to transform_frame_, this must be set in a urdf
@@ -178,7 +179,6 @@ public:
    */
   ROSCameraListenerTransInterface(const std::string& transform_frame, const std::string& camera_mounting_frame);
 
-
   /**
    * @brief Default destructor
    */
@@ -226,7 +226,8 @@ public:
    * @param optical_frame The name of the optical frame defined in the urdf
    * @param housing_frame The name of camera housing frame defined in the urdf
    */
-  ROSCameraHousingListenerTInterface(const std::string& optical_frame, const std::string& mounting_frame, const std::string& housing_frame);
+  ROSCameraHousingListenerTInterface(const std::string& optical_frame, const std::string& mounting_frame,
+                                     const std::string& housing_frame);
 
   /**
    * @brief Default destructor
@@ -256,11 +257,12 @@ public:
   }
 
 private:
-  std::string
-      housing_frame_; /**< housing frame name note, this is not used, but kept be symetry with broadcaster param list */
+  std::string housing_frame_; /**< housing frame name note, this is not used, but kept be symetry with broadcaster param
+                                 list */
 };
 
-/** @brief This transform interface is used when the pose from the ref_frame_ to the transform_frame_ is determined through calibration
+/** @brief This transform interface is used when the pose from the ref_frame_ to the transform_frame_ is determined
+   through calibration
     /* The urdf should not define this transform, otherwise there will be a conflict
     /* the pose from the yaml file is broadcast immediately
     /* Once calibrated, the pose may be pushed, then the updated pose will be observed by tf
@@ -305,12 +307,13 @@ private:
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
 };
 
-/** @brief This transform interface is used when the camera pose (transform from transform_frame_ to ref_frame_) is determined through calibration
+/** @brief This transform interface is used when the camera pose (transform from transform_frame_ to ref_frame_) is
+   determined through calibration
     /* The urdf should not define this transform, otherwise there will be a conflict
     /* the pose in the camera yaml file is broadcast imediately
     /* Once calibrated, the pose may be pushed to tf
     /* intermediate transform is identity
-    
+
 */
 
 class ROSCameraBroadcastTransInterface : public ROSCameraTransformInterface
@@ -352,15 +355,14 @@ private:
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
 };
 
-/** @brief This transform interface is the pose of the camera's optical frame (transform_frame_) relative to the mounting_frame_, not the ref_frame_
- * there is also a housing_frame_ with a known transform to optical_frame_ that must be defined by the urdf
- * this frame will be listened to by this interface
- * when the pose (mount 2 optical) is determined and pushed, the mounting_frame_ to housing_frame_ is adjusted to
- * make the computed mounting_frame_ to transform_frame_ correct
- * The urdf should not define a frame from mounting_frame_ to housing_frame_, otherwise there will be two publishers of this info
- * the pose in the camera yaml file is broadcast imediately after the ref_frame_ is initialized
- * the intermediate frame is from the mounting_frame_ to the ref_frame_
-*/
+/** @brief This transform interface is the pose of the camera's optical frame (transform_frame_) relative to the
+ * mounting_frame_, not the ref_frame_ there is also a housing_frame_ with a known transform to optical_frame_ that must
+ * be defined by the urdf this frame will be listened to by this interface when the pose (mount 2 optical) is determined
+ * and pushed, the mounting_frame_ to housing_frame_ is adjusted to make the computed mounting_frame_ to
+ * transform_frame_ correct The urdf should not define a frame from mounting_frame_ to housing_frame_, otherwise there
+ * will be two publishers of this info the pose in the camera yaml file is broadcast imediately after the ref_frame_ is
+ * initialized the intermediate frame is from the mounting_frame_ to the ref_frame_
+ */
 class ROSCameraHousingBroadcastTInterface : public ROSCameraTransformInterface
 {
 public:
@@ -371,10 +373,8 @@ public:
    * @param mounting_frame the camera's mounting frame
    * intermediate frame is from mounting_frame_ to ref_frame_
    */
-  ROSCameraHousingBroadcastTInterface(const std::string& transform_frame,
-				      const std::string& mounting_frame,
-				      const std::string& housing_frame,
-				      const Pose6d& pose);
+  ROSCameraHousingBroadcastTInterface(const std::string& transform_frame, const std::string& mounting_frame,
+                                      const std::string& housing_frame, const Pose6d& pose);
 
   /**
    * @brief Default destructor
@@ -430,8 +430,7 @@ public:
    * @param mounting_frame The name of frame on which the camera housing is mounted
    */
   ROSCameraHousingCalTInterface(const std::string& transform_frame, /* optical frame */
-                                const std::string& mounting_frame,
-				const std::string& housing_frame );
+                                const std::string& mounting_frame, const std::string& housing_frame);
 
   /**
    * @brief Default destructor
@@ -459,27 +458,27 @@ public:
   void setReferenceFrame(std::string& ref_frame);
 
 private:
-  ros::NodeHandle* nh_;               /**< the standard node handle for ros*/
-  ros::ServiceClient get_client_;     /**< a client for calling the service to get the joint values associated with the
-                                         transform */
-  ros::ServiceClient set_client_;     /**< a client for calling the service to set the joint values associated with the
-                                         transform */
-  ros::ServiceClient
-      store_client_; /**< a client for calling the service to store the joint values associated with the transform */
-  std::vector<std::string> joint_names_;                                    /**< names of joints  */
-  std::vector<double> joint_values_;                                        /**< values of joints  */
-  industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_; /**< request when transform is part of a
-                                                                               mutable set */
-  industrial_extrinsic_cal::get_mutable_joint_states::Response
-      get_response_; /**< response when transform is part of a mutable set */
-  industrial_extrinsic_cal::set_mutable_joint_states::Request set_request_; /**< request when transform is part of a
-                                                                               mutable set */
-  industrial_extrinsic_cal::set_mutable_joint_states::Response
-      set_response_; /**< response when transform is part of a mutable set */
-  industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_; /**< request to store when  part of a
-                                                                                   mutable set */
-  industrial_extrinsic_cal::store_mutable_joint_states::Response
-      store_response_; /**< response to store when  part of a mutable set */
+  ros::NodeHandle* nh_;             /**< the standard node handle for ros*/
+  ros::ServiceClient get_client_;   /**< a client for calling the service to get the joint values associated with the
+                                       transform */
+  ros::ServiceClient set_client_;   /**< a client for calling the service to set the joint values associated with the
+                                       transform */
+  ros::ServiceClient store_client_; /**< a client for calling the service to store the joint values associated with the
+                                       transform */
+  std::vector<std::string> joint_names_;                                      /**< names of joints  */
+  std::vector<double> joint_values_;                                          /**< values of joints  */
+  industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_;   /**< request when transform is part of a
+                                                                                 mutable set */
+  industrial_extrinsic_cal::get_mutable_joint_states::Response get_response_; /**< response when transform is part of a
+                                                                                 mutable set */
+  industrial_extrinsic_cal::set_mutable_joint_states::Request set_request_;   /**< request when transform is part of a
+                                                                                 mutable set */
+  industrial_extrinsic_cal::set_mutable_joint_states::Response set_response_; /**< response when transform is part of a
+                                                                                 mutable set */
+  industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_;   /**< request to store when  part of a
+                                                                                     mutable set */
+  industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_; /**< response to store when  part of a
+                                                                                     mutable set */
 };
 
 /** @brief this is expected to be used for calibrating a target
@@ -531,17 +530,17 @@ public:
 
   /** @brief gets the transform from ref_frame_ to parent_frame_ */
   Pose6d getIntermediateFrame();
-    
+
 private:
   ros::NodeHandle* nh_;
-  std::string transform_frame_;   /**< transform frame name */
-  std::string parent_frame_;      /**< parent's frame name */
-  ros::ServiceClient get_client_; /**< a client for calling the service to get the joint values associated with the
-                                     transform */
-  ros::ServiceClient set_client_; /**< a client for calling the service to set the joint values associated with the
-                                     transform */
-  ros::ServiceClient
-      store_client_; /**< a client for calling the service to store the joint values associated with the transform */
+  std::string transform_frame_;     /**< transform frame name */
+  std::string parent_frame_;        /**< parent's frame name */
+  ros::ServiceClient get_client_;   /**< a client for calling the service to get the joint values associated with the
+                                       transform */
+  ros::ServiceClient set_client_;   /**< a client for calling the service to set the joint values associated with the
+                                       transform */
+  ros::ServiceClient store_client_; /**< a client for calling the service to store the joint values associated with the
+                                       transform */
   std::vector<std::string> joint_names_; /**< names of joints  */
   std::vector<double> joint_values_;     /**< values of joints  */
   industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_;
@@ -552,9 +551,8 @@ private:
   industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_;
 };
 
-/** @brief this is expected to be used for calibrating a camera who's optical frame is mounted directly to the ref_frame_
- *             The macro takes a child and a parent link, and defines the following joints
- *             {child}_x_joint:
+/** @brief this is expected to be used for calibrating a camera who's optical frame is mounted directly to the
+ * ref_frame_ The macro takes a child and a parent link, and defines the following joints {child}_x_joint:
  *             {child}_y_joint:
  *             {child}_z_joint:
  *             {child}_yaw_joint:
@@ -579,7 +577,6 @@ public:
    */
   ROSSimpleCameraCalTInterface(const std::string& transform_frame, const std::string& camera_mounting_frame);
 
-
   /**
    * @brief Default destructor
    */
@@ -602,12 +599,12 @@ public:
 
 private:
   ros::NodeHandle* nh_;
-  ros::ServiceClient get_client_; /**< a client for calling the service to get the joint values associated with the
-                                     transform */
-  ros::ServiceClient set_client_; /**< a client for calling the service to set the joint values associated with the
-                                     transform */
-  ros::ServiceClient
-      store_client_; /**< a client for calling the service to store the joint values associated with the transform */
+  ros::ServiceClient get_client_;   /**< a client for calling the service to get the joint values associated with the
+                                       transform */
+  ros::ServiceClient set_client_;   /**< a client for calling the service to set the joint values associated with the
+                                       transform */
+  ros::ServiceClient store_client_; /**< a client for calling the service to store the joint values associated with the
+                                       transform */
   std::vector<std::string> joint_names_; /**< names of joints  */
   std::vector<double> joint_values_;     /**< values of joints  */
   industrial_extrinsic_cal::get_mutable_joint_states::Request get_request_;
@@ -617,50 +614,49 @@ private:
   industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_;
   industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_;
 };
-  class DefaultTransformInterface : public TransformInterface
+class DefaultTransformInterface : public TransformInterface
+{
+public:
+  /** @brief  constructor
+   *   @param pose the pose associated with the transform interface
+   */
+  DefaultTransformInterface(){};
+
+  /** @brief  destructor */
+  ~DefaultTransformInterface(){};
+
+  /** @brief push the transform to the hardware or display
+   *   @param pose the pose associated with the transform interface
+   */
+  bool pushTransform(Pose6d& pose)
   {
-  public:
-    /** @brief  constructor
-     *   @param pose the pose associated with the transform interface
-     */
-    DefaultTransformInterface(){};
+    pose_ = pose;
+    return (true);
+  };
 
-    /** @brief  destructor */
-    ~DefaultTransformInterface(){};
+  /** @brief get the transform from the hardware or display
+   *    @return the pose
+   */
+  Pose6d pullTransform()
+  {
+    return (pose_);
+  };
 
-    /** @brief push the transform to the hardware or display
-     *   @param pose the pose associated with the transform interface
-     */
-    bool pushTransform(Pose6d& pose)
-    {
-      pose_ = pose;
-      return(true);
-    };
+  /** @brief sets the reference frame of the transform interface, sometimes not used */
+  void setReferenceFrame(std::string& ref_frame)
+  {
+    ref_frame_ = ref_frame;
+    ref_frame_initialized_ = true;
+  }
+  /** @brief typically outputs the results to a file, but here does nothing
+   *    @param the file path name, a dummy argument in this case
+   *    @return   always true
+   */
+  bool store(std::string& filePath)
+  {
+    return (true);
+  };
+};  // end of default tranform interface
 
-    /** @brief get the transform from the hardware or display
-     *    @return the pose
-     */
-    Pose6d pullTransform()
-    {
-      return (pose_);
-    };
-
-    /** @brief sets the reference frame of the transform interface, sometimes not used */
-    void setReferenceFrame(std::string& ref_frame)
-    {
-      ref_frame_ = ref_frame;
-      ref_frame_initialized_ = true;
-    }
-    /** @brief typically outputs the results to a file, but here does nothing
-     *    @param the file path name, a dummy argument in this case
-     *    @return   always true
-     */
-    bool store(std::string& filePath)
-    {
-      return (true);
-    };
-  };              // end of default tranform interface
-
-
-}  // end industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal
 #endif /* ROS_CAMERA_OBSERVER_H_ */

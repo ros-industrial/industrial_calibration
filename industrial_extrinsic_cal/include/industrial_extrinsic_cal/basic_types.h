@@ -67,7 +67,7 @@ public:
    *    @param aax x component of angle axis vector
    *    @param aay y component of angle axis vector
    *    @param aaz z component of angle axis vector
-  */
+   */
   Pose6d(double tx, double ty, double tz, double aax, double aay, double aaz);
 
   /** @brief default constructor*/
@@ -80,14 +80,14 @@ public:
 
   /** @brief set the translational part of pose using a tf::Vector3
    *    @param v the translation components as a 3 vector
-  */
+   */
   void setOrigin(tf::Vector3& v);
 
   /** @brief set the translational part of pose
    *    @param tx  the x value of the translation vector
    *    @param ty  the y value of the translation vector
    *    @param tz  the z value of the translation vector
-  */
+   */
   void setOrigin(double tx, double ty, double tz);
 
   /** @brief set the rotational part of pose using Euler Z-Y-Z rotations
@@ -109,7 +109,7 @@ public:
    *    @param aax x component of angle axis vector
    *    @param aay y component of angle axis vector
    *    @param aaz z component of angle axis vector
-  */
+   */
   void setAngleAxis(double aax, double aay, double aaz);
 
   /** @brief get the rotational part of pose as a tf::Matrix3x3 */
@@ -132,7 +132,7 @@ public:
    *   @param qy quaternion y value
    *   @param qz quaternion z value
    *   @param qw quaternion w value
-  */
+   */
   void getQuaternion(double& qx, double& qy, double& qz, double& qw) const;
 
   /** @brief get the inverse of the pose_*/
@@ -227,16 +227,14 @@ typedef struct
   int width;
 } CameraParameters;
 
-
 /** @brief Parameters defining Denavit-Hartenberg parameters for links of a robot  */
 typedef struct
 {
-  double a;  
+  double a;
   double alpha;
   double d;
   double theta;
 } DHParameters;
 
- 
-}  // end namespace industrial_extrinsiac_cal
+}  // namespace industrial_extrinsic_cal
 #endif

@@ -23,7 +23,7 @@
 #include "ceres/rotation.h"
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
-double PI = 4*atan(1);
+double PI = 4 * atan(1);
 
 namespace industrial_extrinsic_cal
 {
@@ -105,7 +105,7 @@ inline void extractCameraIntrinsics(const T intrinsics[4], T& fx, T& fy, T& cx, 
 }
 
 template <typename T>
-void extractPoseExtrinsics(Pose6d P, T E[6] );
+void extractPoseExtrinsics(Pose6d P, T E[6]);
 template <typename T>
 inline void extractPoseExtrinsics(Pose6d P, T E[6])
 {
@@ -177,7 +177,6 @@ inline void transformPoint(const T angle_axis[3], const T tx[3], const T point[3
   t_point[2] = t_point[2] + tx[2];
 }
 
-
 /*! \brief ceres compliant function to apply an angle-axis and translation to transform a point
  *  @param E, all 6 extrinsic parameters, ax,ay,az,tx,ty,tz
  *  @param point, the original point
@@ -188,7 +187,6 @@ inline void eTransformPoint(const T E[6], const T point[3], T t_point[3]);
 template <typename T>
 inline void eTransformPoint(const T E[6], const T point[3], T t_point[3])
 {
-  
   ceres::AngleAxisRotatePoint(E, point, t_point);
   t_point[0] = t_point[0] + E[3];
   t_point[1] = t_point[1] + E[4];
@@ -198,7 +196,7 @@ inline void eTransformPoint(const T E[6], const T point[3], T t_point[3])
 /*! \brief ceres compliant function to apply dh-parameters to transform a point down the link
  *  @param a     link x axis length
  *  @param alpha link twist around x axis
- *  @param d     link z axis length       (joint valure for prismatic joints) 
+ *  @param d     link z axis length       (joint valure for prismatic joints)
  *  @param theta link twist around z axis (joint value for rotary joints)
  *  @param point, the original point
  *  @param t_point, the transformed point
@@ -213,19 +211,28 @@ inline void dhTransformPoint(const T a, const T alpha, const T d, const T theta,
   T ct = cos(theta);
   T sa = sin(alpha);
   T ca = cos(alpha);
-  M[0][0] = ct;      M[0][1] = -st*ca; M[0][2] =  st*sa; M[0][3] = a*ct;
-  M[1][0] = st;      M[1][1] =  ct*ca; M[1][2] = -ct*sa; M[1][3] = a*st;
-  M[2][0] = T(0.0);  M[2][1] =  sa;    M[2][2] =  ca;    M[2][3] = d;
+  M[0][0] = ct;
+  M[0][1] = -st * ca;
+  M[0][2] = st * sa;
+  M[0][3] = a * ct;
+  M[1][0] = st;
+  M[1][1] = ct * ca;
+  M[1][2] = -ct * sa;
+  M[1][3] = a * st;
+  M[2][0] = T(0.0);
+  M[2][1] = sa;
+  M[2][2] = ca;
+  M[2][3] = d;
 
-  t_point[0] = M[0][0]*point[0] + M[0][1]*point[1] + M[0][2]*point[2] + M[0][3];
-  t_point[1] = M[1][0]*point[0] + M[1][1]*point[1] + M[1][2]*point[2] + M[1][3];
-  t_point[1] = M[2][0]*point[0] + M[2][1]*point[1] + M[2][2]*point[2] + M[2][3];
+  t_point[0] = M[0][0] * point[0] + M[0][1] * point[1] + M[0][2] * point[2] + M[0][3];
+  t_point[1] = M[1][0] * point[0] + M[1][1] * point[1] + M[1][2] * point[2] + M[1][3];
+  t_point[1] = M[2][0] * point[0] + M[2][1] * point[1] + M[2][2] * point[2] + M[2][3];
 }
 
 /*! \brief ceres compliant function to apply dh-parameters to transform a Point3d down the link
  *  @param a     link x axis length
  *  @param alpha link twist around x axis
- *  @param d     link z axis length       (joint valure for prismatic joints) 
+ *  @param d     link z axis length       (joint valure for prismatic joints)
  *  @param theta link twist around z axis (joint value for rotary joints)
  *  @param point, the original point
  *  @param t_point, the transformed point
@@ -239,13 +246,13 @@ inline void dhTransformPoint3d(const T a, const T alpha, const T d, const T thet
   point[0] = T(point_.x);
   point[1] = T(point_.y);
   point[2] = T(point_.z);
-  dhTransformPoint(a, alpha, d, theta, point, t_point); // use subroutine call rather than duplicate code
+  dhTransformPoint(a, alpha, d, theta, point, t_point);  // use subroutine call rather than duplicate code
 }
 
 /*! \brief ceres compliant function to apply dh-parameters to transform a point up the link
  *  @param a     link x axis length
  *  @param alpha link twist around x axis
- *  @param d     link z axis length       (joint valure for prismatic joints) 
+ *  @param d     link z axis length       (joint valure for prismatic joints)
  *  @param theta link twist around z axis (joint value for rotary joints)
  *  @param point, the original point
  *  @param t_point, the transformed point
@@ -261,44 +268,54 @@ inline void dhInvTransformPoint(const T a, const T alpha, const T d, const T the
   T sa = sin(alpha);
   T ca = cos(alpha);
 
-
   /* original M matrix
   M[0][0] = ct;   M[0][1] = -st*ca; M[0][2] =  st*sa; M[0][3] = a*ct;
   M[1][0] = st;   M[1][1] =  ct*ca; M[1][2] = -ct*sa; M[1][3] = a*st;
   M[2][0] = 0.0;  M[2][1] =  sa;    M[2][2] =  ca;    M[2][3] = d;
 
-  The inverse is the transpose of the rotation part, and if M is composed of four vectors M=[R | v] = [n | o | a| v] then
-  the upper 3x3 of M_inv is the transpose of the upper 3x3 of M and
-  the last column of M_inv = [  -n^t v ; -o^t v ; a^t v ]
+  The inverse is the transpose of the rotation part, and if M is composed of four vectors M=[R | v] = [n | o | a| v]
+  then the upper 3x3 of M_inv is the transpose of the upper 3x3 of M and the last column of M_inv = [  -n^t v ; -o^t v ;
+  a^t v ]
   */
 
-  M[0][0] =    ct;    M[0][1] =  st;    M[0][2] =  T(0.0);  M[0][3] = -(  ct   * a*ct   +  st    * a*st  + T(0.0) * d);
-  M[1][0] = -st*ca;   M[1][1] =  ct*ca; M[1][2] =  sa;      M[1][3] = -(-st*ca * a*ct   +  ct*ca * a*st  + sa     * d);
-  M[2][0] =  st*sa;   M[2][1] = -ct*sa; M[2][2] =  ca;      M[2][3] = -( st*sa * a*ct   + -ct*sa * a*st  + ca     * d);
+  M[0][0] = ct;
+  M[0][1] = st;
+  M[0][2] = T(0.0);
+  M[0][3] = -(ct * a * ct + st * a * st + T(0.0) * d);
+  M[1][0] = -st * ca;
+  M[1][1] = ct * ca;
+  M[1][2] = sa;
+  M[1][3] = -(-st * ca * a * ct + ct * ca * a * st + sa * d);
+  M[2][0] = st * sa;
+  M[2][1] = -ct * sa;
+  M[2][2] = ca;
+  M[2][3] = -(st * sa * a * ct + -ct * sa * a * st + ca * d);
 
-  t_point[0] = M[0][0]*point[0] + M[0][1]*point[1] + M[0][2]*point[2] + M[0][3];
-  t_point[1] = M[1][0]*point[0] + M[1][1]*point[1] + M[1][2]*point[2] + M[1][3];
-  t_point[1] = M[2][0]*point[0] + M[2][1]*point[1] + M[2][2]*point[2] + M[2][3];
+  t_point[0] = M[0][0] * point[0] + M[0][1] * point[1] + M[0][2] * point[2] + M[0][3];
+  t_point[1] = M[1][0] * point[0] + M[1][1] * point[1] + M[1][2] * point[2] + M[1][3];
+  t_point[1] = M[2][0] * point[0] + M[2][1] * point[1] + M[2][2] * point[2] + M[2][3];
 }
 
 /*! \brief ceres compliant function to apply dh-parameters to transform a Point3d
  *  @param a     link x axis length
  *  @param alpha link twist around x axis
- *  @param d     link z axis length       (joint valure for prismatic joints) 
+ *  @param d     link z axis length       (joint valure for prismatic joints)
  *  @param theta link twist around z axis (joint value for rotary joints)
  *  @param point, the original point
  *  @param t_point, the transformed point
  */
 template <typename T>
-inline void dhInvTransformPoint3d(const T a, const T alpha, const T d, const T theta, const Point3d& point_, T t_point[3]);
+inline void dhInvTransformPoint3d(const T a, const T alpha, const T d, const T theta, const Point3d& point_,
+                                  T t_point[3]);
 template <typename T>
-inline void dhInvTransformPoint3d(const T a, const T alpha, const T d, const T theta, const Point3d& point_, T t_point[3])
+inline void dhInvTransformPoint3d(const T a, const T alpha, const T d, const T theta, const Point3d& point_,
+                                  T t_point[3])
 {
   T point[3];
   point[0] = T(point_.x);
   point[1] = T(point_.y);
   point[2] = T(point_.z);
-  dhInvTransformPoint(a, alpha, d, theta, point, t_point); // use subroutine call rather than duplicate code
+  dhInvTransformPoint(a, alpha, d, theta, point, t_point);  // use subroutine call rather than duplicate code
 }
 
 /*! \brief ceres compliant function to apply a pose to transform a point
@@ -342,14 +359,13 @@ inline void transformPoint3d(const T angle_axis[3], const T tx[3], const Point3d
   t_point[2] = t_point[2] + tx[2];
 }
 
-
 /*! \brief ceres compliant function to apply an angle-axis and translation to transform a point in Point3d form
  *  @param E extrinsic parameters  ax, ay, az, tx, ty, tz
  *  @param point, the original point in a Point3d form
  *  @param t_point, the transformed point
  */
 template <typename T>
-void eTransformPoint3d(const T E[6],  const Point3d& point, T t_point[3]);
+void eTransformPoint3d(const T E[6], const Point3d& point, T t_point[3]);
 template <typename T>
 inline void eTransformPoint3d(const T E[6], const Point3d& point, T t_point[3])
 {
@@ -379,7 +395,7 @@ inline void poseRotationMatrix(const Pose6d& pose, T R[9])
   ceres::AngleAxisToRotationMatrix(angle_axis, R);
 }
 
-/*! \brief ceres compliant function to multiply two 6DoF angle-axis-tx poses 
+/*! \brief ceres compliant function to multiply two 6DoF angle-axis-tx poses
  *  @param T1 6Dof angle-axis-tx pose 1
  *  @param T2 6Dof angle-axis-tx pose 2
  *  @param T1T2 6Dof product in angle-axis-tx form
@@ -389,16 +405,16 @@ void extrinsicsMult(const T T1[6], const T T2[6], T T1T2[6]);
 template <typename T>
 inline void extrinsicsMult(const T T1[6], const T T2[6], T T1T2[6])
 {
-  T R1[9],R2[9],R3[9];
-  const T* aa1(&T1[0]); // angle axis from T1
-  const T* aa2(&T2[0]); // angle axis from T2
-  const T* tx1(&T1[3]); // position part of T1
-  const T* tx2(&T2[3]); // position part of T2
+  T R1[9], R2[9], R3[9];
+  const T* aa1(&T1[0]);  // angle axis from T1
+  const T* aa2(&T2[0]);  // angle axis from T2
+  const T* tx1(&T1[3]);  // position part of T1
+  const T* tx2(&T2[3]);  // position part of T2
   T aa3[3], tx3[3];
   ceres::AngleAxisToRotationMatrix(aa1, R1);
   ceres::AngleAxisToRotationMatrix(aa2, R2);
   rotationProduct(R1, R2, R3);
-  ceres::RotationMatrixToAngleAxis(R3,aa3);
+  ceres::RotationMatrixToAngleAxis(R3, aa3);
   eTransformPoint(T1, tx2, tx3);
 
   T1T2[0] = aa3[0];
@@ -407,9 +423,7 @@ inline void extrinsicsMult(const T T1[6], const T T2[6], T T1T2[6])
   T1T2[3] = tx3[0];
   T1T2[4] = tx3[1];
   T1T2[5] = tx3[2];
-
 }
-
 
 /*! \brief ceres compliant function to compute the residual from a distorted pinhole camera model
  *  @param point[3] the input point
@@ -530,9 +544,9 @@ inline void projectPntNoDistortion(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox
  *  @param oy observation in y
  */
 template <typename T>
-void projectPntDist(T point[3], T& fx, T& fy, T& cx, T& cy, T& k1, T & k2, T& k3, T& p1, T& p2, T& ox, T& oy);
+void projectPntDist(T point[3], T& fx, T& fy, T& cx, T& cy, T& k1, T& k2, T& k3, T& p1, T& p2, T& ox, T& oy);
 template <typename T>
-inline void projectPntDist(T point[3], T& fx, T& fy, T& cx, T& cy, T& k1, T & k2, T& k3, T& p1, T& p2, T& ox, T& oy)
+inline void projectPntDist(T point[3], T& fx, T& fy, T& cx, T& cy, T& k1, T& k2, T& k3, T& p1, T& p2, T& ox, T& oy)
 {
   T xp1 = point[0];
   T yp1 = point[1];
@@ -596,13 +610,13 @@ inline void projectPntDist(T point[3], T& fx, T& fy, T& cx, T& cy, T& k1, T & k2
  * was observed
  */
 template <typename T>
-void cameraCircResidualDist(T point[3], T& circle_diameter,const T TtoC[6], T& k1, T& k2, T& k3, T& p1, T& p2, T& fx,
+void cameraCircResidualDist(T point[3], T& circle_diameter, const T TtoC[6], T& k1, T& k2, T& k3, T& p1, T& p2, T& fx,
                             T& fy, T& cx, T& cy, T& ox, T& oy, T residual[2]);
 template <typename T>
 inline void cameraCircResidualDist(T point[3], T& circle_diameter, const T TtoC[6], T& k1, T& k2, T& k3, T& p1, T& p2,
                                    T& fx, T& fy, T& cx, T& cy, T& ox, T& oy, T residual[2])
 
-{  
+{
   // Circle Delta is the difference between the projection of the center of the circle
   // and the center of the projected ellipse
 
@@ -632,30 +646,30 @@ inline void cameraCircResidualDist(T point[3], T& circle_diameter, const T TtoC[
   // pt_1 = (xp + rcos(atan(R8/R7))), yp + rsin(atan(R8/R7)), 0)
   // pt_2 = (xp + rcos(atan(R8/R7) + PI)), yp + rsin(atan(R8/R7) + PI), 0)
 
-  T xp1 = point[0]; // center of circle in target coordinates
+  T xp1 = point[0];  // center of circle in target coordinates
   T yp1 = point[1];
   T zp1 = point[2];
-  T pt_1[3]; // max/min point in target coordinates
-  T pt_2[3]; // max/min point in target coordinates
-  T camera_point1[3]; // max/min point in camera coordinates
-  T camera_point2[3]; // max/min point in camera coordinates
-  T r   = T(circle_diameter/2.0);
+  T pt_1[3];           // max/min point in target coordinates
+  T pt_2[3];           // max/min point in target coordinates
+  T camera_point1[3];  // max/min point in camera coordinates
+  T camera_point2[3];  // max/min point in camera coordinates
+  T r = T(circle_diameter / 2.0);
   const T* target_to_camera_aa(&TtoC[0]);
   const T* target_to_camera_tx(&TtoC[3]);
   T R[9];
 
   ceres::AngleAxisToRotationMatrix(target_to_camera_aa, R);
-  T R7     = R[6];
-  T R8     = R[7];
+  T R7 = R[6];
+  T R8 = R[7];
 
   // find max/min points 1 and 2
-  pt_1[0] = xp1 + r*cos(atan(R8/R7));
-  pt_1[1] = yp1 + r*sin(atan(R8/R7));
-  pt_1[2] = zp1; // this should be zero
+  pt_1[0] = xp1 + r * cos(atan(R8 / R7));
+  pt_1[1] = yp1 + r * sin(atan(R8 / R7));
+  pt_1[2] = zp1;  // this should be zero
 
-  pt_2[0] = xp1 + r*cos(atan(R8/R7) + T(PI));
-  pt_2[1] = yp1 + r*sin(atan(R8/R7) + T(PI));
-  pt_2[2] = zp1; // this should be zero
+  pt_2[0] = xp1 + r * cos(atan(R8 / R7) + T(PI));
+  pt_2[1] = yp1 + r * sin(atan(R8 / R7) + T(PI));
+  pt_2[2] = zp1;  // this should be zero
 
   eTransformPoint(TtoC, pt_1, camera_point1);
   eTransformPoint(TtoC, pt_2, camera_point2);
@@ -666,11 +680,9 @@ inline void cameraCircResidualDist(T point[3], T& circle_diameter, const T TtoC[
   projectPntDist(camera_point2, fx, fy, cx, cy, k1, k2, k3, p1, p2, pnt2_ix, pnt2_iy);
 
   /* compute the residual */
-  residual[0] = (pnt1_ix + pnt2_ix)/T(2.0) - ox;
-  residual[1] = (pnt1_iy + pnt2_iy)/T(2.0) - oy;
-
+  residual[0] = (pnt1_ix + pnt2_ix) / T(2.0) - ox;
+  residual[1] = (pnt1_iy + pnt2_iy) / T(2.0) - oy;
 }
-
 
 /*! \brief ceres compliant function to compute the residual from a pinhole camera model without distortion, in this
  * case,
@@ -691,10 +703,9 @@ template <typename T>
 void cameraCircResidual(T point[3], T& circle_diameter, const T TtoC[6], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy,
                         T residual[2]);
 template <typename T>
-inline void cameraCircResidual(T point[3], T& circle_diameter, const T TtoC[6], T& fx, T& fy, T& cx, T& cy, T& ox, T& oy,
-                               T residual[2])
+inline void cameraCircResidual(T point[3], T& circle_diameter, const T TtoC[6], T& fx, T& fy, T& cx, T& cy, T& ox,
+                               T& oy, T residual[2])
 {
-  
   // Circle Delta is the difference between the projection of the center of the circle
   // and the center of the projected ellipse
 
@@ -724,35 +735,35 @@ inline void cameraCircResidual(T point[3], T& circle_diameter, const T TtoC[6], 
   // pt_1 = (xp + rcos(atan(R8/R7))), yp + rsin(atan(R8/R7)), 0)
   // pt_2 = (xp + rcos(atan(R8/R7) + PI)), yp + rsin(atan(R8/R7) + PI), 0)
 
-  T xp1 = point[0]; // center of circle in target coordinates
+  T xp1 = point[0];  // center of circle in target coordinates
   T yp1 = point[1];
   T zp1 = point[2];
-  T pt_1[3]; // max/min point in target coordinates
-  T pt_2[3]; // max/min point in target coordinates
-  T camera_point1[3]; // max/min point in camera coordinates
-  T camera_point2[3]; // max/min point in camera coordinates
-  T r   = T(circle_diameter/2.0);
+  T pt_1[3];           // max/min point in target coordinates
+  T pt_2[3];           // max/min point in target coordinates
+  T camera_point1[3];  // max/min point in camera coordinates
+  T camera_point2[3];  // max/min point in camera coordinates
+  T r = T(circle_diameter / 2.0);
   const T* target_to_camera_aa(&TtoC[0]);
   const T* target_to_camera_tx(&TtoC[3]);
-  T predict_p1[2], predict_p2[2]; // predicted image of max/min point1 and point2
+  T predict_p1[2], predict_p2[2];  // predicted image of max/min point1 and point2
   T R[9];
 
   ceres::AngleAxisToRotationMatrix(target_to_camera_aa, R);
-  T R7     = R[6];
-  T R8     = R[7];
+  T R7 = R[6];
+  T R8 = R[7];
 
   // find max/min points 1 and 2
-  pt_1[0] = xp1 + r*cos(atan(R8/R7));
-  pt_1[1] = yp1 + r*sin(atan(R8/R7));
-  pt_1[2] = zp1; // this should be zero
+  pt_1[0] = xp1 + r * cos(atan(R8 / R7));
+  pt_1[1] = yp1 + r * sin(atan(R8 / R7));
+  pt_1[2] = zp1;  // this should be zero
 
-  pt_2[0] = xp1 + r*cos(atan(R8/R7) + T(PI));
-  pt_2[1] = yp1 + r*sin(atan(R8/R7) + T(PI));
-  pt_2[2] = zp1; // this should be zero
+  pt_2[0] = xp1 + r * cos(atan(R8 / R7) + T(PI));
+  pt_2[1] = yp1 + r * sin(atan(R8 / R7) + T(PI));
+  pt_2[2] = zp1;  // this should be zero
 
-  eTransformPoint(TtoC,pt_1, camera_point1);
-  eTransformPoint(TtoC,pt_2, camera_point2);
-  
+  eTransformPoint(TtoC, pt_1, camera_point1);
+  eTransformPoint(TtoC, pt_2, camera_point2);
+
   T pnt1_ix, pnt1_iy;  // image of point1
   T pnt2_ix, pnt2_iy;  // image of point2
   projectPntNoDistortion(camera_point1, fx, fy, cx, cy, pnt1_ix, pnt1_iy);
@@ -760,8 +771,8 @@ inline void cameraCircResidual(T point[3], T& circle_diameter, const T TtoC[6], 
 
   /* compute the residual */
   /* compute the residual */
-  residual[0] = (pnt1_ix + pnt2_ix)/T(2.0) - ox;
-  residual[1] = (pnt1_iy + pnt2_iy)/T(2.0) - oy;
+  residual[0] = (pnt1_ix + pnt2_ix) / T(2.0) - ox;
+  residual[1] = (pnt1_iy + pnt2_iy) / T(2.0) - oy;
 }
 
 /*! \brief ceres compliant function to compute the residual from a pinhole camera model without distortion
@@ -844,7 +855,7 @@ inline void cameraPntResidual(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox, T& 
  *  1. find the pose of the target or the camera relative to one another
  *     a. unknown variables are the 6Dof extrinsics
  *     b. known variables are the intrinsics and the location of the point on the target
- *     CameraReprjErrorPK()           
+ *     CameraReprjErrorPK()
  *     CircleCameraReprjErrorPK()
  *     DistortedCameraFinder()      same as CameraRepjErrorPK but for unrectified images
  *
@@ -853,7 +864,7 @@ inline void cameraPntResidual(T point[3], T& fx, T& fy, T& cx, T& cy, T& ox, T& 
  *     b. known variables:  Transform from base/world to link, camera intrinsices, point location in target frame
  *     LinkCameraTargetReprjErrorPK()          Both of these assume a rectified image is used
  *     LinkCameraCircleTargetReprjErrorPK()
- *     
+ *
  *  3. Find the pose of a camera in the workcell by viewing a target mounted on the robot
  *     a. unknown variables: Extrinsics of camera relative to world/base, Extrinsic of target relative to link
  *     b. known variables:  Transform from base/world to link, camera intrinsices, point location in target frame
@@ -1323,12 +1334,12 @@ public:
 };
 
 // used whenever the target or camera is on the wrist of a robot while the camera or target is in the workcell
-// The 
+// The
 class WristCal
 {
 public:
   WristCal(double ob_x, double ob_y, double fx, double fy, double cx, double cy, Pose6d targetm_to_cameram,
-                               Point3d point)
+           Point3d point)
     : ox_(ob_x), oy_(ob_y), fx_(fx), fy_(fy), cx_(cx), cy_(cy), targetm_to_cameram_(targetm_to_cameram), point_(point)
   {
   }
@@ -1340,9 +1351,9 @@ public:
   {
     const T* camera_T(&c_p1[0]);
     const T* target_T(&c_p2[0]);
-    T target_mount_point[3];   /** point in link coordinates */
-    T camera_mount_point[3];  /** point in worls coordinates */
-    T camera_point[3]; /** point in camera coordinates */
+    T target_mount_point[3]; /** point in link coordinates */
+    T camera_mount_point[3]; /** point in worls coordinates */
+    T camera_point[3];       /** point in camera coordinates */
 
     /** transform point into camera coordinates */
     eTransformPoint3d(target_T, point_, target_mount_point);
@@ -1377,12 +1388,11 @@ public:
   double cx_;                 /*!< known optical center of camera in x */
   double cy_;                 /*!< known optical center of camera in y */
   Point3d point_;             /*! location of point in target coordinates */
-  Pose6d targetm_to_cameram_; /*!< transform from targets mount to cameras mount frame. 
-                                 (e.g. camera attached to tool0 and target attached to world this becomes tool0 to world)    
-                                 (e.g. camera attached to world and target attached to tool0 this becomes world to tool0)    
-				 in the camera attached to tool0 case, 
-                                 the transform takes points in the world frame and expresses them in tool0 frame
-			      */
+  Pose6d targetm_to_cameram_; /*!< transform from targets mount to cameras mount frame.
+                                 (e.g. camera attached to tool0 and target attached to world this becomes tool0 to
+         world) (e.g. camera attached to world and target attached to tool0 this becomes world to tool0) in the camera
+         attached to tool0 case, the transform takes points in the world frame and expresses them in tool0 frame
+            */
 };
 
 // reprojection error of a single point attatched to a target observed by a camera with NO lens distortion
@@ -1579,7 +1589,7 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // all six parameters with a new name
+    const T* camera_T(&c_p1[0]);  // all six parameters with a new name
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
     T camera_point[3]; /** point in camera coordinates*/
@@ -1591,7 +1601,8 @@ public:
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,
+                           residual);
 
     return true;
   } /** end of operator() */
@@ -1635,7 +1646,8 @@ public:
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,
+                           residual);
 
     return true;
   } /** end of operator() */
@@ -1666,8 +1678,8 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // all six parameters with a new name
-    T camera_point[3]; /** point in camera coordinates */
+    const T* camera_T(&c_p1[0]);  // all six parameters with a new name
+    T camera_point[3];            /** point in camera coordinates */
 
     /** transform point into camera coordinates */
     eTransformPoint(camera_T, point, camera_point);
@@ -1715,8 +1727,8 @@ public:
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // all six parameters with a new name
-    T camera_point[3]; /* point in camera coordinates */
+    const T* camera_T(&c_p1[0]);  // all six parameters with a new name
+    T camera_point[3];            /* point in camera coordinates */
 
     /** rotate and translate point into camera coordinates*/
     eTransformPoint3d(camera_T, point_, camera_point);
@@ -1767,9 +1779,9 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // full 6dof parameters for camera pose
-    const T* target_T(&c_p3[0]); // full 6dof parameters for target pose
-    T TtoC[6];                   // full 6dof parameters for transforming target points into camera frame
+    const T* camera_T(&c_p1[0]);  // full 6dof parameters for camera pose
+    const T* target_T(&c_p3[0]);  // full 6dof parameters for target pose
+    T TtoC[6];                    // full 6dof parameters for transforming target points into camera frame
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     T camera_point[3];
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
@@ -1812,9 +1824,9 @@ public:
                   const T* const c_p3, /** 6Dof transform of target into world frame [6]*/
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // full 6dof parameters for camera pose
-    const T* target_T(&c_p3[0]); // full 6dof parameters for target pose
-    T TtoC[6];                   // full 6dof parameters for transforming target points into camera frame
+    const T* camera_T(&c_p1[0]);  // full 6dof parameters for camera pose
+    const T* target_T(&c_p3[0]);  // full 6dof parameters for target pose
+    T TtoC[6];                    // full 6dof parameters for transforming target points into camera frame
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     T camera_point[3];
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
@@ -1822,12 +1834,12 @@ public:
     extrinsicsMult(camera_T, target_T, TtoC);
     eTransformPoint3d(TtoC, point_, camera_point);
 
-
     /** compute project point into image plane and compute residual */
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,
+                           residual);
 
     return true;
   } /** end of operator() */
@@ -1859,7 +1871,7 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // all six parameters with a new name
+    const T* camera_T(&c_p1[0]);  // all six parameters with a new name
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     T camera_point[3];
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
@@ -1871,7 +1883,8 @@ public:
     T circle_diameter = T(circle_diameter_);
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,
+                           residual);
 
     return true;
   } /** end of operator() */
@@ -1903,10 +1916,10 @@ public:
                   const T* const c_p2, /** intrinsic parameters[9] */
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // all six parameters with a new name
+    const T* camera_T(&c_p1[0]);  // all six parameters with a new name
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    T camera_point[3];        /** point in camera coordinates */
+    T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
     eTransformPoint3d(camera_T, point_, camera_point);
@@ -1916,7 +1929,8 @@ public:
     T oy = T(oy_);
 
     /** compute project point into image plane and compute residual */
-    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+    cameraCircResidualDist(camera_point, circle_diameter, camera_T, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,
+                           residual);
 
     return true;
   } /** end of operator() */
@@ -1949,14 +1963,14 @@ public:
                   const T* const c_p3, /** intrinsic parameters of camera fx,fy,cx,cy,k1,k2,k2,p1,p2 [9] */
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // all six parameters for camera pose
-    const T* target_T(&c_p3[0]); // all six parameters for target pose
-    T        TtoC[6];            // all six parameters for target to camera transform
+    const T* camera_T(&c_p1[0]);  // all six parameters for camera pose
+    const T* target_T(&c_p3[0]);  // all six parameters for target pose
+    T TtoC[6];                    // all six parameters for target to camera transform
     T fx, fy, cx, cy, k1, k2, k3, p1, p2;
     T camera_point[3]; /** point in world coordinates */
 
     extractCameraIntrinsics(c_p2, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    
+
     // compute transform taking points in target frame into camera frame
     extrinsicsMult(camera_T, target_T, TtoC);
 
@@ -1999,11 +2013,11 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // all six parameters for camera pose
-    const T* target_T(&c_p2[0]); // all six parameters for target pose
-    T        TtoC[6];            // all six parameters for target to camera transform
+    const T* camera_T(&c_p1[0]);  // all six parameters for camera pose
+    const T* target_T(&c_p2[0]);  // all six parameters for target pose
+    T TtoC[6];                    // all six parameters for target to camera transform
     T camera_point[3];
-    
+
     // compute transform taking points in target frame into camera frame
     extrinsicsMult(camera_T, target_T, TtoC);
 
@@ -2054,11 +2068,11 @@ public:
                   const T* const c_p2, /** 6Dof transform of target into world frame [6] */
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // all six parameters for camera pose
-    const T* target_T(&c_p2[0]); // all six parameters for target pose
-    T        TtoC[6];            // all six parameters for target to camera transform
+    const T* camera_T(&c_p1[0]);  // all six parameters for camera pose
+    const T* target_T(&c_p2[0]);  // all six parameters for target pose
+    T TtoC[6];                    // all six parameters for target to camera transform
     T camera_point[3];
-    
+
     // compute transform taking points in target frame into camera frame
     extrinsicsMult(camera_T, target_T, TtoC);
 
@@ -2111,15 +2125,15 @@ public:
                   const T* const point, /** point described in target frame that is being seen [3]*/
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // all six parameters for camera pose
-    const T* target_T(&c_p2[0]); // all six parameters for target pose
-    T        TtoC[6];            // all six parameters for target to camera transform
-    T        TtoL[6];            // target to link transform
-    T      link_T[6];            // world to link transform
+    const T* camera_T(&c_p1[0]);  // all six parameters for camera pose
+    const T* target_T(&c_p2[0]);  // all six parameters for target pose
+    T TtoC[6];                    // all six parameters for target to camera transform
+    T TtoL[6];                    // target to link transform
+    T link_T[6];                  // world to link transform
     T camera_point[3];
-    
+
     // compute transform taking points in target frame into camera frame
-    extractPoseExtrinsics(link_pose_,link_T);
+    extractPoseExtrinsics(link_pose_, link_T);
     extrinsicsMult(link_T, target_T, TtoL);
     extrinsicsMult(camera_T, TtoL, TtoC);
 
@@ -2179,13 +2193,13 @@ public:
                   const T* const c_p2, /** 6Dof transform of target into world frame [6] */
                   T* residual) const
   {
-    const T* camera_T(&c_p1[0]); // all six parameters for camera pose
-    const T* target_T(&c_p2[0]); // all six parameters for target pose
-    T        TtoC[6];            // all six parameters for target to camera transform
-    T        TtoL[6];            // target to link transform
-    T      link_T[6];            // world to link transform
+    const T* camera_T(&c_p1[0]);  // all six parameters for camera pose
+    const T* target_T(&c_p2[0]);  // all six parameters for target pose
+    T TtoC[6];                    // all six parameters for target to camera transform
+    T TtoL[6];                    // target to link transform
+    T link_T[6];                  // world to link transform
     T camera_point[3];
-    
+
     // compute transform taking points in target frame into camera frame
     extractPoseExtrinsics(link_pose_, link_T);
     extrinsicsMult(link_T, target_T, TtoL);
@@ -2247,12 +2261,12 @@ public:
     const T* target_T(&c_p2[0]);
     T TtoL[6];
     T TtoC[6];
-    T          linki_T[6];
+    T linki_T[6];
     T camera_point[3];
-    
+
     extractPoseExtrinsics(link_posei_, linki_T);
-    extrinsicsMult(linki_T,target_T,TtoL);
-    extrinsicsMult(camera_T,TtoL,TtoC);
+    extrinsicsMult(linki_T, target_T, TtoL);
+    extrinsicsMult(camera_T, TtoL, TtoC);
     eTransformPoint(TtoC, point, camera_point);
 
     /** compute project point into image plane and compute residual */
@@ -2314,10 +2328,10 @@ public:
     double linki_T[6];
     double TtoL[6];
     double camera_point[3];
-    
-    extractPoseExtrinsics(link_posei_,linki_T);
-    extrinsicsMult(linki_T,target_T,TtoL);
-    extrinsicsMult(camera_T,TtoL,TtoC);
+
+    extractPoseExtrinsics(link_posei_, linki_T);
+    extrinsicsMult(linki_T, target_T, TtoL);
+    extrinsicsMult(camera_T, TtoL, TtoC);
     eTransformPoint3d(TtoC, point_, camera_point);
 
     /** compute project point into image plane and compute residual */
@@ -2330,7 +2344,6 @@ public:
     double oy = oy_;
 
     cameraCircResidual(camera_point, circle_diameter, TtoC, fx, fy, cx, cy, ox, oy, residual);
-
   }
   template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters [6] */
@@ -2343,7 +2356,7 @@ public:
     T TtoL[6];
     T TtoC[6];
     T camera_point[3];
-    
+
     extractPoseExtrinsics(link_posei_, linki_T);
     extrinsicsMult(linki_T, target_T, TtoL);
     extrinsicsMult(camera_T, TtoL, TtoC);
@@ -2409,7 +2422,7 @@ public:
     const double* camera_T(&c_p1[0]);
     double mount_T[6];
     double MtoC[6];
-    double camera_point[3];        /** point in camera coordinates */
+    double camera_point[3]; /** point in camera coordinates */
 
     extractPoseExtrinsics(mount_to_target_pose_, mount_T);
     extrinsicsMult(camera_T, mount_T, MtoC);
@@ -2432,8 +2445,8 @@ public:
     const T* camera_T(&c_p1[0]);
     T mount_T[6];
     T MtoC[6];
-    T camera_point[3];        /** point in camera coordinates */
-    
+    T camera_point[3]; /** point in camera coordinates */
+
     extractPoseExtrinsics(mount_to_target_pose_, mount_T);
     extrinsicsMult(camera_T, mount_T, MtoC);
     eTransformPoint3d(MtoC, point_, camera_point);
@@ -2516,54 +2529,48 @@ public:
   Point3d point_;        /** point expressed in target coordinates */
 };
 
-class  RailICal3
+class RailICal3
 {
 public:
-  RailICal3(double ob_x, double ob_y, Point3d rail_position, Point3d point) :
-    ox_(ob_x), oy_(ob_y), rail_position_(rail_position), point_(point)
+  RailICal3(double ob_x, double ob_y, Point3d rail_position, Point3d point)
+    : ox_(ob_x), oy_(ob_y), rail_position_(rail_position), point_(point)
   {
   }
-  
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /**intrinsics [9] */
-			    const T* const c_p2,  /**target_pose [6] */
-			    T* residual) const
+
+  template <typename T>
+  bool operator()(const T* const c_p1, /**intrinsics [9] */
+                  const T* const c_p2, /**target_pose [6] */
+                  T* residual) const
   {
-    T fx, fy, cx, cy, k1, k2, k3, p1, p2;      // extract intrinsics
+    T fx, fy, cx, cy, k1, k2, k3, p1, p2;  // extract intrinsics
     extractCameraIntrinsics(c_p1, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    const T *target_T(& c_p2[0]); // extract target's angle axis
-    
+    const T* target_T(&c_p2[0]);  // extract target's angle axis
+
     /** transform point into camera frame */
     T camera_point[3]; /** point in camera coordinates */
     eTransformPoint3d(target_T, point_, camera_point);
-    camera_point[0] = camera_point[0] + T(rail_position_.x); // transform to camera's location along rail
-    camera_point[1] = camera_point[1] + T(rail_position_.y); // transform to camera's location along rail
-    camera_point[2] = camera_point[2] + T(rail_position_.z); // transform to camera's location along rail
-    
+    camera_point[0] = camera_point[0] + T(rail_position_.x);  // transform to camera's location along rail
+    camera_point[1] = camera_point[1] + T(rail_position_.y);  // transform to camera's location along rail
+    camera_point[2] = camera_point[2] + T(rail_position_.z);  // transform to camera's location along rail
+
     /** compute project point into image plane and compute residual */
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy,  residual);
-    
+    cameraPntResidualDist(camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
+
     return true;
   } /** end of operator() */
-  
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double o_x, const double o_y, 
-				     Point3d rail_position,
-				     Point3d point)
+
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d rail_position, Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction<RailICal3, 2, 9, 6>
-	    (
-	     new RailICal3(o_x, o_y, rail_position, point)
-	     )
-	    );
+    return (new ceres::AutoDiffCostFunction<RailICal3, 2, 9, 6>(new RailICal3(o_x, o_y, rail_position, point)));
   }
-  double ox_; /** observed x location of object in image */
-  double oy_; /** observed y location of object in image */
+  double ox_;             /** observed x location of object in image */
+  double oy_;             /** observed y location of object in image */
   Point3d rail_position_; /** location of camera along rail */
-  Point3d point_; /** point expressed in target coordinates */
+  Point3d point_;         /** point expressed in target coordinates */
 };
 
 // Estimate the axis of motion as part of the optimization for intrinic cal with camera on a rail
@@ -2572,32 +2579,33 @@ class RailICal4
 public:
   RailICal4(double ob_x, double ob_y, double rail_position, Point3d point)
     : ox_(ob_x), oy_(ob_y), rail_position_(rail_position), point_(point)
-  {}
+  {
+  }
 
-  template<typename T>
-  bool operator()(const T* const c_p1, // Intrinsics (9 params)
-                  const T* const c_p2, // Target origin (6 params)
-                  const T* const c_p3, // Camera skew (2 params)
+  template <typename T>
+  bool operator()(const T* const c_p1,  // Intrinsics (9 params)
+                  const T* const c_p2,  // Target origin (6 params)
+                  const T* const c_p3,  // Camera skew (2 params)
                   T* residual) const
   {
-    T fx, fy, cx, cy, k1, k2, k3, p1, p2;      // extract intrinsics
+    T fx, fy, cx, cy, k1, k2, k3, p1, p2;  // extract intrinsics
     extractCameraIntrinsics(c_p1, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    const T *target_aa(& c_p2[0]); // extract target's angle axis
-    const T *target_tx(& c_p2[3]); // extract target's position
+    const T* target_aa(&c_p2[0]);  // extract target's angle axis
+    const T* target_tx(&c_p2[3]);  // extract target's position
 
     /** transform point into camera frame */
     T camera_point[3]; /** point in camera coordinates */
     transformPoint3d(target_aa, target_tx, point_, camera_point);
-    
+
     // Now let's move the camera point by the rail travel
     // This involves two steps:
     // 1. Estimating the axis of motion (relative to camera z)
-    T nominal_axis[3]; // Nominally we move back in camera z
+    T nominal_axis[3];  // Nominally we move back in camera z
     nominal_axis[0] = T(0.0);
     nominal_axis[1] = T(0.0);
     nominal_axis[2] = T(1.0);
 
-    T rotation_axis[3]; // Here we skew the axis of motion w/ 2 rotation params
+    T rotation_axis[3];  // Here we skew the axis of motion w/ 2 rotation params
     rotation_axis[0] = c_p3[0];
     rotation_axis[1] = c_p3[1];
     rotation_axis[2] = T(0.0);
@@ -2623,10 +2631,10 @@ public:
     return new ceres::AutoDiffCostFunction<RailICal4, 2, 9, 6, 2>(new RailICal4(o_x, o_y, rail_position, point));
   }
 
-  double ox_; /** observed x location of object in image */
-  double oy_; /** observed y location of object in image */
+  double ox_;            /** observed x location of object in image */
+  double oy_;            /** observed y location of object in image */
   double rail_position_; /** location of camera along rail */
-  Point3d point_; /** point expressed in target coordinates */
+  Point3d point_;        /** point expressed in target coordinates */
 };
 
 // Estimate the axis of motion as part of the optimization for intrinic cal using target on a rail
@@ -2635,26 +2643,27 @@ class RailICal5
 public:
   RailICal5(double ob_x, double ob_y, double rail_position, Point3d point)
     : ox_(ob_x), oy_(ob_y), rail_position_(rail_position), point_(point)
-  {}
+  {
+  }
 
-  template<typename T>
-  bool operator()(const T* const c_p1, // Intrinsics (9 params)
-                  const T* const c_p2, // Target origin (6 params)
-                  const T* const c_p3, // Camera skew (2 params)
+  template <typename T>
+  bool operator()(const T* const c_p1,  // Intrinsics (9 params)
+                  const T* const c_p2,  // Target origin (6 params)
+                  const T* const c_p3,  // Camera skew (2 params)
                   T* residual) const
   {
-    T fx, fy, cx, cy, k1, k2, k3, p1, p2;      // extract intrinsics
+    T fx, fy, cx, cy, k1, k2, k3, p1, p2;  // extract intrinsics
     extractCameraIntrinsics(c_p1, fx, fy, cx, cy, k1, k2, k3, p1, p2);
-    const T *target_aa(& c_p2[0]); // extract target's angle axis
-    const T *target_tx(& c_p2[3]); // extract target's position
+    const T* target_aa(&c_p2[0]);  // extract target's angle axis
+    const T* target_tx(&c_p2[3]);  // extract target's position
 
     // 1. Estimating the axis of motion (relative to initial target pose)
-    T nominal_axis[3]; // Nominally we move back in camera z
+    T nominal_axis[3];  // Nominally we move back in camera z
     nominal_axis[0] = T(0.0);
     nominal_axis[1] = T(0.0);
     nominal_axis[2] = T(1.0);
 
-    T rotation_axis[3]; // Here we skew the axis of motion w/ 2 rotation params
+    T rotation_axis[3];  // Here we skew the axis of motion w/ 2 rotation params
     rotation_axis[0] = c_p3[0];
     rotation_axis[1] = c_p3[1];
     rotation_axis[2] = T(0.0);
@@ -2685,152 +2694,176 @@ public:
     return new ceres::AutoDiffCostFunction<RailICal5, 2, 9, 6, 2>(new RailICal5(o_x, o_y, rail_position, point));
   }
 
-  double ox_; /** observed x location of object in image */
-  double oy_; /** observed y location of object in image */
+  double ox_;            /** observed x location of object in image */
+  double oy_;            /** observed y location of object in image */
   double rail_position_; /** location of camera along rail */
-  Point3d point_; /** point expressed in target coordinates */
+  Point3d point_;        /** point expressed in target coordinates */
 };
-  
-class  RailSCal
+
+class RailSCal
 {
 public:
-  RailSCal(double left_ob_x,  double left_ob_y,  Point3d left_point,
-	   double right_ob_x, double right_ob_y, Point3d right_point, Point3d rail_position,
-	   double lfx, double lfy, double lcx, double lcy, double lk1, double lk2, double lk3, double lp1, double lp2,
-	   double rfx, double rfy, double rcx, double rcy, double rk1, double rk2, double rk3, double rp1, double rp2) :
-    lox_(left_ob_x),   loy_(left_ob_y),   left_point_(left_point),
-    rox_(right_ob_x),  roy_(right_ob_y),  right_point_(right_point),
-    rail_position_(rail_position),
-    lfx_(lfx), lfy_(lfy), lcx_(lcx), lcy_(lcy), lk1_(lk1), lk2_(lk2), lk3_(lk3), lp1_(lp1), lp2_(lp2),
-    rfx_(rfx), rfy_(rfy), rcx_(rcx), rcy_(rcy), rk1_(rk1), rk2_(rk2), rk3_(rk3), rp1_(rp1), rp2_(rp2)
+  RailSCal(double left_ob_x, double left_ob_y, Point3d left_point, double right_ob_x, double right_ob_y,
+           Point3d right_point, Point3d rail_position, double lfx, double lfy, double lcx, double lcy, double lk1,
+           double lk2, double lk3, double lp1, double lp2, double rfx, double rfy, double rcx, double rcy, double rk1,
+           double rk2, double rk3, double rp1, double rp2)
+    : lox_(left_ob_x)
+    , loy_(left_ob_y)
+    , left_point_(left_point)
+    , rox_(right_ob_x)
+    , roy_(right_ob_y)
+    , right_point_(right_point)
+    , rail_position_(rail_position)
+    , lfx_(lfx)
+    , lfy_(lfy)
+    , lcx_(lcx)
+    , lcy_(lcy)
+    , lk1_(lk1)
+    , lk2_(lk2)
+    , lk3_(lk3)
+    , lp1_(lp1)
+    , lp2_(lp2)
+    , rfx_(rfx)
+    , rfy_(rfy)
+    , rcx_(rcx)
+    , rcy_(rcy)
+    , rk1_(rk1)
+    , rk2_(rk2)
+    , rk3_(rk3)
+    , rp1_(rp1)
+    , rp2_(rp2)
   {
   }
-  
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /** pose of right camera relative to left frame [6] */
-			    const T* const c_p2,  /** target_pose[6] */
-			    T* residual) const    /** this residual has 4 terms one for each camera */
+
+  template <typename T>
+  bool operator()(const T* const c_p1, /** pose of right camera relative to left frame [6] */
+                  const T* const c_p2, /** target_pose[6] */
+                  T* residual) const   /** this residual has 4 terms one for each camera */
   {
-    const T *C1toC2_T(& c_p1[0]); // extract right camera's angle axis
-    const T *target_T(& c_p2[0]); // extract target's angle axis
-    
+    const T* C1toC2_T(&c_p1[0]);  // extract right camera's angle axis
+    const T* target_T(&c_p2[0]);  // extract target's angle axis
+
     /** transform both points into left camera frame, note, that usually these would be exactly the same point.
-	However, the camera observer may not provide observations in the same order. */
-    T left_camera_point[3]; 
-    T right_point_in_left_frame[3]; 
+  However, the camera observer may not provide observations in the same order. */
+    T left_camera_point[3];
+    T right_point_in_left_frame[3];
     eTransformPoint3d(target_T, right_point_, right_point_in_left_frame);
     eTransformPoint3d(target_T, left_point_, left_camera_point);
-    left_camera_point[0] = left_camera_point[0] + T(rail_position_.x); // transform to camera's location along rail
-    left_camera_point[1] = left_camera_point[1] + T(rail_position_.y); // transform to camera's location along rail
-    left_camera_point[2] = left_camera_point[2] + T(rail_position_.z); // transform to camera's location along rail
-    right_point_in_left_frame[0] = right_point_in_left_frame[0] + T(rail_position_.x); // transform to camera's location along rail
-    right_point_in_left_frame[1] = right_point_in_left_frame[1] + T(rail_position_.y); // transform to camera's location along rail
-    right_point_in_left_frame[2] = right_point_in_left_frame[2] + T(rail_position_.z); // transform to camera's location along rail
-    
+    left_camera_point[0] = left_camera_point[0] + T(rail_position_.x);  // transform to camera's location along rail
+    left_camera_point[1] = left_camera_point[1] + T(rail_position_.y);  // transform to camera's location along rail
+    left_camera_point[2] = left_camera_point[2] + T(rail_position_.z);  // transform to camera's location along rail
+    right_point_in_left_frame[0] =
+        right_point_in_left_frame[0] + T(rail_position_.x);  // transform to camera's location along rail
+    right_point_in_left_frame[1] =
+        right_point_in_left_frame[1] + T(rail_position_.y);  // transform to camera's location along rail
+    right_point_in_left_frame[2] =
+        right_point_in_left_frame[2] + T(rail_position_.z);  // transform to camera's location along rail
+
     /** transform right point in right camera frame */
-    T right_camera_point[3]; 
+    T right_camera_point[3];
     eTransformPoint(C1toC2_T, right_point_in_left_frame, right_camera_point);
-    
+
     /** compute project point into image plane and compute residual */
     T lox = T(lox_);
     T loy = T(loy_);
     T rox = T(rox_);
     T roy = T(roy_);
-    
+
     T lfx = T(lfx_);
     T lfy = T(lfy_);
     T lcx = T(lcx_);
     T lcy = T(lcy_);
     T lk1 = T(lk1_);
     T lk2 = T(lk2_);
-    T lk3 = T(lk3_);	    
+    T lk3 = T(lk3_);
     T lp1 = T(lp1_);
     T lp2 = T(lp2_);
-    
+
     T rfx = T(rfx_);
     T rfy = T(rfy_);
     T rcx = T(rcx_);
     T rcy = T(rcy_);
     T rk1 = T(rk1_);
     T rk2 = T(rk2_);
-    T rk3 = T(rk3_);	    
+    T rk3 = T(rk3_);
     T rp1 = T(rp1_);
     T rp2 = T(rp2_);
-    cameraPntResidualDist(left_camera_point,  lk1, lk2, lk3, lp1, lp2, lfx, lfy, lcx, lcy, lox, loy,  &(residual[0]));
-    cameraPntResidualDist(right_camera_point, rk1, rk2, rk3, rp1, rp2, rfx, rfy, rcx, rcy, rox, roy,  &(residual[2]));			   
+    cameraPntResidualDist(left_camera_point, lk1, lk2, lk3, lp1, lp2, lfx, lfy, lcx, lcy, lox, loy, &(residual[0]));
+    cameraPntResidualDist(right_camera_point, rk1, rk2, rk3, rp1, rp2, rfx, rfy, rcx, rcy, rox, roy, &(residual[2]));
     return true;
   } /** end of operator() */
-  
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double lo_x, const double lo_y, Point3d lpoint,
-				     const double ro_x, const double ro_y, Point3d rpoint,
-				     Point3d rail_position,
-				     const double lfx, const double lfy,
-				     const double lcx, const double lcy,
-				     const double lk1, const double lk2, const double lk3,
-				     const double lp1, const double lp2,
-				     const double rfx, const double rfy,
-				     const double rcx, const double rcy,
-				     const double rk1, const double rk2, const double rk3,
-				     const double rp1, const double rp2)
+
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double lo_x, const double lo_y, Point3d lpoint, const double ro_x,
+                                     const double ro_y, Point3d rpoint, Point3d rail_position, const double lfx,
+                                     const double lfy, const double lcx, const double lcy, const double lk1,
+                                     const double lk2, const double lk3, const double lp1, const double lp2,
+                                     const double rfx, const double rfy, const double rcx, const double rcy,
+                                     const double rk1, const double rk2, const double rk3, const double rp1,
+                                     const double rp2)
   {
-    return (new ceres::AutoDiffCostFunction<RailSCal, 4, 6, 6>
-	    (
-	     new RailSCal(lo_x, lo_y, lpoint,
-			  ro_x, ro_y, rpoint,
-			  rail_position,
-			  lfx, lfy, lcx, lcy, lk1, lk2, lk3, lp1, lp2,
-			  rfx, rfy, rcx, rcy, rk1, rk2, rk3, rp1, rp2)
-	     )
-	    );
+    return (new ceres::AutoDiffCostFunction<RailSCal, 4, 6, 6>(
+        new RailSCal(lo_x, lo_y, lpoint, ro_x, ro_y, rpoint, rail_position, lfx, lfy, lcx, lcy, lk1, lk2, lk3, lp1, lp2,
+                     rfx, rfy, rcx, rcy, rk1, rk2, rk3, rp1, rp2)));
   }
-  double lox_; /** observed x location of left_point in left image */
-  double loy_; /** observed y location of left_point in left image */
-  double rox_; /** observed x location of right point in right image */
-  double roy_; /** observed x location of right point in right image */
-  Point3d rail_position_; /** location of camera along rail */
-  Point3d left_point_; /** left point expressed in target coordinates */
-  Point3d right_point_; /** right point expressed in target coordinates */
-  double lfx_,lfy_,lcx_,lcy_,lk1_,lk2_,lk3_,lp1_,lp2_; /** left camera intrinsics */
-  double rfx_,rfy_,rcx_,rcy_,rk1_,rk2_,rk3_,rp1_,rp2_; /** right camera intrinsics */
+  double lox_;                                                 /** observed x location of left_point in left image */
+  double loy_;                                                 /** observed y location of left_point in left image */
+  double rox_;                                                 /** observed x location of right point in right image */
+  double roy_;                                                 /** observed x location of right point in right image */
+  Point3d rail_position_;                                      /** location of camera along rail */
+  Point3d left_point_;                                         /** left point expressed in target coordinates */
+  Point3d right_point_;                                        /** right point expressed in target coordinates */
+  double lfx_, lfy_, lcx_, lcy_, lk1_, lk2_, lk3_, lp1_, lp2_; /** left camera intrinsics */
+  double rfx_, rfy_, rcx_, rcy_, rk1_, rk2_, rk3_, rp1_, rp2_; /** right camera intrinsics */
 };
 
-  /* use to compute the pose between two intrinsically calibrated cameras used as a stereo pair when eiither
-   *  the camera or the target is on the wrist of a robot. The transform from the left camera to the target
-   *  is provided as an initial guess for each scene
-   *  For N scenes there will be N*6 target pose parameters and 6 camera to camera pose parameters
-   */
-class  WristStereoCal
+/* use to compute the pose between two intrinsically calibrated cameras used as a stereo pair when eiither
+ *  the camera or the target is on the wrist of a robot. The transform from the left camera to the target
+ *  is provided as an initial guess for each scene
+ *  For N scenes there will be N*6 target pose parameters and 6 camera to camera pose parameters
+ */
+class WristStereoCal
 {
 public:
-  WristStereoCal(double left_ob_x,  double left_ob_y,  Point3d left_point,
-		      double right_ob_x, double right_ob_y, Point3d right_point,
-		      double lfx, double lfy, double lcx, double lcy,
-		      double rfx, double rfy, double rcx, double rcy) :
-    lox_(left_ob_x),   loy_(left_ob_y),   left_point_(left_point),
-    rox_(right_ob_x),  roy_(right_ob_y),  right_point_(right_point),
-    lfx_(lfx), lfy_(lfy), lcx_(lcx), lcy_(lcy),
-    rfx_(rfx), rfy_(rfy), rcx_(rcx), rcy_(rcy)
+  WristStereoCal(double left_ob_x, double left_ob_y, Point3d left_point, double right_ob_x, double right_ob_y,
+                 Point3d right_point, double lfx, double lfy, double lcx, double lcy, double rfx, double rfy,
+                 double rcx, double rcy)
+    : lox_(left_ob_x)
+    , loy_(left_ob_y)
+    , left_point_(left_point)
+    , rox_(right_ob_x)
+    , roy_(right_ob_y)
+    , right_point_(right_point)
+    , lfx_(lfx)
+    , lfy_(lfy)
+    , lcx_(lcx)
+    , lcy_(lcy)
+    , rfx_(rfx)
+    , rfy_(rfy)
+    , rcx_(rcx)
+    , rcy_(rcy)
   {
   }
-  
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /** target_pose_relative to left camera[6] */
-			    const T* const c_p2,  /** left camera relative to right camera[6] */
-			    T* residual) const    /** this residual has 4 terms one for each camera */
+
+  template <typename T>
+  bool operator()(const T* const c_p1, /** target_pose_relative to left camera[6] */
+                  const T* const c_p2, /** left camera relative to right camera[6] */
+                  T* residual) const   /** this residual has 4 terms one for each camera */
   {
-    const T *target_T(& c_p1[0]); // extract target's extrinsics
-    const T *Stereo_T(& c_p2[0]); // extract right_camera extrinsics
-    
+    const T* target_T(&c_p1[0]);  // extract target's extrinsics
+    const T* Stereo_T(&c_p2[0]);  // extract right_camera extrinsics
+
     // Even though both cameras observe the same target and therefore have the same number of observations,
     // we don't assume the points observed are in the same order. Point1 will likely be the same as point2
-    T left_camera_point[3]; // point observed by left camera in left camera frame
-    T left_camera_point2[3]; // point observed by right camera in left frame
-    T right_camera_point[3]; // point observed by right camera in right camera fraem
-    eTransformPoint3d(target_T, left_point_, left_camera_point);// transform both points into left frame, probably the same point twice
-    eTransformPoint3d(target_T, right_point_,left_camera_point2);
-    eTransformPoint(Stereo_T, left_camera_point2, right_camera_point);    /** transform right point in right camera frame */
+    T left_camera_point[3];   // point observed by left camera in left camera frame
+    T left_camera_point2[3];  // point observed by right camera in left frame
+    T right_camera_point[3];  // point observed by right camera in right camera fraem
+    eTransformPoint3d(target_T, left_point_,
+                      left_camera_point);  // transform both points into left frame, probably the same point twice
+    eTransformPoint3d(target_T, right_point_, left_camera_point2);
+    eTransformPoint(Stereo_T, left_camera_point2,
+                    right_camera_point); /** transform right point in right camera frame */
 
     /** project point into image plane and compute residual in both images*/
     T lox = T(lox_);
@@ -2845,70 +2878,81 @@ public:
     T rfy = T(rfy_);
     T rcx = T(rcx_);
     T rcy = T(rcy_);
-    cameraPntResidual(left_camera_point, lfx, lfy, lcx, lcy, lox, loy,  &(residual[0]));
-    cameraPntResidual(right_camera_point,rfx, rfy, rcx, rcy, rox, roy,  &(residual[2]));			   
+    cameraPntResidual(left_camera_point, lfx, lfy, lcx, lcy, lox, loy, &(residual[0]));
+    cameraPntResidual(right_camera_point, rfx, rfy, rcx, rcy, rox, roy, &(residual[2]));
     return true;
   } /** end of operator() */
 
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double lo_x, const double lo_y, Point3d lpoint,
-				     const double ro_x, const double ro_y, Point3d rpoint,
-				     const double lfx, const double lfy,
-				     const double lcx, const double lcy,
-				     const double rfx, const double rfy,
-				     const double rcx, const double rcy)
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double lo_x, const double lo_y, Point3d lpoint, const double ro_x,
+                                     const double ro_y, Point3d rpoint, const double lfx, const double lfy,
+                                     const double lcx, const double lcy, const double rfx, const double rfy,
+                                     const double rcx, const double rcy)
   {
-    return (new ceres::AutoDiffCostFunction<WristStereoCal, 4, 6, 6>
-	    (
-	     new WristStereoCal(lo_x, lo_y, lpoint,
-				     ro_x, ro_y, rpoint,
-				     lfx, lfy, lcx, lcy,
-				     rfx, rfy, rcx, rcy)
-	     )
-	    );
+    return (new ceres::AutoDiffCostFunction<WristStereoCal, 4, 6, 6>(
+        new WristStereoCal(lo_x, lo_y, lpoint, ro_x, ro_y, rpoint, lfx, lfy, lcx, lcy, rfx, rfy, rcx, rcy)));
   }
-  double lox_; /** observed x location of left_point in left image */
-  double loy_; /** observed y location of left_point in left image */
-  double rox_; /** observed x location of right point in right image */
-  double roy_; /** observed x location of right point in right image */
-  Point3d left_point_; /** left point expressed in target coordinates */
-  Point3d right_point_; /** right point expressed in target coordinates */
-  double lfx_,lfy_,lcx_,lcy_;/** left camera intrinsics */
-  double rfx_,rfy_,rcx_,rcy_; /** right camera intrinsics */
+  double lox_;                   /** observed x location of left_point in left image */
+  double loy_;                   /** observed y location of left_point in left image */
+  double rox_;                   /** observed x location of right point in right image */
+  double roy_;                   /** observed x location of right point in right image */
+  Point3d left_point_;           /** left point expressed in target coordinates */
+  Point3d right_point_;          /** right point expressed in target coordinates */
+  double lfx_, lfy_, lcx_, lcy_; /** left camera intrinsics */
+  double rfx_, rfy_, rcx_, rcy_; /** right camera intrinsics */
 };
 
-
-class  StereoTargetLocator
+class StereoTargetLocator
 {
 public:
-  StereoTargetLocator(double left_ob_x,  double left_ob_y,  Point3d left_point,
-		      double right_ob_x, double right_ob_y, Point3d right_point, Pose6d C1toC2,
-		      double lfx, double lfy, double lcx, double lcy, double lk1, double lk2, double lk3, double lp1, double lp2,
-		      double rfx, double rfy, double rcx, double rcy, double rk1, double rk2, double rk3, double rp1, double rp2) :
-    lox_(left_ob_x),   loy_(left_ob_y),   left_point_(left_point),
-    rox_(right_ob_x),  roy_(right_ob_y),  right_point_(right_point),
-    C1toC2_(C1toC2),
-    lfx_(lfx), lfy_(lfy), lcx_(lcx), lcy_(lcy), lk1_(lk1), lk2_(lk2), lk3_(lk3), lp1_(lp1), lp2_(lp2),
-    rfx_(rfx), rfy_(rfy), rcx_(rcx), rcy_(rcy), rk1_(rk1), rk2_(rk2), rk3_(rk3), rp1_(rp1), rp2_(rp2)
+  StereoTargetLocator(double left_ob_x, double left_ob_y, Point3d left_point, double right_ob_x, double right_ob_y,
+                      Point3d right_point, Pose6d C1toC2, double lfx, double lfy, double lcx, double lcy, double lk1,
+                      double lk2, double lk3, double lp1, double lp2, double rfx, double rfy, double rcx, double rcy,
+                      double rk1, double rk2, double rk3, double rp1, double rp2)
+    : lox_(left_ob_x)
+    , loy_(left_ob_y)
+    , left_point_(left_point)
+    , rox_(right_ob_x)
+    , roy_(right_ob_y)
+    , right_point_(right_point)
+    , C1toC2_(C1toC2)
+    , lfx_(lfx)
+    , lfy_(lfy)
+    , lcx_(lcx)
+    , lcy_(lcy)
+    , lk1_(lk1)
+    , lk2_(lk2)
+    , lk3_(lk3)
+    , lp1_(lp1)
+    , lp2_(lp2)
+    , rfx_(rfx)
+    , rfy_(rfy)
+    , rcx_(rcx)
+    , rcy_(rcy)
+    , rk1_(rk1)
+    , rk2_(rk2)
+    , rk3_(rk3)
+    , rp1_(rp1)
+    , rp2_(rp2)
   {
   }
-  
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /** target_pose[6] */
-			    T* residual) const    /** this residual has 4 terms one for each camera */
+
+  template <typename T>
+  bool operator()(const T* const c_p1, /** target_pose[6] */
+                  T* residual) const   /** this residual has 4 terms one for each camera */
   {
-    const T *target_T(& c_p1[0]); // extract target's extrinsics
-    
+    const T* target_T(&c_p1[0]);  // extract target's extrinsics
+
     /** transform both points into left camera frame, note, that usually these would be exactly the same point.
-	However, the camera observer may not provide observations in the same order. */
-    T left_camera_point[3]; 
-    T right_point_in_left_frame[3]; 
+  However, the camera observer may not provide observations in the same order. */
+    T left_camera_point[3];
+    T right_point_in_left_frame[3];
     eTransformPoint3d(target_T, right_point_, right_point_in_left_frame);
     eTransformPoint3d(target_T, left_point_, left_camera_point);
 
     /** transform right point in right camera frame */
-    T right_camera_point[3]; 
+    T right_camera_point[3];
     poseTransformPoint(C1toC2_, right_point_in_left_frame, right_camera_point);
 
     /** compute project point into image plane and compute residual */
@@ -2916,169 +2960,173 @@ public:
     T loy = T(loy_);
     T rox = T(rox_);
     T roy = T(roy_);
-      
+
     T lfx = T(lfx_);
     T lfy = T(lfy_);
     T lcx = T(lcx_);
     T lcy = T(lcy_);
     T lk1 = T(lk1_);
     T lk2 = T(lk2_);
-    T lk3 = T(lk3_);	    
+    T lk3 = T(lk3_);
     T lp1 = T(lp1_);
     T lp2 = T(lp2_);
-      
+
     T rfx = T(rfx_);
     T rfy = T(rfy_);
     T rcx = T(rcx_);
     T rcy = T(rcy_);
     T rk1 = T(rk1_);
     T rk2 = T(rk2_);
-    T rk3 = T(rk3_);	    
+    T rk3 = T(rk3_);
     T rp1 = T(rp1_);
     T rp2 = T(rp2_);
-    cameraPntResidualDist(left_camera_point,  lk1, lk2, lk3, lp1, lp2, lfx, lfy, lcx, lcy, lox, loy,  &(residual[0]));
-    cameraPntResidualDist(right_camera_point, rk1, rk2, rk3, rp1, rp2, rfx, rfy, rcx, rcy, rox, roy,  &(residual[2]));			   
+    cameraPntResidualDist(left_camera_point, lk1, lk2, lk3, lp1, lp2, lfx, lfy, lcx, lcy, lox, loy, &(residual[0]));
+    cameraPntResidualDist(right_camera_point, rk1, rk2, rk3, rp1, rp2, rfx, rfy, rcx, rcy, rox, roy, &(residual[2]));
     return true;
   } /** end of operator() */
 
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double lo_x, const double lo_y, Point3d lpoint,
-				     const double ro_x, const double ro_y, Point3d rpoint,
-				     Pose6d C1toC2,
-				     const double lfx, const double lfy,
-				     const double lcx, const double lcy,
-				     const double lk1, const double lk2, const double lk3,
-				     const double lp1, const double lp2,
-				     const double rfx, const double rfy,
-				     const double rcx, const double rcy,
-				     const double rk1, const double rk2, const double rk3,
-				     const double rp1, const double rp2)
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double lo_x, const double lo_y, Point3d lpoint, const double ro_x,
+                                     const double ro_y, Point3d rpoint, Pose6d C1toC2, const double lfx,
+                                     const double lfy, const double lcx, const double lcy, const double lk1,
+                                     const double lk2, const double lk3, const double lp1, const double lp2,
+                                     const double rfx, const double rfy, const double rcx, const double rcy,
+                                     const double rk1, const double rk2, const double rk3, const double rp1,
+                                     const double rp2)
   {
-    return (new ceres::AutoDiffCostFunction<StereoTargetLocator, 4, 6>
-	    (
-	     new StereoTargetLocator(lo_x, lo_y, lpoint,
-				     ro_x, ro_y, rpoint,
-				     C1toC2,
-				     lfx, lfy, lcx, lcy, lk1, lk2, lk3, lp1, lp2,
-				     rfx, rfy, rcx, rcy, rk1, rk2, rk3, rp1, rp2)
-	     )
-	    );
+    return (new ceres::AutoDiffCostFunction<StereoTargetLocator, 4, 6>(
+        new StereoTargetLocator(lo_x, lo_y, lpoint, ro_x, ro_y, rpoint, C1toC2, lfx, lfy, lcx, lcy, lk1, lk2, lk3, lp1,
+                                lp2, rfx, rfy, rcx, rcy, rk1, rk2, rk3, rp1, rp2)));
   }
-  double lox_; /** observed x location of left_point in left image */
-  double loy_; /** observed y location of left_point in left image */
-  double rox_; /** observed x location of right point in right image */
-  double roy_; /** observed x location of right point in right image */
-  Pose6d C1toC2_; /** transforms points expressed in left camera frame into right camera frame */
-  Point3d left_point_; /** left point expressed in target coordinates */
+  double lox_;          /** observed x location of left_point in left image */
+  double loy_;          /** observed y location of left_point in left image */
+  double rox_;          /** observed x location of right point in right image */
+  double roy_;          /** observed x location of right point in right image */
+  Pose6d C1toC2_;       /** transforms points expressed in left camera frame into right camera frame */
+  Point3d left_point_;  /** left point expressed in target coordinates */
   Point3d right_point_; /** right point expressed in target coordinates */
-  double lfx_,lfy_,lcx_,lcy_,lk1_,lk2_,lk3_,lp1_,lp2_; /** left camera intrinsics */
-  double rfx_,rfy_,rcx_,rcy_,rk1_,rk2_,rk3_,rp1_,rp2_; /** right camera intrinsics */
+  double lfx_, lfy_, lcx_, lcy_, lk1_, lk2_, lk3_, lp1_, lp2_; /** left camera intrinsics */
+  double rfx_, rfy_, rcx_, rcy_, rk1_, rk2_, rk3_, rp1_, rp2_; /** right camera intrinsics */
 };
 
-  // used to locate a stereo pair in world using a target on the end of arm tooling (right camera version)
-class  TargetOnLinkRtStereo
+// used to locate a stereo pair in world using a target on the end of arm tooling (right camera version)
+class TargetOnLinkRtStereo
 {
 public:
-  TargetOnLinkRtStereo( double ob_x, double ob_y, Point3d point, Pose6d C1toC2, Pose6d ForwardK,
-		        double fx, double fy, double cx, double cy, double k1, double k2, double k3, double p1, double p2) :
-    ox_(ob_x),  oy_(ob_y),  point_(point),
-    C1toC2_(C1toC2), ForwardK_(ForwardK),
-    fx_(fx), fy_(fy), cx_(cx), cy_(cy), k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2)
+  TargetOnLinkRtStereo(double ob_x, double ob_y, Point3d point, Pose6d C1toC2, Pose6d ForwardK, double fx, double fy,
+                       double cx, double cy, double k1, double k2, double k3, double p1, double p2)
+    : ox_(ob_x)
+    , oy_(ob_y)
+    , point_(point)
+    , C1toC2_(C1toC2)
+    , ForwardK_(ForwardK)
+    , fx_(fx)
+    , fy_(fy)
+    , cx_(cx)
+    , cy_(cy)
+    , k1_(k1)
+    , k2_(k2)
+    , k3_(k3)
+    , p1_(p1)
+    , p2_(p2)
   {
   }
-  
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /** target_pose[6] */
-			    const T* const c_p2,  /** left_camera_extrinsics_pose[6] */
-			    T* residual) const    /** this residual has 4 terms one for each camera */
+
+  template <typename T>
+  bool operator()(const T* const c_p1, /** target_pose[6] */
+                  const T* const c_p2, /** left_camera_extrinsics_pose[6] */
+                  T* residual) const   /** this residual has 4 terms one for each camera */
   {
-    const T *target_ex(& c_p1[0]); // extract target's extrinsics
-    const T *Left_C_ex(& c_p2[0]); // left camera's extrinsics
+    const T* target_ex(&c_p1[0]);  // extract target's extrinsics
+    const T* Left_C_ex(&c_p2[0]);  // left camera's extrinsics
     T fx = T(fx_);
     T fy = T(fy_);
     T cx = T(cx_);
     T cy = T(cy_);
     T k1 = T(k1_);
     T k2 = T(k2_);
-    T k3 = T(k3_);	    
+    T k3 = T(k3_);
     T p1 = T(p1_);
     T p2 = T(p2_);
     T ox = T(ox_);
     T oy = T(oy_);
-   
+
     /** transform point into right camera frame **/
     T tool_point[3];
     T world_point[3];
     T left_camera_point[3];
-    T right_camera_point[3]; 
+    T right_camera_point[3];
     eTransformPoint3d(target_ex, point_, tool_point);
     poseTransformPoint(ForwardK_, tool_point, world_point);
     eTransformPoint(Left_C_ex, world_point, left_camera_point);
     poseTransformPoint(C1toC2_, left_camera_point, right_camera_point);
 
     /** compute project point into image plane and compute residual */
-    cameraPntResidualDist(right_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);			   
+    cameraPntResidualDist(right_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
 
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point,
-				     Pose6d C1toC2, Pose6d ForwardK,
-				     const double fx, const double fy,
-				     const double cx, const double cy,
-				     const double k1, const double k2, const double k3,
-				     const double p1, const double p2)
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point, Pose6d C1toC2, Pose6d ForwardK,
+                                     const double fx, const double fy, const double cx, const double cy,
+                                     const double k1, const double k2, const double k3, const double p1,
+                                     const double p2)
   {
-    return (new ceres::AutoDiffCostFunction<TargetOnLinkRtStereo, 2, 6, 6>
-	    (
-	     new TargetOnLinkRtStereo(o_x, o_y, point,
-				      C1toC2, ForwardK,
-				      fx, fy, cx, cy, k1, k2, k3, p1, p2)
-	     )
-	    );
+    return (new ceres::AutoDiffCostFunction<TargetOnLinkRtStereo, 2, 6, 6>(
+        new TargetOnLinkRtStereo(o_x, o_y, point, C1toC2, ForwardK, fx, fy, cx, cy, k1, k2, k3, p1, p2)));
   }
-  double ox_; /** observed x location */
-  double oy_; /** observed y location */
-  Pose6d C1toC2_; /** transforms points expressed in left camera frame into right camera frame */
+  double ox_;       /** observed x location */
+  double oy_;       /** observed y location */
+  Pose6d C1toC2_;   /** transforms points expressed in left camera frame into right camera frame */
   Pose6d ForwardK_; /** transforms points expressed in tool to world */
-  Point3d point_; /** point expressed in target coordinates */
-  double fx_,fy_,cx_,cy_,k1_,k2_,k3_,p1_,p2_; /** camera intrinsics */
+  Point3d point_;   /** point expressed in target coordinates */
+  double fx_, fy_, cx_, cy_, k1_, k2_, k3_, p1_, p2_; /** camera intrinsics */
 };
 
-  // used to locate a stereo pair in world using a target on the end of arm tooling (right camera version)
-class  TargetOnLinkLtStereo
+// used to locate a stereo pair in world using a target on the end of arm tooling (right camera version)
+class TargetOnLinkLtStereo
 {
 public:
-  TargetOnLinkLtStereo( double ob_x, double ob_y, Point3d point, Pose6d ForwardK,
-		        double fx, double fy, double cx, double cy, double k1, double k2, double k3, double p1, double p2) :
-    ox_(ob_x),  oy_(ob_y),  point_(point),
-    ForwardK_(ForwardK),
-    fx_(fx), fy_(fy), cx_(cx), cy_(cy), k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2)
+  TargetOnLinkLtStereo(double ob_x, double ob_y, Point3d point, Pose6d ForwardK, double fx, double fy, double cx,
+                       double cy, double k1, double k2, double k3, double p1, double p2)
+    : ox_(ob_x)
+    , oy_(ob_y)
+    , point_(point)
+    , ForwardK_(ForwardK)
+    , fx_(fx)
+    , fy_(fy)
+    , cx_(cx)
+    , cy_(cy)
+    , k1_(k1)
+    , k2_(k2)
+    , k3_(k3)
+    , p1_(p1)
+    , p2_(p2)
   {
   }
-  
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /** target_pose[6] */
-			    const T* const c_p2,  /** left_camera_extrinsics_pose[6] */
-			    T* residual) const    /** this residual has 4 terms one for each camera */
+
+  template <typename T>
+  bool operator()(const T* const c_p1, /** target_pose[6] */
+                  const T* const c_p2, /** left_camera_extrinsics_pose[6] */
+                  T* residual) const   /** this residual has 4 terms one for each camera */
   {
-    const T *target_ex(& c_p1[0]); // extract target's extrinsics
-    const T *Left_C_ex(& c_p2[0]); // left camera's extrinsics
+    const T* target_ex(&c_p1[0]);  // extract target's extrinsics
+    const T* Left_C_ex(&c_p2[0]);  // left camera's extrinsics
     T fx = T(fx_);
     T fy = T(fy_);
     T cx = T(cx_);
     T cy = T(cy_);
     T k1 = T(k1_);
     T k2 = T(k2_);
-    T k3 = T(k3_);	    
+    T k3 = T(k3_);
     T p1 = T(p1_);
     T p2 = T(p2_);
     T ox = T(ox_);
     T oy = T(oy_);
-    
+
     /** transform point into left camera frame **/
     T tool_point[3];
     T world_point[3];
@@ -3088,140 +3136,145 @@ public:
     eTransformPoint(Left_C_ex, world_point, left_camera_point);
 
     /** compute project point into image plane and compute residual */
-    cameraPntResidualDist(left_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);			   
+    cameraPntResidualDist(left_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
 
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point,
-				     Pose6d ForwardK,
-				     const double fx, const double fy,
-				     const double cx, const double cy,
-				     const double k1, const double k2, const double k3,
-				     const double p1, const double p2)
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point, Pose6d ForwardK,
+                                     const double fx, const double fy, const double cx, const double cy,
+                                     const double k1, const double k2, const double k3, const double p1,
+                                     const double p2)
   {
-    return (new ceres::AutoDiffCostFunction<TargetOnLinkLtStereo, 2, 6, 6>
-	    (
-	     new TargetOnLinkLtStereo(o_x, o_y, point,
-				      ForwardK,
-				      fx, fy, cx, cy, k1, k2, k3, p1, p2)
-	     )
-	    );
+    return (new ceres::AutoDiffCostFunction<TargetOnLinkLtStereo, 2, 6, 6>(
+        new TargetOnLinkLtStereo(o_x, o_y, point, ForwardK, fx, fy, cx, cy, k1, k2, k3, p1, p2)));
   }
-  double ox_; /** observed x location */
-  double oy_; /** observed y location */
-  Pose6d ForwardK_; /** transforms points expressed in tool to world */
-  Point3d point_; /** point expressed in target coordinates */
-  double fx_,fy_,cx_,cy_,k1_,k2_,k3_,p1_,p2_; /** camera intrinsics */
+  double ox_;                                         /** observed x location */
+  double oy_;                                         /** observed y location */
+  Pose6d ForwardK_;                                   /** transforms points expressed in tool to world */
+  Point3d point_;                                     /** point expressed in target coordinates */
+  double fx_, fy_, cx_, cy_, k1_, k2_, k3_, p1_, p2_; /** camera intrinsics */
 };
 
-
-  // used to locate a stereo pair on link using a target on the end of arm tooling (right camera version)
-class  StereoOnLinkRt
+// used to locate a stereo pair on link using a target on the end of arm tooling (right camera version)
+class StereoOnLinkRt
 {
 public:
-  StereoOnLinkRt( double ob_x, double ob_y, Point3d point, Pose6d C1toC2, Pose6d ForwardK,
-		        double fx, double fy, double cx, double cy, double k1, double k2, double k3, double p1, double p2) :
-    ox_(ob_x),  oy_(ob_y),  point_(point),
-    C1toC2_(C1toC2), 
-    fx_(fx), fy_(fy), cx_(cx), cy_(cy), k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2)
+  StereoOnLinkRt(double ob_x, double ob_y, Point3d point, Pose6d C1toC2, Pose6d ForwardK, double fx, double fy,
+                 double cx, double cy, double k1, double k2, double k3, double p1, double p2)
+    : ox_(ob_x)
+    , oy_(ob_y)
+    , point_(point)
+    , C1toC2_(C1toC2)
+    , fx_(fx)
+    , fy_(fy)
+    , cx_(cx)
+    , cy_(cy)
+    , k1_(k1)
+    , k2_(k2)
+    , k3_(k3)
+    , p1_(p1)
+    , p2_(p2)
   {
     ForwardK_inv_ = ForwardK.getInverse();
   }
-  
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /** target_pose[6] */
-			    const T* const c_p2,  /** left_camera_extrinsics_pose[6] */
-			    T* residual) const    /** this residual has 4 terms one for each camera */
+
+  template <typename T>
+  bool operator()(const T* const c_p1, /** target_pose[6] */
+                  const T* const c_p2, /** left_camera_extrinsics_pose[6] */
+                  T* residual) const   /** this residual has 4 terms one for each camera */
   {
-    const T *target_ex(& c_p1[0]); // extract target's extrinsics
-    const T *Left_C_ex(& c_p2[0]); // left camera's extrinsics
+    const T* target_ex(&c_p1[0]);  // extract target's extrinsics
+    const T* Left_C_ex(&c_p2[0]);  // left camera's extrinsics
     T fx = T(fx_);
     T fy = T(fy_);
     T cx = T(cx_);
     T cy = T(cy_);
     T k1 = T(k1_);
     T k2 = T(k2_);
-    T k3 = T(k3_);	    
+    T k3 = T(k3_);
     T p1 = T(p1_);
     T p2 = T(p2_);
     T ox = T(ox_);
     T oy = T(oy_);
-    
+
     /** transform point into right camera frame **/
     T world_point[3];
     T tool_point[3];
     T left_camera_point[3];
-    T right_camera_point[3]; 
+    T right_camera_point[3];
     eTransformPoint3d(target_ex, point_, world_point);
     poseTransformPoint(ForwardK_inv_, world_point, tool_point);
     eTransformPoint(Left_C_ex, tool_point, left_camera_point);
     poseTransformPoint(C1toC2_, left_camera_point, right_camera_point);
 
     /** compute project point into image plane and compute residual */
-    cameraPntResidualDist(right_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);			   
+    cameraPntResidualDist(right_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
 
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point,
-				     Pose6d C1toC2, Pose6d ForwardK,
-				     const double fx, const double fy,
-				     const double cx, const double cy,
-				     const double k1, const double k2, const double k3,
-				     const double p1, const double p2)
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point, Pose6d C1toC2, Pose6d ForwardK,
+                                     const double fx, const double fy, const double cx, const double cy,
+                                     const double k1, const double k2, const double k3, const double p1,
+                                     const double p2)
   {
-    return (new ceres::AutoDiffCostFunction<StereoOnLinkRt, 2, 6, 6>
-	    (
-	     new StereoOnLinkRt(o_x, o_y, point,
-				C1toC2, ForwardK,
-				fx, fy, cx, cy, k1, k2, k3, p1, p2)
-	     )
-	    );
+    return (new ceres::AutoDiffCostFunction<StereoOnLinkRt, 2, 6, 6>(
+        new StereoOnLinkRt(o_x, o_y, point, C1toC2, ForwardK, fx, fy, cx, cy, k1, k2, k3, p1, p2)));
   }
-  double ox_; /** observed x location */
-  double oy_; /** observed y location */
-  Pose6d C1toC2_; /** transforms points expressed in left camera frame into right camera frame */
+  double ox_;           /** observed x location */
+  double oy_;           /** observed y location */
+  Pose6d C1toC2_;       /** transforms points expressed in left camera frame into right camera frame */
   Pose6d ForwardK_inv_; /** transforms points expressed in tool to world */
-  Point3d point_; /** point expressed in target coordinates */
-  double fx_,fy_,cx_,cy_,k1_,k2_,k3_,p1_,p2_; /** camera intrinsics */
+  Point3d point_;       /** point expressed in target coordinates */
+  double fx_, fy_, cx_, cy_, k1_, k2_, k3_, p1_, p2_; /** camera intrinsics */
 };
 
-  // used to locate a stereo pair on link using a target on the end of arm tooling (left camera version)
-class  StereoOnLinkLt
+// used to locate a stereo pair on link using a target on the end of arm tooling (left camera version)
+class StereoOnLinkLt
 {
 public:
-  StereoOnLinkLt( double ob_x, double ob_y, Point3d point, Pose6d ForwardK,
-		        double fx, double fy, double cx, double cy, double k1, double k2, double k3, double p1, double p2) :
-    ox_(ob_x),  oy_(ob_y),  point_(point),
-    fx_(fx), fy_(fy), cx_(cx), cy_(cy), k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2)
+  StereoOnLinkLt(double ob_x, double ob_y, Point3d point, Pose6d ForwardK, double fx, double fy, double cx, double cy,
+                 double k1, double k2, double k3, double p1, double p2)
+    : ox_(ob_x)
+    , oy_(ob_y)
+    , point_(point)
+    , fx_(fx)
+    , fy_(fy)
+    , cx_(cx)
+    , cy_(cy)
+    , k1_(k1)
+    , k2_(k2)
+    , k3_(k3)
+    , p1_(p1)
+    , p2_(p2)
   {
     ForwardK_inv_ = ForwardK.getInverse();
   }
-  
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /** target_pose[6] */
-			    const T* const c_p2,  /** left_camera_extrinsics_pose[6] */
-			    T* residual) const    /** this residual has 4 terms one for each camera */
+
+  template <typename T>
+  bool operator()(const T* const c_p1, /** target_pose[6] */
+                  const T* const c_p2, /** left_camera_extrinsics_pose[6] */
+                  T* residual) const   /** this residual has 4 terms one for each camera */
   {
-    const T *target_ex(& c_p1[0]); // extract target's extrinsics
-    const T *Left_C_ex(& c_p2[0]); // left camera's extrinsics
+    const T* target_ex(&c_p1[0]);  // extract target's extrinsics
+    const T* Left_C_ex(&c_p2[0]);  // left camera's extrinsics
     T fx = T(fx_);
     T fy = T(fy_);
     T cx = T(cx_);
     T cy = T(cy_);
     T k1 = T(k1_);
     T k2 = T(k2_);
-    T k3 = T(k3_);	    
+    T k3 = T(k3_);
     T p1 = T(p1_);
     T p2 = T(p2_);
     T ox = T(ox_);
     T oy = T(oy_);
-    
+
     /** transform point into left camera frame **/
     T world_point[3];
     T tool_point[3];
@@ -3231,53 +3284,53 @@ public:
     eTransformPoint(Left_C_ex, tool_point, left_camera_point);
 
     /** compute project point into image plane and compute residual */
-    cameraPntResidualDist(left_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);			   
+    cameraPntResidualDist(left_camera_point, k1, k2, k3, p1, p2, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
 
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point,
-				     Pose6d ForwardK,
-				     const double fx, const double fy,
-				     const double cx, const double cy,
-				     const double k1, const double k2, const double k3,
-				     const double p1, const double p2)
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, Point3d point, Pose6d ForwardK,
+                                     const double fx, const double fy, const double cx, const double cy,
+                                     const double k1, const double k2, const double k3, const double p1,
+                                     const double p2)
   {
-    return (new ceres::AutoDiffCostFunction<StereoOnLinkLt, 2, 6, 6>
-	    (
-	     new StereoOnLinkLt(o_x, o_y, point,
-				ForwardK,
-				fx, fy, cx, cy, k1, k2, k3, p1, p2)
-	     )
-	    );
+    return (new ceres::AutoDiffCostFunction<StereoOnLinkLt, 2, 6, 6>(
+        new StereoOnLinkLt(o_x, o_y, point, ForwardK, fx, fy, cx, cy, k1, k2, k3, p1, p2)));
   }
-  double ox_; /** observed x location */
-  double oy_; /** observed y location */
-  Pose6d ForwardK_inv_; /** transforms points expressed in tool to world */
-  Point3d point_; /** point expressed in target coordinates */
-  double fx_,fy_,cx_,cy_,k1_,k2_,k3_,p1_,p2_; /** camera intrinsics */
+  double ox_;                                         /** observed x location */
+  double oy_;                                         /** observed y location */
+  Pose6d ForwardK_inv_;                               /** transforms points expressed in tool to world */
+  Point3d point_;                                     /** point expressed in target coordinates */
+  double fx_, fy_, cx_, cy_, k1_, k2_, k3_, p1_, p2_; /** camera intrinsics */
 };
-
 
 class DistortedCameraFinder
 {
 public:
-  DistortedCameraFinder(double ob_x, double ob_y, double fx, double fy,
-			double cx, double cy, double k1, double k2, double k3, double p1, double p2,
-			Point3d point) :
-    ox_(ob_x), oy_(ob_y), fx_(fx), fy_(fy), cx_(cx), cy_(cy),
-    k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2),
-    point_(point)
+  DistortedCameraFinder(double ob_x, double ob_y, double fx, double fy, double cx, double cy, double k1, double k2,
+                        double k3, double p1, double p2, Point3d point)
+    : ox_(ob_x)
+    , oy_(ob_y)
+    , fx_(fx)
+    , fy_(fy)
+    , cx_(cx)
+    , cy_(cy)
+    , k1_(k1)
+    , k2_(k2)
+    , k3_(k3)
+    , p1_(p1)
+    , p2_(p2)
+    , point_(point)
   {
   }
 
-  template<typename T>
+  template <typename T>
   bool operator()(const T* const c_p1, /** extrinsic parameters */
-		  T* residual) const
+                  T* residual) const
   {
-    const T *camera_T(&c_p1[0]);
+    const T* camera_T(&c_p1[0]);
     T camera_point[3]; /** point in camera coordinates */
 
     /** transform point into camera coordinates */
@@ -3300,103 +3353,93 @@ public:
     return true;
   } /** end of operator() */
 
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double o_x, const double o_y, 
-				     const double fx, const double fy, 
-				     const double cx, const double cy,
-				     const double k1, const double k2, const double k3,
-				     const double p1, const double p2,
-				     Point3d point)
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, const double fx, const double fy,
+                                     const double cx, const double cy, const double k1, const double k2,
+                                     const double k3, const double p1, const double p2, Point3d point)
   {
     return (new ceres::AutoDiffCostFunction<DistortedCameraFinder, 2, 6>(
-									 new DistortedCameraFinder(o_x, o_y, fx, fy, cx, cy, k1, k2, k3, p1, p2, point)));
+        new DistortedCameraFinder(o_x, o_y, fx, fy, cx, cy, k1, k2, k3, p1, p2, point)));
   }
-  double ox_; /** observed x location of object in image */
-  double oy_; /** observed y location of object in image */
-  double fx_; /*!< known focal length of camera in x */
-  double fy_; /*!< known focal length of camera in y */
-  double cx_; /*!< known optical center of camera in x */
-  double cy_; /*!< known optical center of camera in y */
-  double k1_; /*!< known radial distorition k1 */
-  double k2_; /*!< known radial distorition k2 */
-  double k3_; /*!< known radial distorition k3 */
-  double p1_; /*!< known decentering distorition p1 */
-  double p2_; /*!< known decentering distorition p2 */
+  double ox_;     /** observed x location of object in image */
+  double oy_;     /** observed y location of object in image */
+  double fx_;     /*!< known focal length of camera in x */
+  double fy_;     /*!< known focal length of camera in y */
+  double cx_;     /*!< known optical center of camera in x */
+  double cy_;     /*!< known optical center of camera in y */
+  double k1_;     /*!< known radial distorition k1 */
+  double k2_;     /*!< known radial distorition k2 */
+  double k3_;     /*!< known radial distorition k3 */
+  double p1_;     /*!< known decentering distorition p1 */
+  double p2_;     /*!< known decentering distorition p2 */
   Point3d point_; /*!< known location of point in target coordinates */
 };
 
-class  RailICalNoDistortion
+class RailICalNoDistortion
 {
 public:
-  RailICalNoDistortion(double ob_x, double ob_y, double rail_position, Point3d point) :
-    ox_(ob_x), oy_(ob_y), rail_position_(rail_position), point_(point)
+  RailICalNoDistortion(double ob_x, double ob_y, double rail_position, Point3d point)
+    : ox_(ob_x), oy_(ob_y), rail_position_(rail_position), point_(point)
   {
   }
 
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /**intrinsics [4] */
-			    const T* const c_p2,  /**target_pose [6] */
-			    T* residual) const
+  template <typename T>
+  bool operator()(const T* const c_p1, /**intrinsics [4] */
+                  const T* const c_p2, /**target_pose [6] */
+                  T* residual) const
   {
-    T fx, fy, cx, cy;      // extract intrinsics
+    T fx, fy, cx, cy;  // extract intrinsics
     extractCameraIntrinsics(c_p1, fx, fy, cx, cy);
-    const T *target_T(& c_p2[0]); // extract target's angle axis
+    const T* target_T(&c_p2[0]);  // extract target's angle axis
 
     /** transform point into camera frame */
     T camera_point[3]; /** point in camera coordinates */
     eTransformPoint3d(target_T, point_, camera_point);
-    camera_point[2] = camera_point[2] + T(rail_position_); // transform to camera's location along rail
+    camera_point[2] = camera_point[2] + T(rail_position_);  // transform to camera's location along rail
 
     /** compute project point into image plane and compute residual */
     T ox = T(ox_);
     T oy = T(oy_);
-    cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy,  residual);
+    cameraPntResidual(camera_point, fx, fy, cx, cy, ox, oy, residual);
 
     return true;
   } /** end of operator() */
 
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double o_x, const double o_y,
-				     const double rail_position,
-				     Point3d point)
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, const double rail_position, Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction<RailICal, 2, 4, 6>
-	    (
-	     new RailICal(o_x, o_y, rail_position, point)
-	     )
-	    );
+    return (new ceres::AutoDiffCostFunction<RailICal, 2, 4, 6>(new RailICal(o_x, o_y, rail_position, point)));
   }
-  double ox_; /** observed x location of object in image */
-  double oy_; /** observed y location of object in image */
+  double ox_;            /** observed x location of object in image */
+  double oy_;            /** observed y location of object in image */
   double rail_position_; /** location of camera along rail */
-  Point3d point_; /** point expressed in target coordinates */
+  Point3d point_;        /** point expressed in target coordinates */
 };
-  /* @brief rangeSensorExtrinsic This cost function is to be used for extrinsic calibration of a 3D camera. 
-   * This is used when the focal lenghts, optical center and distortion parameters used to get the 3D data
-   * are not available. Instead, we have the point cloud and an intensity image. We use the intensity
-   * image to find the centers of the cirlces of the calibration target and then assume that the same index 
-   * in the point cloud corresponds to the x,y,z location of this point.
-   * This assumption is probably erroneous because rectification of the intensity image is usually performed 
-   * prior to generation of the point cloud. 
-   * Solving extrinsic cal for a range sensor is equivalent to the inner computation of ICP where correspondence
-   * is perfectly known. There exists an analytic solution. 
-   */ 
-class  RangeSensorExtrinsicCal
+/* @brief rangeSensorExtrinsic This cost function is to be used for extrinsic calibration of a 3D camera.
+ * This is used when the focal lenghts, optical center and distortion parameters used to get the 3D data
+ * are not available. Instead, we have the point cloud and an intensity image. We use the intensity
+ * image to find the centers of the cirlces of the calibration target and then assume that the same index
+ * in the point cloud corresponds to the x,y,z location of this point.
+ * This assumption is probably erroneous because rectification of the intensity image is usually performed
+ * prior to generation of the point cloud.
+ * Solving extrinsic cal for a range sensor is equivalent to the inner computation of ICP where correspondence
+ * is perfectly known. There exists an analytic solution.
+ */
+class RangeSensorExtrinsicCal
 {
 public:
-  RangeSensorExtrinsicCal(double ob_x, double ob_y, double ob_z, Point3d point) :
-    ox_(ob_x), oy_(ob_y), oz_(ob_z),
-    point_(point)
+  RangeSensorExtrinsicCal(double ob_x, double ob_y, double ob_z, Point3d point)
+    : ox_(ob_x), oy_(ob_y), oz_(ob_z), point_(point)
   {
   }
 
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /**extriniscs [6] */
-			    T* residual) const
+  template <typename T>
+  bool operator()(const T* const c_p1, /**extriniscs [6] */
+                  T* residual) const
   {
-    const T *camera_T(& c_p1[0]); // extract camera's extrinsics
+    const T* camera_T(&c_p1[0]);  // extract camera's extrinsics
 
     /** transform point into camera frame */
     T camera_point[3]; /** point in camera coordinates */
@@ -3410,68 +3453,68 @@ public:
     return true;
   } /** end of operator() */
 
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(const double o_x, const double o_y,  const double o_z,
-				     Point3d point)
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(const double o_x, const double o_y, const double o_z, Point3d point)
   {
-    return (new ceres::AutoDiffCostFunction<RangeSensorExtrinsicCal, 3, 6>
-	    (
-	     new RangeSensorExtrinsicCal(o_x, o_y, o_z, point)
-	     )
-	    );
+    return (new ceres::AutoDiffCostFunction<RangeSensorExtrinsicCal, 3, 6>(
+        new RangeSensorExtrinsicCal(o_x, o_y, o_z, point)));
   }
-  double ox_; /** observed x location of object in 3D data */
-  double oy_; /** observed y location of object in 3D data */
-  double oz_; /** observed z location of object in 3D data */
+  double ox_;     /** observed x location of object in 3D data */
+  double oy_;     /** observed y location of object in 3D data */
+  double oz_;     /** observed z location of object in 3D data */
   Point3d point_; /** point expressed in target coordinates */
 };
 
-  /* @brief used to calibrate a camera mounted on wrist and the joint offsets and the pose of the target in a workcell */
-class  CameraOnWristWithJointOffsets
+/* @brief used to calibrate a camera mounted on wrist and the joint offsets and the pose of the target in a workcell */
+class CameraOnWristWithJointOffsets
 {
 public:
-  CameraOnWristWithJointOffsets(double ob_x, double ob_y,
-				std::vector<DHParameters> DH,
-				Pose6d& target_IT,
-				Pose6d& robot_IT,
-				double fx, double fy,
-				double cx, double cy,
-				double k1, double k2, double k3,
-				double p1, double p2,
-				Point3d point) :
-    ox_(ob_x), oy_(ob_y), 
-    target_IT_(target_IT),
-    robot_IT_(robot_IT),
-    fx_(fx), fy_(fy), cx_(cx), cy_(cy),
-    k1_(k1), k2_(k2), k3_(k3), p1_(p1), p2_(p2),
-    point_(point)
+  CameraOnWristWithJointOffsets(double ob_x, double ob_y, std::vector<DHParameters> DH, Pose6d& target_IT,
+                                Pose6d& robot_IT, double fx, double fy, double cx, double cy, double k1, double k2,
+                                double k3, double p1, double p2, Point3d point)
+    : ox_(ob_x)
+    , oy_(ob_y)
+    , target_IT_(target_IT)
+    , robot_IT_(robot_IT)
+    , fx_(fx)
+    , fy_(fy)
+    , cx_(cx)
+    , cy_(cy)
+    , k1_(k1)
+    , k2_(k2)
+    , k3_(k3)
+    , p1_(p1)
+    , p2_(p2)
+    , point_(point)
   {
     N_joints_ = DH.size();
-    for(int i=0; i<N_joints_; i++){
+    for (int i = 0; i < N_joints_; i++)
+    {
       DH_.push_back(DH[i]);
     }
   }
 
-  template<typename T>
-  bool operator()(	    const T* const c_p1,  /** target extriniscs [6] */
-			    const T* const c_p2,  /** camera extrinsics [6] */
-			    const T* const c_p3,  /** joint offsets, one for each joint */
-			    T* residual) const
+  template <typename T>
+  bool operator()(const T* const c_p1, /** target extriniscs [6] */
+                  const T* const c_p2, /** camera extrinsics [6] */
+                  const T* const c_p3, /** joint offsets, one for each joint */
+                  T* residual) const
   {
-    const T *target_T(& c_p1[0]); // extract target's extrinsics
-    const T *camera_T(& c_p2[0]); // extract camera's extrinsics
+    const T* target_T(&c_p1[0]);  // extract target's extrinsics
+    const T* camera_T(&c_p2[0]);  // extract camera's extrinsics
 
-    T target_mt_point[3];  /** point in frame of target's mounting frame */
-    T ref_point[3];        /** point in frame of ref_frame               */
-    T camera_point[3];     /** point in frame of camera's optical frame  */
-    T linki_point[3];      /** point in linki frame                      */
-    T link_ip1_point[3];   /** point in link i+1 frame                   */
+    T target_mt_point[3]; /** point in frame of target's mounting frame */
+    T ref_point[3];       /** point in frame of ref_frame               */
+    T camera_point[3];    /** point in frame of camera's optical frame  */
+    T linki_point[3];     /** point in linki frame                      */
+    T link_ip1_point[3];  /** point in link i+1 frame                   */
 
-    eTransformPoint3d(target_T, point_, target_mt_point);      // point in target's mounting_frame
-    poseTransformPoint(target_IT_, target_mt_point, ref_point); // point in ref_frame
-    poseTransformPoint(robot_IT_, ref_point, linki_point);     // point in the robot base frame 
-    for(int i=0;i<N_joints_;i++){                              // transform point up each link until it reaches the camera
+    eTransformPoint3d(target_T, point_, target_mt_point);        // point in target's mounting_frame
+    poseTransformPoint(target_IT_, target_mt_point, ref_point);  // point in ref_frame
+    poseTransformPoint(robot_IT_, ref_point, linki_point);       // point in the robot base frame
+    for (int i = 0; i < N_joints_; i++)
+    {  // transform point up each link until it reaches the camera
       T a(DH_[i].a);
       T alpha(DH_[i].alpha);
       T d(DH_[i].d);
@@ -3481,7 +3524,7 @@ public:
       linki_point[1] = link_ip1_point[1];
       linki_point[2] = link_ip1_point[2];
     }
-    eTransformPoint(camera_T, linki_point, camera_point);    // point in camera's optical frame
+    eTransformPoint(camera_T, linki_point, camera_point);  // point in camera's optical frame
 
     /** compute residual */
     T fx(fx_);
@@ -3490,7 +3533,7 @@ public:
     T cy(cy_);
     T k1(k1_);
     T k2(k2_);
-    T k3(k3_);	
+    T k3(k3_);
     T p1(p1_);
     T p2(p2_);
     T ox(ox_);
@@ -3500,52 +3543,35 @@ public:
     return true;
   } /** end of operator() */
 
-    /** Factory to hide the construction of the CostFunction object from */
-    /** the client code. */
-  static ceres::CostFunction* Create(double ob_x, double ob_y,
-				std::vector<DHParameters> DH,
-				Pose6d& target_IT,
-				Pose6d& robot_IT,
-				double fx, double fy,
-				double cx, double cy,
-				double k1, double k2, double k3,
-				double p1, double p2,
-				Point3d point) 
+  /** Factory to hide the construction of the CostFunction object from */
+  /** the client code. */
+  static ceres::CostFunction* Create(double ob_x, double ob_y, std::vector<DHParameters> DH, Pose6d& target_IT,
+                                     Pose6d& robot_IT, double fx, double fy, double cx, double cy, double k1, double k2,
+                                     double k3, double p1, double p2, Point3d point)
 
   {
-    return (new ceres::AutoDiffCostFunction<CameraOnWristWithJointOffsets, 2, 6, 6, 5 >
-	    (
-	     new CameraOnWristWithJointOffsets(ob_x, ob_y,
-					       DH,
-					       target_IT,
-					       robot_IT,
-					       fx, fy,
-					       cx,  cy,
-					       k1,  k2,  k3,
-					       p1,  p2,
-					       point) 
-	     )
-	    );
+    return (
+        new ceres::AutoDiffCostFunction<CameraOnWristWithJointOffsets, 2, 6, 6, 5>(new CameraOnWristWithJointOffsets(
+            ob_x, ob_y, DH, target_IT, robot_IT, fx, fy, cx, cy, k1, k2, k3, p1, p2, point)));
   }
-  double ox_; /** observed x location of object in 3D data */
-  double oy_; /** observed y location of object in 3D data */
+  double ox_;     /** observed x location of object in 3D data */
+  double oy_;     /** observed y location of object in 3D data */
   Point3d point_; /** point expressed in target coordinates */
   int N_joints_;
   // DH parameters for robot with up to 12 joints
-  std::vector<DHParameters> DH_; // link dh parameters
-  Pose6d target_IT_; // transform from target mounting point to ref_frame
-  Pose6d robot_IT_; // transform from base of robot to ref_frame
-  double fx_; /*!< known focal length of camera in x */
-  double fy_; /*!< known focal length of camera in y */
-  double cx_; /*!< known optical center of camera in x */
-  double cy_; /*!< known optical center of camera in y */
-  double k1_; /*!< known radial distorition k1 */
-  double k2_; /*!< known radial distorition k2 */
-  double k3_; /*!< known radial distorition k3 */
-  double p1_; /*!< known decentering distorition p1 */
-  double p2_; /*!< known decentering distorition p2 */
+  std::vector<DHParameters> DH_;  // link dh parameters
+  Pose6d target_IT_;              // transform from target mounting point to ref_frame
+  Pose6d robot_IT_;               // transform from base of robot to ref_frame
+  double fx_;                     /*!< known focal length of camera in x */
+  double fy_;                     /*!< known focal length of camera in y */
+  double cx_;                     /*!< known optical center of camera in x */
+  double cy_;                     /*!< known optical center of camera in y */
+  double k1_;                     /*!< known radial distorition k1 */
+  double k2_;                     /*!< known radial distorition k2 */
+  double k3_;                     /*!< known radial distorition k3 */
+  double p1_;                     /*!< known decentering distorition p1 */
+  double p2_;                     /*!< known decentering distorition p2 */
 };
 
-
-} // end of namespace
+}  // namespace industrial_extrinsic_cal
 #endif

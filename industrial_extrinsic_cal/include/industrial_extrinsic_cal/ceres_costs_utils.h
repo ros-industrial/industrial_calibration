@@ -22,56 +22,58 @@
 #include <string>
 namespace industrial_extrinsic_cal
 {
-  // create an enumeration of all the cost functions
-  namespace cost_functions{
-    enum Cost_function{
-      CameraReprjErrorWithDistortion,
-      CameraReprjErrorWithDistortionPK,
-      CameraReprjError,
-      CameraReprjErrorPK,
-      TriangulationError,
-      TargetCameraReprjError,
-      TargetCameraReprjErrorPK,
-      LinkTargetCameraReprjError,
-      LinkTargetCameraReprjErrorPK,
-      wristCal,
-      PosedTargetCameraReprjErrorPK,
-      LinkCameraTargetReprjError,
-      LinkCameraTargetReprjErrorPK,
-      CircleCameraReprjErrorWithDistortion,
-      CircleCameraReprjErrorWithDistortionPK,
-      CircleCameraReprjError,
-      CircleCameraReprjErrorPK,
-      CircleTargetCameraReprjErrorWithDistortion,
-      CircleTargetCameraReprjErrorWithDistortionPK,
-      FixedCircleTargetCameraReprjErrorWithDistortionPK,
-      SimpleCircleTargetCameraReprjErrorWithDistortionPK,
-      CircleTargetCameraReprjError,
-      CircleTargetCameraReprjErrorPK,
-      LinkCircleTargetCameraReprjError,
-      LinkCircleTargetCameraReprjErrorPK,
-      LinkCameraCircleTargetReprjError,
-      LinkCameraCircleTargetReprjErrorPK,
-      FixedCircleTargetCameraReprjErrorPK,
-      RailICal,
-      RailICal3,
-      RailICal4,
-      RailICal5,
-      RailSCal,
-      StereoTargetLocator,
-      TargetOnLinkRtStereo,
-      TargetOnLinkLtStereo,
-      WristStereoCal,
-      StereoOnLinkRt,
-      StereoOnLinkLt,
-      DistortedCameraFinder,
-      RailICalNoDistortion,
-      RangeSensorExtrinsicCal,
-      CameraOnWristWithJointOffsets,
-      NullCostType
-    };
-  }// end of namespace cost_functions
-  typedef cost_functions::Cost_function Cost_function;
+// create an enumeration of all the cost functions
+namespace cost_functions
+{
+enum Cost_function
+{
+  CameraReprjErrorWithDistortion,
+  CameraReprjErrorWithDistortionPK,
+  CameraReprjError,
+  CameraReprjErrorPK,
+  TriangulationError,
+  TargetCameraReprjError,
+  TargetCameraReprjErrorPK,
+  LinkTargetCameraReprjError,
+  LinkTargetCameraReprjErrorPK,
+  wristCal,
+  PosedTargetCameraReprjErrorPK,
+  LinkCameraTargetReprjError,
+  LinkCameraTargetReprjErrorPK,
+  CircleCameraReprjErrorWithDistortion,
+  CircleCameraReprjErrorWithDistortionPK,
+  CircleCameraReprjError,
+  CircleCameraReprjErrorPK,
+  CircleTargetCameraReprjErrorWithDistortion,
+  CircleTargetCameraReprjErrorWithDistortionPK,
+  FixedCircleTargetCameraReprjErrorWithDistortionPK,
+  SimpleCircleTargetCameraReprjErrorWithDistortionPK,
+  CircleTargetCameraReprjError,
+  CircleTargetCameraReprjErrorPK,
+  LinkCircleTargetCameraReprjError,
+  LinkCircleTargetCameraReprjErrorPK,
+  LinkCameraCircleTargetReprjError,
+  LinkCameraCircleTargetReprjErrorPK,
+  FixedCircleTargetCameraReprjErrorPK,
+  RailICal,
+  RailICal3,
+  RailICal4,
+  RailICal5,
+  RailSCal,
+  StereoTargetLocator,
+  TargetOnLinkRtStereo,
+  TargetOnLinkLtStereo,
+  WristStereoCal,
+  StereoOnLinkRt,
+  StereoOnLinkLt,
+  DistortedCameraFinder,
+  RailICalNoDistortion,
+  RangeSensorExtrinsicCal,
+  CameraOnWristWithJointOffsets,
+  NullCostType
+};
+}  // end of namespace cost_functions
+typedef cost_functions::Cost_function Cost_function;
 
 // prototypes of functions
 

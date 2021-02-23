@@ -144,6 +144,6 @@ inline std::string locateResource(const std::string& url)
   return mod_url;
 }
 
-}  // end namespace
+}  // namespace industrial_extrinsic_cal
 
 #endif

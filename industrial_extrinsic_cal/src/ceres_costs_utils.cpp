@@ -61,14 +61,10 @@ Cost_function string2CostType(std::string& cost_type_str)
   if (cost_type_str == "LinkCameraCircleTargetReprjErrorPK")
     return (cost_functions::LinkCameraCircleTargetReprjErrorPK);
 
-  if (cost_type_str == "TargetOnLinkRtStereo")
-    return (cost_functions::TargetOnLinkRtStereo);
-  if (cost_type_str == "TargetOnLinkLtStereo")
-    return (cost_functions::TargetOnLinkLtStereo);
-  if (cost_type_str == "StereoOnLinkRt")
-    return (cost_functions::StereoOnLinkRt);
-  if (cost_type_str == "StereoOnLinkLt")
-    return (cost_functions::StereoOnLinkLt);
+  if (cost_type_str == "TargetOnLinkRtStereo") return (cost_functions::TargetOnLinkRtStereo);
+  if (cost_type_str == "TargetOnLinkLtStereo") return (cost_functions::TargetOnLinkLtStereo);
+  if (cost_type_str == "StereoOnLinkRt") return (cost_functions::StereoOnLinkRt);
+  if (cost_type_str == "StereoOnLinkLt") return (cost_functions::StereoOnLinkLt);
   return (cost_functions::NullCostType);
 }
 
@@ -108,4 +104,4 @@ std::string costType2String(Cost_function cost_type)
   if (cost_type == cost_functions::FixedCircleTargetCameraReprjErrorPK) return ("FixedCircleTargetCameraReprjErrorPK");
   return ("NullCostType");
 }
-}  // end of namespace
+}  // namespace industrial_extrinsic_cal

@@ -23,61 +23,64 @@
 
 namespace industrial_extrinsic_cal
 {
-  bool TransformInterface::saveCurrentPose(int scene, std::string& filename)
+bool TransformInterface::saveCurrentPose(int scene, std::string& filename)
+{
+  std::string full_file_path_name;
+  char scene_chars[30];
+  sprintf(scene_chars, "_%03d.yaml", scene);
+  if (filename == "")
+  {  // build file name from data_directory_,
+    full_file_path_name = data_directory_ + "/" + transform_frame_ + std::string(scene_chars);
+  }
+  else
   {
-    std::string full_file_path_name;
-    char scene_chars[30];
-    sprintf(scene_chars,"_%03d.yaml",scene);
-    if(filename == ""){ // build file name from data_directory_, 
-      full_file_path_name  = data_directory_ + "/" +  transform_frame_ + std::string(scene_chars);
-    }
-    else{
-      full_file_path_name  = data_directory_ + "/" +  filename;
-    }
-    writePoseYAML(full_file_path_name, pose_);
-    return(true);
-  }// end saveCurrentPose()
+    full_file_path_name = data_directory_ + "/" + filename;
+  }
+  writePoseYAML(full_file_path_name, pose_);
+  return (true);
+}  // end saveCurrentPose()
 
-  bool TransformInterface::loadPose(int scene, std::string& filename)
-  {
-    std::string full_file_path_name;
-    char scene_chars[30];
-    sprintf(scene_chars,"_%03d.yaml",scene);
-    if(filename == ""){ // build file name from data_directory_
-      full_file_path_name  = data_directory_ + "/" +  transform_frame_ + std::string(scene_chars);
-    }
-    else{
-      full_file_path_name  = data_directory_ + "/" +  filename;
-    }
-    
-    return(loadPoseYAML(full_file_path_name));
-  }// end loadPose()
-  bool TransformInterface::loadPoseYAML(std::string &file)
-  {
-    YAML::Node n;
-    if(yamlNodeFromFileName(file, n)){
-      return(parsePose(n,pose_));
-    }
-    return(false);
+bool TransformInterface::loadPose(int scene, std::string& filename)
+{
+  std::string full_file_path_name;
+  char scene_chars[30];
+  sprintf(scene_chars, "_%03d.yaml", scene);
+  if (filename == "")
+  {  // build file name from data_directory_
+    full_file_path_name = data_directory_ + "/" + transform_frame_ + std::string(scene_chars);
   }
-  Pose6d TransformInterface::getCurrentPose()
+  else
   {
-    return (pose_);
-  }
-  void TransformInterface::setCurrentPose(const Pose6d P)
-  {
-    pose_ = P;
-  }
-  void TransformInterface::setDataDirectory(std::string dir_name)
-  {
-    data_directory_ = dir_name;
+    full_file_path_name = data_directory_ + "/" + filename;
   }
 
-  std::string TransformInterface::getDataDirectory()
+  return (loadPoseYAML(full_file_path_name));
+}  // end loadPose()
+bool TransformInterface::loadPoseYAML(std::string& file)
+{
+  YAML::Node n;
+  if (yamlNodeFromFileName(file, n))
   {
-    return(data_directory_);
+    return (parsePose(n, pose_));
   }
+  return (false);
+}
+Pose6d TransformInterface::getCurrentPose()
+{
+  return (pose_);
+}
+void TransformInterface::setCurrentPose(const Pose6d P)
+{
+  pose_ = P;
+}
+void TransformInterface::setDataDirectory(std::string dir_name)
+{
+  data_directory_ = dir_name;
+}
 
+std::string TransformInterface::getDataDirectory()
+{
+  return (data_directory_);
+}
 
-
-}// end of namespace industrial_extrinsic_cal
+}  // end of namespace industrial_extrinsic_cal

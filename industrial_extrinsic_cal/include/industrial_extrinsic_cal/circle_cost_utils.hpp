@@ -384,17 +384,17 @@ class CircleTargetCameraReprjErrorNoDFixedPointOLD
 {
 public:
   /** @brief Constructor
-*   @param ob_x observation -x value in image coordinates
-*   @param ob_y observation -y value in image coordinates
-*   @param c_dia diameter of circle being viewed
-*   @param fx  focal length in x units are pixels
-*   @param fy  focal length in y units are pixels
-*   @param cx optical center in x units are pixels
-*   @param cy optical center in y units are pixels
-*   @param point_x location of point in target frame x value
-*   @param point_y location of point in target frame y value
-*   @param point_z location of point in target frame z value
-*/
+   *   @param ob_x observation -x value in image coordinates
+   *   @param ob_y observation -y value in image coordinates
+   *   @param c_dia diameter of circle being viewed
+   *   @param fx  focal length in x units are pixels
+   *   @param fy  focal length in y units are pixels
+   *   @param cx optical center in x units are pixels
+   *   @param cy optical center in y units are pixels
+   *   @param point_x location of point in target frame x value
+   *   @param point_y location of point in target frame y value
+   *   @param point_z location of point in target frame z value
+   */
   CircleTargetCameraReprjErrorNoDFixedPointOLD(double ob_x, double ob_y, double c_dia, double fx, double fy, double cx,
                                                double cy, double point_x, double point_y, double point_z)
     : ox_(ob_x), oy_(ob_y), circle_diameter_(c_dia), fx_(fx), fy_(fy), cx_(cx), cy_(cy)
@@ -563,6 +563,6 @@ bool industrial_extrinsic_cal::CircleTargetCameraReprjErrorNoDFixedPointOLD::ope
 
   return true;
 }  // end of operator()
-}
+}  // namespace industrial_extrinsic_cal
 
 #endif

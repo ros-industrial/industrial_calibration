@@ -159,7 +159,7 @@ public:
   {
     return &scene_list_;
   };
-  
+
   //    ::std::ostream& operator<<(::std::ostream& os, const CalibrationJob& C){ return os<< "TODO";}
 protected:
   /*!
@@ -231,7 +231,7 @@ protected:
 
   /** @brief each camera and each target have a transform interface, pull the current values from the interface
    *    @param scene_id the id for the scene, only pull transforms from targets and cameras of this scene
-*/
+   */
   void pullTransforms(int scene_id);
 
 private:

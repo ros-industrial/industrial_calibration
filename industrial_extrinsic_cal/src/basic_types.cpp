@@ -256,4 +256,4 @@ Pose6d Pose6d::operator*(Pose6d pose2) const
   return (pose);
 }
 
-}  // end of namespace
+}  // namespace industrial_extrinsic_cal

@@ -8,8 +8,8 @@
 
 namespace industrial_extrinsic_cal
 {
-  bool parsePose(const YAML::Node& node, Pose6d& pose);
-  void writePoseYAML(std::string &file, Pose6d pose);
-}  // end industrial_extrinsic_cal namespace
+bool parsePose(const YAML::Node& node, Pose6d& pose);
+void writePoseYAML(std::string& file, Pose6d pose);
+}  // namespace industrial_extrinsic_cal
 
 #endif

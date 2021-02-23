@@ -27,20 +27,20 @@
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
 #define SHOW_DEBUG false
 
+using boost::shared_ptr;
+using industrial_extrinsic_cal::Camera;
+using industrial_extrinsic_cal::Cost_function;
+using industrial_extrinsic_cal::extractCameraIntrinsics;
+using industrial_extrinsic_cal::ObservationDataPoint;
+using industrial_extrinsic_cal::P_BLOCK;
+using industrial_extrinsic_cal::Point3d;
+using industrial_extrinsic_cal::Pose6d;
+using industrial_extrinsic_cal::projectPntNoDistortion;
+using industrial_extrinsic_cal::string2CostType;
+using industrial_extrinsic_cal::transformPoint;
 using std::ifstream;
 using std::string;
 using std::vector;
-using boost::shared_ptr;
-using industrial_extrinsic_cal::Pose6d;
-using industrial_extrinsic_cal::P_BLOCK;
-using industrial_extrinsic_cal::Camera;
-using industrial_extrinsic_cal::Point3d;
-using industrial_extrinsic_cal::ObservationDataPoint;
-using industrial_extrinsic_cal::extractCameraIntrinsics;
-using industrial_extrinsic_cal::transformPoint;
-using industrial_extrinsic_cal::projectPntNoDistortion;
-using industrial_extrinsic_cal::string2CostType;
-using industrial_extrinsic_cal::Cost_function;
 
 typedef boost::minstd_rand base_gen_type;
 base_gen_type gen(42);

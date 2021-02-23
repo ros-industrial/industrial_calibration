@@ -39,6 +39,6 @@ boost::shared_ptr<Trigger> parseTrigger(const YAML::Node& node, std::string& nam
  **/
 bool parseCameras(std::string& cameras_input_file, std::vector<boost::shared_ptr<Camera> >& cameras);
 
-}  // end industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal
 
 #endif

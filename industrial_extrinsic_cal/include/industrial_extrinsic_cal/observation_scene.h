@@ -33,9 +33,8 @@ class ObservationScene
 {
 public:
   /*! \brief Constructor with no inputs */
-  ObservationScene() : scene_id_(-1)
-  {};
-  
+  ObservationScene() : scene_id_(-1){};
+
   /*! \brief Constructor,
    *   \param Trigger the type of trigger to initiate this observation
    */

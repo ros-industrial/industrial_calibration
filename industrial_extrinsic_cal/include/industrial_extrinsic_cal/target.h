@@ -52,8 +52,8 @@ public:
   void generatePoints();
 
   /*! \brief gets the number of rows and cols, if not this kind, no change */
-  bool getRowsCols(int &rows, int & cols);
-  
+  bool getRowsCols(int& rows, int& cols);
+
   // TODO make these each a derived class of a base target class
   union
   {
@@ -67,7 +67,7 @@ public:
   unsigned int num_points_;  /**< number of points in the point array */
   std::vector<Point3d> pts_; /**< an array of points expressed relative to Pose p. */
   bool is_moving_;           /**< observed in multiple locations or it fixed to ref frame */
-  bool pub_rviz_vis_;         /**< publish an rviz visualization of the target */
+  bool pub_rviz_vis_;        /**< publish an rviz visualization of the target */
   std::string target_name_;  /**< Name of target */
   std::string target_frame_; /**< name of target's coordinate frame */
   unsigned int target_type_; /**< Type of target */
@@ -82,5 +82,5 @@ typedef struct MovingTarget
   int scene_id_;                    // but point parameters may be unused duplicates
 } MovingTarget;
 
-}  // end of namespace
+}  // namespace industrial_extrinsic_cal
 #endif

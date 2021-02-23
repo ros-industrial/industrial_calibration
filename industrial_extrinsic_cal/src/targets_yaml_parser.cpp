@@ -8,15 +8,15 @@
 #include <yaml-cpp/yaml.h>
 #include <industrial_extrinsic_cal/ros_transform_interface.h>
 #include <industrial_extrinsic_cal/targets_yaml_parser.h>
-#include <industrial_extrinsic_cal/camera_yaml_parser.h>   
-#include <industrial_extrinsic_cal/pose_yaml_parser.h>   
+#include <industrial_extrinsic_cal/camera_yaml_parser.h>
+#include <industrial_extrinsic_cal/pose_yaml_parser.h>
 #include <industrial_extrinsic_cal/ros_camera_observer.h>  // for pattern options
 
+using boost::make_shared;
+using boost::shared_ptr;
 using std::ifstream;
 using std::string;
 using std::vector;
-using boost::shared_ptr;
-using boost::make_shared;
 using YAML::Node;
 
 namespace industrial_extrinsic_cal
@@ -49,7 +49,7 @@ bool parseTargets(std::string& target_file, vector<boost::shared_ptr<Target> >& 
         n_static++;
       }
     }
-    ROS_INFO("parsed = %d static targets",(int) targets.size());
+    ROS_INFO("parsed = %d static targets", (int)targets.size());
     // read in all moving targets
     int n_moving = 0;
     const YAML::Node& target_parameters2 = parseNode(target_doc, "moving_targets");
@@ -106,17 +106,17 @@ shared_ptr<Target> parseSingleTarget(const Node& node)
       case pattern_options::Chessboard:
         success &= parseInt(node, "target_rows", temp_target->checker_board_parameters_.pattern_rows);
         success &= parseInt(node, "target_cols", temp_target->checker_board_parameters_.pattern_cols);
-	parseDouble(node, "square_size", temp_target->checker_board_parameters_.square_size);
+        parseDouble(node, "square_size", temp_target->checker_board_parameters_.square_size);
         ROS_DEBUG_STREAM("TargetRows: " << temp_target->checker_board_parameters_.pattern_rows);
-	parseBool(node,"publish_vis_marker", temp_target->pub_rviz_vis_);
+        parseBool(node, "publish_vis_marker", temp_target->pub_rviz_vis_);
         if (!success) ROS_ERROR("must set rows and cols");
         break;
       case pattern_options::CircleGrid:
         parseInt(node, "target_rows", temp_target->circle_grid_parameters_.pattern_rows);
         parseInt(node, "target_cols", temp_target->circle_grid_parameters_.pattern_cols);
         parseDouble(node, "circle_dia", temp_target->circle_grid_parameters_.circle_diameter);
-	parseDouble(node, "spacing", temp_target->circle_grid_parameters_.spacing);
-	parseBool(node,"publish_vis_marker", temp_target->pub_rviz_vis_);
+        parseDouble(node, "spacing", temp_target->circle_grid_parameters_.spacing);
+        parseBool(node, "publish_vis_marker", temp_target->pub_rviz_vis_);
         temp_target->circle_grid_parameters_.is_symmetric = true;
         ROS_DEBUG_STREAM("TargetRows: " << temp_target->circle_grid_parameters_.pattern_rows);
         break;
@@ -124,8 +124,8 @@ shared_ptr<Target> parseSingleTarget(const Node& node)
         parseInt(node, "target_rows", temp_target->circle_grid_parameters_.pattern_rows);
         parseInt(node, "target_cols", temp_target->circle_grid_parameters_.pattern_cols);
         parseDouble(node, "circle_dia", temp_target->circle_grid_parameters_.circle_diameter);
-	parseDouble(node, "spacing", temp_target->circle_grid_parameters_.spacing);
-	parseBool(node,"publish_vis_marker", temp_target->pub_rviz_vis_);
+        parseDouble(node, "spacing", temp_target->circle_grid_parameters_.spacing);
+        parseBool(node, "publish_vis_marker", temp_target->pub_rviz_vis_);
         temp_target->circle_grid_parameters_.is_symmetric = true;
         ROS_DEBUG_STREAM("TargetRows: " << temp_target->circle_grid_parameters_.pattern_rows);
         break;
@@ -142,7 +142,7 @@ shared_ptr<Target> parseSingleTarget(const Node& node)
     else
     {
       shared_ptr<TransformInterface> temp_ti =
-	parseTransformInterface(node, transform_interface, temp_target->target_frame_, pose);
+          parseTransformInterface(node, transform_interface, temp_target->target_frame_, pose);
       temp_target->setTransformInterface(temp_ti);  // install the transform interface
       if (transform_available)
       {
@@ -155,9 +155,9 @@ shared_ptr<Target> parseSingleTarget(const Node& node)
       const YAML::Node& points_node = parseNode(node, "points");
       int num_points = parseTargetPoints(points_node, temp_target->pts_);
       if (num_points != temp_target->num_points_ || num_points != (int)temp_target->pts_.size())
-	{
-	  ROS_ERROR("Expecting %d points found %d", temp_target->num_points_, num_points);
-	}
+      {
+        ROS_ERROR("Expecting %d points found %d", temp_target->num_points_, num_points);
+      }
     }
   }  // end try
   catch (YAML::ParserException& e)
@@ -191,7 +191,7 @@ int parseTargetPoints(const Node& node, std::vector<Point3d>& points)
     temp_pnt3d.z = temp_pnt[2];
     points.push_back(temp_pnt3d);
   }
-  return(node.size());
+  return (node.size());
 }
 
-}  // end of industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal

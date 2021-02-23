@@ -42,14 +42,15 @@ int main(int argc, char** argv)
   image_transport::Publisher pub7 = it.advertise("camera7/rgb/image_rect_color", 1);
   image_transport::Publisher pub8 = it.advertise("camera8/rgb/image_rect_color", 1);
 
-
   std::string image_directory;
-  if(!nh.getParam(node_name + "/image_directory", image_directory)){
+  if (!nh.getParam(node_name + "/image_directory", image_directory))
+  {
     ROS_ERROR("MUST SET ros node parameter image_directory");
     exit(1);
   }
-  else{
-    ROS_INFO("Using Image Directory: %s",image_directory.c_str());
+  else
+  {
+    ROS_INFO("Using Image Directory: %s", image_directory.c_str());
   }
 
   std::string image_1 = image_directory + "/camera1_cal.jpg";
@@ -61,14 +62,14 @@ int main(int argc, char** argv)
   std::string image_7 = image_directory + "/camera7_cal.jpg";
   std::string image_8 = image_directory + "/camera8_cal.jpg";
 
-  cv::Mat image1= cv::imread(image_1, CV_LOAD_IMAGE_COLOR);
-  cv::Mat image2= cv::imread(image_2, CV_LOAD_IMAGE_COLOR);
-  cv::Mat image3= cv::imread(image_3, CV_LOAD_IMAGE_COLOR);
-  cv::Mat image4= cv::imread(image_4, CV_LOAD_IMAGE_COLOR);
-  cv::Mat image5= cv::imread(image_5, CV_LOAD_IMAGE_COLOR);
-  cv::Mat image6= cv::imread(image_6, CV_LOAD_IMAGE_COLOR);
-  cv::Mat image7= cv::imread(image_7, CV_LOAD_IMAGE_COLOR);
-  cv::Mat image8= cv::imread(image_8, CV_LOAD_IMAGE_COLOR);
+  cv::Mat image1 = cv::imread(image_1, CV_LOAD_IMAGE_COLOR);
+  cv::Mat image2 = cv::imread(image_2, CV_LOAD_IMAGE_COLOR);
+  cv::Mat image3 = cv::imread(image_3, CV_LOAD_IMAGE_COLOR);
+  cv::Mat image4 = cv::imread(image_4, CV_LOAD_IMAGE_COLOR);
+  cv::Mat image5 = cv::imread(image_5, CV_LOAD_IMAGE_COLOR);
+  cv::Mat image6 = cv::imread(image_6, CV_LOAD_IMAGE_COLOR);
+  cv::Mat image7 = cv::imread(image_7, CV_LOAD_IMAGE_COLOR);
+  cv::Mat image8 = cv::imread(image_8, CV_LOAD_IMAGE_COLOR);
 
   //  cv::namedWindow("test");
   //  cv::imshow("test",image1);
@@ -80,17 +81,18 @@ int main(int argc, char** argv)
   header.frame_id = "world_frame";
   header.stamp = ros::Time::now();
   std::string encoding("bgr8");
-  cv_bridge::CvImage  cv1(header, encoding, image1);
-  cv_bridge::CvImage  cv2(header, encoding, image2);
-  cv_bridge::CvImage  cv3(header, encoding, image3);
-  cv_bridge::CvImage  cv4(header, encoding, image4);
-  cv_bridge::CvImage  cv5(header, encoding, image5);
-  cv_bridge::CvImage  cv6(header, encoding, image6);
-  cv_bridge::CvImage  cv7(header, encoding, image7);
-  cv_bridge::CvImage  cv8(header, encoding, image8);
-  
+  cv_bridge::CvImage cv1(header, encoding, image1);
+  cv_bridge::CvImage cv2(header, encoding, image2);
+  cv_bridge::CvImage cv3(header, encoding, image3);
+  cv_bridge::CvImage cv4(header, encoding, image4);
+  cv_bridge::CvImage cv5(header, encoding, image5);
+  cv_bridge::CvImage cv6(header, encoding, image6);
+  cv_bridge::CvImage cv7(header, encoding, image7);
+  cv_bridge::CvImage cv8(header, encoding, image8);
+
   ros::Rate loop_rate(5);
-  while (nh.ok()) {
+  while (nh.ok())
+  {
     header.seq = seq++;
     header.frame_id = "world_frame";
     header.stamp = ros::Time::now();

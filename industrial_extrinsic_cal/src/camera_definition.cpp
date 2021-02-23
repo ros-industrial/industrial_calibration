@@ -20,9 +20,9 @@
 
 namespace industrial_extrinsic_cal
 {
-using std::string;
 using boost::shared_ptr;
 using ceres::CostFunction;
+using std::string;
 Camera::Camera()
 {
   camera_name_ = "NONE";
@@ -81,10 +81,11 @@ int Camera::getObservations(CameraObservations& camera_observations)
   camera_observer_->getObservations(camera_observations);
   // get intermediate frames form camera and target
   for (int i = 0; i < (int)camera_observations.size(); i++)
-    {
+  {
     camera_observations[i].intermediate_camera_frame = transform_interface_->getIntermediateFrame();
-    camera_observations[i].intermediate_target_frame = camera_observations[i].target->transform_interface_->getIntermediateFrame();
+    camera_observations[i].intermediate_target_frame =
+        camera_observations[i].target->transform_interface_->getIntermediateFrame();
   }
-  return(1);
+  return (1);
 }
 }  // end namespace industrial_extrinsic_cal

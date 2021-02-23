@@ -422,5 +422,5 @@ private:
   ceres::Problem problem_; /*!< This is the object which solves non-linear optimization problems */
 };
 
-}  // end of namespace
+}  // namespace industrial_extrinsic_cal
 #endif

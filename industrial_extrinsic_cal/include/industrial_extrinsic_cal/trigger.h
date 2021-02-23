@@ -46,6 +46,6 @@ class NoWaitTrigger : public Trigger
   };  // don't wait
 };
 
-}  // end of namespace
+}  // namespace industrial_extrinsic_cal
 
 #endif

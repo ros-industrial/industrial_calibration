@@ -30,6 +30,7 @@ class ServersNode
 {
 protected:
   ros::NodeHandle nh_;
+
 public:
   typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_joint_values_triggerAction> JointValuesServer;
   typedef actionlib::SimpleActionServer<industrial_extrinsic_cal::robot_pose_triggerAction> PoseServer;
@@ -46,13 +47,16 @@ public:
     move_group_->setNumPlanningAttempts(30.0);              // Allow parallel planner to hybridize this many plans
     move_group_->setPlannerId("RRTConnectkConfigDefault");  // use this planner
     ros::NodeHandle pnh("~");
-    if (!pnh.getParam("end_effector_link_name", end_effector_link_name_)){
+    if (!pnh.getParam("end_effector_link_name", end_effector_link_name_))
+    {
       end_effector_link_name_ = "ee_link";
     }
-    if (!pnh.getParam("pose_ref_frame_name", pose_ref_frame_name_)){
+    if (!pnh.getParam("pose_ref_frame_name", pose_ref_frame_name_))
+    {
       pose_ref_frame_name_ = "world";
     }
-    ROS_INFO("using %s as pose reference frame and %s as end effector frame", pose_ref_frame_name_.c_str(), end_effector_link_name_.c_str());
+    ROS_INFO("using %s as pose reference frame and %s as end effector frame", pose_ref_frame_name_.c_str(),
+             end_effector_link_name_.c_str());
   };
 
   ~ServersNode()
@@ -87,8 +91,8 @@ public:
     move_group_->setJointValueTarget(goal->joint_values);
     if (move_group_->move())
     {
-      // For calibration, one might want a sleep here, but in that case, it should be the caller's responsibility to sleep
-      // after the move completes to allow for vibrations to settle.
+      // For calibration, one might want a sleep here, but in that case, it should be the caller's responsibility to
+      // sleep after the move completes to allow for vibrations to settle.
       joint_value_server_.setSucceeded();
     }
     else

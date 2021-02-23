@@ -19,8 +19,8 @@
 #include <industrial_extrinsic_cal/ceres_blocks.h>
 #include <boost/shared_ptr.hpp>
 
-using std::string;
 using boost::shared_ptr;
+using std::string;
 
 namespace industrial_extrinsic_cal
 {
@@ -429,9 +429,9 @@ void CeresBlocks::displayMovingTargets()
     }
   }
 }
-using std::string;
-using std::ofstream;
 using std::endl;
+using std::ofstream;
+using std::string;
 
 bool CeresBlocks::writeAllStaticTransforms(string filePath)
 {

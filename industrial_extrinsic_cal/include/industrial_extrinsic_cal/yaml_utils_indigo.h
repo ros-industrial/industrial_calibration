@@ -108,6 +108,6 @@ inline bool yamlNodeFromFileName(std::string filename, YAML::Node& ynode)
   return (rtn);
 }
 
-}  // end namespace
+}  // namespace industrial_extrinsic_cal
 
 #endif

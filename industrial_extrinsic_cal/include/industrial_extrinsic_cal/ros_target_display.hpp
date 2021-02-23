@@ -19,11 +19,10 @@
 #ifndef ROS_TARGET_DISPLAY_HPP
 #define ROS_TARGET_DISPLAY_HPP
 
-
 #include <industrial_extrinsic_cal/target.h>
 
-  /*@brief display target in rviz
-   * @param target target to be displayed
-   */
+/*@brief display target in rviz
+ * @param target target to be displayed
+ */
 void displayRvizTarget(boost::shared_ptr<industrial_extrinsic_cal::Target> target);
 #endif

@@ -127,7 +127,8 @@ bool CameraObserverTrigger::executeCallBack(industrial_extrinsic_cal::camera_obs
   {
     camera_observer.clearObservations();
     camera_observer.triggerCamera();
-    while (!camera_observer.observationsDone());
+    while (!camera_observer.observationsDone())
+      ;
     camera_observer.getObservations(camera_observations);
     num_observations = (int)camera_observations.size();
     ROS_DEBUG("camera observer found %d observations", (int)camera_observations.size());

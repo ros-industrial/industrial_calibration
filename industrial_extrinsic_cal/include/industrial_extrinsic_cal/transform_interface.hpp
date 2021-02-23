@@ -19,7 +19,6 @@
 #ifndef TRANSFORM_INTERFACE_HPP_
 #define TRANSFORM_INTERFACE_HPP_
 
-
 #include <industrial_extrinsic_cal/basic_types.h> /* Pose6d,Roi,Observation,CameraObservations */
 #include <ros/ros.h>
 namespace industrial_extrinsic_cal
@@ -45,7 +44,7 @@ public:
 
   /** @brief get the transform reference frame of transform
    *   @param ref_frame the reference frame name
-  */
+   */
   virtual void setReferenceFrame(std::string& ref_frame) = 0;
 
   /** @brief set the transform reference frame of transform */
@@ -87,22 +86,22 @@ public:
   }
 
   /** @brief saves the latest image to the image_directory_ with the provided filename
-   *  if the filename is a null string, the name is built 
+   *  if the filename is a null string, the name is built
    *  from the image_directory_/transform_frame_ + underscore + scene_number.jpg
-  */
+   */
   /** @param scene, the scene number */
   /** @param filename, the file name */
   bool saveCurrentPose(int scene, std::string& filename);
 
   /** @brief load pose from the data_directory_ with the provided filename
-   *  if the filename is a null string, the name is built 
+   *  if the filename is a null string, the name is built
    *  from the data_directory_/transform_frame_ + underscore + scene_number.yaml
-  */
+   */
   /** @param scene, the scene number */
   /** @param filename, the file name */
   bool loadPose(int scene, std::string& filename);
 
-  bool loadPoseYAML(std::string &file);
+  bool loadPoseYAML(std::string& file);
   /**
    *  @brief get current Pose
    *  @return the current Pose
@@ -123,15 +122,13 @@ public:
   /** @param dir_name, the directory path */
   std::string getDataDirectory();
 
-
 protected:
-  Pose6d pose_; /*!< 6dof pose  */
-  std::string data_directory_; /*! directory for storing and retrieving transform information for each scene */
+  Pose6d pose_;                 /*!< 6dof pose  */
+  std::string data_directory_;  /*! directory for storing and retrieving transform information for each scene */
   std::string ref_frame_;       /*!< name of reference frame for transform (parent frame_id in  Rviz) */
   std::string transform_frame_; /*!< name of frame being defined (frame_id in Rviz) */
   bool ref_frame_initialized_;  /*!< can't interact with a transform interface until the reference frame is set */
-
 };
 
-}  // end of namespace
+}  // namespace industrial_extrinsic_cal
 #endif

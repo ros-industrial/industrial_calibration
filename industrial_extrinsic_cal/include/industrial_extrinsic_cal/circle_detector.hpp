@@ -89,5 +89,5 @@ public:
 
   CV_WRAP static Ptr<CircleDetector> create(const CircleDetector::Params& parameters = CircleDetector::Params());
 };
-}
+}  // namespace cv
 #endif

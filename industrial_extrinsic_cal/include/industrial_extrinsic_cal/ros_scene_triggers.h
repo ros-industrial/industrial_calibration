@@ -96,5 +96,5 @@ private:
   std::string server_name_;
   std::string action_message_;
 };
-}  // end of namespace
+}  // namespace industrial_extrinsic_cal
 #endif

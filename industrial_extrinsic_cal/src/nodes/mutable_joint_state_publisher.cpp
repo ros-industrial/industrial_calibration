@@ -177,9 +177,9 @@ bool MutableJointStatePublisher::publishJointStates()
     joint_states.effort.push_back(0.0);
   }
   joint_state_pub_.publish(joint_states);
-  return(true);
+  return (true);
 }
-}  // end namespace mutable_joint_state_publisher
+}  // namespace industrial_extrinsic_cal
 
 int main(int argc, char** argv)
 {

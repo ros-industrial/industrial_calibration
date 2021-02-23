@@ -17,11 +17,11 @@
 
 namespace industrial_extrinsic_cal
 {
+using boost::make_shared;
+using boost::shared_ptr;
 using std::ifstream;
 using std::string;
 using std::vector;
-using boost::shared_ptr;
-using boost::make_shared;
 using YAML::Node;
 
 bool parseCaljob(std::string& caljob_input_file, vector<ObservationScene>& scene_list, string& reference_frame,
@@ -118,4 +118,4 @@ ObservationScene parseSingleScene(const Node& node, int scene_id, CeresBlocks& b
   return (temp_scene);
 }
 
-}  // end of industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal

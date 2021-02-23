@@ -32,11 +32,11 @@
 #include <industrial_extrinsic_cal/caljob_yaml_parser.h>
 #include <industrial_extrinsic_cal/ros_target_display.hpp>
 
-using std::string;
-using boost::shared_ptr;
 using boost::make_shared;
+using boost::shared_ptr;
 using ceres::CostFunction;
 using industrial_extrinsic_cal::covariance_requests::CovarianceRequestType;
+using std::string;
 
 namespace industrial_extrinsic_cal
 {
@@ -168,12 +168,12 @@ bool CalibrationJob::loadCamera()
   // if loaded camera is the right side of a stereo pair, it contains a pointer to the left one.
   // TODO, check that the left camera existed
   for (int i = 0; i < (int)all_cameras.size(); i++)
+  {
+    if (all_cameras[i]->is_right_stereo_camera_)
     {
-      if(all_cameras[i]->is_right_stereo_camera_)
-	{
-	  all_cameras[i]->left_stereo_camera_ = ceres_blocks_.getCameraByName(all_cameras[i]->left_stereo_camera_name_);
-	}
+      all_cameras[i]->left_stereo_camera_ = ceres_blocks_.getCameraByName(all_cameras[i]->left_stereo_camera_name_);
     }
+  }
   return rtn;
 }
 
@@ -190,8 +190,9 @@ bool CalibrationJob::loadTarget()
   {  // target file parses ok
     for (int i = 0; i < (int)all_targets.size(); i++)
     {
-      if (all_targets[i]->pub_rviz_vis_){ // use rviz visualization marker to display the target, currently must be modified circle grid
-	displayRvizTarget(all_targets[i]);
+      if (all_targets[i]->pub_rviz_vis_)
+      {  // use rviz visualization marker to display the target, currently must be modified circle grid
+        displayRvizTarget(all_targets[i]);
       }
       if (all_targets[i]->is_moving_)
       {
@@ -332,7 +333,7 @@ bool CalibrationJob::runObservations()
         ObservationDataPoint temp_ODP(camera_name, target_name, target_type, scene_id, intrinsics, extrinsics, pnt_id,
                                       target_pose, pnt_pos, observation_x, observation_y, cost_type,
                                       observation.intermediate_camera_frame, observation.intermediate_target_frame,
-				      circle_dia);
+                                      circle_dia);
         listpercamera.addObservationPoint(temp_ODP);
       }  // end for each observed point
     }    // end for each camera
@@ -419,7 +420,7 @@ bool CalibrationJob::runOptimization()
       double image_y = ODP.image_y_;
       Point3d point;
       Pose6d camera_mounting_pose = ODP.intermediate_camera_frame_;  // identity except when camera mounted on robot
-      point.x = ODP.point_position_[0];                       // location of point within target frame
+      point.x = ODP.point_position_[0];                              // location of point within target frame
       point.y = ODP.point_position_[1];
       point.z = ODP.point_position_[2];
       unsigned int target_type = ODP.target_type_;
@@ -671,114 +672,112 @@ bool CalibrationJob::runOptimization()
         }
         break;
         case cost_functions::StereoTargetLocator:
-	{
-	  // This cost function requires two sets of observations at once
-	  ROS_ERROR("Cannot handle StereoTargetLocator cost functions"); 
-	}
-	break;
+        {
+          // This cost function requires two sets of observations at once
+          ROS_ERROR("Cannot handle StereoTargetLocator cost functions");
+        }
+        break;
         case cost_functions::TargetOnLinkRtStereo:
-	{
-	  P_BLOCK lt_camera_ex;
-	  shared_ptr<Camera> Rt_camera    = ceres_blocks_.getCameraByName(ODP.camera_name_);
-	  if(Rt_camera->is_right_stereo_camera_){
-	    // TODO, don't assume static camera
-	    lt_camera_ex = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(Rt_camera->left_stereo_camera_name_);
-	    if(lt_camera_ex == NULL){
-        ROS_ERROR("couldn't find left stereo camera: %s",Rt_camera->left_stereo_camera_name_.c_str());
-	    }
-	  }
-	  else{
-	    ROS_ERROR("This camera is not the right camera of a stereo pair. Something is wrong with your caljob file!!!!!");
-	  }
-	  // TODO, don't assume static target
-	  P_BLOCK target_ex    = ceres_blocks_.getStaticTargetPoseParameterBlock(ODP.target_name_);
+        {
+          P_BLOCK lt_camera_ex;
+          shared_ptr<Camera> Rt_camera = ceres_blocks_.getCameraByName(ODP.camera_name_);
+          if (Rt_camera->is_right_stereo_camera_)
+          {
+            // TODO, don't assume static camera
+            lt_camera_ex = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(Rt_camera->left_stereo_camera_name_);
+            if (lt_camera_ex == NULL)
+            {
+              ROS_ERROR("couldn't find left stereo camera: %s", Rt_camera->left_stereo_camera_name_.c_str());
+            }
+          }
+          else
+          {
+            ROS_ERROR("This camera is not the right camera of a stereo pair. Something is wrong with your caljob "
+                      "file!!!!!");
+          }
+          // TODO, don't assume static target
+          P_BLOCK target_ex = ceres_blocks_.getStaticTargetPoseParameterBlock(ODP.target_name_);
           double x, y, z, ax, ay, az;
           extractCameraExtrinsics(extrinsics, x, y, z, ax, ay, az);
-          Pose6d rt2lt_camera(x, y, z, ax, ay, az); // transforms point in left camera into right camera frame
-	  Pose6d forwardK = ODP.intermediate_target_frame_;  // from mounting_frame_ of target to ref_frame_
-	  double fx = Rt_camera->camera_parameters_.focal_length_x;
-	  double fy = Rt_camera->camera_parameters_.focal_length_y;
-	  double cx = Rt_camera->camera_parameters_.center_x;
-	  double cy = Rt_camera->camera_parameters_.center_y;
-	  double k1 = Rt_camera->camera_parameters_.distortion_k1;
-	  double k2 = Rt_camera->camera_parameters_.distortion_k2;
-	  double k3 = Rt_camera->camera_parameters_.distortion_k3;
-	  double p1 = Rt_camera->camera_parameters_.distortion_p1;
-	  double p2 = Rt_camera->camera_parameters_.distortion_p2;
-          CostFunction* cost_function = TargetOnLinkRtStereo::Create(image_x, image_y,
-								     point,
-								     rt2lt_camera,
-								     forwardK,
-								     fx, fy, cx, cy, k1, k2, k3, p1, p2);
+          Pose6d rt2lt_camera(x, y, z, ax, ay, az);          // transforms point in left camera into right camera frame
+          Pose6d forwardK = ODP.intermediate_target_frame_;  // from mounting_frame_ of target to ref_frame_
+          double fx = Rt_camera->camera_parameters_.focal_length_x;
+          double fy = Rt_camera->camera_parameters_.focal_length_y;
+          double cx = Rt_camera->camera_parameters_.center_x;
+          double cy = Rt_camera->camera_parameters_.center_y;
+          double k1 = Rt_camera->camera_parameters_.distortion_k1;
+          double k2 = Rt_camera->camera_parameters_.distortion_k2;
+          double k3 = Rt_camera->camera_parameters_.distortion_k3;
+          double p1 = Rt_camera->camera_parameters_.distortion_p1;
+          double p2 = Rt_camera->camera_parameters_.distortion_p2;
+          CostFunction* cost_function = TargetOnLinkRtStereo::Create(image_x, image_y, point, rt2lt_camera, forwardK,
+                                                                     fx, fy, cx, cy, k1, k2, k3, p1, p2);
           problem_->AddResidualBlock(cost_function, NULL, target_ex, lt_camera_ex);
 
-	  if(ODP.point_id_ == 0){
-	    rt2lt_camera.show("TargetOnLinkRtStereo: rt2lt_camera");
-	    forwardK.show("TargetOnLinkRtStereo: forwardK");   
-	    extractCameraExtrinsics(lt_camera_ex, x, y, z, ax, ay, az);
-	    Pose6d current_lt_camera_pose(x,y,z,ax,ay,az);
-	    current_lt_camera_pose.show("current_left_camera_pose");
-	    extractCameraExtrinsics(target_ex, x, y, z, ax, ay, az);
-	    Pose6d current_target_pose(x,y,z,ax,ay,az);
-	    current_target_pose.show("current_target_pose");
-	    ROS_INFO("observation %f %f",image_x, image_y);
-	  }
-
-	}
-	break;
+          if (ODP.point_id_ == 0)
+          {
+            rt2lt_camera.show("TargetOnLinkRtStereo: rt2lt_camera");
+            forwardK.show("TargetOnLinkRtStereo: forwardK");
+            extractCameraExtrinsics(lt_camera_ex, x, y, z, ax, ay, az);
+            Pose6d current_lt_camera_pose(x, y, z, ax, ay, az);
+            current_lt_camera_pose.show("current_left_camera_pose");
+            extractCameraExtrinsics(target_ex, x, y, z, ax, ay, az);
+            Pose6d current_target_pose(x, y, z, ax, ay, az);
+            current_target_pose.show("current_target_pose");
+            ROS_INFO("observation %f %f", image_x, image_y);
+          }
+        }
+        break;
         case cost_functions::TargetOnLinkLtStereo:
-	{
-	  // unkowns: target extrinsics attatching target to tool. left camera extrinsics attatching it to the world
-	  // knowns: forward kinematics from world to tool, and camera params
-	  P_BLOCK lt_camera_ex = extrinsics;
-	  P_BLOCK target_ex    = ceres_blocks_.getStaticTargetPoseParameterBlock(ODP.target_name_);
-	  Pose6d forwardK      = ODP.intermediate_target_frame_;  // from mounting_frame_ of target to ref_frame_
-	  shared_ptr<Camera> lt_camera = ceres_blocks_.getCameraByName(ODP.camera_name_);
-	  double fx = lt_camera->camera_parameters_.focal_length_x;
-	  double fy = lt_camera->camera_parameters_.focal_length_y;
-	  double cx = lt_camera->camera_parameters_.center_x;
-	  double cy = lt_camera->camera_parameters_.center_y;
-	  double k1 = lt_camera->camera_parameters_.distortion_k1;
-	  double k2 = lt_camera->camera_parameters_.distortion_k2;
-	  double k3 = lt_camera->camera_parameters_.distortion_k3;
-	  double p1 = lt_camera->camera_parameters_.distortion_p1;
-	  double p2 = lt_camera->camera_parameters_.distortion_p2;
-          CostFunction* cost_function = TargetOnLinkLtStereo::Create(image_x, image_y,
-								     point,
-								     forwardK,
-								     fx, fy, cx, cy, k1, k2, k3, p1, p2);
+        {
+          // unkowns: target extrinsics attatching target to tool. left camera extrinsics attatching it to the world
+          // knowns: forward kinematics from world to tool, and camera params
+          P_BLOCK lt_camera_ex = extrinsics;
+          P_BLOCK target_ex = ceres_blocks_.getStaticTargetPoseParameterBlock(ODP.target_name_);
+          Pose6d forwardK = ODP.intermediate_target_frame_;  // from mounting_frame_ of target to ref_frame_
+          shared_ptr<Camera> lt_camera = ceres_blocks_.getCameraByName(ODP.camera_name_);
+          double fx = lt_camera->camera_parameters_.focal_length_x;
+          double fy = lt_camera->camera_parameters_.focal_length_y;
+          double cx = lt_camera->camera_parameters_.center_x;
+          double cy = lt_camera->camera_parameters_.center_y;
+          double k1 = lt_camera->camera_parameters_.distortion_k1;
+          double k2 = lt_camera->camera_parameters_.distortion_k2;
+          double k3 = lt_camera->camera_parameters_.distortion_k3;
+          double p1 = lt_camera->camera_parameters_.distortion_p1;
+          double p2 = lt_camera->camera_parameters_.distortion_p2;
+          CostFunction* cost_function =
+              TargetOnLinkLtStereo::Create(image_x, image_y, point, forwardK, fx, fy, cx, cy, k1, k2, k3, p1, p2);
           problem_->AddResidualBlock(cost_function, NULL, target_ex, lt_camera_ex);
-	  if(ODP.point_id_ == 0){
-	    forwardK.show("TargetOnLinkLtStereo: forwardK");
-	    double x,y,z,ax,ay,az;
-	    extractCameraExtrinsics(lt_camera_ex, x, y, z, ax, ay, az);
-	    Pose6d current_lt_camera_pose(x,y,z,ax,ay,az);
-	    current_lt_camera_pose.show("current_lt_camera_pose");
-	    extractCameraExtrinsics(target_ex, x, y, z, ax, ay, az);
-	    Pose6d current_target_pose(x,y,z,ax,ay,az);
-	    current_target_pose.show("current_target_pose");
-	    ROS_INFO("observation %f %f",image_x, image_y);
-	  }
-
-
-	}
-	break;
+          if (ODP.point_id_ == 0)
+          {
+            forwardK.show("TargetOnLinkLtStereo: forwardK");
+            double x, y, z, ax, ay, az;
+            extractCameraExtrinsics(lt_camera_ex, x, y, z, ax, ay, az);
+            Pose6d current_lt_camera_pose(x, y, z, ax, ay, az);
+            current_lt_camera_pose.show("current_lt_camera_pose");
+            extractCameraExtrinsics(target_ex, x, y, z, ax, ay, az);
+            Pose6d current_target_pose(x, y, z, ax, ay, az);
+            current_target_pose.show("current_target_pose");
+            ROS_INFO("observation %f %f", image_x, image_y);
+          }
+        }
+        break;
         case cost_functions::StereoOnLinkRt:
-	{
-	  // unkowns: target extrinsics attatching target to world. left camera extrinsics attatching it to the tool
-	  // knowns: forward kinematics from world to tool. extrinsics attaching right camera to left, and camera params
-	}
-	break;
+        {
+          // unkowns: target extrinsics attatching target to world. left camera extrinsics attatching it to the tool
+          // knowns: forward kinematics from world to tool. extrinsics attaching right camera to left, and camera params
+        }
+        break;
         case cost_functions::StereoOnLinkLt:
-	{
-	  // unkowns: target extrinsics attatching target to world. left camera extrinsics attatching it to the tool
-	  // knowns: forward kinematics from world to tool, and camera params
-	}
-	break;
+        {
+          // unkowns: target extrinsics attatching target to world. left camera extrinsics attatching it to the tool
+          // knowns: forward kinematics from world to tool, and camera params
+        }
+        break;
         case cost_functions::DistortedCameraFinder:
- 	{
-	}
-	break;
+        {
+        }
+        break;
         default:
         {
           std::string cost_type_string = costType2String(ODP.cost_type_);
@@ -935,8 +934,8 @@ bool CalibrationJob::store(std::string filePath)
 
 void CalibrationJob::show()
 {
-  ceres_blocks_.pullTransforms(
-      -1);  // since we don't know which scene for any moving objects, only pull static transforms
+  ceres_blocks_.pullTransforms(-1);  // since we don't know which scene for any moving objects, only pull static
+                                     // transforms
   ceres_blocks_.displayAllCamerasAndTargets();
 }
 void CalibrationJob::pullTransforms(int scene_id)

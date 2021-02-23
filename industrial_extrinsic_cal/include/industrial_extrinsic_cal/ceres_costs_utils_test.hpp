@@ -166,5 +166,5 @@ Observation projectPointNoDistortion(CameraParameters C, Point3d P)
   return (O);
 }
 
-}  // end of namespace
+}  // namespace industrial_extrinsic_cal
 #endif

@@ -11,11 +11,11 @@
 #include <industrial_extrinsic_cal/camera_yaml_parser.h>   // for parse_pose() and parse_transform_interface()
 #include <industrial_extrinsic_cal/ros_camera_observer.h>  // for pattern options
 
+using boost::make_shared;
+using boost::shared_ptr;
 using std::ifstream;
 using std::string;
 using std::vector;
-using boost::shared_ptr;
-using boost::make_shared;
 using YAML::Node;
 
 namespace industrial_extrinsic_cal
@@ -143,4 +143,4 @@ int parse_target_points(const Node& node, std::vector<Point3d> points)
   return (node.size());
 }
 
-}  // end of industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal

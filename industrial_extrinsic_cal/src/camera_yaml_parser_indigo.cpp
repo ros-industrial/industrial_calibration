@@ -13,11 +13,11 @@
 #include <industrial_extrinsic_cal/ros_triggers.h>
 #include <industrial_extrinsic_cal/camera_yaml_parser.h>
 
+using boost::make_shared;
+using boost::shared_ptr;
 using std::ifstream;
 using std::string;
 using std::vector;
-using boost::shared_ptr;
-using boost::make_shared;
 using YAML::Node;
 
 namespace industrial_extrinsic_cal
@@ -235,4 +235,4 @@ Pose6d parsePose(const Node& node)
   pose.setQuaternion(qx, qy, qz, qw);
   return (pose);
 }
-}  // end of industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal

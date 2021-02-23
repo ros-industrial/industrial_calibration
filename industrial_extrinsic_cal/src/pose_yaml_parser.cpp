@@ -15,7 +15,6 @@ using YAML::Node;
 
 namespace industrial_extrinsic_cal
 {
-
 bool parsePose(const YAML::Node& node, Pose6d& pose)
 {
   bool rtn = true;
@@ -35,21 +34,21 @@ bool parsePose(const YAML::Node& node, Pose6d& pose)
       rtn = false;
     }  // right number of values
   }    // "xyz_quat_pose" exists in yaml node
-  else  if (node["xyz_aaxis_pose"])
+  else if (node["xyz_aaxis_pose"])
   {
-    const YAML::Node& node2 = parseNode(node,"xyz_aaxis_pose");
-    double x,y,z,ax,ay,az;
+    const YAML::Node& node2 = parseNode(node, "xyz_aaxis_pose");
+    double x, y, z, ax, ay, az;
     rtn &= parseDouble(node2, "x", x);
     rtn &= parseDouble(node2, "y", y);
     rtn &= parseDouble(node2, "z", z);
     rtn &= parseDouble(node2, "ax", ax);
     rtn &= parseDouble(node2, "ay", ay);
     rtn &= parseDouble(node2, "az", az);
-    if(rtn)
-      {
-	pose.setOrigin(x,y,z);
-	pose.setAngleAxis(ax,ay,az);
-      }
+    if (rtn)
+    {
+      pose.setOrigin(x, y, z);
+      pose.setAngleAxis(ax, ay, az);
+    }
     else
     {  // can't find xyz_aaxis_pose
       ROS_ERROR("did not read xyz_aaxis_pose correctly");
@@ -62,30 +61,28 @@ bool parsePose(const YAML::Node& node, Pose6d& pose)
   return rtn;
 }
 
- void writePoseYAML(std::string &file, Pose6d pose)
- {
-   
-   std::ofstream fout(file.c_str());
-   if(!fout.is_open()){
-     ROS_ERROR("writePoseYaml: Could not open %s", file.c_str());
-     return;
-   }
-   YAML::Emitter yaml_emitter;
-   yaml_emitter << YAML::BeginMap;
-   yaml_emitter << YAML::Key << "xyz_aaxis_pose";
-   yaml_emitter << YAML::BeginMap;
-   yaml_emitter << YAML::Key << "x"  << YAML::Value << pose.x;
-   yaml_emitter << YAML::Key << "y"  << YAML::Value << pose.y;
-   yaml_emitter << YAML::Key << "z"  << YAML::Value << pose.z;
-   yaml_emitter << YAML::Key << "ax" << YAML::Value << pose.ax;
-   yaml_emitter << YAML::Key << "ay" << YAML::Value << pose.ay;
-   yaml_emitter << YAML::Key << "az" << YAML::Value << pose.az;
-   yaml_emitter << YAML::EndMap;
-   yaml_emitter << YAML::EndMap;
-   fout << yaml_emitter.c_str();
-   fout.close();
- }
-
-
+void writePoseYAML(std::string& file, Pose6d pose)
+{
+  std::ofstream fout(file.c_str());
+  if (!fout.is_open())
+  {
+    ROS_ERROR("writePoseYaml: Could not open %s", file.c_str());
+    return;
+  }
+  YAML::Emitter yaml_emitter;
+  yaml_emitter << YAML::BeginMap;
+  yaml_emitter << YAML::Key << "xyz_aaxis_pose";
+  yaml_emitter << YAML::BeginMap;
+  yaml_emitter << YAML::Key << "x" << YAML::Value << pose.x;
+  yaml_emitter << YAML::Key << "y" << YAML::Value << pose.y;
+  yaml_emitter << YAML::Key << "z" << YAML::Value << pose.z;
+  yaml_emitter << YAML::Key << "ax" << YAML::Value << pose.ax;
+  yaml_emitter << YAML::Key << "ay" << YAML::Value << pose.ay;
+  yaml_emitter << YAML::Key << "az" << YAML::Value << pose.az;
+  yaml_emitter << YAML::EndMap;
+  yaml_emitter << YAML::EndMap;
+  fout << yaml_emitter.c_str();
+  fout.close();
+}
 
 }  // end of namespace industrial_extrinsic_cal

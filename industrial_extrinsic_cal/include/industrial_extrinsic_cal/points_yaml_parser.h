@@ -14,6 +14,6 @@ namespace industrial_extrinsic_cal
  */
 bool parsePoints(std::string& points_input_file, std::vector<industrial_extrinsic_cal::Point3d>& points);
 
-}  // end industrial_extrinsic_cal namespace
+}  // namespace industrial_extrinsic_cal
 
 #endif

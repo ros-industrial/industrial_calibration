@@ -42,55 +42,59 @@ void Target::setTIReferenceFrame(std::string ref_frame)
 }
 void Target::generatePoints()
 {
-    pts_.clear();
-    int rows, cols;
-    double spacing;
-    switch(target_type_){
+  pts_.clear();
+  int rows, cols;
+  double spacing;
+  switch (target_type_)
+  {
     case pattern_options::Chessboard:
-      rows    = checker_board_parameters_.pattern_rows;
-      cols    = checker_board_parameters_.pattern_cols;
+      rows = checker_board_parameters_.pattern_rows;
+      cols = checker_board_parameters_.pattern_cols;
       spacing = checker_board_parameters_.square_size;
-        break;
+      break;
     case pattern_options::CircleGrid:
     case pattern_options::ModifiedCircleGrid:
-      rows    = circle_grid_parameters_.pattern_rows;
-      cols    = circle_grid_parameters_.pattern_cols;
+      rows = circle_grid_parameters_.pattern_rows;
+      cols = circle_grid_parameters_.pattern_cols;
       spacing = circle_grid_parameters_.spacing;
       break;
     default:
       break;
-    }// end switch for target type
+  }  // end switch for target type
 
-    num_points_ = rows*cols;
-    for(int i=0; i<rows; i++){
-      for(int j=0; j<cols; j++){
-	Point3d point;
-	point.x = j*spacing;
-	point.y = (rows -1 -i)*spacing;
-	point.z = 0.0;
-	pts_.push_back(point);
-      }
+  num_points_ = rows * cols;
+  for (int i = 0; i < rows; i++)
+  {
+    for (int j = 0; j < cols; j++)
+    {
+      Point3d point;
+      point.x = j * spacing;
+      point.y = (rows - 1 - i) * spacing;
+      point.z = 0.0;
+      pts_.push_back(point);
     }
-}// end of Target::generatePoints()
+  }
+}  // end of Target::generatePoints()
 
-bool Target::getRowsCols(int &rows, int &cols)
+bool Target::getRowsCols(int& rows, int& cols)
 {
-  bool rtn=true;
-  switch(target_type_){
-  case pattern_options::Chessboard:
-    rows    = checker_board_parameters_.pattern_rows;
-    cols    = checker_board_parameters_.pattern_cols;
-    break;
-  case pattern_options::CircleGrid:
-  case pattern_options::ModifiedCircleGrid:
-    rows    = circle_grid_parameters_.pattern_rows;
-    cols    = circle_grid_parameters_.pattern_cols;
-    break;
-  default:
-    rtn=false;
-    break;
-  }// end switch for target type
-  return(rtn);
-}// end of Target::getRowsCols()
-  
-}  // end of namespace
+  bool rtn = true;
+  switch (target_type_)
+  {
+    case pattern_options::Chessboard:
+      rows = checker_board_parameters_.pattern_rows;
+      cols = checker_board_parameters_.pattern_cols;
+      break;
+    case pattern_options::CircleGrid:
+    case pattern_options::ModifiedCircleGrid:
+      rows = circle_grid_parameters_.pattern_rows;
+      cols = circle_grid_parameters_.pattern_cols;
+      break;
+    default:
+      rtn = false;
+      break;
+  }  // end switch for target type
+  return (rtn);
+}  // end of Target::getRowsCols()
+
+}  // namespace industrial_extrinsic_cal
