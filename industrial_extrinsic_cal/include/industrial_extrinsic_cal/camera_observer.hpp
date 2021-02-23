@@ -246,7 +246,7 @@ public:
     selected_point_index.push_back(rows*cols - cols -2); // nearby to point3
     selected_point_index.push_back(rows*cols -2); // nearby to point4
     selected_point_index.push_back(rows*cols/2); // middle point
-    // build matrix of type Ax=b where A x is the unknown elements of the pro<<<<<<< target_finder_impsclivity matrix "alpha"
+    // build matrix of type Ax=b where A x is the unknown elements of the proclivity matrix "alpha"
     int row = 0;
     for(int i=0; i<(int) selected_point_index.size(); i++){
       int pi = CO.at(selected_point_index[i]).point_id; // We expect that selected_point_index = pi, but not sure
