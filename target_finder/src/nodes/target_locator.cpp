@@ -64,7 +64,11 @@ class TargetLocatorService
 {
 public:
   TargetLocatorService(ros::NodeHandle nh);
-  ~TargetLocatorService(){};
+  ~TargetLocatorService()
+  {
+	  delete camera_observer_;
+	  delete target_to_camera_TI_;
+  };
   bool executeCallBack(target_locator::Request& req, target_locator::Response& res);
   bool verifyCallBack(target_verify::Request& req, target_verify::Response& res);
   bool saveLocCallBack(target_save_location::Request& req, target_save_location::Response& res);
