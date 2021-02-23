@@ -145,7 +145,7 @@ public:
       full_file_path_name  = image_directory_ + "/" +  filename;
     }
     ROS_INFO("saving camera: %s image with filepath %s",camera_name_.c_str(),full_file_path_name.c_str());
-    if(!cv::imwrite(full_file_path_name, getCurrentImage()))<<<<<<< target_finder_imps
+    if(!cv::imwrite(full_file_path_name, getCurrentImage()))
       {
 	ROS_ERROR("couldn't save camera %s image with filepath %s",camera_name_.c_str(),full_file_path_name.c_str());
 	return(false);
@@ -166,7 +166,7 @@ public:
     char scene_chars[30];
     sprintf(scene_chars,"_%03d.jpg",scene);
     if(filename == ""){ // build file name from image_directory_,
-      full_image_file_path_name  = image_directory_ + std::string("/") +  cam<<<<<<< target_finder_impsera_name_ + std::string(scene_chars);
+      full_image_file_path_name  = image_directory_ + std::string("/") +  camera_name_ + std::string(scene_chars);
     }
     else{
       full_image_file_path_name  = image_directory_ + "/" +  filename;
@@ -283,7 +283,7 @@ public:
     P.at<double>(0,1) = Alpha.at<double>(1);
     P.at<double>(0,2) = Alpha.at<double>(2);
     P.at<double>(1,0) = Alpha.at<double>(3);
-    P.at<double>(1,1) = Alpha.at<double>(4);<<<<<<< target_finder_imps
+    P.at<double>(1,1) = Alpha.at<double>(4);
     P.at<double>(1,2) = Alpha.at<double>(5);
     P.at<double>(2,0) = Alpha.at<double>(6);
     P.at<double>(2,1) = Alpha.at<double>(7);
