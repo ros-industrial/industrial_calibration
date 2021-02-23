@@ -113,6 +113,15 @@ public:
   /** @brief sets current image and the bridge images whereas the base class just set the last_raw_image_ */
   void setCurrentImage(const cv::Mat& image);
 
+  /** @brief starts the subscriber to the image_topic and tries to observe target in each image **/
+  void startTargetTrack();
+
+  /** @brief stops the subscriber to the image_topic, ending the observation of the target with each image **/
+  void stopTargetTrack();
+
+  /** @brief finds observations of the targets in the image **/
+  void imageCB(const sensor_msgs::Image& image);
+
 private:
   /**
    * @brief name of pattern being looked for
@@ -245,6 +254,8 @@ private:
   {
     image_number_ = image_number;
   }
+
+  boost::mutex image_lock_;  // taken before updating the current image and before using it for observations
 
 public:
   /**

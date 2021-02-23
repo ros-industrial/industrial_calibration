@@ -169,6 +169,7 @@ public:
   bool load_current_image(int scene, std::string& filename)
   {
     std::string full_image_file_path_name;
+
     char scene_chars[30];
     sprintf(scene_chars, "_%03d.jpg", scene);
     if (filename == "")
@@ -337,7 +338,7 @@ public:
       }
     }  // done checking proclivities
     ave_error = ave_error / (int)CO.size();
-    ROS_WARN("average proclivity error = %8.3lf", ave_error);
+    ROS_INFO("average proclivity error = %8.3lf", ave_error);
     return (rtn);
   };
 

@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<launch>
+       <arg name="image_topic" default="/camera/rgb/image_rect_color"/>
+       <arg name="camera_name" default="/camera/rgb"/>
+       <arg name="camera_frame" default="camera_rgb_optical_frame"/>
+       <arg name="target_frame" default="target_frame"/>
+       <arg name="data_directory" default="/home/clewis/data"/>
+       <arg name="pose_file_name" default="verify_pose.yaml"/>
+
+       <include file="$(find astra_camera)/launch/astra.launch"/>
+
+       <node pkg="target_finder" type="target_tracker" name="target_tracker" >
+	 <param name="image_topic" value="$(arg image_topic)" />
+	 <param name="camera_name" value="$(arg camera_name)" />
+	 <param name="camera_frame" value="$(arg camera_frame)" />
+	 <param name="target_frame" value="$(arg target_frame)" />
+	 <param name="data_directory" value="$(arg data_directory)" />
+	 <param name="publish_rviz_markers" value="true"/>
+	 <param name="target_tracker/target_spacing" value=".02"/>
+	 <param name="target_tracker/target_circle_dia" value=".012"/>
+	 <param name="target_tracker/target_rows" value="10"/>
+	 <param name="target_tracker/target_cols" value="10"/>
+	 <param name="camera/rgb/max_area" value="1000.0"/>
+	 <param name="camera/rgb/min_area" value="50.0"/>
+       </node>
+       
+       <node pkg="tf" type="static_transform_publisher" name="camera_tf_pub" args="0.1 0.0 1.0 0.0 1.5708 0.0 world $(arg camera_frame) 100" />
+
+       <node name="rviz" pkg="rviz" type="rviz" args="-d $(find target_finder)/config/target_finder_astra.rviz" required="true" />
+	 
+</launch>
