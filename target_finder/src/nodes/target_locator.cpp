@@ -25,6 +25,7 @@
 #include <industrial_extrinsic_cal/basic_types.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
+#include <industrial_extrinsic_cal/ros_target_display.hpp>
 #include <target_finder/target_locator.h>
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
@@ -84,6 +85,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   {
     ROS_ERROR("Must set param: camera_name");
   }
+
   camera_observer_ = new ROSCameraObserver(image_topic_, camera_name_);
 
   if (target_type_ == pattern_options::ModifiedCircleGrid)
@@ -105,6 +107,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
       ROS_ERROR("Must set param:  target_spacing");
     }
     initMCircleTarget(target_rows_, target_cols_, diameter, spacing);
+    pnh.getParam("publish_target_marker", target_->pub_rviz_vis_);
   }
   else
   {
@@ -151,8 +154,9 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
 
   camera_observer_->addTarget(target_, roi, cost_type);
   camera_observer_->triggerCamera();
-  while (!camera_observer_->observationsDone())
-    ;
+  if(target_->pub_rviz_vis_) displayRvizTarget(target_);
+  while (!camera_observer_->observationsDone());
+
   camera_observer_->getObservations(camera_observations);
   int num_observations = (int)camera_observations.size();
   if (num_observations != target_rows_ * target_cols_)

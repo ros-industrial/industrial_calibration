@@ -136,7 +136,7 @@ public:
   bool save_current_image(int scene, std::string& filename)
   {
     std::string full_file_path_name;
-    char scene_chars[18];
+    char scene_chars[30];
     sprintf(scene_chars,"_%03d.jpg",scene);
     if(filename == ""){ // build file name from image_directory_, 
       full_file_path_name  = image_directory_ + std::string("/") +  camera_name_ + std::string(scene_chars);
@@ -163,7 +163,7 @@ public:
   bool load_current_image(int scene, std::string& filename)
   {
     std::string full_image_file_path_name;
-    char scene_chars[18];
+    char scene_chars[30];
     sprintf(scene_chars,"_%03d.jpg",scene);
     if(filename == ""){ // build file name from image_directory_,
       full_image_file_path_name  = image_directory_ + std::string("/") +  camera_name_ + std::string(scene_chars);
@@ -223,7 +223,7 @@ public:
     last_raw_image_ = image.clone();
     new_image_collected_ = true;
   }
-
+	
   bool checkObservationProclivity(CameraObservations& CO)
   {
     /* compute proclivity from a few specific points in the observation */
