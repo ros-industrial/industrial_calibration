@@ -204,8 +204,7 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
   camera_observer_->addTarget(target_, roi, cost_type);
   camera_observer_->triggerCamera();
 
-  while (!camera_observer_->observationsDone())
-    ;
+  while (!camera_observer_->observationsDone());
 
   camera_observer_->getObservations(camera_observations);
   int num_observations = (int)camera_observations.size();
