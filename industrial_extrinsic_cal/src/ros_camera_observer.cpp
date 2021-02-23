@@ -575,9 +575,9 @@ void ROSCameraObserver::triggerCamera()
     char number_string[100];
     sprintf(number_string, "%d", image_number_);
     std::string image_name = image_directory_ + "/" + image_topic_ + number_string;
-    cv::Mat loaded_color_image = cv::imread(image_name.c_str(), CV_LOAD_IMAGE_COLOR);
+    cv::Mat loaded_color_image = cv::imread(image_name.c_str(), cv::IMREAD_COLOR);
     last_raw_image_ = loaded_color_image.clone();
-    cv::Mat loaded_mono_image = cv::imread(image_name.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat loaded_mono_image = cv::imread(image_name.c_str(), cv::IMREAD_GRAYSCALE);
     input_bridge_->image = loaded_mono_image;
     output_bridge_->image = loaded_color_image;
     out_bridge_->image = loaded_mono_image;

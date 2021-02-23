@@ -491,7 +491,7 @@ bool RobocylSCalService::executeCallBack( intrinsic_cal::rail_scal_run::Request 
     res.final_cost_per_observation  = final_cost;
     LCtoRC.show("LCtoRC");
     for(int i=0;i<num_camera_locations_;i++) {
-      char msg[12];
+      char msg[255];
       sprintf(msg,"target_pose%d",i);
       target_poses[i].show(msg);
     }

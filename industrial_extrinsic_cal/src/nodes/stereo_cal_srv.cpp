@@ -210,7 +210,7 @@ public:
   // called to collect observations for the current pose of the scene
   bool observationCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
-    char msg[100];
+    char msg[255];
 
     if(problem_initialized_ != true ){
       std_srvs::TriggerRequest  sreq;
@@ -296,8 +296,8 @@ public:
 	  P_->AddResidualBlock(cost_function, NULL, target_pb, right_extrinsics);
 	}  // for each point on the target
       if (save_data_){
-	  char pose_scene_chars[8];
-	  char image_scene_chars[7];
+	  char pose_scene_chars[18];
+	  char image_scene_chars[18];
 	  sprintf(pose_scene_chars,"_%03d.yaml",scene_);
 	  sprintf(image_scene_chars,"_%03d.jpg",scene_);
 	  std::string image1_file = all_cameras_[0]->camera_name_ + std::string(image_scene_chars);
@@ -343,7 +343,7 @@ public:
 
   bool runCallBack( industrial_extrinsic_cal::cal_srv_solveRequest &req, industrial_extrinsic_cal::cal_srv_solveResponse &res)
   {
-    char msg[100];
+    char msg[255];
 
     // check for obvious errors
     if(problem_initialized_==false){
@@ -365,7 +365,7 @@ public:
     for(int i=0; i<all_cameras_.size(); i++){
       all_cameras_[i]->pullTransform();
       Pose6d CP = all_cameras_[i]->transform_interface_->pullTransform();
-      char msg[100];
+      char msg[255];
       sprintf(msg,"Camera %s initial pose",all_cameras_[i]->camera_name_.c_str());
       CP.show(msg);
     }

@@ -21,7 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Boost REQUIRED)
 
 find_package(Ceres REQUIRED)
-message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
+message(STATUS "-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
 
 add_service_files(

@@ -29,7 +29,7 @@ namespace industrial_extrinsic_cal
 {
 /*! \brief An observation is the x,y image location of a target's point in an image*/
 typedef struct
-{
+{<<<<<<< target_finder_imps
   boost::shared_ptr<Target> target; /**< pointer to target who's point is observed */
   int point_id;                     /**< point's id in target's point array */
   double image_loc_x;               /**< target point was found at image location x */
@@ -145,7 +145,7 @@ public:
       full_file_path_name  = image_directory_ + "/" +  filename;
     }
     ROS_INFO("saving camera: %s image with filepath %s",camera_name_.c_str(),full_file_path_name.c_str());
-    if(!cv::imwrite(full_file_path_name, getCurrentImage()))
+    if(!cv::imwrite(full_file_path_name, getCurrentImage()))<<<<<<< target_finder_imps
       {
 	ROS_ERROR("couldn't save camera %s image with filepath %s",camera_name_.c_str(),full_file_path_name.c_str());
 	return(false);
@@ -166,7 +166,7 @@ public:
     char scene_chars[30];
     sprintf(scene_chars,"_%03d.jpg",scene);
     if(filename == ""){ // build file name from image_directory_,
-      full_image_file_path_name  = image_directory_ + std::string("/") +  camera_name_ + std::string(scene_chars);
+      full_image_file_path_name  = image_directory_ + std::string("/") +  cam<<<<<<< target_finder_impsera_name_ + std::string(scene_chars);
     }
     else{
       full_image_file_path_name  = image_directory_ + "/" +  filename;
@@ -204,7 +204,7 @@ public:
     }
     setCurrentImage(cv::imread(full_file_path_name));
     return(true);
-  };
+  };<<<<<<< target_finder_imps
 
   /**
    *  @brief get current image
@@ -222,7 +222,7 @@ public:
   {
     last_raw_image_ = image.clone();
     new_image_collected_ = true;
-  }
+  }<<<<<<< target_finder_imps
 
   bool checkObservationProclivity(CameraObservations& CO)
   {
@@ -246,7 +246,7 @@ public:
     selected_point_index.push_back(rows*cols - cols -2); // nearby to point3
     selected_point_index.push_back(rows*cols -2); // nearby to point4
     selected_point_index.push_back(rows*cols/2); // middle point
-    // build matrix of type Ax=b where A x is the unknown elements of the proclivity matrix "alpha"
+    // build matrix of type Ax=b where A x is the unknown elements of the pro<<<<<<< target_finder_impsclivity matrix "alpha"
     int row = 0;
     for(int i=0; i<(int) selected_point_index.size(); i++){
       int pi = CO.at(selected_point_index[i]).point_id; // We expect that selected_point_index = pi, but not sure
@@ -283,7 +283,7 @@ public:
     P.at<double>(0,1) = Alpha.at<double>(1);
     P.at<double>(0,2) = Alpha.at<double>(2);
     P.at<double>(1,0) = Alpha.at<double>(3);
-    P.at<double>(1,1) = Alpha.at<double>(4);
+    P.at<double>(1,1) = Alpha.at<double>(4);<<<<<<< target_finder_imps
     P.at<double>(1,2) = Alpha.at<double>(5);
     P.at<double>(2,0) = Alpha.at<double>(6);
     P.at<double>(2,1) = Alpha.at<double>(7);

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rgbd_depth_correction)
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
@@ -24,7 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Boost REQUIRED COMPONENTS thread)
 
 find_package(Ceres REQUIRED)
-message("-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
+message(STATUS "-- Found Ceres version ${CERES_VERSION}: ${CERES_INCLUDE_DIRS}")
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(yaml_cpp REQUIRED yaml-cpp)

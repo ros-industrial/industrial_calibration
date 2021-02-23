@@ -225,7 +225,7 @@ public:
   // called to collect observations for the current pose of the scene
   bool observationCallBack( std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &res)
   {
-    char msg[100];
+    char msg[255];
     Pose6d TtoC = targetm_to_cameram_TI_->pullTransform();
     TtoC.show("TtoC");
     
@@ -325,8 +325,8 @@ public:
     
 
     if (save_data_){
-      char pose_scene_chars[8];
-      char image_scene_chars[7];
+      char pose_scene_chars[23];
+      char image_scene_chars[23];
       sprintf(pose_scene_chars,"_%03d.yaml",scene_);
       sprintf(image_scene_chars,"_%03d.jpg",scene_);
       std::string image_file = all_cameras_[0]->camera_name_ + std::string(image_scene_chars);
@@ -458,7 +458,7 @@ public:
 
   bool runCallBack( industrial_extrinsic_cal::cal_srv_solveRequest &req, industrial_extrinsic_cal::cal_srv_solveResponse &res)
   {
-    char msg[100];
+    char msg[255];
     // check for obvious errors
     if(problem_initialized_==false){
       ROS_ERROR("must call start service");
