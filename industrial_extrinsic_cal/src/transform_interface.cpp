@@ -40,7 +40,7 @@ namespace industrial_extrinsic_cal
 
   bool TransformInterface::loadPose(int scene, std::string& filename)
   {
-    std::string full_file_path_name;<<<<<<< target_finder_imps
+    std::string full_file_path_name;
     char scene_chars[30];
     sprintf(scene_chars,"_%03d.yaml",scene);
     if(filename == ""){ // build file name from data_directory_
