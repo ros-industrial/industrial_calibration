@@ -29,7 +29,7 @@ namespace industrial_extrinsic_cal
 {
 /*! \brief An observation is the x,y image location of a target's point in an image*/
 typedef struct
-{<<<<<<< target_finder_imps
+{
   boost::shared_ptr<Target> target; /**< pointer to target who's point is observed */
   int point_id;                     /**< point's id in target's point array */
   double image_loc_x;               /**< target point was found at image location x */
@@ -204,7 +204,7 @@ public:
     }
     setCurrentImage(cv::imread(full_file_path_name));
     return(true);
-  };<<<<<<< target_finder_imps
+  };
 
   /**
    *  @brief get current image
@@ -222,8 +222,8 @@ public:
   {
     last_raw_image_ = image.clone();
     new_image_collected_ = true;
-  }<<<<<<< target_finder_imps
-
+  }
+	
   bool checkObservationProclivity(CameraObservations& CO)
   {
     /* compute proclivity from a few specific points in the observation */
