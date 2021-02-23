@@ -10,24 +10,24 @@
        <include file="$(find astra_camera)/launch/astra.launch"/>
 
        <node pkg="target_finder" type="target_locator_srv" name="target_locator_srv" >
-	 <param name="image_topic" value="$(arg image_topic)" />
-	 <param name="camera_name" value="$(arg camera_name)" />
-	 <param name="camera_frame" value="$(arg camera_frame)" />
-	 <param name="target_frame" value="$(arg target_frame)" />
-	 <param name="data_directory" value="$(arg data_directory)" />
-	 <param name="target_locator/target_spacing" value=".02"/>
-	 <param name="target_locator/target_circle_dia" value=".002"/>
-	 <param name="target_locator/target_rows" value="7"/>
-	 <param name="target_locator/target_cols" value="5"/>
-	 <param name="camera/rgb/max_area" value="1000.0"/>
-	 <param name="camera/rgb/min_area" value="100.0"/>
+	       <param name="image_topic" value="$(arg image_topic)" />
+	       <param name="camera_name" value="$(arg camera_name)" />	        
+         <param name="camera_frame" value="$(arg camera_frame)" />
+         <param name="target_frame" value="$(arg target_frame)" />
+	       <param name="data_directory" value="$(arg data_directory)" />
+	       <param name="target_locator/target_spacing" value=".02"/>
+	       <param name="target_locator/target_circle_dia" value=".002"/>
+	       <param name="target_locator/target_rows" value="7"/>
+	       <param name="target_locator/target_cols" value="5"/>
+	       <param name="camera/rgb/max_area" value="1000.0"/>
+	       <param name="camera/rgb/min_area" value="100.0"/>
        </node>
        
        <node pkg="target_finder" type="call_service" name="call_service" output="screen" >
          <param name="roi_width" value="640"/>
          <param name="roi_height" value="480"/>
          <param name="optical_frame" value="$(arg camera_frame)"/>
-	 <param name="pose_file_name" value="$(arg pose_file_name)"/>
+	       <param name="pose_file_name" value="$(arg pose_file_name)"/>
        </node>
        
        <node pkg="tf" type="static_transform_publisher" name="camera_tf_pub" args="0.1 0.0 1.0 0.0 1.5708 0.0 world $(arg camera_frame) 100" />

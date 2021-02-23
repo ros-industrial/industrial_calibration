@@ -18,6 +18,7 @@
 
 #include <ros/ros.h>
 #include <ros/package.h>
+
 #include <ros/console.h>
 #include <dynamic_reconfigure/server.h>
 #include <dynamic_reconfigure/BoolParameter.h>
@@ -34,7 +35,7 @@
 #include <industrial_extrinsic_cal/pose_yaml_parser.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
-
+#include <industrial_extrinsic_cal/ros_target_display.hpp>
 #include <target_finder/target_locator.h>
 #include <target_finder/target_verify.h>
 #include <target_finder/target_save_location.h>
@@ -115,6 +116,7 @@ TargetLocatorService::TargetLocatorService(ros::NodeHandle nh)
   {
     ROS_ERROR("Must set param: camera_name");
   }
+
   camera_observer_ = new ROSCameraObserver(image_topic_, camera_name_);
 
   camera_observer_->use_circle_detector_ = true;
@@ -197,7 +199,9 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
   camera_observer_->clearObservations();
   camera_observer_->addTarget(target_, roi, cost_type);
   camera_observer_->triggerCamera();
+  
   while (!camera_observer_->observationsDone());
+
   camera_observer_->getObservations(camera_observations);
   int num_observations = (int)camera_observations.size();
   if (num_observations != target_rows_ * target_cols_)
