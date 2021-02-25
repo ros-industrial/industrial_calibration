@@ -416,8 +416,7 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
           large_point.y = centers[start_last_row].y;
           if (usual_ordering)
           {  // right side up, no rotation, order is natural, starting from upper left, reads like book
-            for (int i = 0; i < (int)centers.size(); i++)
-              observation_pts_.push_back(centers[i]);
+            for (int i = 0; i < (int)centers.size(); i++) observation_pts_.push_back(centers[i]);
           }
           else
           {  // unusual ordering 99 89 87 86...9 then 98 88 78... 8

@@ -98,11 +98,11 @@ bool ROSBroadcastTransInterface::pushTransform(Pose6d& pose)
   {
     return (false);  // timer won't start publishing until ref_frame_ is defined
   }
-  if(immediate_)
-    {
-      const ros::TimerEvent timer_event;// unused in timer callback
-      timerCallback(timer_event);
-    }
+  if (immediate_)
+  {
+    const ros::TimerEvent timer_event;  // unused in timer callback
+    timerCallback(timer_event);
+  }
   return (true);
 }
 
@@ -169,11 +169,11 @@ bool ROSCameraBroadcastTransInterface::pushTransform(Pose6d& pose)
   {
     return (false);  // timer won't start publishing until ref_frame_ is defined
   }
-  if(immediate_)
-    {
-      const ros::TimerEvent timer_event;// unused in timer callback
-      timerCallback(timer_event);
-    }
+  if (immediate_)
+  {
+    const ros::TimerEvent timer_event;  // unused in timer callback
+    timerCallback(timer_event);
+  }
 
   return (true);
 }
@@ -242,11 +242,11 @@ bool ROSCameraHousingBroadcastTInterface::pushTransform(Pose6d& pose)
 {
   pose_ = pose;  // store the pose from transform_frame to mounting_frame
 
-  if(immediate_)
-    {
-      const ros::TimerEvent timer_event;// unused in timer callback
-      timerCallback(timer_event);
-    }
+  if (immediate_)
+  {
+    const ros::TimerEvent timer_event;  // unused in timer callback
+    timerCallback(timer_event);
+  }
 
   return (true);
 }
