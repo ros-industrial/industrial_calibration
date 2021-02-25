@@ -159,7 +159,7 @@ public:
 
 private:
   tf::StampedTransform transform_;
-};
+};// end ROSListenerTransInterface
 
 /** @brief this object is intened to be used for cameras not targets
  *            It simply listens to a pose from camera's optical frame to reference frame, this must be set in a urdf
@@ -208,7 +208,7 @@ public:
 
 private:
   tf::StampedTransform transform_;
-};
+}; // end ROSCameraListenerTransInterface
 
 /** @brief this is expected to be used by a camera who's position is defined by the urdf
  *              For example the camera might be held by a robot.
@@ -259,7 +259,7 @@ public:
 private:
   std::string housing_frame_; /**< housing frame name note, this is not used, but kept be symetry with broadcaster param
                                  list */
-};
+}; // end ROSCameraHousingListenerTInterface
 
 /** @brief This transform interface is used when the pose from the ref_frame_ to the transform_frame_ is determined
    through calibration
@@ -285,6 +285,7 @@ public:
   /** @brief  updates the pose being broadcast*/
   bool pushTransform(Pose6d& pose);
 
+  /** @brief  changes behavior of PushTransform to send it to TF imediately rather than wait for the timer*/
   void setImmediate(bool state);
 
   /** @brief this is a broadcaster, this should return the value of the construtor, or the last value used in
@@ -308,7 +309,7 @@ private:
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
   bool immediate_;                          /**< send immediately on push */
-};
+}; // end ROSBroadcastTransInterface
 
 /** @brief This transform interface is used when the camera pose (transform from transform_frame_ to ref_frame_) is
    determined through calibration
@@ -336,6 +337,9 @@ public:
   /** @brief  updates the pose being broadcast*/
   bool pushTransform(Pose6d& pose);
 
+  /** @brief  changes behavior of PushTransform to send it to TF imediately rather than wait for the timer*/
+  void setImmediate(bool state);
+
   /** @brief this is a broadcaster, this should return the value of the construtor, or the last value used in
    * pullTransform(pose) */
   Pose6d pullTransform()
@@ -356,7 +360,8 @@ private:
   ros::Timer timer_;                        /**< need a timer to initiate broadcast of transform */
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
-};
+  bool immediate_;                          /**< send immediately on push */
+}; // end  ROSCameraBroadcastTransInterface
 
 /** @brief This transform interface is the pose of the camera's optical frame (transform_frame_) relative to the
  * mounting_frame_, not the ref_frame_ there is also a housing_frame_ with a known transform to optical_frame_ that must
@@ -387,6 +392,9 @@ public:
   /** @brief  updates the pose being broadcast*/
   bool pushTransform(Pose6d& Pose);
 
+  /** @brief  changes behavior of PushTransform to send it to TF imediately rather than wait for the timer*/
+  void setImmediate(bool state);
+
   /** @brief returns the pose used in construction, or the one most recently pushed */
   Pose6d pullTransform();
 
@@ -403,7 +411,8 @@ private:
   ros::Timer timer_;                        /**< need a timer to initiate broadcast of transform */
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
-};
+  bool immediate_;                          /**< send immediately on push */
+}; // end ROSCameraHousingBroadcastTInterface
 
 /** @brief this is expected to be used by a camera who's position is defined by the urdf using the calibration xacro
  * macro
@@ -482,7 +491,7 @@ private:
                                                                                      mutable set */
   industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_; /**< response to store when  part of a
                                                                                      mutable set */
-};
+}; // end ROSCameraHousingCalTInterface
 
 /** @brief this is expected to be used for calibrating a target
  *             The macro takes a child and a parent link, and defines the following joints
@@ -552,7 +561,7 @@ private:
   industrial_extrinsic_cal::set_mutable_joint_states::Response set_response_;
   industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_;
   industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_;
-};
+}; // end ROSTransformInterface
 
 /** @brief this is expected to be used for calibrating a camera who's optical frame is mounted directly to the
  * ref_frame_ The macro takes a child and a parent link, and defines the following joints {child}_x_joint:
@@ -616,6 +625,7 @@ private:
   industrial_extrinsic_cal::set_mutable_joint_states::Response set_response_;
   industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_;
   industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_;
+  bool immediate_;                          /**< send immediately on push */
 };
 class DefaultTransformInterface : public TransformInterface
 {
@@ -659,7 +669,7 @@ public:
   {
     return (true);
   };
-};  // end of default tranform interface
+};  // end DefaultTransformInterface
 
 }  // namespace industrial_extrinsic_cal
 #endif /* ROS_CAMERA_OBSERVER_H_ */
