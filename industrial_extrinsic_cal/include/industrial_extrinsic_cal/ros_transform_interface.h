@@ -285,6 +285,8 @@ public:
   /** @brief  updates the pose being broadcast*/
   bool pushTransform(Pose6d& pose);
 
+  void setImmediate(bool state);
+
   /** @brief this is a broadcaster, this should return the value of the construtor, or the last value used in
    * pullTransform(pose) */
   Pose6d pullTransform()
@@ -305,6 +307,7 @@ private:
   ros::Timer timer_;                        /**< need a timer to initiate broadcast of transform */
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
+  bool immediate_;                          /**< send immediately on push */
 };
 
 /** @brief This transform interface is used when the camera pose (transform from transform_frame_ to ref_frame_) is

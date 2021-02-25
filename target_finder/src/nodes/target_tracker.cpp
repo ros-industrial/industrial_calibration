@@ -35,7 +35,8 @@
 #include <industrial_extrinsic_cal/ceres_costs_utils.h>
 #include <industrial_extrinsic_cal/ceres_costs_utils.hpp>
 #include <industrial_extrinsic_cal/ros_target_display.hpp>
-
+#include <std_msgs/Float64.h>
+#include <geometry_msgs/Point.h>
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
 #include "ceres/types.h"
@@ -74,6 +75,7 @@ public:
   bool solvePnP(CameraObservations& camera_observations);
 
 private:
+  ros::Publisher debug_pub_;
   ros::NodeHandle nh_;
   ros::Subscriber image_sub_;
   shared_ptr<Target> target_;
@@ -152,6 +154,7 @@ TargetTracker::TargetTracker(ros::NodeHandle nh)
   target_to_camera_TI_ = shared_ptr<ROSBroadcastTransInterface>(new ROSBroadcastTransInterface(target_frame_));
   target_to_camera_TI_->setReferenceFrame(camera_frame_);
   target_to_camera_TI_->setDataDirectory(data_directory_);
+  target_to_camera_TI_->setImmediate(true);
 
   camera_observer_ = shared_ptr<ROSCameraObserver>(new ROSCameraObserver(image_topic_, camera_name_));
   camera_observer_->pullCameraInfo(fx_, fy_, cx_, cy_, k1_, k2_, k3_, p1_, p2_, width_, height_);
@@ -169,6 +172,7 @@ TargetTracker::TargetTracker(ros::NodeHandle nh)
 
   // subscribe to image for updating with each image
   camera_observer_->startTargetTrack();
+  debug_pub_ = nh_.advertise<geometry_msgs::Point>("delta_pnp", 1, true);
 }
 
 void TargetTracker::dynReConfCallBack(target_finder::target_finderConfig& config, uint32_t level)
@@ -234,15 +238,10 @@ bool TargetTracker::solvePnP(CameraObservations& camera_observations)
     object_pts.at<double>(i, 1) = target_->pts_[i].y;
     object_pts.at<double>(i, 2) = target_->pts_[i].z;
   }
-  cameraMatrix.at<double>(0, 0) = fx_;
-  cameraMatrix.at<double>(0, 1) = 0.0;
-  cameraMatrix.at<double>(0, 2) = cx_;
-  cameraMatrix.at<double>(1, 0) = 0.0;
-  cameraMatrix.at<double>(1, 1) = fy_;
-  cameraMatrix.at<double>(1, 2) = cy_;
-  cameraMatrix.at<double>(2, 0) = 0.0;
-  cameraMatrix.at<double>(1, 2) = 0.0;
-  cameraMatrix.at<double>(1, 2) = 1.0;
+  cameraMatrix.at<double>(0, 0) = fx_;  cameraMatrix.at<double>(0, 1) = 0.0; cameraMatrix.at<double>(0, 2) = cx_;
+  cameraMatrix.at<double>(1, 0) = 0.0;  cameraMatrix.at<double>(1, 1) = fy_; cameraMatrix.at<double>(1, 2) = cy_;
+  cameraMatrix.at<double>(2, 0) = 0.0;  cameraMatrix.at<double>(2, 1) = 0.0; cameraMatrix.at<double>(2, 2) = 1.0;
+
   //  distCoeffs.at<double>(0) = k1_;
   //  distCoeffs.at<double>(1) = k2_;
   //  distCoeffs.at<double>(2) = k3_;
@@ -290,7 +289,12 @@ bool TargetTracker::solvePnP(CameraObservations& camera_observations)
   {
     if (cost_per_observation <= allowable_cost_per_observation_)
     {
-      ROS_INFO("number of succesful steps = %d", summary.num_successful_steps);
+      ROS_ERROR("number of succesful steps = %d", summary.num_successful_steps);
+      geometry_msgs::Point p;
+      p.x = tvec.at<double>(0) - target_->pose_.x;
+      p.y = tvec.at<double>(1) - target_->pose_.y;
+      p.z = tvec.at<double>(2) - target_->pose_.z;
+      debug_pub_.publish(p);
       rtn = true;
     }
     else
