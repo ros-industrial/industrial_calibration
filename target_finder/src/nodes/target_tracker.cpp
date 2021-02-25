@@ -72,7 +72,8 @@ public:
 
   void sendTransform();
 
-  bool solvePnP(CameraObservations& camera_observations);
+  bool solvePnPOpencv(CameraObservations& camera_observations);
+  bool solvePnPCeres(CameraObservations& camera_observations);
 
 private:
   ros::Publisher debug_pub_;
@@ -220,7 +221,47 @@ void TargetTracker::initMCircleTarget(int rows, int cols, double circle_dia, dou
   camera_observer_->addTarget(target_, input_roi_, cost_type);
 }
 
-bool TargetTracker::solvePnP(CameraObservations& camera_observations)
+bool TargetTracker::solvePnPCeres(CameraObservations& camera_observations)
+{
+  Problem problem;
+  for (size_t i = 0; i < camera_observations.size(); i++)
+  {
+    double image_x = camera_observations[i].image_loc_x;
+    double image_y = camera_observations[i].image_loc_y;
+    Point3d point = target_->pts_[i];  // assume the correct ordering
+    CostFunction* cost_function =
+        industrial_extrinsic_cal::CameraReprjErrorPK::Create(image_x, image_y, fx_, fy_, cx_, cy_, point);
+    problem.AddResidualBlock(cost_function, NULL, target_->pose_.pb_pose);
+  }
+  Solver::Options options;
+  Solver::Summary summary;
+  options.linear_solver_type = ceres::DENSE_SCHUR;
+  options.minimizer_progress_to_stdout = false;
+  options.max_num_iterations = 1000;
+  ceres::Solve(options, &problem, &summary);
+
+  double cost_per_observation = summary.final_cost / expected_num_observations_;
+  bool rtn = false;
+  if (summary.termination_type != ceres::NO_CONVERGENCE)
+  {
+    if (cost_per_observation <= allowable_cost_per_observation_)
+    {
+      ROS_INFO("number of succesful steps = %d", summary.num_successful_steps);
+      rtn = true;
+    }
+    else
+    {
+      ROS_ERROR("cost exceeded allowable %f > %f", cost_per_observation, allowable_cost_per_observation_);
+    }
+  }
+  else
+  {
+    ROS_ERROR("NO CONVERGENCE");
+  }
+  return rtn;
+}
+
+bool TargetTracker::solvePnPOpencv(CameraObservations& camera_observations)
 {
   size_t num_obs = camera_observations.size();
   cv::Mat object_pts = cv::Mat(num_obs, 3, CV_64F);
@@ -238,9 +279,15 @@ bool TargetTracker::solvePnP(CameraObservations& camera_observations)
     object_pts.at<double>(i, 1) = target_->pts_[i].y;
     object_pts.at<double>(i, 2) = target_->pts_[i].z;
   }
-  cameraMatrix.at<double>(0, 0) = fx_;  cameraMatrix.at<double>(0, 1) = 0.0; cameraMatrix.at<double>(0, 2) = cx_;
-  cameraMatrix.at<double>(1, 0) = 0.0;  cameraMatrix.at<double>(1, 1) = fy_; cameraMatrix.at<double>(1, 2) = cy_;
-  cameraMatrix.at<double>(2, 0) = 0.0;  cameraMatrix.at<double>(2, 1) = 0.0; cameraMatrix.at<double>(2, 2) = 1.0;
+  cameraMatrix.at<double>(0, 0) = fx_;
+  cameraMatrix.at<double>(0, 1) = 0.0;
+  cameraMatrix.at<double>(0, 2) = cx_;
+  cameraMatrix.at<double>(1, 0) = 0.0;
+  cameraMatrix.at<double>(1, 1) = fy_;
+  cameraMatrix.at<double>(1, 2) = cy_;
+  cameraMatrix.at<double>(2, 0) = 0.0;
+  cameraMatrix.at<double>(2, 1) = 0.0;
+  cameraMatrix.at<double>(2, 2) = 1.0;
 
   //  distCoeffs.at<double>(0) = k1_;
   //  distCoeffs.at<double>(1) = k2_;
@@ -266,47 +313,7 @@ bool TargetTracker::solvePnP(CameraObservations& camera_observations)
   target_->pose_.setBasis(R3);
   target_->pose_.setOrigin(tvec.at<double>(0), tvec.at<double>(1), tvec.at<double>(2));
 
-  Problem problem;
-  for (size_t i = 0; i < camera_observations.size(); i++)
-  {
-    double image_x = camera_observations[i].image_loc_x;
-    double image_y = camera_observations[i].image_loc_y;
-    Point3d point = target_->pts_[i];  // assume the correct ordering
-    CostFunction* cost_function =
-        industrial_extrinsic_cal::CameraReprjErrorPK::Create(image_x, image_y, fx_, fy_, cx_, cy_, point);
-    problem.AddResidualBlock(cost_function, NULL, target_->pose_.pb_pose);
-  }
-  Solver::Options options;
-  Solver::Summary summary;
-  options.linear_solver_type = ceres::DENSE_SCHUR;
-  options.minimizer_progress_to_stdout = false;
-  options.max_num_iterations = 1000;
-  ceres::Solve(options, &problem, &summary);
-
-  double cost_per_observation = summary.final_cost / expected_num_observations_;
-  bool rtn = false;
-  if (summary.termination_type != ceres::NO_CONVERGENCE)
-  {
-    if (cost_per_observation <= allowable_cost_per_observation_)
-    {
-      ROS_ERROR("number of succesful steps = %d", summary.num_successful_steps);
-      geometry_msgs::Point p;
-      p.x = tvec.at<double>(0) - target_->pose_.x;
-      p.y = tvec.at<double>(1) - target_->pose_.y;
-      p.z = tvec.at<double>(2) - target_->pose_.z;
-      debug_pub_.publish(p);
-      rtn = true;
-    }
-    else
-    {
-      ROS_ERROR("cost exceeded allowable %f > %f", cost_per_observation, allowable_cost_per_observation_);
-    }
-  }
-  else
-  {
-    ROS_ERROR("NO CONVERGENCE");
-  }
-  return rtn;
+  return true;
 }
 void TargetTracker::update()
 {
@@ -324,9 +331,12 @@ void TargetTracker::update()
   }
   if (camera_observations.size() == expected_num_observations_)
   {
-    if (!solvePnP(camera_observations))
+    if (!solvePnPCeres(camera_observations))
     {
-      ROS_ERROR("PnP not solved");
+      if (!solvePnPOpencv(camera_observations))
+      {
+        ROS_ERROR("PnP not solved");
+      }
     }
     else
     {

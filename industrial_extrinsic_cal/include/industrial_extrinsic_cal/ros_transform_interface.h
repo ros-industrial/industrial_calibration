@@ -159,7 +159,7 @@ public:
 
 private:
   tf::StampedTransform transform_;
-};// end ROSListenerTransInterface
+};  // end ROSListenerTransInterface
 
 /** @brief this object is intened to be used for cameras not targets
  *            It simply listens to a pose from camera's optical frame to reference frame, this must be set in a urdf
@@ -208,7 +208,7 @@ public:
 
 private:
   tf::StampedTransform transform_;
-}; // end ROSCameraListenerTransInterface
+};  // end ROSCameraListenerTransInterface
 
 /** @brief this is expected to be used by a camera who's position is defined by the urdf
  *              For example the camera might be held by a robot.
@@ -259,7 +259,7 @@ public:
 private:
   std::string housing_frame_; /**< housing frame name note, this is not used, but kept be symetry with broadcaster param
                                  list */
-}; // end ROSCameraHousingListenerTInterface
+};                            // end ROSCameraHousingListenerTInterface
 
 /** @brief This transform interface is used when the pose from the ref_frame_ to the transform_frame_ is determined
    through calibration
@@ -309,7 +309,7 @@ private:
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
   bool immediate_;                          /**< send immediately on push */
-}; // end ROSBroadcastTransInterface
+};                                          // end ROSBroadcastTransInterface
 
 /** @brief This transform interface is used when the camera pose (transform from transform_frame_ to ref_frame_) is
    determined through calibration
@@ -361,7 +361,7 @@ private:
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
   bool immediate_;                          /**< send immediately on push */
-}; // end  ROSCameraBroadcastTransInterface
+};                                          // end  ROSCameraBroadcastTransInterface
 
 /** @brief This transform interface is the pose of the camera's optical frame (transform_frame_) relative to the
  * mounting_frame_, not the ref_frame_ there is also a housing_frame_ with a known transform to optical_frame_ that must
@@ -412,7 +412,7 @@ private:
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
   bool immediate_;                          /**< send immediately on push */
-}; // end ROSCameraHousingBroadcastTInterface
+};                                          // end ROSCameraHousingBroadcastTInterface
 
 /** @brief this is expected to be used by a camera who's position is defined by the urdf using the calibration xacro
  * macro
@@ -491,7 +491,7 @@ private:
                                                                                      mutable set */
   industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_; /**< response to store when  part of a
                                                                                      mutable set */
-}; // end ROSCameraHousingCalTInterface
+};                                                                                // end ROSCameraHousingCalTInterface
 
 /** @brief this is expected to be used for calibrating a target
  *             The macro takes a child and a parent link, and defines the following joints
@@ -561,7 +561,7 @@ private:
   industrial_extrinsic_cal::set_mutable_joint_states::Response set_response_;
   industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_;
   industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_;
-}; // end ROSTransformInterface
+};  // end ROSTransformInterface
 
 /** @brief this is expected to be used for calibrating a camera who's optical frame is mounted directly to the
  * ref_frame_ The macro takes a child and a parent link, and defines the following joints {child}_x_joint:
@@ -625,7 +625,7 @@ private:
   industrial_extrinsic_cal::set_mutable_joint_states::Response set_response_;
   industrial_extrinsic_cal::store_mutable_joint_states::Request store_request_;
   industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_;
-  bool immediate_;                          /**< send immediately on push */
+  bool immediate_; /**< send immediately on push */
 };
 class DefaultTransformInterface : public TransformInterface
 {
