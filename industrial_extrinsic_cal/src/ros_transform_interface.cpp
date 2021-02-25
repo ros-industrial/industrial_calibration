@@ -154,6 +154,12 @@ ROSCameraBroadcastTransInterface::ROSCameraBroadcastTransInterface(const string&
 {
   transform_.child_frame_id_ = transform_frame_;
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
+  immediate_ = false;
+}
+
+void ROSCameraBroadcastTransInterface::setImmediate(bool state)
+{
+  immediate_ = state;
 }
 
 bool ROSCameraBroadcastTransInterface::pushTransform(Pose6d& pose)
@@ -163,6 +169,12 @@ bool ROSCameraBroadcastTransInterface::pushTransform(Pose6d& pose)
   {
     return (false);  // timer won't start publishing until ref_frame_ is defined
   }
+  if(immediate_)
+    {
+      const ros::TimerEvent timer_event;// unused in timer callback
+      timerCallback(timer_event);
+    }
+
   return (true);
 }
 
@@ -218,11 +230,24 @@ ROSCameraHousingBroadcastTInterface::ROSCameraHousingBroadcastTInterface(const s
   pose_ = pose;
   transform_.child_frame_id_ = transform_frame_;
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
+  immediate_ = false;
+}
+
+void ROSCameraHousingBroadcastTInterface::setImmediate(bool state)
+{
+  immediate_ = state;
 }
 
 bool ROSCameraHousingBroadcastTInterface::pushTransform(Pose6d& pose)
 {
   pose_ = pose;  // store the pose from transform_frame to mounting_frame
+
+  if(immediate_)
+    {
+      const ros::TimerEvent timer_event;// unused in timer callback
+      timerCallback(timer_event);
+    }
+
   return (true);
 }
 
@@ -272,6 +297,7 @@ void ROSCameraHousingBroadcastTInterface::setReferenceFrame(string& ref_frame)
   ref_frame_ = ref_frame;
   ref_frame_initialized_ = true;
   timer_ = nh.createTimer(ros::Rate(1.0), &ROSCameraHousingBroadcastTInterface::timerCallback, this);
+  immediate_ = false;
 }
 
 void ROSCameraHousingBroadcastTInterface::timerCallback(const ros::TimerEvent& timer_event)
