@@ -84,6 +84,11 @@ ROSBroadcastTransInterface::ROSBroadcastTransInterface(const string& transform_f
   transform_frame_ = transform_frame;
   transform_.child_frame_id_ = transform_frame_;
   ref_frame_initialized_ = false;  // still need to initialize ref_frame_
+  immediate_ = false;
+}
+void ROSBroadcastTransInterface::setImmediate(bool state)
+{
+  immediate_ = state;
 }
 
 bool ROSBroadcastTransInterface::pushTransform(Pose6d& pose)
@@ -93,6 +98,11 @@ bool ROSBroadcastTransInterface::pushTransform(Pose6d& pose)
   {
     return (false);  // timer won't start publishing until ref_frame_ is defined
   }
+  if(immediate_)
+    {
+      const ros::TimerEvent timer_event;// unused in timer callback
+      timerCallback(timer_event);
+    }
   return (true);
 }
 
