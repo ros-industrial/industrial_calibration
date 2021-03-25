@@ -87,6 +87,7 @@ private:
   string target_frame_;
   bool use_circle_detector_;
   bool publish_rviz_markers_;
+  bool ceres_first_;
   size_t expected_num_observations_;
   double allowable_cost_per_observation_;
   boost::shared_ptr<dynamic_reconfigure::Server<target_finder::target_finderConfig> > reconf_srv_;
@@ -95,6 +96,7 @@ private:
   tf::StampedTransform transform_;
   shared_ptr<ROSCameraObserver> camera_observer_;
   double fx_, fy_, cx_, cy_, k1_, k2_, k3_, p1_, p2_;
+  cv::Mat cameraMatrix_;
   int width_, height_;
   Roi input_roi_;
 };
@@ -151,6 +153,12 @@ TargetTracker::TargetTracker(ros::NodeHandle nh)
     allowable_cost_per_observation_ = .25;
   }
 
+  // when this is set, Ceres-solver is attempted first. 
+  if (!pnh.getParam("ceres_first", ceres_first_))
+  {
+    ceres_first_ = false;
+  }
+
   // initialize the transform interface it listens from the frame in the constructor to the reference frame
   target_to_camera_TI_ = shared_ptr<ROSBroadcastTransInterface>(new ROSBroadcastTransInterface(target_frame_));
   target_to_camera_TI_->setReferenceFrame(camera_frame_);
@@ -159,6 +167,11 @@ TargetTracker::TargetTracker(ros::NodeHandle nh)
 
   camera_observer_ = shared_ptr<ROSCameraObserver>(new ROSCameraObserver(image_topic_, camera_name_));
   camera_observer_->pullCameraInfo(fx_, fy_, cx_, cy_, k1_, k2_, k3_, p1_, p2_, width_, height_);
+  cameraMatrix_ = cv::Mat(3, 3, CV_64F);
+  cameraMatrix_.at<double>(0, 0) = fx_;   cameraMatrix_.at<double>(0, 1) = 0.0;   cameraMatrix_.at<double>(0, 2) = cx_;
+  cameraMatrix_.at<double>(1, 0) = 0.0;   cameraMatrix_.at<double>(1, 1) = fy_;   cameraMatrix_.at<double>(1, 2) = cy_;
+  cameraMatrix_.at<double>(2, 0) = 0.0;   cameraMatrix_.at<double>(2, 1) = 0.0;   cameraMatrix_.at<double>(2, 2) = 1.0;
+
   camera_observer_->use_circle_detector_ = use_circle_detector_;
   input_roi_.x_min = 0;
   input_roi_.y_min = 0;
@@ -228,7 +241,8 @@ bool TargetTracker::solvePnPCeres(CameraObservations& camera_observations)
   {
     double image_x = camera_observations[i].image_loc_x;
     double image_y = camera_observations[i].image_loc_y;
-    Point3d point = target_->pts_[i];  // assume the correct ordering
+    int point_id = camera_observations[i].point_id;
+    Point3d point = target_->pts_[point_id];  // assume the correct ordering
     CostFunction* cost_function =
         industrial_extrinsic_cal::CameraReprjErrorPK::Create(image_x, image_y, fx_, fy_, cx_, cy_, point);
     problem.AddResidualBlock(cost_function, NULL, target_->pose_.pb_pose);
@@ -258,6 +272,7 @@ bool TargetTracker::solvePnPCeres(CameraObservations& camera_observations)
   {
     ROS_ERROR("NO CONVERGENCE");
   }
+  // note, results are computed directly in the target_->pose 
   return rtn;
 }
 
@@ -266,53 +281,42 @@ bool TargetTracker::solvePnPOpencv(CameraObservations& camera_observations)
   size_t num_obs = camera_observations.size();
   cv::Mat object_pts = cv::Mat(num_obs, 3, CV_64F);
   cv::Mat image_pts = cv::Mat(num_obs, 2, CV_64F);
-  cv::Mat cameraMatrix = cv::Mat(3, 3, CV_64F);
-  cv::Mat distCoeffs;  // = cv::Mat(5, 1, CV_64F);
-  cv::Mat rvec = cv::Mat(4, 1, CV_64F);
+  cv::Mat distCoeffs;
+  cv::Mat rvec = cv::Mat(3, 1, CV_64F);
   cv::Mat tvec = cv::Mat(3, 1, CV_64F);
+  cv::Mat r_matrix = cv::Mat(3, 3, CV_64F);
 
+  // set observation data
   for (size_t i = 0; i < camera_observations.size(); i++)
   {
     image_pts.at<double>(i, 0) = camera_observations[i].image_loc_x;
     image_pts.at<double>(i, 1) = camera_observations[i].image_loc_y;
-    object_pts.at<double>(i, 0) = target_->pts_[i].x;
-    object_pts.at<double>(i, 1) = target_->pts_[i].y;
-    object_pts.at<double>(i, 2) = target_->pts_[i].z;
+    int point_id = camera_observations[i].point_id;
+    object_pts.at<double>(i, 0) = target_->pts_[point_id].x;
+    object_pts.at<double>(i, 1) = target_->pts_[point_id].y;
+    object_pts.at<double>(i, 2) = target_->pts_[point_id].z;
   }
-  cameraMatrix.at<double>(0, 0) = fx_;
-  cameraMatrix.at<double>(0, 1) = 0.0;
-  cameraMatrix.at<double>(0, 2) = cx_;
-  cameraMatrix.at<double>(1, 0) = 0.0;
-  cameraMatrix.at<double>(1, 1) = fy_;
-  cameraMatrix.at<double>(1, 2) = cy_;
-  cameraMatrix.at<double>(2, 0) = 0.0;
-  cameraMatrix.at<double>(2, 1) = 0.0;
-  cameraMatrix.at<double>(2, 2) = 1.0;
 
-  //  distCoeffs.at<double>(0) = k1_;
-  //  distCoeffs.at<double>(1) = k2_;
-  //  distCoeffs.at<double>(2) = k3_;
-  //  distCoeffs.at<double>(3) = p1_;
-  //  distCoeffs.at<double>(4) = p2_;
-  if (!cv::solvePnP(object_pts, image_pts, cameraMatrix, distCoeffs, rvec, tvec))
+  if (!cv::solvePnP(object_pts, image_pts, cameraMatrix_, distCoeffs, rvec, tvec))
   {
     ROS_ERROR("opencv did not solve");
     return false;
   }
 
-  tf::Matrix3x3 R3;
-  R3[0][0] = rvec.at<double>(0, 0);
-  R3[0][1] = rvec.at<double>(0, 1);
-  R3[0][2] = rvec.at<double>(0, 2);
-  R3[1][0] = rvec.at<double>(1, 0);
-  R3[1][1] = rvec.at<double>(1, 1);
-  R3[1][2] = rvec.at<double>(1, 2);
-  R3[2][0] = rvec.at<double>(2, 0);
-  R3[2][1] = rvec.at<double>(2, 1);
-  R3[2][2] = rvec.at<double>(2, 2);
-  target_->pose_.setBasis(R3);
+  // copy the result to the right place
+  cv::Rodrigues(rvec,r_matrix);
+  tf::Matrix3x3 r_tf;
+  r_tf[0][0] = r_matrix.at<double>(0, 0);
+  r_tf[0][1] = r_matrix.at<double>(0, 1);
+  r_tf[0][2] = r_matrix.at<double>(0, 2);
+  r_tf[1][0] = r_matrix.at<double>(1, 0);
+  r_tf[1][1] = r_matrix.at<double>(1, 1);
+  r_tf[1][2] = r_matrix.at<double>(1, 2);
+  r_tf[2][0] = r_matrix.at<double>(2, 0);
+  r_tf[2][1] = r_matrix.at<double>(2, 1);
+  r_tf[2][2] = r_matrix.at<double>(2, 2);
+  target_->pose_.setBasis(r_tf);
   target_->pose_.setOrigin(tvec.at<double>(0), tvec.at<double>(1), tvec.at<double>(2));
-
   return true;
 }
 void TargetTracker::update()
@@ -331,23 +335,30 @@ void TargetTracker::update()
   }
   if (camera_observations.size() == expected_num_observations_)
   {
-    if (!solvePnPCeres(camera_observations))
-    {
-      if (!solvePnPOpencv(camera_observations))
+    if(ceres_first_)
       {
-        ROS_ERROR("PnP not solved");
+	if (!solvePnPCeres(camera_observations))
+	  {
+	    ROS_WARN("Ceres failed to solvePnP");
+	    if (!solvePnPOpencv(camera_observations))
+	      {
+		ROS_ERROR("Both Ceres and OpenCV failed to solvePnP");
+	      }
+	  }
       }
-    }
-    else
-    {
-      static int do_once = 1;
-      if (do_once)
+    else{
+      if (!solvePnPOpencv(camera_observations))
+	{
+	  ROS_ERROR("OpenCV failed to solvePnP");
+	}
+    }      
+    static int do_once = 1;
+    if (do_once)
       {
         displayRvizTarget(target_);
         do_once = 0;
       }
-      target_->pushTransform();
-    }
+    target_->pushTransform();
   }
   else
   {
