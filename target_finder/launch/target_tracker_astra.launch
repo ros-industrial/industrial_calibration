@@ -9,7 +9,7 @@
 
        <include file="$(find astra_camera)/launch/astra.launch"/>
 
-       <node pkg="target_finder" type="target_tracker" name="target_tracker" >
+       <node pkg="target_finder" type="target_tracker" name="target_tracker">
 	 <param name="image_topic" value="$(arg image_topic)" />
 	 <param name="camera_name" value="$(arg camera_name)" />
 	 <param name="camera_frame" value="$(arg camera_frame)" />
@@ -22,6 +22,7 @@
 	 <param name="target_tracker/target_cols" value="10"/>
 	 <param name="camera/rgb/max_area" value="1000.0"/>
 	 <param name="camera/rgb/min_area" value="50.0"/>
+	 <param name="ceres_first" value="true"/>
        </node>
        
        <node pkg="tf" type="static_transform_publisher" name="camera_tf_pub" args="0.1 0.0 1.0 0.0 1.5708 0.0 world $(arg camera_frame) 100" />
