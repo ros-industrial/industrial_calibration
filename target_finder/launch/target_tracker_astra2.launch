@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<launch>
+       <arg name="image_topic" default="/astra/rgb/image_rect_color"/>
+       <arg name="camera_name" default="/astra/rgb"/>
+       <arg name="camera_frame" default="astra_rgb_optical_frame"/>
+       <arg name="rgb_frame_id" default="astra_rgb_optical_frame"/>
+       <arg name="target_frame" default="target_frame"/>
+       <arg name="data_directory" default="~/data"/>
+       <arg name="pose_file_name" default="verify_pose.yaml"/>
+       <arg name="publish_tf" default="False"/>
+       <arg name="depth_frame_id" default="astra_depth_frame"/>
+
+       <include file="$(find astra_camera)/launch/astra.launch">
+         <arg name="publish_tf" value="$(arg publish_tf)"/>
+         <arg name="camera" value="astra" />
+         <arg name="rgb_camera_info_url" value="file://$(find target_finder)/yaml/astera_rgb_calibration.yaml" />
+         <arg name="depth_camera_info_url" value="file://$(find target_finder)/yaml/astra_ir_calibration.yaml" />
+         <arg name="auto_exposure"      value="true" />
+         <arg name="auto_white_balance" value="true" />
+         <arg name="rgb_frame_id" value="$(arg rgb_frame_id)"/>
+         <arg name="depth_frame_id" value="$(arg depth_frame_id)"/>
+         <remap from="/camera/depth_registered/points" to="/camera/depth/color/points"/>
+       </include>
+       
+       <node pkg="target_finder" type="target_tracker" name="target_tracker">
+	 <param name="image_topic" value="$(arg image_topic)" />
+	 <param name="camera_name" value="$(arg camera_name)" />
+	 <param name="camera_frame" value="$(arg camera_frame)" />
+	 <param name="target_frame" value="$(arg target_frame)" />
+	 <param name="data_directory" value="$(arg data_directory)" />
+	 <param name="publish_rviz_markers" value="true"/>
+	 <param name="target_tracker/target_spacing" value=".020"/>
+	 <param name="target_tracker/target_circle_dia" value=".0125"/>
+	 <param name="target_tracker/target_rows" value="10"/>
+	 <param name="target_tracker/target_cols" value="10"/>
+	 <param name="astra/rgb/max_area" value="1000"/>
+	 <param name="astra/rgb/min_area" value="20"/>
+	 <param name="camera/rgb/max_area" value="1000.0"/>
+	 <param name="camera/rgb/min_area" value="50.0"/>
+	 <param name="ceres_first" value="true"/>
+       </node>
+
+      <node name="yak_node" pkg="yak_ros" type="yak_ros_node" respawn="false" output="screen">
+	<!-- I have to question, why doesn't yak read the camera matrix from the camera_info_manager? This is just dumb! -->
+	<rosparam param="camera_matrix">[570.3422, 0.000000, 319.5, 0.000000, 570.3422, 239.5, 0.000000, 0.000000, 1.000000]</rosparam>
+        <param name="tsdf_frame" value="tsdf_origin"/>
+        <remap from="~input_depth_image" to="/astra/depth/image_raw"/>
+        <param name="cols" value="640"/>
+        <param name="rows" value="480"/>
+        <param name="volume_resolution" value="0.002"/>
+        <param name="volume_x" value="320"/>
+        <param name="volume_y" value="512"/>
+	<param name="volume_z" value="160"/>
+      </node>
+
+      <node pkg="tf" type="static_transform_publisher" name="camera_tf_pub" args="0.1 0.0 1.0 0.0 1.5708 0.0 world $(arg camera_frame) 100" />
+      <node pkg="tf" type="static_transform_publisher" name="tsdf_tf_pub" args="-0.3 -0.3 -0.05 0.0 0.0 0.0 $(arg target_frame) tsdf_origin 100" />
+
+      <node name="rviz" pkg="rviz" type="rviz" args="-d $(find target_finder)/config/astra_target_tracker_yak.rviz" required="true" />
+	 
+</launch>

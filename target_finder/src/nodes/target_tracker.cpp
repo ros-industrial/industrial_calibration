@@ -66,8 +66,6 @@ public:
 
   void dynReConfCallBack(target_finder::target_finderConfig& config, uint32_t level);
 
-  bool imageCB(const sensor_msgs::Image& image);
-
   void update();
 
   void sendTransform();
