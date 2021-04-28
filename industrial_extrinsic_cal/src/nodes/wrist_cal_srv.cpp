@@ -243,11 +243,9 @@ public:
   {
     char msg[255];
     Pose6d TtoC = targetm_to_cameram_TI_->pullTransform();
-    TtoC.show("TtoC");
 
-    if (problem_initialized_ != true)
-    {
-      std_srvs::TriggerRequest sreq;
+    if(problem_initialized_ != true ){
+      std_srvs::TriggerRequest  sreq;
       std_srvs::TriggerResponse sres;
       ROS_INFO("Problem not yet initialized, calling start service");
       startCallBack(sreq, sres);
@@ -637,66 +635,56 @@ public:
       char image_scene_chars[7];
       std::string image_file = all_cameras_[0]->camera_name_ + std::string(image_scene_chars);
       std::string extrinsics_scene_d_yaml = std::string("_extrinsics") + std::string(pose_scene_chars);
-      std::string camera_mount_to_target_mount =
-          std::string("Cm_to_Tm") +
-          std::string(pose_scene_chars);  // write pose info to data_directory_/Cm_to_tm_sceneID.yaml
-      std::string camera_extrinsics =
-          all_cameras_[0]->camera_name_ +
-          extrinsics_scene_d_yaml;  // write pose to data_directory_/camera_name_extrinsics_sceneID.yaml
-      std::string target_extrinsics =
-          all_targets_[0]->target_name_ +
-          extrinsics_scene_d_yaml;  // write pose to data_directory_/target_name_extrinsics_sceneID.yaml
-
-      data_read_ok &= targetm_to_cameram_TI_->loadPose(scene_, camera_mount_to_target_mount);
-      data_read_ok &= all_cameras_[0]->camera_observer_->load_current_image(scene_, image_file);
-
-      if (data_read_ok)
-      {
-        Pose6d TtoC = targetm_to_cameram_TI_->getCurrentPose();
-        TtoC.show("TtoC");
-
-        // set target and get observations from the image
-        CameraObservations camera_observations;
-        all_cameras_[0]->camera_observer_->clearTargets();
-        all_cameras_[0]->camera_observer_->clearObservations();
-        all_cameras_[0]->camera_observer_->addTarget(all_targets_[0], roi, cost_type);
-        while (!all_cameras_[0]->camera_observer_->observationsDone())
-          ;
-        all_cameras_[0]->camera_observer_->getObservations(camera_observations);
-
-        int num_observations = (int)camera_observations.size();
-        ROS_INFO("Found %d observations", (int)camera_observations.size());
-
-        // add observations to problem
-        num_observations = (int)camera_observations.size();
-        if (num_observations != total_pts)
-        {
-          ROS_ERROR("Target Locator could not find all targets found %d out of %d", num_observations, total_pts);
-        }
-        else  // add a new cost to the problem for each observation
-        {
-          total_observations_ += num_observations;
-          ceres_blocks_.addMovingTarget(camera_observations[0].target, scene_);
-          for (int k = 0; k < num_observations; k++)
-          {
-            shared_ptr<Target> target = camera_observations[k].target;
-            double image_x = camera_observations[k].image_loc_x;
-            double image_y = camera_observations[k].image_loc_y;
-            Point3d point = target->pts_[camera_observations[k].point_id];
-            P_BLOCK intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[0]->camera_name_);
-            P_BLOCK extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(all_cameras_[0]->camera_name_);
-            P_BLOCK target_pb = ceres_blocks_.getStaticTargetPoseParameterBlock(target->target_name_);
-            double fx = intrinsics[0];
-            double fy = intrinsics[1];
-            double cx = intrinsics[2];
-            double cy = intrinsics[3];
-            CostFunction* cost_function = industrial_extrinsic_cal::LinkTargetCameraReprjErrorPK::Create(
-                image_x, image_y, fx, fy, cx, cy, TtoC, point);
-            P_->AddResidualBlock(cost_function, NULL, extrinsics, target_pb);
-          }  // for each observation at this camera_location
-        }    // end of else (there are some observations to add)
-        scene_++;
-      }  // end if data_read_ok
+      std::string camera_mount_to_target_mount= std::string("Cm_to_Tm") + std::string(pose_scene_chars);  // write pose info to data_directory_/Cm_to_tm_sceneID.yaml
+      std::string camera_extrinsics = all_cameras_[0]->camera_name_ + extrinsics_scene_d_yaml; // write pose to data_directory_/camera_name_extrinsics_sceneID.yaml
+      std::string target_extrinsics = all_targets_[0]->target_name_ + extrinsics_scene_d_yaml; // write pose to data_directory_/target_name_extrinsics_sceneID.yaml
+      
+      data_read_ok &= targetm_to_cameram_TI_->loadPose(scene_,camera_mount_to_target_mount);
+      data_read_ok &= all_cameras_[0]->camera_observer_->load_current_image(scene_,image_file);
+      
+      if(data_read_ok){
+	Pose6d TtoC = targetm_to_cameram_TI_->getCurrentPose();
+	
+	// set target and get observations from the image
+	CameraObservations camera_observations;
+	all_cameras_[0]->camera_observer_->clearTargets();
+	all_cameras_[0]->camera_observer_->clearObservations();
+	all_cameras_[0]->camera_observer_->addTarget(all_targets_[0], roi, cost_type);
+	while (!all_cameras_[0]->camera_observer_->observationsDone());
+	all_cameras_[0]->camera_observer_->getObservations(camera_observations);
+	
+	int num_observations = (int)camera_observations.size();
+	ROS_INFO("Found %d observations", (int)camera_observations.size());
+	
+	// add observations to problem
+	num_observations = (int)camera_observations.size();
+	if (num_observations != total_pts)
+	  {
+	    ROS_ERROR("Target Locator could not find all targets found %d out of %d", num_observations, total_pts);
+	  }
+	else	 // add a new cost to the problem for each observation
+	  {	 
+	    total_observations_ += num_observations;
+	    ceres_blocks_.addMovingTarget(camera_observations[0].target, scene_);
+	    for (int k = 0; k < num_observations; k++)
+	      {
+		shared_ptr<Target> target = camera_observations[k].target;
+		double image_x = camera_observations[k].image_loc_x;
+		double image_y = camera_observations[k].image_loc_y;
+		Point3d point  = target->pts_[camera_observations[k].point_id];
+		P_BLOCK intrinsics = ceres_blocks_.getStaticCameraParameterBlockIntrinsics(all_cameras_[0]->camera_name_);
+		P_BLOCK extrinsics = ceres_blocks_.getStaticCameraParameterBlockExtrinsics(all_cameras_[0]->camera_name_);
+		P_BLOCK target_pb  = ceres_blocks_.getStaticTargetPoseParameterBlock(target->target_name_);
+		double fx = intrinsics[0];
+		double fy = intrinsics[1];
+		double cx = intrinsics[2];
+		double cy = intrinsics[3];
+		CostFunction* cost_function = industrial_extrinsic_cal::LinkTargetCameraReprjErrorPK::Create(image_x, image_y, fx, fy, cx, cy, TtoC, point);
+		P_->AddResidualBlock(cost_function, NULL, extrinsics, target_pb);
+	      }  // for each observation at this camera_location
+	  } // end of else (there are some observations to add)
+	scene_++;
+      }// end if data_read_ok
     }
     return true;
   }
