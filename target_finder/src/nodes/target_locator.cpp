@@ -169,6 +169,25 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
 {
   ros::NodeHandle nh;
   CameraObservations camera_observations;
+
+  if(req.initial_pose.orientation.x == 0 &&
+     req.initial_pose.orientation.y == 0 &&
+     req.initial_pose.orientation.z == 0 &&
+     req.initial_pose.position.x == 0 &&
+     req.initial_pose.position.y == 0 &&
+     req.initial_pose.position.z == 0
+     )
+    {
+      Pose6d TtoC = target_to_camera_TI_->pullTransform(); // this listens to the transform from TF
+      TtoC.getQuaternion(req.initial_pose.orientation.x,
+       req.initial_pose.orientation.y,
+       req.initial_pose.orientation.z,
+       req.initial_pose.orientation.w);
+      req.initial_pose.position.x = TtoC.x;
+      req.initial_pose.position.y = TtoC.y;
+      req.initial_pose.position.z = TtoC.z;
+    }
+
   // get the focal length and optical center
   double fx, fy, cx, cy;
   double k1, k2, k3, p1, p2;  // unused
@@ -275,45 +294,7 @@ bool TargetLocatorService::verifyCallBack(target_verify::Request& req, target_ve
   tl_req.allowable_cost_per_observation = req.allowable_cost_per_observation;
   tl_req.roi = req.roi;
 
-  if (req.initial_pose.orientation.x == 0 && req.initial_pose.orientation.y == 0 &&
-      req.initial_pose.orientation.z == 0 && req.initial_pose.orientation.w == 0 && req.initial_pose.position.x == 0 &&
-      req.initial_pose.position.y == 0 && req.initial_pose.position.z == 0)
-  {
-    Pose6d TtoC = target_to_camera_TI_->pullTransform();  // this listens to the transform from TF
-    TtoC.getQuaternion(tl_req.initial_pose.orientation.x, tl_req.initial_pose.orientation.y,
-                       tl_req.initial_pose.orientation.z, tl_req.initial_pose.orientation.w);
-    tl_req.initial_pose.position.x = TtoC.x;
-    tl_req.initial_pose.position.y = TtoC.y;
-    tl_req.initial_pose.position.z = TtoC.z;
-  }
-  else
-  {
-    tl_req.initial_pose = req.initial_pose;
-  }
-
-  if (!executeCallBack(tl_req, tl_res))
-  {
-    ROS_ERROR("Pose Estimation of Target Failed");
-    res.position_error = -1.0;  // set to negative 1 since the pose is not computed
-    res.cost_per_observation = tl_res.cost_per_observation;
-    res.success = false;
-  }
-  else
-  {
-    res.cost_per_observation = tl_res.cost_per_observation;
-    // compare to saved position
-    std::string file_name = req.file_name.data;
-    if (!target_to_camera_TI_->loadPose(0, file_name))
-    {
-      ROS_ERROR("could not load the pose from %s", file_name.c_str());
-    }
-    Pose6d P = target_to_camera_TI_->getCurrentPose();
-    double sqd = (P.x - tl_res.final_pose.position.x) * (P.x - tl_res.final_pose.position.x) +
-                 (P.y - tl_res.final_pose.position.y) * (P.y - tl_res.final_pose.position.y) +
-                 (P.z - tl_res.final_pose.position.z) * (P.z - tl_res.final_pose.position.z);
-    double position_error = sqrt(sqd);
-    res.position_error = position_error;
-    if (position_error < req.max_error)
+  if(!executeCallBack(tl_req, tl_res))
     {
       res.success = true;
     }
