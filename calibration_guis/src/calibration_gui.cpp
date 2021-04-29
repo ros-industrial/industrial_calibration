@@ -14,6 +14,7 @@
 #include <geometry_msgs/Twist.h>
 #include <std_srvs/Trigger.h>
 #include <industrial_extrinsic_cal/cal_srv_solve.h>
+#include <industrial_extrinsic_cal/store_mutable_joint_states.h>
 
 #include <calibration_guis/calibration_gui.h>
 #include <pluginlib/class_list_macros.h>
@@ -198,10 +199,10 @@ void calPanel::covClicked()
 }
 void calPanel::saveExCalClicked()
 {
-  std_srvs::Trigger srv;
+  industrial_extrinsic_cal::store_mutable_joint_states srv;
   if (ecp_client_.call(srv))
   {
-    ROS_INFO("Output %s", srv.response.message.c_str());
+    ROS_INFO("Called service to stored mutable joint states");
   }
   else
   {

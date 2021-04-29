@@ -337,7 +337,7 @@ public:
       }
     }  // done checking proclivities
     ave_error = ave_error / (int)CO.size();
-    ROS_WARN("average proclivity error = %8.3lf", ave_error);
+    ROS_INFO("average proclivity error = %8.3lf", ave_error);
     return (rtn);
   };
 

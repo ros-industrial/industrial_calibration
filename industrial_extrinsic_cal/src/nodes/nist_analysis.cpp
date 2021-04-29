@@ -969,8 +969,7 @@ bool parseScenes(std::string& scene_file_name, std::vector<Scene>& scenes)
       {
         done = true;
         char c = 'a';
-        while (c != '\n')
-          fscanf(fp, "%c", &c);
+        while (c != '\n') fscanf(fp, "%c", &c);
       }
       else
       {

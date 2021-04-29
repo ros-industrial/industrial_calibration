@@ -163,12 +163,27 @@ void TargetLocatorService::dynReConfCallBack(target_finder::target_finderConfig&
   target_rows_ = config.target_rows;
   target_cols_ = config.target_cols;
   initMCircleTarget(config.target_rows, config.target_cols, config.target_circle_dia, config.target_spacing);
+  ROS_INFO("reconfigured to %dx%d with %lf spacing and %lf diameter", config.target_rows, config.target_cols,
+           config.target_spacing, config.target_circle_dia);
 }
 
 bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_locator::Response& res)
 {
   ros::NodeHandle nh;
   CameraObservations camera_observations;
+
+  if (req.initial_pose.orientation.x == 0 && req.initial_pose.orientation.y == 0 &&
+      req.initial_pose.orientation.z == 0 && req.initial_pose.position.x == 0 && req.initial_pose.position.y == 0 &&
+      req.initial_pose.position.z == 0)
+  {
+    Pose6d TtoC = target_to_camera_TI_->pullTransform();  // this listens to the transform from TF
+    TtoC.getQuaternion(req.initial_pose.orientation.x, req.initial_pose.orientation.y, req.initial_pose.orientation.z,
+                       req.initial_pose.orientation.w);
+    req.initial_pose.position.x = TtoC.x;
+    req.initial_pose.position.y = TtoC.y;
+    req.initial_pose.position.z = TtoC.z;
+  }
+
   // get the focal length and optical center
   double fx, fy, cx, cy;
   double k1, k2, k3, p1, p2;  // unused
@@ -203,7 +218,6 @@ bool TargetLocatorService::executeCallBack(target_locator::Request& req, target_
   camera_observer_->clearObservations();
   camera_observer_->addTarget(target_, roi, cost_type);
   camera_observer_->triggerCamera();
-
   while (!camera_observer_->observationsDone())
     ;
 
@@ -274,22 +288,6 @@ bool TargetLocatorService::verifyCallBack(target_verify::Request& req, target_ve
   target_locator::Response tl_res;
   tl_req.allowable_cost_per_observation = req.allowable_cost_per_observation;
   tl_req.roi = req.roi;
-
-  if (req.initial_pose.orientation.x == 0 && req.initial_pose.orientation.y == 0 &&
-      req.initial_pose.orientation.z == 0 && req.initial_pose.orientation.w == 0 && req.initial_pose.position.x == 0 &&
-      req.initial_pose.position.y == 0 && req.initial_pose.position.z == 0)
-  {
-    Pose6d TtoC = target_to_camera_TI_->pullTransform();  // this listens to the transform from TF
-    TtoC.getQuaternion(tl_req.initial_pose.orientation.x, tl_req.initial_pose.orientation.y,
-                       tl_req.initial_pose.orientation.z, tl_req.initial_pose.orientation.w);
-    tl_req.initial_pose.position.x = TtoC.x;
-    tl_req.initial_pose.position.y = TtoC.y;
-    tl_req.initial_pose.position.z = TtoC.z;
-  }
-  else
-  {
-    tl_req.initial_pose = req.initial_pose;
-  }
 
   if (!executeCallBack(tl_req, tl_res))
   {

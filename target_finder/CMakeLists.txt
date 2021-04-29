@@ -76,12 +76,14 @@ add_executable(dual_call_service src/nodes/dual_camera_cs.cpp)
 add_executable(target_locator_srv src/nodes/target_locator.cpp)
 add_executable(stereo_locator_srv src/nodes/stereo_locator.cpp)
 add_executable(stereo_pose_stats src/nodes/stereo_pose_stats.cpp)
+add_executable(target_tracker src/nodes/target_tracker.cpp)
 
 add_dependencies(call_service ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
 add_dependencies(dual_call_service ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
 add_dependencies(target_locator_srv ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 add_dependencies(stereo_locator_srv ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
 add_dependencies(stereo_pose_stats ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS})
+add_dependencies(target_tracker ${catkin_EXPORTED_TARGETS} ${target_finder_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 target_link_libraries(target_gen ${catkin_LIBRARIES})
 target_link_libraries(call_service ${catkin_LIBRARIES})
@@ -89,7 +91,7 @@ target_link_libraries(dual_call_service ${catkin_LIBRARIES})
 target_link_libraries(target_locator_srv ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(stereo_locator_srv ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(stereo_pose_stats ${catkin_LIBRARIES} ${CERES_LIBRARIES})
-
+target_link_libraries(target_tracker ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 
 install(
   TARGETS
@@ -99,6 +101,7 @@ install(
     target_locator_srv
     stereo_locator_srv
     stereo_pose_stats
+    target_tracker
   RUNTIME DESTINATION
     ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
