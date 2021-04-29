@@ -259,6 +259,7 @@ public:
 private:
   std::string housing_frame_; /**< housing frame name note, this is not used, but kept be symetry with broadcaster param
                                  list */
+
 };                            // end ROSCameraHousingListenerTInterface
 
 /** @brief This transform interface is used when the pose from the ref_frame_ to the transform_frame_ is determined
@@ -360,6 +361,7 @@ private:
   ros::Timer timer_;                        /**< need a timer to initiate broadcast of transform */
   tf::StampedTransform transform_;          /**< the broadcaster needs this which we get values from pose_ */
   tf::TransformBroadcaster tf_broadcaster_; /**< the broadcaster to tf */
+
   bool immediate_;                          /**< send immediately on push */
 };                                          // end  ROSCameraBroadcastTransInterface
 
@@ -491,6 +493,7 @@ private:
                                                                                      mutable set */
   industrial_extrinsic_cal::store_mutable_joint_states::Response store_response_; /**< response to store when  part of a
                                                                                      mutable set */
+
 };                                                                                // end ROSCameraHousingCalTInterface
 
 /** @brief this is expected to be used for calibrating a target
@@ -669,6 +672,7 @@ public:
   {
     return (true);
   };
+
 };  // end DefaultTransformInterface
 
 }  // namespace industrial_extrinsic_cal

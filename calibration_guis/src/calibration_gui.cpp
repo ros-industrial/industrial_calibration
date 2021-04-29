@@ -199,6 +199,7 @@ void calPanel::covClicked()
 }
 void calPanel::saveExCalClicked()
 {
+
   industrial_extrinsic_cal::store_mutable_joint_states srv;
   if (ecp_client_.call(srv))
   {
