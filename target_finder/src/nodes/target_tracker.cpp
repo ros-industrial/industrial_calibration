@@ -151,7 +151,7 @@ TargetTracker::TargetTracker(ros::NodeHandle nh)
     allowable_cost_per_observation_ = .25;
   }
 
-  // when this is set, Ceres-solver is attempted first. 
+  // when this is set, Ceres-solver is attempted first.
   if (!pnh.getParam("ceres_first", ceres_first_))
   {
     ceres_first_ = false;
@@ -166,9 +166,15 @@ TargetTracker::TargetTracker(ros::NodeHandle nh)
   camera_observer_ = shared_ptr<ROSCameraObserver>(new ROSCameraObserver(image_topic_, camera_name_));
   camera_observer_->pullCameraInfo(fx_, fy_, cx_, cy_, k1_, k2_, k3_, p1_, p2_, width_, height_);
   cameraMatrix_ = cv::Mat(3, 3, CV_64F);
-  cameraMatrix_.at<double>(0, 0) = fx_;   cameraMatrix_.at<double>(0, 1) = 0.0;   cameraMatrix_.at<double>(0, 2) = cx_;
-  cameraMatrix_.at<double>(1, 0) = 0.0;   cameraMatrix_.at<double>(1, 1) = fy_;   cameraMatrix_.at<double>(1, 2) = cy_;
-  cameraMatrix_.at<double>(2, 0) = 0.0;   cameraMatrix_.at<double>(2, 1) = 0.0;   cameraMatrix_.at<double>(2, 2) = 1.0;
+  cameraMatrix_.at<double>(0, 0) = fx_;
+  cameraMatrix_.at<double>(0, 1) = 0.0;
+  cameraMatrix_.at<double>(0, 2) = cx_;
+  cameraMatrix_.at<double>(1, 0) = 0.0;
+  cameraMatrix_.at<double>(1, 1) = fy_;
+  cameraMatrix_.at<double>(1, 2) = cy_;
+  cameraMatrix_.at<double>(2, 0) = 0.0;
+  cameraMatrix_.at<double>(2, 1) = 0.0;
+  cameraMatrix_.at<double>(2, 2) = 1.0;
 
   camera_observer_->use_circle_detector_ = use_circle_detector_;
   input_roi_.x_min = 0;
@@ -270,7 +276,7 @@ bool TargetTracker::solvePnPCeres(CameraObservations& camera_observations)
   {
     ROS_ERROR("NO CONVERGENCE");
   }
-  // note, results are computed directly in the target_->pose 
+  // note, results are computed directly in the target_->pose
   return rtn;
 }
 
@@ -302,7 +308,7 @@ bool TargetTracker::solvePnPOpencv(CameraObservations& camera_observations)
   }
 
   // copy the result to the right place
-  cv::Rodrigues(rvec,r_matrix);
+  cv::Rodrigues(rvec, r_matrix);
   tf::Matrix3x3 r_tf;
   r_tf[0][0] = r_matrix.at<double>(0, 0);
   r_tf[0][1] = r_matrix.at<double>(0, 1);
@@ -333,29 +339,30 @@ void TargetTracker::update()
   }
   if (camera_observations.size() == expected_num_observations_)
   {
-    if(ceres_first_)
+    if (ceres_first_)
+    {
+      if (!solvePnPCeres(camera_observations))
       {
-	if (!solvePnPCeres(camera_observations))
-	  {
-	    ROS_WARN("Ceres failed to solvePnP");
-	    if (!solvePnPOpencv(camera_observations))
-	      {
-		ROS_ERROR("Both Ceres and OpenCV failed to solvePnP");
-	      }
-	  }
+        ROS_WARN("Ceres failed to solvePnP");
+        if (!solvePnPOpencv(camera_observations))
+        {
+          ROS_ERROR("Both Ceres and OpenCV failed to solvePnP");
+        }
       }
-    else{
+    }
+    else
+    {
       if (!solvePnPOpencv(camera_observations))
-	{
-	  ROS_ERROR("OpenCV failed to solvePnP");
-	}
-    }      
+      {
+        ROS_ERROR("OpenCV failed to solvePnP");
+      }
+    }
     static int do_once = 1;
     if (do_once)
-      {
-        displayRvizTarget(target_);
-        do_once = 0;
-      }
+    {
+      displayRvizTarget(target_);
+      do_once = 0;
+    }
     target_->pushTransform();
   }
   else
