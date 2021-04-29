@@ -161,7 +161,6 @@ void ROSCameraObserver::setCurrentImage(const cv::Mat& image)
   last_raw_image_ = image.clone();
   std::string encoding = "mono8";
   std_msgs::Header header;
-
   {
     boost::lock_guard<boost::mutex> lock(image_lock_);
 
