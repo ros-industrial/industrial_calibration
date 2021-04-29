@@ -243,7 +243,6 @@ public:
   {
     char msg[255];
     Pose6d TtoC = targetm_to_cameram_TI_->pullTransform();
-    TtoC.show("TtoC");
 
     if (problem_initialized_ != true)
     {
@@ -653,7 +652,6 @@ public:
       if (data_read_ok)
       {
         Pose6d TtoC = targetm_to_cameram_TI_->getCurrentPose();
-        TtoC.show("TtoC");
 
         // set target and get observations from the image
         CameraObservations camera_observations;

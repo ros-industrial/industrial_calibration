@@ -169,7 +169,6 @@ public:
   bool load_current_image(int scene, std::string& filename)
   {
     std::string full_image_file_path_name;
-
     char scene_chars[30];
     sprintf(scene_chars, "_%03d.jpg", scene);
     if (filename == "")
