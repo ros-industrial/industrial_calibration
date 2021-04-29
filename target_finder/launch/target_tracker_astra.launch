@@ -16,10 +16,10 @@
 	 <param name="target_frame" value="$(arg target_frame)" />
 	 <param name="data_directory" value="$(arg data_directory)" />
 	 <param name="publish_rviz_markers" value="true"/>
-	 <param name="target_tracker/target_spacing" value=".02"/>
+	 <param name="target_tracker/target_spacing" value=".062"/>
 	 <param name="target_tracker/target_circle_dia" value=".012"/>
-	 <param name="target_tracker/target_rows" value="10"/>
-	 <param name="target_tracker/target_cols" value="10"/>
+	 <param name="target_tracker/target_rows" value="7"/>
+	 <param name="target_tracker/target_cols" value="5"/>
 	 <param name="camera/rgb/max_area" value="1000.0"/>
 	 <param name="camera/rgb/min_area" value="50.0"/>
 	 <param name="ceres_first" value="true"/>
