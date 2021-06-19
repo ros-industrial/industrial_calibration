@@ -87,14 +87,26 @@ void ROSCameraObserver::stopTargetTrack()
 
 void ROSCameraObserver::imageCB(const sensor_msgs::Image& image)
 {
-  cv_bridge::CvImagePtr bridge = cv_bridge::toCvCopy(image, image.encoding);
+  sensor_msgs::Image new_image = image;
+  if(image.encoding == "32FC1")
+    {
+      cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(image);
+      cv::Mat tmp = cv::Mat(cv_ptr->image.size(), CV_8UC1);
+      cv::convertScaleAbs(cv_ptr->image, tmp, 1, 0.0);
+      cv_bridge::CvImagePtr cv_ptr2(new cv_bridge::CvImage());
+      cv_ptr2->encoding = "mono8";
+      cv_ptr2->image = tmp.clone();
+      cv_ptr2->header = cv_ptr->header;
+      new_image = *(cv_ptr2->toImageMsg());
+    }
+  cv_bridge::CvImagePtr bridge = cv_bridge::toCvCopy(new_image, new_image.encoding);
   debug_pub_.publish(bridge->toImageMsg());
   //  setCurrentImage(bridge->image);
 
-  input_bridge_ = cv_bridge::toCvCopy(image, "mono8");
-  output_bridge_ = cv_bridge::toCvCopy(image, "bgr8");
+  input_bridge_ = cv_bridge::toCvCopy(new_image, "mono8");
+  output_bridge_ = cv_bridge::toCvCopy(new_image, "bgr8");
   last_raw_image_ = output_bridge_->image.clone();
-  out_bridge_ = cv_bridge::toCvCopy(image, "mono8");
+  out_bridge_ = cv_bridge::toCvCopy(new_image, "mono8");
   new_image_collected_ = true;
 }
 
