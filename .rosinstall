@@ -1,0 +1,2 @@
+# Library for robo_cylinder
+- git: {local-name: intelligent_actuator, uri: 'https://github.com/ros-industrial/intelligent_actuator.git', version: master}
