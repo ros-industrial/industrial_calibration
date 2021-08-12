@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ical_core</name>
+  <version>0.1.0</version>
+  <description>The industrial calibration core package</description>
+
+  <author email="chris.lewis@swri.org">Chris Lewis</author>
+  <author email="jmeyer1292@gmail.com">Jonathan Meyer</author>
+  <author email="michael.ripperger@swri.org">Michael Ripperger</author>
+  <maintainer email="michael.ripperger@swri.org">Michael Ripperger</maintainer>
+
+  <license>Apache 2.0</license>
+
+  <build_depend>ros_industrial_cmake_boilerplate</build_depend>
+  <depend>libopencv-dev</depend>
+  <depend>boost</depend>
+  <depend>eigen</depend>
+  <depend>yaml-cpp</depend>
+
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>
