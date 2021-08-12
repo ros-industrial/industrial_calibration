@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ical_core/ceres_math_utilities.h>
+#include <ical_core/optimizations/utils/ceres_math_utilities.h>
 #include <ical_core/types.h>
 
 #include <Eigen/Geometry>

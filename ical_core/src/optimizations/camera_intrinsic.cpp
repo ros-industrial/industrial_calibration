@@ -1,6 +1,6 @@
 #include <ical_core/optimizations/camera_intrinsic.h>
 #include <ical_core/cost_functions/camera_intrinsic.h>
-#include <ical_core/ceres_math_utilities.h>
+#include <ical_core/optimizations/utils/ceres_math_utilities.h>
 #include <ical_core/optimizations/utils/covariance_analysis.h>
 #include <ical_core/optimizations/pnp.h>
 

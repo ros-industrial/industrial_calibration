@@ -1,6 +1,6 @@
 #include <ical_core/optimizations/multi_camera_pnp.h>
 #include <ical_core/cost_functions/multi_camera_pnp.h>
-#include <ical_core/ceres_math_utilities.h>
+#include <ical_core/optimizations/utils/ceres_math_utilities.h>
 #include <ical_core/types.h>
 
 #include <ceres/ceres.h>

@@ -1,6 +1,6 @@
 #include <ical_core/optimizations/extrinsic_hand_eye.h>
 #include <ical_core/cost_functions/extrinsic_hand_eye.h>
-#include <ical_core/ceres_math_utilities.h>
+#include <ical_core/optimizations/utils/ceres_math_utilities.h>
 #include <ical_core/types.h>
 #include <ical_core/optimizations/utils/covariance_analysis.h>
 

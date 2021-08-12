@@ -1,6 +1,6 @@
 #include <ical_core/optimizations/dh_chain_kinematic_calibration.h>
 #include <ical_core/cost_functions/dh_chain_kinematic_calibration.h>
-#include <ical_core/ceres_math_utilities.h>
+#include <ical_core/optimizations/utils/ceres_math_utilities.h>
 #include <ical_core/optimizations/utils/covariance_analysis.h>
 #include <ical_core/optimizations/utils/maximum_likelihood.h>
 #include <ical_core/optimizations/utils/local_parameterization.h>

@@ -22,9 +22,9 @@ endif()
 
 add_library(${PROJECT_NAME} SHARED
   # Common
-  src/ceres_math_utilities.cpp
   src/dh_chain.cpp
   # Optimization Utilities
+  src/optimizations/utils/ceres_math_utilities.cpp
   src/optimizations/utils/covariance_types.cpp
   src/optimizations/utils/covariance_analysis.cpp
   # Optimizations
