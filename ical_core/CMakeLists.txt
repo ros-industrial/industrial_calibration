@@ -67,6 +67,13 @@ install(
 # Install headers
 install(DIRECTORY include/ DESTINATION include/)
 
+# Unit tests
+if(${ICAL_ENABLE_TESTING})
+  enable_testing()
+  add_run_tests_target(ENABLE ${ICAL_ENABLE_RUN_TESTING})
+  add_subdirectory(test)
+endif()
+
 # Package configuration
 install(EXPORT ${PROJECT_NAME}-targets NAMESPACE "industrial_calibration::" DESTINATION lib/cmake/${PROJECT_NAME})
 export(EXPORT ${PROJECT_NAME}-targets NAMESPACE "industrial_calibration::" FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-targets.cmake)
