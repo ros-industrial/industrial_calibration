@@ -34,6 +34,10 @@ add_library(${PROJECT_NAME} SHARED
   src/optimizations/extrinsic_hand_eye.cpp
   src/optimizations/extrinsic_multi_static_camera.cpp
   src/optimizations/multi_camera_pnp.cpp
+  # Optimization Analysis
+  src/optimizations/analysis/camera_intrinsic_calibration_analysis.cpp
+  src/optimizations/analysis/homography_analysis.cpp
+  src/optimizations/analysis/noise_qualification.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
