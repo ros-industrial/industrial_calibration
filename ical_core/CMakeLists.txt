@@ -27,6 +27,13 @@ add_library(${PROJECT_NAME} SHARED
   # Optimization Utilities
   src/optimizations/utils/covariance_types.cpp
   src/optimizations/utils/covariance_analysis.cpp
+  # Optimizations
+  src/optimizations/pnp.cpp
+  src/optimizations/camera_intrinsic.cpp
+  src/optimizations/dh_chain_kinematic_calibration.cpp
+  src/optimizations/extrinsic_hand_eye.cpp
+  src/optimizations/extrinsic_multi_static_camera.cpp
+  src/optimizations/multi_camera_pnp.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
