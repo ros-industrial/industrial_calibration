@@ -20,6 +20,34 @@ if(NOT TARGET Eigen3::Eigen)
   set_property(TARGET Eigen3::Eigen PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS})
 endif()
 
+add_library(${PROJECT_NAME} SHARED
+  # Common
+  src/ceres_math_utilities.cpp
+)
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>")
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CERES_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}
+  PUBLIC
+    Eigen3::Eigen
+    ${CERES_LIBRARIES})
+target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 14)
+target_clang_tidy(${PROJECT_NAME}
+  ENABLE ${ICAL_ENABLE_CLANG_TIDY}
+  WARNINGS_AS_ERRORS ${ICAL_ENABLE_TESTING}
+  CHECKS ${DEFAULT_CLANG_TIDY_CHECKS})
+target_code_coverage(${PROJECT_NAME} INTERFACE ALL ENABLE ${ICAL_ENABLE_TESTING})
+
+# Install the library
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}-targets
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+
 # Install headers
 install(DIRECTORY include/ DESTINATION include/)
 
