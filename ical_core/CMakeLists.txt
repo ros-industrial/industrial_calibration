@@ -46,7 +46,8 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CERES_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
     Eigen3::Eigen
-    ${CERES_LIBRARIES})
+    ${CERES_LIBRARIES}
+    yaml-cpp)
 target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 14)
 target_clang_tidy(${PROJECT_NAME}
   ENABLE ${ICAL_ENABLE_CLANG_TIDY}
