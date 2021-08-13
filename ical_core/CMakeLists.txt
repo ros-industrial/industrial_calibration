@@ -38,6 +38,11 @@ add_library(${PROJECT_NAME} SHARED
   src/optimizations/analysis/camera_intrinsic_calibration_analysis.cpp
   src/optimizations/analysis/homography_analysis.cpp
   src/optimizations/analysis/noise_qualification.cpp
+  # Target Finders
+  src/target_finders/utils/circle_detector.cpp
+  src/target_finders/modified_circle_grid_target_finder.cpp
+  src/target_finders/aruco_grid_target_finder.cpp
+  src/target_finders/charuco_grid_target_finder.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -47,7 +52,12 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC
     Eigen3::Eigen
     ${CERES_LIBRARIES}
-    yaml-cpp)
+    yaml-cpp
+    opencv_core
+    opencv_aruco
+    opencv_features2d
+    opencv_imgproc
+    opencv_highgui)
 target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 14)
 target_clang_tidy(${PROJECT_NAME}
   ENABLE ${ICAL_ENABLE_CLANG_TIDY}
