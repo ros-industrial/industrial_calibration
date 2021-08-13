@@ -1,5 +1,6 @@
 #include <ical_core/optimizations/analysis/noise_qualification.h>
 #include <ical_core/optimizations/pnp.h>
+#include <ical_core/exceptions.h>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
@@ -40,7 +41,7 @@ Eigen::Quaterniond computeQuaternionMean(const std::vector<Eigen::Quaterniond>& 
   Eigen::Quaterniond q;
   q.coeffs() << svd.matrixU().col(0);
 
-  if (q.coeffs().array().hasNaN()) throw std::runtime_error("Mean quaternion has NaN values");
+  if (q.coeffs().array().hasNaN()) throw ICalException("Mean quaternion has NaN values");
 
   return q;
 };

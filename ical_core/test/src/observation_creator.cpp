@@ -1,6 +1,7 @@
 #include <ical_core_tests/observation_creator.h>
 #include <ical_core/optimizations/utils/ceres_math_utilities.h>
 #include <ical_core_tests/pose_generator.h>
+#include <ical_core/exceptions.h>
 
 namespace industrial_calibration
 {
@@ -41,7 +42,7 @@ Correspondence2D3D::Set getCorrespondences(const Eigen::Isometry3d& camera_pose,
     }
     else if (require_all)
     {
-      throw std::runtime_error("Target point was not observed");
+      throw ICalException("Target point was not observed");
     }
   }
 

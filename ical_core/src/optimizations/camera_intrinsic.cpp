@@ -3,6 +3,7 @@
 #include <ical_core/optimizations/utils/ceres_math_utilities.h>
 #include <ical_core/optimizations/utils/covariance_analysis.h>
 #include <ical_core/optimizations/pnp.h>
+#include <ical_core/exceptions.h>
 
 #include <ceres/ceres.h>
 
@@ -19,7 +20,7 @@ static Pose6d solvePnP(const CameraIntrinsics& intr, const Correspondence2D3D::S
 
   PnPResult result = optimize(problem);
 
-  if (!result.converged) throw std::runtime_error("unable to solve PnP sub-problem");
+  if (!result.converged) throw ICalException("unable to solve PnP sub-problem");
 
   return poseEigenToCal(result.camera_to_target);
 }

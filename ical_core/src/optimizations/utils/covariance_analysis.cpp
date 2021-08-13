@@ -1,4 +1,5 @@
 ﻿#include <ical_core/optimizations/utils/covariance_analysis.h>
+#include <ical_core/exceptions.h>
 
 #include <sstream>
 

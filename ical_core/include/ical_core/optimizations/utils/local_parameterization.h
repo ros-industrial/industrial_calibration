@@ -1,9 +1,11 @@
 #pragma once
 
-#include <Eigen/Core>
+#include <ical_core/types.h>
+#include <ical_core/exceptions.h>
+
 #include <ceres/problem.h>
 #include <ceres/local_parameterization.h>
-#include <ical_core/types.h>
+#include <Eigen/Core>
 
 // Ceres Solver - A fast non-linear least squares minimizer
 // Copyright 2015 Google Inc. All rights reserved.

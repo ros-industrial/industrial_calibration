@@ -1,7 +1,9 @@
 #pragma once
 
-#include <Eigen/Core>
 #include <ical_core/types.h>
+#include <ical_core/exceptions.h>
+
+#include <Eigen/Core>
 
 namespace industrial_calibration
 {

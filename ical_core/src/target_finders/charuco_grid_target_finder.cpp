@@ -1,4 +1,5 @@
 #include <ical_core/target_finders/charuco_grid_target_finder.h>
+#include <ical_core/exceptions.h>
 
 namespace
 {
@@ -85,7 +86,7 @@ TargetFeatures CharucoGridBoardTargetFinder::findTargetFeatures(const cv::Mat& i
 
   if (marker_ids.empty())
   {
-    throw std::runtime_error("No ArUco markers were detected");
+    throw ICalException("No ArUco markers were detected");
   }
 
   // Detect the chessboard intersections given the observed ArUco markers

@@ -1,5 +1,6 @@
 #include <ical_core/optimizations/analysis/camera_intrinsic_calibration_analysis.h>
 #include <ical_core/optimizations/pnp.h>
+#include <ical_core/exceptions.h>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
@@ -26,7 +27,7 @@ VirtualCorrespondenceResult measureVirtualTargetDiff(const Correspondence2D3D::S
       std::stringstream ss;
       ss << "PnP optimization " << (result.converged ? "converged" : "did not converge") << " with residual error of "
          << result.final_cost_per_obs << " (" << pnp_sq_error_threshold << " max)";
-      throw std::runtime_error(ss.str());
+      throw ICalException(ss.str());
     }
 
     return result.camera_to_target;

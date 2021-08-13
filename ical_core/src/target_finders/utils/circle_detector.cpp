@@ -47,6 +47,7 @@ the use of this software, even if advised of the possibility of such damage.
 // center of mass of contour to provide the location of the circle.
 
 #include <ical_core/target_finders/utils/circle_detector.h>
+#include <ical_core/exceptions.h>
 
 #include <algorithm>
 #include <iterator>
@@ -225,7 +226,7 @@ std::vector<DetectionResult> applyThresholds(const cv::Mat& image, const CircleD
     std::stringstream ss;
     ss << "Minimum repeatability (" << params.minRepeatability << ") cannot exceed the number of thresholds ("
        << params.nThresholds << ")";
-    throw std::runtime_error(ss.str());
+    throw ICalException(ss.str());
   }
 
   // Create a container for all of the circle centers and contours detected at the different threshold levels

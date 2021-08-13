@@ -1,5 +1,6 @@
 #include <ical_core/optimizations/analysis/homography_analysis.h>
 #include <ical_core/types.h>
+#include <ical_core/exceptions.h>
 
 #include <Eigen/Dense>
 
@@ -21,7 +22,7 @@ std::vector<std::size_t> GridCorrespondenceSampler::getSampleCorrespondenceIndic
     std::stringstream ss;
     ss << "Number of correspondences does not exceed minimum of " << n_samples * 2 << " (" << rows * cols
        << " provided)";
-    throw std::runtime_error(ss.str());
+    throw ICalException(ss.str());
   }
 
   std::vector<std::size_t> correspondence_indices;
@@ -50,13 +51,13 @@ RandomCorrespondenceSampler::RandomCorrespondenceSampler(const std::size_t n_cor
   {
     std::stringstream ss;
     ss << "Not enough samples specified: " << n_samples << " vs. " << min_samples << " required";
-    throw std::runtime_error(ss.str());
+    throw ICalException(ss.str());
   }
   if (n_samples > n_correspondences)
   {
     std::stringstream ss;
     ss << "Number of correspondences (" << n_correspondences << ") must exceed number of samples (" << n_samples << ")";
-    throw std::runtime_error(ss.str());
+    throw ICalException(ss.str());
   }
 }
 
@@ -119,7 +120,7 @@ Eigen::VectorXd calculateHomographyError(const Correspondence2D3D::Set& correspo
     std::stringstream ss;
     ss << "Correspondences size is not more than 2x sample size (" << correspondences.size() << " correspondences vs. "
        << n_samples << ")";
-    throw std::runtime_error(ss.str());
+    throw ICalException(ss.str());
   }
 
   // Create the A and b matrices

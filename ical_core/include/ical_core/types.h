@@ -400,20 +400,4 @@ struct KinematicMeasurement
   Eigen::VectorXd target_chain_joints;
 };
 
-struct OptimizationException : public std::runtime_error
-{
-public:
-  OptimizationException(const std::string& what) : std::runtime_error(what)
-  {
-  }
-};
-
-struct CovarianceException : public std::runtime_error
-{
-public:
-  CovarianceException(const std::string& what) : std::runtime_error(what)
-  {
-  }
-};
-
 }  // namespace industrial_calibration

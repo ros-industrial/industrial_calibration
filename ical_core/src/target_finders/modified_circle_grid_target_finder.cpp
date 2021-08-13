@@ -1,5 +1,6 @@
 #include <ical_core/target_finders/modified_circle_grid_target_finder.h>
 #include <ical_core/target_finders/utils/circle_detector.h>
+#include <ical_core/exceptions.h>
 
 #include <opencv2/calib3d.hpp>
 #include <memory>
@@ -105,8 +106,8 @@ static std::vector<cv::Point2d> extractKeyPoints(const cv::Mat& image, const std
   }
 
   if (!centers_tmp.empty())
-    throw std::runtime_error("Centers and keypoints did not match. Check this issue: "
-                             "'https://github.com/opencv/opencv/issues/4775'");
+    throw ICalException("Centers and keypoints did not match. Check this issue: "
+                        "'https://github.com/opencv/opencv/issues/4775'");
 
   // If a flipped pattern is found, flip the rows/columns
   std::size_t temp_rows = flipped ? cols : rows;
@@ -149,7 +150,7 @@ static std::vector<cv::Point2d> extractKeyPoints(const cv::Mat& image, const std
 
   // No keypoint match for one or more corners
   if (start_last_row_size < 0.0 || start_first_row_size < 0.0 || end_last_row_size < 0.0 || end_first_row_size < 0.0)
-    throw std::runtime_error("No keypoint match for one or more centers");
+    throw ICalException("No keypoint match for one or more centers");
 
   /*
     Note(cLewis):
@@ -310,7 +311,7 @@ static std::vector<cv::Point2d> extractKeyPoints(const cv::Mat& image, const std
 
   else
   {
-    throw std::runtime_error("No matching configuration");
+    throw ICalException("No matching configuration");
   }
 
   return observation_points;
@@ -350,7 +351,7 @@ static std::vector<cv::Point2d> extractModifiedCircleGrid(const cv::Mat& image, 
     }
   }
 
-  if (centers.size() == 0) throw std::runtime_error("Failed to find circle centers");
+  if (centers.size() == 0) throw ICalException("Failed to find circle centers");
 
   return extractKeyPoints(image, centers, detector_ptr, rows, cols, flipped);
 }

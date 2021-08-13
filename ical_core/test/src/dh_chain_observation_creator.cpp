@@ -1,5 +1,6 @@
 #include <ical_core_tests/dh_chain_observation_creator.h>
 #include <ical_core_tests/observation_creator.h>
+#include <ical_core/exceptions.h>
 
 namespace industrial_calibration
 {
@@ -113,7 +114,7 @@ KinObservation2D3D::Set createKinematicObservations(const DHChain& to_camera_cha
     std::stringstream ss;
     ss << "Failed to generate required number of observations (" << observations.size() << "/"
        << observations.capacity() << ")";
-    throw std::runtime_error(ss.str());
+    throw ICalException(ss.str());
   }
 
   return observations;

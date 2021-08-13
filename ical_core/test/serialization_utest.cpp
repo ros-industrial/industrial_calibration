@@ -1,6 +1,7 @@
 #include <ical_core/serialization/problems.h>
 #include <ical_core_tests/utilities.h>
 #include <ical_core_tests/observation_creator.h>
+#include <ical_core/exceptions.h>
 
 #include <gtest/gtest.h>
 #include <fstream>
@@ -11,7 +12,7 @@ template <class T>
 void serialize(const std::string& file, const T& val)
 {
   std::ofstream ofh(file);
-  if (!ofh) throw std::runtime_error("Failed to open file '" + file + "'");
+  if (!ofh) throw ICalException("Failed to open file '" + file + "'");
 
   YAML::Node n = YAML::Node(val);
   ofh << n;

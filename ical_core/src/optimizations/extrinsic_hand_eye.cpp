@@ -3,6 +3,7 @@
 #include <ical_core/optimizations/utils/ceres_math_utilities.h>
 #include <ical_core/types.h>
 #include <ical_core/optimizations/utils/covariance_analysis.h>
+#include <ical_core/exceptions.h>
 
 #include <ceres/ceres.h>
 #include <iostream>
@@ -49,9 +50,9 @@ ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem2D3D& params)
       // Target features that project behind the camera tend to prevent the optimization from converging
       if (!isPointVisible(internal_camera_to_wrist, internal_base_to_target, cost_fn))
       {
-        throw std::runtime_error("Projected target feature lies behind the image plane using the "
-                                 "current target mount and camera mount transform guesses. Try updating the initial "
-                                 "transform guesses to more accurately represent the problem");
+        throw ICalException("Projected target feature lies behind the image plane using the "
+                            "current target mount and camera mount transform guesses. Try updating the initial "
+                            "transform guesses to more accurately represent the problem");
       }
 
       problem.AddResidualBlock(cost_block, NULL, internal_camera_to_wrist.values.data(),

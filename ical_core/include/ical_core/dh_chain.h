@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ical_core/exceptions.h>
+
 #include <Eigen/Geometry>
 #include <memory>
 #include <utility>
@@ -72,7 +74,7 @@ struct DHTransform
         updated_params(1) += joint_value;
         break;
       default:
-        throw std::runtime_error("Unknown DH joint type");
+        throw ICalException("Unknown DH joint type");
     }
 
     // Perform the DH transformations
@@ -161,14 +163,14 @@ public:
     {
       std::stringstream ss;
       ss << "Joint values size (" << joint_values.size() << ") is larger than the chain DoF (" << dof() << ")";
-      throw std::runtime_error(ss.str());
+      throw ICalException(ss.str());
     }
     else if (joint_values.size() > offsets.rows())
     {
       std::stringstream ss;
       ss << "Joint values size (" << joint_values.size() << ") is larger than the rows of DH offsets ("
          << offsets.rows() << ")";
-      throw std::runtime_error(ss.str());
+      throw ICalException(ss.str());
     }
 
     Isometry3<T> transform(base_offset_.cast<T>());
