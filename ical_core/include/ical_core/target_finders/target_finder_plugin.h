@@ -12,17 +12,24 @@ namespace industrial_calibration
 class TargetFinderPlugin : public TargetFinder
 {
 public:
-  virtual void init(const YAML::Node& config) = 0;
+  using TargetFinder::TargetFinder;
 
-  virtual TargetFeatures findTargetFeatures(const cv::Mat& image) const override final
+  TargetFeatures findTargetFeatures(const cv::Mat& image) const override final
   {
     return finder_->findTargetFeatures(image);
   }
 
-  virtual cv::Mat drawTargetFeatures(const cv::Mat& image, const TargetFeatures& target_features) const override final
+  cv::Mat drawTargetFeatures(const cv::Mat& image, const TargetFeatures& target_features) const override final
   {
     return finder_->drawTargetFeatures(image, target_features);
   }
+
+  const Target& target() const override final
+  {
+    return finder_->target();
+  }
+
+  virtual void init(const YAML::Node& config) = 0;
 
 protected:
   std::unique_ptr<const TargetFinder> finder_;
@@ -30,16 +37,19 @@ protected:
 
 struct ModifiedCircleGridTargetFinderPlugin : public TargetFinderPlugin
 {
+public:
   void init(const YAML::Node& config) override;
 };
 
 struct CharucoGridTargetFinderPlugin : public TargetFinderPlugin
 {
+public:
   void init(const YAML::Node& config) override;
 };
 
 struct ArucoGridTargetFinderPlugin : public TargetFinderPlugin
 {
+public:
   void init(const YAML::Node& config) override;
 };
 
