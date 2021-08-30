@@ -3,7 +3,7 @@
 #include <ical_core/types.h>
 
 #include <Eigen/Core>
-#include <opencv2/core/mat.hpp>
+#include <opencv2/core/types_c.h>
 #include <map>
 #include <vector>
 
@@ -53,24 +53,28 @@ public:
 
   /**
    * @brief Finds the features of the target in an image
-   * @param image
-   * @return
    */
   virtual TargetFeatures findTargetFeatures(const cv::Mat& image) const = 0;
 
   /**
    * @brief Draws the target features on an input image
-   * @param image
-   * @param target_features
-   * @return
    */
   virtual cv::Mat drawTargetFeatures(const cv::Mat& image, const TargetFeatures& target_features) const = 0;
 
   /**
    * @brief Returns the definition of the target used by the finder
-   * @return
    */
   virtual const Target& target() const = 0;
+
+  /**
+   * @brief Finds correspondences from an image
+   */
+  Correspondence2D3D::Set findCorrespondences(const cv::Mat& image) const;
+
+  /**
+   * @brief Finds correspondences from a set of images
+   */
+  Correspondence2D3D::Set findCorrespondences(const std::vector<cv::Mat>& images) const;
 };
 
 }  // namespace industrial_calibration
