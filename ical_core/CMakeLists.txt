@@ -44,6 +44,7 @@ add_library(${PROJECT_NAME} SHARED
   src/target_finders/modified_circle_grid_target_finder.cpp
   src/target_finders/aruco_grid_target_finder.cpp
   src/target_finders/charuco_grid_target_finder.cpp
+  src/target_finders/target_finder_plugins.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
