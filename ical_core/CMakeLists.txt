@@ -40,6 +40,7 @@ add_library(${PROJECT_NAME} SHARED
   src/optimizations/analysis/noise_qualification.cpp
   # Target Finders
   src/target_finders/utils/circle_detector.cpp
+  src/target_finders/utils/utils.cpp
   src/target_finders/modified_circle_grid_target_finder.cpp
   src/target_finders/aruco_grid_target_finder.cpp
   src/target_finders/charuco_grid_target_finder.cpp
