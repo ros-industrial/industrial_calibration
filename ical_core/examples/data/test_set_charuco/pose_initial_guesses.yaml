@@ -1,0 +1,16 @@
+base_to_camera_guess:
+  x: -0.0196464  # Note: Until I fix this YOU NEED to make this a DOUBLE! Don't write just '0'.
+  y: 1.27843
+  z: 0.283965
+  qx: -0.0480798
+  qy: -0.558686
+  qz: 0.827604
+  qw: -0.0251035
+wrist_to_target_guess:
+  x: 0.0633135
+  y: 0.119958
+  z: 0.211056
+  qx: -0.633597
+  qy: 0.262427
+  qz: 0.664998
+  qw: 0.295794
