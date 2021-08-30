@@ -1,5 +1,6 @@
 #include <ical_core/target_finders/target_finder_plugin.h>
 #include <ical_core/exceptions.h>
+#include <ical_core/target_finders/aruco_grid_target_finder.h>
 #include <ical_core/target_finders/charuco_grid_target_finder.h>
 #include <ical_core/target_finders/modified_circle_grid_target_finder.h>
 
@@ -101,6 +102,18 @@ void CharucoGridTargetFinderPlugin::init(const YAML::Node& config)
 
   CharucoGridTarget target(rows, cols, chessboard_dim, aruco_marker_dim, dictionary);
   finder_ = std::make_unique<const CharucoGridBoardTargetFinder>(target);
+}
+
+void ArucoGridTargetFinderPlugin::init(const YAML::Node& config)
+{
+  int cols = config["cols"].as<int>();
+  int rows = config["rows"].as<int>();
+  float aruco_marker_dim = config["aruco_marker_dim"].as<float>();
+  float marker_gap = config["marker_gap"].as<float>();
+  int dictionary = config["dictionary"].as<int>();
+
+  ArucoGridTarget target(rows, cols, aruco_marker_dim, marker_gap, dictionary);
+  finder_ = std::make_unique<const ArucoGridBoardTargetFinder>(target);
 }
 
 }  // namespace industrial_calibration

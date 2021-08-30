@@ -38,4 +38,9 @@ struct CharucoGridTargetFinderPlugin : public TargetFinderPlugin
   void init(const YAML::Node& config) override;
 };
 
+struct ArucoGridTargetFinderPlugin : public TargetFinderPlugin
+{
+  void init(const YAML::Node& config) override;
+};
+
 }  // namespace industrial_calibration
