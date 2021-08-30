@@ -1,0 +1,24 @@
+# Hand-eye calibration example
+add_executable(${PROJECT_NAME}_extrinsic_hand_eye extrinsic_hand_eye.cpp)
+target_link_libraries(${PROJECT_NAME}_extrinsic_hand_eye PRIVATE ${PROJECT_NAME} Boost::filesystem)
+target_compile_definitions(${PROJECT_NAME}_extrinsic_hand_eye PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+
+# Build unit tests from the examples
+if(${ICAL_ENABLE_TESTING})
+  find_gtest()
+
+  # Hand-eye calibration
+  add_gtest_discover_tests(${PROJECT_NAME}_extrinsic_hand_eye)
+  add_dependencies(run_tests ${PROJECT_NAME}_extrinsic_hand_eye)
+  target_link_libraries(${PROJECT_NAME}_extrinsic_hand_eye PRIVATE GTest::GTest GTest::Main)
+  target_compile_definitions(${PROJECT_NAME}_extrinsic_hand_eye PUBLIC ICAL_ENABLE_TESTING)
+endif()
+
+# Install the example executables so they can be run independently later if needed
+install(
+  TARGETS
+    ${PROJECT_NAME}_extrinsic_hand_eye
+  RUNTIME DESTINATION bin/examples
+  LIBRARY DESTINATION lib/examples
+  ARCHIVE DESTINATION lib/examples
+)

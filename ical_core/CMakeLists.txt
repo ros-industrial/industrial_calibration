@@ -7,7 +7,7 @@ extract_package_metadata(pkg)
 project(${pkg_extracted_name} VERSION ${pkg_extracted_version} LANGUAGES CXX)
 
 find_package(Eigen3 REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(OpenCV REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(yaml-cpp REQUIRED)
@@ -86,6 +86,9 @@ if(${ICAL_ENABLE_TESTING})
   add_run_tests_target(ENABLE ${ICAL_ENABLE_RUN_TESTING})
   add_subdirectory(test)
 endif()
+
+# Calibration examples
+add_subdirectory(examples)
 
 # Package configuration
 install(EXPORT ${PROJECT_NAME}-targets NAMESPACE "industrial_calibration::" DESTINATION lib/cmake/${PROJECT_NAME})
