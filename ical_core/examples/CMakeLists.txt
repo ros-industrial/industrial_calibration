@@ -8,6 +8,11 @@ add_executable(${PROJECT_NAME}_kinematic_calibration kinematic_calibration.cpp)
 target_link_libraries(${PROJECT_NAME}_kinematic_calibration PRIVATE ${PROJECT_NAME} Boost::filesystem)
 target_compile_definitions(${PROJECT_NAME}_kinematic_calibration PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
+# Noise qualification example
+add_executable(${PROJECT_NAME}_noise_qualification_2d noise_qualification_2d.cpp)
+target_link_libraries(${PROJECT_NAME}_noise_qualification_2d PRIVATE ${PROJECT_NAME} Boost::filesystem)
+target_compile_definitions(${PROJECT_NAME}_noise_qualification_2d PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+
 # Build unit tests from the examples
 if(${ICAL_ENABLE_TESTING})
   find_gtest()
@@ -23,6 +28,12 @@ if(${ICAL_ENABLE_TESTING})
   add_dependencies(run_tests ${PROJECT_NAME}_kinematic_calibration)
   target_link_libraries(${PROJECT_NAME}_kinematic_calibration PRIVATE GTest::GTest GTest::Main)
   target_compile_definitions(${PROJECT_NAME}_kinematic_calibration PUBLIC ICAL_ENABLE_TESTING)
+
+  # Noise qualification
+  add_gtest_discover_tests(${PROJECT_NAME}_noise_qualification_2d)
+  add_dependencies(run_tests ${PROJECT_NAME}_noise_qualification_2d)
+  target_link_libraries(${PROJECT_NAME}_noise_qualification_2d PRIVATE GTest::GTest GTest::Main)
+  target_compile_definitions(${PROJECT_NAME}_noise_qualification_2d PUBLIC ICAL_ENABLE_TESTING)
 endif()
 
 # Install the example executables so they can be run independently later if needed
@@ -30,6 +41,7 @@ install(
   TARGETS
     ${PROJECT_NAME}_extrinsic_hand_eye
     ${PROJECT_NAME}_kinematic_calibration
+    ${PROJECT_NAME}_noise_qualification_2d
   RUNTIME DESTINATION bin/examples
   LIBRARY DESTINATION lib/examples
   ARCHIVE DESTINATION lib/examples
