@@ -1,0 +1,8 @@
+- git:
+    local-name: intelligent_actuator
+    uri: https://github.com/ros-industrial/intelligent_actuator.git
+    version: 9a9d9291df2ebb4e2cdbd4fb8196738afa62b9b8
+- git:
+    local-name: ros_industrial_cmake_boilerplate
+    uri: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git
+    version: 0.2.11
