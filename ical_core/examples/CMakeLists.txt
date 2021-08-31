@@ -58,3 +58,6 @@ install(
   LIBRARY DESTINATION lib/examples
   ARCHIVE DESTINATION lib/examples
 )
+
+# Install the data directory
+install(DIRECTORY data DESTINATION share/${PROJECT_NAME})
