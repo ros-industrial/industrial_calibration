@@ -9,7 +9,7 @@ add_library(${PROJECT_NAME}_test_support SHARED
   src/circle_fit.cpp)
 target_link_libraries(${PROJECT_NAME}_test_support ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}_test_support PUBLIC include)
-target_compile_definitions(${PROJECT_NAME}_test_support PUBLIC RCT_RANDOM_SEED=0)
+target_compile_definitions(${PROJECT_NAME}_test_support PUBLIC RANDOM_SEED=0)
 
 # The actual tests...
 

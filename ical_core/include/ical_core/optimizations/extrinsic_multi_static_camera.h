@@ -1,6 +1,6 @@
 /*
  * This file mirrors the interface for ExtrinsicStaticCameraMovingTarget found in
- * rct_optimizations/extrinsic_static_camera.h but extends it to work for simultaneously
+ * extrinsic_static_camera.h but extends it to work for simultaneously
  * localizing multiple cameras.
  *
  * Thus you now pass:

@@ -35,7 +35,7 @@ TEST(DHChain, NoisyFKTest)
   DHChain robot = test::createABBIRB2400();
 
   // Create random gaussian-distributed DH offsets
-  std::mt19937 mt_rand(RCT_RANDOM_SEED);
+  std::mt19937 mt_rand(RANDOM_SEED);
   std::uniform_real_distribution<double> dist(-0.01, 0.01);
 
   Eigen::MatrixX4d dh_offsets = Eigen::MatrixX4d(robot.dof(), 4).unaryExpr([&](float) { return dist(mt_rand); });

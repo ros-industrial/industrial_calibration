@@ -1,6 +1,6 @@
 # 10x10 modified circle grid target finder
 target_finder:
-  type: rct_ros_tools::ModifiedCircleGridTargetFinderPlugin
+  type: industrial_calibration::ModifiedCircleGridTargetFinderPlugin
   rows: 10
   cols: 10
   spacing: 0.0254 # (meters between dot centers)

@@ -10,7 +10,7 @@
 
 using namespace industrial_calibration;
 
-static std::mt19937 RAND_GEN(RCT_RANDOM_SEED);
+static std::mt19937 RAND_GEN(RANDOM_SEED);
 
 template <typename T>
 T perturb_normal(T val, T std_dev)

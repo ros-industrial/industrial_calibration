@@ -76,7 +76,7 @@ TEST_F(HomographyTest, NoisyCorrespondences)
                       test::getCorrespondences(target_to_camera, Eigen::Isometry3d::Identity(), camera, target, true));
 
   // Add Gaussian noise to the image features
-  std::mt19937 mt_rand(RCT_RANDOM_SEED);
+  std::mt19937 mt_rand(RANDOM_SEED);
   const double stdev = 1.0;
   std::normal_distribution<double> dist(0.0, stdev);
   for (Correspondence2D3D& corr : correspondence_set)
