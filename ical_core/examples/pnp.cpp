@@ -5,7 +5,14 @@
 // Utilities
 #include "utils.h"
 
+#if __GNUC__ >= 8
 #include <filesystem>
+using path = std::filesystem::path;
+#else
+#include <experimental/filesystem>
+using path = std::experimental::filesystem::path;
+#endif
+
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
@@ -56,7 +63,6 @@ static Eigen::Isometry3d solveCVPnP(const CameraIntrinsics& intr, const Correspo
  */
 std::tuple<PnPResult, Eigen::Isometry3d> run()
 {
-  using path = std::filesystem::path;
   const path data_path = path(EXAMPLE_DATA_DIR) / path("test_set_10x10");
 
   YAML::Node data_node = YAML::LoadFile((data_path / "cal_data.yaml").string());

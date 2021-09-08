@@ -8,7 +8,14 @@
 // Utilities
 #include "utils.h"
 
+#if __GNUC__ >= 8
 #include <filesystem>
+using path = std::filesystem::path;
+#else
+#include <experimental/filesystem>
+using path = std::experimental::filesystem::path;
+#endif
+
 #include <iostream>
 #include <memory>
 #include <opencv2/highgui.hpp>
@@ -235,7 +242,6 @@ Params loadModifiedCircleGridCalibrationData()
 {
   Params params;
 
-  using path = std::filesystem::path;
   const path data_dir = path(EXAMPLE_DATA_DIR) / path("test_set_10x10");
 
   // Load the pose guesses
@@ -262,7 +268,6 @@ Params loadCharucoGridCalibrationData()
 {
   Params params;
 
-  using path = std::filesystem::path;
   const path data_dir = path(EXAMPLE_DATA_DIR) / path("test_set_charuco");
 
   // Load the pose guesses

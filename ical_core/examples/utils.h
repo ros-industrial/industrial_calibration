@@ -3,7 +3,13 @@
 #include <ical_core/serialization/problems.h>
 #include <ical_core/target_finders/utils/utils.h>
 
+#if __GNUC__ >= 8
 #include <filesystem>
+using path = std::filesystem::path;
+#else
+#include <experimental/filesystem>
+using path = std::experimental::filesystem::path;
+#endif
 #include <Eigen/Geometry>
 #include <iostream>
 #include <opencv2/imgproc/types_c.h>
@@ -13,7 +19,7 @@ using VectorEigenIsometry = std::vector<Eigen::Isometry3d, Eigen::aligned_alloca
 
 namespace industrial_calibration
 {
-std::tuple<VectorEigenIsometry, std::vector<cv::Mat>> loadPoseImagePairs(const std::filesystem::path& data_dir)
+std::tuple<VectorEigenIsometry, std::vector<cv::Mat>> loadPoseImagePairs(const path& data_dir)
 {
   VectorEigenIsometry poses;
   std::vector<cv::Mat> images;

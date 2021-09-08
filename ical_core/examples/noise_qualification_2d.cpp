@@ -3,7 +3,14 @@
 #include <ical_core/target_finders/utils/utils.h>
 #include <ical_core/serialization/types.h>
 
+#if __GNUC__ >= 8
 #include <filesystem>
+using path = std::filesystem::path;
+#else
+#include <experimental/filesystem>
+using path = std::experimental::filesystem::path;
+#endif
+
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -15,8 +22,6 @@ std::string WINDOW = "window";
 
 PnPNoiseStat run()
 {
-  using path = std::filesystem::path;
-
   // Parse parameters
   path data_path = path(EXAMPLE_DATA_DIR) / path("noise_qualification");
 

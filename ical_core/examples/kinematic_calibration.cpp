@@ -3,7 +3,14 @@
 #include <ical_core/optimizations/dh_chain_kinematic_calibration.h>
 #include <ical_core/serialization/eigen.h>
 
+#if __GNUC__ >= 8
 #include <filesystem>
+using path = std::filesystem::path;
+#else
+#include <experimental/filesystem>
+using path = std::experimental::filesystem::path;
+#endif
+
 #include <random>
 #include <yaml-cpp/yaml.h>
 
@@ -213,7 +220,6 @@ Stats compareToMeasurements(const DHChain& initial_camera_chain, const DHChain& 
  */
 std::tuple<KinematicCalibrationResult, Stats, Stats> run()
 {
-  using path = std::filesystem::path;
   const path data_dir = path(EXAMPLE_DATA_DIR) / path("kinematic_calibration");
 
   // Load the observations
