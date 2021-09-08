@@ -36,6 +36,7 @@ add_library(${PROJECT_NAME} SHARED
   # Optimization Analysis
   src/optimizations/analysis/camera_intrinsic_calibration_analysis.cpp
   src/optimizations/analysis/homography_analysis.cpp
+  src/optimizations/analysis/statistics.cpp
   src/optimizations/analysis/noise_qualification.cpp
   # Target Finders
   src/target_finders/utils/circle_detector.cpp
