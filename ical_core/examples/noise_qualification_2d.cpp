@@ -3,7 +3,7 @@
 #include <ical_core/target_finders/utils/utils.h>
 #include <ical_core/serialization/types.h>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -15,7 +15,7 @@ std::string WINDOW = "window";
 
 PnPNoiseStat run()
 {
-  using path = boost::filesystem::path;
+  using path = std::filesystem::path;
 
   // Parse parameters
   path data_path = path(EXAMPLE_DATA_DIR) / path("noise_qualification");

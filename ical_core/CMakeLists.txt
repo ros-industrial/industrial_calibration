@@ -7,7 +7,6 @@ extract_package_metadata(pkg)
 project(${pkg_extracted_name} VERSION ${pkg_extracted_version} LANGUAGES CXX)
 
 find_package(Eigen3 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(OpenCV REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(yaml-cpp REQUIRED)
@@ -61,7 +60,7 @@ target_link_libraries(${PROJECT_NAME}
     opencv_features2d
     opencv_imgproc
     opencv_highgui)
-target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 14)
+target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 17)
 target_clang_tidy(${PROJECT_NAME}
   ENABLE ${ICAL_ENABLE_CLANG_TIDY}
   WARNINGS_AS_ERRORS ${ICAL_ENABLE_TESTING}

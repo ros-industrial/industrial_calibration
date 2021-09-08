@@ -4,7 +4,7 @@
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <random>
 #include <yaml-cpp/yaml.h>
 
@@ -216,7 +216,7 @@ Stats compareToMeasurements(const DHChain& initial_camera_chain, const DHChain& 
  */
 std::tuple<KinematicCalibrationResult, Stats, Stats> run()
 {
-  using path = boost::filesystem::path;
+  using path = std::filesystem::path;
   const path data_dir = path(EXAMPLE_DATA_DIR) / path("kinematic_calibration");
 
   // Load the observations

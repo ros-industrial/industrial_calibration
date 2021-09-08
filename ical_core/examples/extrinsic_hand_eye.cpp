@@ -9,7 +9,7 @@
 
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/accumulators.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <opencv2/highgui.hpp>
@@ -238,7 +238,7 @@ Params loadModifiedCircleGridCalibrationData()
 {
   Params params;
 
-  using path = boost::filesystem::path;
+  using path = std::filesystem::path;
   const path data_dir = path(EXAMPLE_DATA_DIR) / path("test_set_10x10");
 
   // Load the pose guesses
@@ -265,7 +265,7 @@ Params loadCharucoGridCalibrationData()
 {
   Params params;
 
-  using path = boost::filesystem::path;
+  using path = std::filesystem::path;
   const path data_dir = path(EXAMPLE_DATA_DIR) / path("test_set_charuco");
 
   // Load the pose guesses
