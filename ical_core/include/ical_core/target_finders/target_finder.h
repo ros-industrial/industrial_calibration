@@ -3,8 +3,8 @@
 #include <ical_core/types.h>
 
 #include <Eigen/Core>
-#include <opencv2/core/types_c.h>
 #include <map>
+#include <opencv2/core/mat.hpp>
 #include <vector>
 
 namespace industrial_calibration

@@ -1,6 +1,6 @@
 # Hand-eye calibration example
 add_executable(${PROJECT_NAME}_extrinsic_hand_eye extrinsic_hand_eye.cpp)
-target_link_libraries(${PROJECT_NAME}_extrinsic_hand_eye PRIVATE ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_extrinsic_hand_eye PRIVATE ${PROJECT_NAME} opencv_highgui)
 target_compile_definitions(${PROJECT_NAME}_extrinsic_hand_eye PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 # Kinematic calibration example
@@ -10,12 +10,12 @@ target_compile_definitions(${PROJECT_NAME}_kinematic_calibration PRIVATE EXAMPLE
 
 # Noise qualification example
 add_executable(${PROJECT_NAME}_noise_qualification_2d noise_qualification_2d.cpp)
-target_link_libraries(${PROJECT_NAME}_noise_qualification_2d PRIVATE ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_noise_qualification_2d PRIVATE ${PROJECT_NAME} opencv_highgui)
 target_compile_definitions(${PROJECT_NAME}_noise_qualification_2d PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 # PnP example
 add_executable(${PROJECT_NAME}_pnp pnp.cpp)
-target_link_libraries(${PROJECT_NAME}_pnp PRIVATE ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_pnp PRIVATE ${PROJECT_NAME} opencv_highgui)
 target_compile_definitions(${PROJECT_NAME}_pnp PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 # Build unit tests from the examples

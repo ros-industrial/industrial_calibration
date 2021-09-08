@@ -60,7 +60,7 @@ target_link_libraries(${PROJECT_NAME}
     opencv_aruco
     opencv_features2d
     opencv_imgproc
-    opencv_highgui)
+    opencv_imgcodecs)
 target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 17)
 target_clang_tidy(${PROJECT_NAME}
   ENABLE ${ICAL_ENABLE_CLANG_TIDY}
