@@ -1,3 +1,4 @@
+#include <ical_core/optimizations/analysis/statistics.h>
 #include <ical_core/optimizations/dh_chain_kinematic_calibration.h>
 #include <ical_core/cost_functions/dh_chain_kinematic_calibration.h>
 #include <ical_core/optimizations/utils/local_parameterization.h>
@@ -5,8 +6,6 @@
 #include <ical_core_tests/utilities.h>
 #include <ical_core_tests/observation_creator.h>
 
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics.hpp>
 #include <gtest/gtest.h>
 
 using namespace industrial_calibration;
@@ -96,11 +95,12 @@ public:
     std::cout << "true chain:\n" << camera_chain_truth.getDHTable().matrix() << std::endl << std::endl;
     std::cout << "optimized chain:\n" << optimized_chain.getDHTable().matrix() << std::endl << std::endl;
 
-    namespace ba = boost::accumulators;
-    ba::accumulator_set<double, ba::stats<ba::tag::mean, ba::tag::variance>> pos_acc;
-    ba::accumulator_set<double, ba::stats<ba::tag::mean, ba::tag::variance>> ori_acc;
-
     const std::size_t n = 1000;
+
+    std::vector<double> pos_acc, ori_acc;
+    pos_acc.reserve(n);
+    ori_acc.reserve(n);
+
     for (std::size_t i = 0; i < n; ++i)
     {
       Eigen::VectorXd random_pose = camera_chain_truth.createUniformlyRandomPose();
@@ -113,20 +113,27 @@ public:
 
       // Compare
       Eigen::Isometry3d diff = true_fk.inverse() * optimized_fk;
-      pos_acc(diff.translation().norm());
-      ori_acc(Eigen::Quaterniond(true_fk.linear()).angularDistance(Eigen::Quaterniond(optimized_fk.linear())));
+      pos_acc.push_back(diff.translation().norm());
+      ori_acc.push_back(
+          Eigen::Quaterniond(true_fk.linear()).angularDistance(Eigen::Quaterniond(optimized_fk.linear())));
     }
 
-    std::cout << "Position Difference Mean: " << ba::mean(pos_acc) << std::endl;
-    std::cout << "Position Difference Std. Dev.: " << std::sqrt(ba::variance(pos_acc)) << std::endl;
+    double pos_mean, pos_stdev;
+    std::tie(pos_mean, pos_stdev) = computeStats(pos_acc);
 
-    std::cout << "Orientation Difference Mean: " << ba::mean(ori_acc) << std::endl;
-    std::cout << "Orientation difference Std. Dev.: " << std::sqrt(ba::variance(ori_acc)) << std::endl;
+    std::cout << "Position Difference Mean: " << pos_mean << std::endl;
+    std::cout << "Position Difference Std. Dev.: " << pos_stdev << std::endl;
 
-    EXPECT_LT(ba::mean(pos_acc), position_diff_mean_threshold);
-    EXPECT_LT(std::sqrt(ba::variance(pos_acc)), position_diff_std_dev_threshold);
-    EXPECT_LT(ba::mean(ori_acc), orientation_diff_mean_threshold);
-    EXPECT_LT(std::sqrt(ba::variance(ori_acc)), orientation_diff_std_dev_threshold);
+    double ori_mean, ori_stdev;
+    std::tie(ori_mean, ori_stdev) = computeStats(ori_acc);
+
+    std::cout << "Orientation Difference Mean: " << ori_mean << std::endl;
+    std::cout << "Orientation difference Std. Dev.: " << ori_stdev << std::endl;
+
+    EXPECT_LT(pos_mean, position_diff_mean_threshold);
+    EXPECT_LT(pos_stdev, position_diff_std_dev_threshold);
+    EXPECT_LT(ori_mean, orientation_diff_mean_threshold);
+    EXPECT_LT(ori_stdev, orientation_diff_std_dev_threshold);
   }
 
   double position_diff_mean_threshold;

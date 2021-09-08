@@ -1,9 +1,8 @@
 #include <ical_core/optimizations/pnp.h>
+#include <ical_core/optimizations/analysis/statistics.h>
 #include <ical_core_tests/observation_creator.h>
 #include <ical_core_tests/utilities.h>
 
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics.hpp>
 #include <gtest/gtest.h>
 
 using namespace industrial_calibration;
@@ -78,10 +77,10 @@ TEST_F(PnP2DTest, PerturbedInitialCondition)
   problem.correspondences =
       test::getCorrespondences(target_to_camera, Eigen::Isometry3d::Identity(), camera, target, true);
 
-  namespace ba = boost::accumulators;
-  ba::accumulator_set<double, ba::features<ba::stats<ba::tag::mean, ba::tag::variance>>> residual_acc;
-  ba::accumulator_set<double, ba::features<ba::stats<ba::tag::mean, ba::tag::variance>>> pos_acc;
-  ba::accumulator_set<double, ba::features<ba::stats<ba::tag::mean, ba::tag::variance>>> ori_acc;
+  std::vector<double> residual_acc, pos_acc, ori_acc;
+  residual_acc.reserve(N_RANDOM_SAMPLES);
+  pos_acc.reserve(N_RANDOM_SAMPLES);
+  ori_acc.reserve(N_RANDOM_SAMPLES);
 
   for (std::size_t i = 0; i < N_RANDOM_SAMPLES; ++i)
   {
@@ -96,15 +95,23 @@ TEST_F(PnP2DTest, PerturbedInitialCondition)
     Eigen::Isometry3d diff = result.camera_to_target * target_to_camera;
 
     // Accumulate the positional, rotational, and residual errors
-    pos_acc(diff.translation().norm());
-    ori_acc(Eigen::Quaterniond::Identity().angularDistance(Eigen::Quaterniond(diff.linear())));
-    residual_acc(result.final_cost_per_obs);
+    pos_acc.push_back(diff.translation().norm());
+    ori_acc.push_back(Eigen::Quaterniond::Identity().angularDistance(Eigen::Quaterniond(diff.linear())));
+    residual_acc.push_back(result.final_cost_per_obs);
   }
 
   // Expect 99% of the outputs (i.e. 3 standard deviations) to be within the corresponding threshold
-  EXPECT_LT(ba::mean(pos_acc) + 3 * std::sqrt(ba::variance(pos_acc)), 1.0e-7);
-  EXPECT_LT(ba::mean(ori_acc) + 3 * std::sqrt(ba::variance(ori_acc)), 1.0e-6);
-  EXPECT_LT(ba::mean(residual_acc) + 3 * std::sqrt(ba::variance(residual_acc)), 1.0e-10);
+  double pos_mean, pos_stdev;
+  std::tie(pos_mean, pos_stdev) = computeStats(pos_acc);
+  EXPECT_LT(pos_mean + 3 * pos_stdev, 1.0e-7);
+
+  double ori_mean, ori_stdev;
+  std::tie(ori_mean, ori_stdev) = computeStats(ori_acc);
+  EXPECT_LT(ori_mean + 3 * ori_stdev, 1.0e-6);
+
+  double residual_mean, residual_stdev;
+  std::tie(residual_mean, residual_stdev) = computeStats(residual_acc);
+  EXPECT_LT(residual_mean + 3 * residual_stdev, 1.0e-10);
 }
 
 TEST_F(PnP2DTest, BadIntrinsicParameters)
@@ -175,10 +182,10 @@ TEST_F(PnP3DTest, PerturbedInitialCondition)
   PnPProblem3D problem;
   problem.correspondences = test::getCorrespondences(target_to_camera, Eigen::Isometry3d::Identity(), target);
 
-  namespace ba = boost::accumulators;
-  ba::accumulator_set<double, ba::features<ba::stats<ba::tag::mean, ba::tag::variance>>> residual_acc;
-  ba::accumulator_set<double, ba::features<ba::stats<ba::tag::mean, ba::tag::variance>>> pos_acc;
-  ba::accumulator_set<double, ba::features<ba::stats<ba::tag::mean, ba::tag::variance>>> ori_acc;
+  std::vector<double> residual_acc, pos_acc, ori_acc;
+  residual_acc.reserve(N_RANDOM_SAMPLES);
+  pos_acc.reserve(N_RANDOM_SAMPLES);
+  ori_acc.reserve(N_RANDOM_SAMPLES);
 
   for (std::size_t i = 0; i < N_RANDOM_SAMPLES; ++i)
   {
@@ -192,15 +199,23 @@ TEST_F(PnP3DTest, PerturbedInitialCondition)
     Eigen::Isometry3d diff = result.camera_to_target * target_to_camera;
 
     // Accumulate the positional, rotational, and residual errors
-    pos_acc(diff.translation().norm());
-    ori_acc(Eigen::Quaterniond::Identity().angularDistance(Eigen::Quaterniond(diff.linear())));
-    residual_acc(result.final_cost_per_obs);
+    pos_acc.push_back(diff.translation().norm());
+    ori_acc.push_back(Eigen::Quaterniond::Identity().angularDistance(Eigen::Quaterniond(diff.linear())));
+    residual_acc.push_back(result.final_cost_per_obs);
   }
 
   // Expect 99% of the outputs (i.e. 3 standard deviations) to be within the corresponding threshold
-  EXPECT_LT(ba::mean(pos_acc) + 3 * std::sqrt(ba::variance(pos_acc)), 1.0e-7);
-  EXPECT_LT(ba::mean(ori_acc) + 3 * std::sqrt(ba::variance(ori_acc)), 1.0e-6);
-  EXPECT_LT(ba::mean(residual_acc) + 3 * std::sqrt(ba::variance(residual_acc)), 1.0e-10);
+  double pos_mean, pos_stdev;
+  std::tie(pos_mean, pos_stdev) = computeStats(pos_acc);
+  EXPECT_LT(pos_mean + 3 * pos_stdev, 1.0e-7);
+
+  double ori_mean, ori_stdev;
+  std::tie(ori_mean, ori_stdev) = computeStats(ori_acc);
+  EXPECT_LT(ori_mean + 3 * ori_stdev, 1.0e-6);
+
+  double residual_mean, residual_stdev;
+  std::tie(residual_mean, residual_stdev) = computeStats(residual_acc);
+  EXPECT_LT(residual_mean + 3 * residual_stdev, 1.0e-10);
 }
 
 int main(int argc, char** argv)

@@ -1,5 +1,6 @@
 ﻿#include <ical_core/optimizations/extrinsic_hand_eye.h>
 #include <ical_core/optimizations/analysis/homography_analysis.h>
+#include <ical_core/optimizations/analysis/statistics.h>
 #include <ical_core/optimizations/pnp.h>
 #include <ical_core/serialization/problems.h>
 #include <ical_core/target_finders/target_finder_plugin.h>
@@ -7,8 +8,6 @@
 // Utilities
 #include "utils.h"
 
-#include <boost/accumulators/statistics.hpp>
-#include <boost/accumulators/accumulators.hpp>
 #include <filesystem>
 #include <iostream>
 #include <memory>
@@ -84,9 +83,9 @@ PnPComparisonStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& problem, co
 {
   // Create accumulators to more easily calculate the mean and standard deviation of the position and orientation
   // differences
-  namespace ba = boost::accumulators;
-  ba::accumulator_set<double, ba::stats<ba::tag::mean, ba::tag::variance>> pos_diff_acc;
-  ba::accumulator_set<double, ba::stats<ba::tag::mean, ba::tag::variance>> ori_diff_acc;
+  std::vector<double> pos_diff_acc, ori_diff_acc;
+  pos_diff_acc.reserve(images.size());
+  ori_diff_acc.reserve(images.size());
 
   // Iterate over all of the images in which an observation of the target was made
   for (std::size_t i = 0; i < images.size(); ++i)
@@ -110,16 +109,14 @@ PnPComparisonStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& problem, co
     Eigen::Isometry3d diff = camera_to_target.inverse() * camera_to_target_pnp;
 
     // Accumulate the differences
-    pos_diff_acc(diff.translation().norm());
-    ori_diff_acc(Eigen::Quaterniond(camera_to_target.linear())
-                     .angularDistance(Eigen::Quaterniond(camera_to_target_pnp.linear())));
+    pos_diff_acc.push_back(diff.translation().norm());
+    ori_diff_acc.push_back(Eigen::Quaterniond(camera_to_target.linear())
+                               .angularDistance(Eigen::Quaterniond(camera_to_target_pnp.linear())));
   }
 
   PnPComparisonStats stats;
-  stats.pos_diff_mean = ba::mean(pos_diff_acc);
-  stats.pos_diff_stdev = std::sqrt(ba::variance(pos_diff_acc));
-  stats.ori_diff_mean = ba::mean(ori_diff_acc);
-  stats.ori_diff_stdev = std::sqrt(ba::variance(ori_diff_acc));
+  std::tie(stats.pos_diff_mean, stats.pos_diff_stdev) = computeStats(pos_diff_acc);
+  std::tie(stats.ori_diff_mean, stats.ori_diff_stdev) = computeStats(ori_diff_acc);
 
   return stats;
 }

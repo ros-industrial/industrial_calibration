@@ -1,9 +1,7 @@
 #include <ical_core/optimizations/analysis/camera_intrinsic_calibration_analysis.h>
+#include <ical_core/optimizations/analysis/statistics.h>
 #include <ical_core/optimizations/pnp.h>
 #include <ical_core/exceptions.h>
-
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics.hpp>
 
 namespace industrial_calibration
 {
@@ -81,9 +79,9 @@ IntrinsicCalibrationAccuracyResult measureIntrinsicCalibrationAccuracy(
   }
 
   // Create accumulators for mean and variance
-  namespace ba = boost::accumulators;
-  ba::accumulator_set<double, ba::features<ba::stats<ba::tag::mean>, ba::stats<ba::tag::variance>>> pos_acc;
-  ba::accumulator_set<double, ba::features<ba::stats<ba::tag::mean>, ba::stats<ba::tag::variance>>> ang_acc;
+  std::vector<double> pos_acc, ang_acc;
+  pos_acc.reserve(observations.size());
+  ang_acc.reserve(observations.size());
 
   // Accumulate the position vector of the transformation
   for (const auto& obs : observations)
@@ -95,8 +93,8 @@ IntrinsicCalibrationAccuracyResult measureIntrinsicCalibrationAccuracy(
 
     VirtualCorrespondenceResult res =
         measureVirtualTargetDiff(obs.correspondence_set, intr, camera_to_target, pnp_sq_error_threshold);
-    pos_acc(res.positional_error);
-    ang_acc(res.angular_error);
+    pos_acc.push_back(res.positional_error);
+    ang_acc.push_back(res.angular_error);
   }
 
   // Calculate the mean and variance of the measurements
@@ -104,12 +102,8 @@ IntrinsicCalibrationAccuracyResult measureIntrinsicCalibrationAccuracy(
   // In practice the mean represents bias from the ideal zero state and the variance is the amount of change around the
   // mean
   IntrinsicCalibrationAccuracyResult res;
-  // Positional
-  res.pos_error.first = ba::mean(pos_acc);
-  res.pos_error.second = std::sqrt(ba::variance(pos_acc));
-  // Angular
-  res.ang_error.first = ba::mean(ang_acc);
-  res.ang_error.second = std::sqrt(ba::variance(ang_acc));
+  std::tie(res.pos_error.first, res.pos_error.second) = computeStats(pos_acc);
+  std::tie(res.ang_error.first, res.ang_error.second) = computeStats(ang_acc);
 
   return res;
 }

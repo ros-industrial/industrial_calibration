@@ -1,9 +1,8 @@
 #include <ical_core/exceptions.h>
+#include <ical_core/optimizations/analysis/statistics.h>
 #include <ical_core/optimizations/dh_chain_kinematic_calibration.h>
 #include <ical_core/serialization/eigen.h>
 
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics.hpp>
 #include <filesystem>
 #include <random>
 #include <yaml-cpp/yaml.h>
@@ -174,9 +173,9 @@ Stats compareToMeasurements(const DHChain& initial_camera_chain, const DHChain& 
   DHChain camera_chain(initial_camera_chain, result.camera_chain_dh_offsets);
   DHChain target_chain(initial_target_chain, result.target_chain_dh_offsets);
 
-  namespace ba = boost::accumulators;
-  ba::accumulator_set<double, ba::stats<ba::tag::mean, ba::tag::variance>> pos_acc;
-  ba::accumulator_set<double, ba::stats<ba::tag::mean, ba::tag::variance>> ori_acc;
+  std::vector<double> pos_acc, ori_acc;
+  pos_acc.reserve(measurements.size());
+  ori_acc.reserve(measurements.size());
 
   for (const KinematicMeasurement& m : measurements)
   {
@@ -194,16 +193,14 @@ Stats compareToMeasurements(const DHChain& initial_camera_chain, const DHChain& 
 
     // Compare
     Eigen::Isometry3d diff = camera_to_target.inverse() * m.camera_to_target;
-    pos_acc(diff.translation().norm());
-    ori_acc(
+    pos_acc.push_back(diff.translation().norm());
+    ori_acc.push_back(
         Eigen::Quaterniond(camera_to_target.linear()).angularDistance(Eigen::Quaterniond(m.camera_to_target.linear())));
   }
 
   Stats stats;
-  stats.pos_mean = ba::mean(pos_acc);
-  stats.pos_stdev = std::sqrt(ba::variance(pos_acc));
-  stats.rot_mean = ba::mean(ori_acc);
-  stats.rot_stdev = std::sqrt(ba::variance(ori_acc));
+  std::tie(stats.pos_mean, stats.pos_stdev) = computeStats(pos_acc);
+  std::tie(stats.rot_mean, stats.rot_stdev) = computeStats(ori_acc);
 
   return stats;
 }
