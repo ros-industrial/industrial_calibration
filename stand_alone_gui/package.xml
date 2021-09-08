@@ -50,17 +50,17 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>industrial_extrinsic_cal</build_depend>
-  <build_depend>qt_build</build_depend>
+  <build_depend>qtbase5-dev</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rviz</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_export_depend>industrial_extrinsic_cal</build_export_depend>
-  <build_export_depend>qt_build</build_export_depend>
+  <build_export_depend>qtbase5-dev</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rviz</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <exec_depend>industrial_extrinsic_cal</exec_depend>
-  <exec_depend>qt_build</exec_depend>
+  <exec_depend>qtbase5-dev</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rviz</exec_depend>
   <exec_depend>std_msgs</exec_depend>
