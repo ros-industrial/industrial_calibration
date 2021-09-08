@@ -4,7 +4,7 @@
 #include <ical_core/target_finders/charuco_grid_target_finder.h>
 #include <ical_core/target_finders/modified_circle_grid_target_finder.h>
 
-#include <boost/core/demangle.hpp>
+#include <cxxabi.h>
 #include <iostream>
 #include <memory>
 #include <yaml-cpp/yaml.h>
@@ -21,13 +21,15 @@ static T getMember(const YAML::Node& n, const std::string& key)
   }
   catch (const YAML::BadConversion&)
   {
-    throw BadFileException("Failed to convert parameter '" + key + "' to type '" +
-                           boost::core::demangle(typeid(T).name()) + "'");
+    int status;
+    std::string name(abi::__cxa_demangle(typeid(T).name(), 0, 0, &status));
+    throw BadFileException("Failed to convert parameter '" + key + "' to type '" + name + "'");
   }
   catch (const YAML::Exception&)
   {
-    throw BadFileException("Failed to find '" + key + "' parameter of type '" +
-                           boost::core::demangle(typeid(T).name()) + "'");
+    int status;
+    std::string name(abi::__cxa_demangle(typeid(T).name(), 0, 0, &status));
+    throw BadFileException("Failed to find '" + key + "' parameter of type '" + name + "'");
   }
 }
 

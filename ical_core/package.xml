@@ -14,7 +14,6 @@
   <build_depend>ros_industrial_cmake_boilerplate</build_depend>
   <depend>libceres-dev</depend>
   <depend>libopencv-dev</depend>
-  <depend>boost</depend>
   <depend>eigen</depend>
   <depend>yaml-cpp</depend>
 
