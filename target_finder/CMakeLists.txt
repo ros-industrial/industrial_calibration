@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5.1)
 project(target_finder)
-add_compile_options(-std=c++11)
+#add_compile_options(-std=c++11)
 
+find_package(OpenCV REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   industrial_extrinsic_cal
@@ -91,7 +92,7 @@ target_link_libraries(dual_call_service ${catkin_LIBRARIES})
 target_link_libraries(target_locator_srv ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(stereo_locator_srv ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(stereo_pose_stats ${catkin_LIBRARIES} ${CERES_LIBRARIES})
-target_link_libraries(target_tracker ${catkin_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(target_tracker ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${OPENCV_LIBRARIES})
 
 install(
   TARGETS
