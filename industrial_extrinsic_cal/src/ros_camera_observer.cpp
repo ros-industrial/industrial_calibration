@@ -88,17 +88,17 @@ void ROSCameraObserver::stopTargetTrack()
 void ROSCameraObserver::imageCB(const sensor_msgs::Image& image)
 {
   sensor_msgs::Image new_image = image;
-  if(image.encoding == "32FC1")
-    {
-      cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(image);
-      cv::Mat tmp = cv::Mat(cv_ptr->image.size(), CV_8UC1);
-      cv::convertScaleAbs(cv_ptr->image, tmp, 1, 0.0);
-      cv_bridge::CvImagePtr cv_ptr2(new cv_bridge::CvImage());
-      cv_ptr2->encoding = "mono8";
-      cv_ptr2->image = tmp.clone();
-      cv_ptr2->header = cv_ptr->header;
-      new_image = *(cv_ptr2->toImageMsg());
-    }
+  if (image.encoding == "32FC1")
+  {
+    cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(image);
+    cv::Mat tmp = cv::Mat(cv_ptr->image.size(), CV_8UC1);
+    cv::convertScaleAbs(cv_ptr->image, tmp, 1, 0.0);
+    cv_bridge::CvImagePtr cv_ptr2(new cv_bridge::CvImage());
+    cv_ptr2->encoding = "mono8";
+    cv_ptr2->image = tmp.clone();
+    cv_ptr2->header = cv_ptr->header;
+    new_image = *(cv_ptr2->toImageMsg());
+  }
   cv_bridge::CvImagePtr bridge = cv_bridge::toCvCopy(new_image, new_image.encoding);
   debug_pub_.publish(bridge->toImageMsg());
   //  setCurrentImage(bridge->image);
@@ -428,8 +428,7 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
           large_point.y = centers[start_last_row].y;
           if (usual_ordering)
           {  // right side up, no rotation, order is natural, starting from upper left, reads like book
-            for (int i = 0; i < (int)centers.size(); i++)
-              observation_pts_.push_back(centers[i]);
+            for (int i = 0; i < (int)centers.size(); i++) observation_pts_.push_back(centers[i]);
           }
           else
           {  // unusual ordering 99 89 87 86...9 then 98 88 78... 8
