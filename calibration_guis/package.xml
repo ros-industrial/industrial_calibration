@@ -13,7 +13,7 @@
   <depend>pluginlib</depend>
   <depend>rviz</depend>
   <depend>roscpp</depend>
-  <depend>qt_build</depend>
+  <depend>qtbase5-dev</depend>
   <depend>std_msgs</depend>
   <depend>industrial_extrinsic_cal</depend>
 

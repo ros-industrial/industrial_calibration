@@ -1,0 +1,16 @@
+# List of images relative to a data directory
+# In this example case all the images are the same to produce a zero-noise result
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
+- image: images/0.png
