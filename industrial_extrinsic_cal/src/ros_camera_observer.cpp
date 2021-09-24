@@ -19,6 +19,8 @@
 #include <industrial_extrinsic_cal/ros_camera_observer.h>
 #include <industrial_extrinsic_cal/circle_detector.hpp>
 #include <image_transport/image_transport.h>
+#include <boost/thread/locks.hpp>
+
 #define MODIFIED_CIRCLE_SIZE_RATIO (0.10)
 using cv::CircleDetector;
 namespace industrial_extrinsic_cal
@@ -32,7 +34,6 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
   , load_observation_images_(false)
   , normalize_calibration_image_(false)
   , image_number_(0)
-
 {
   camera_name_ = camera_name;
   new_image_collected_ = false;
@@ -71,6 +72,42 @@ ROSCameraObserver::ROSCameraObserver(const std::string& camera_topic, const std:
 
   f = boost::bind(&ROSCameraObserver::dynReConfCallBack, this, _1, _2);
   server_->setCallback(f);
+}
+
+void ROSCameraObserver::startTargetTrack()
+{
+  // subscribe directly to the image topic and observe targets in every image
+  image_sub_ = nh_.subscribe(image_topic_, 5, &ROSCameraObserver::imageCB, this);
+}
+
+void ROSCameraObserver::stopTargetTrack()
+{
+  image_sub_.shutdown();
+}
+
+void ROSCameraObserver::imageCB(const sensor_msgs::Image& image)
+{
+  sensor_msgs::Image new_image = image;
+  if (image.encoding == "32FC1")
+  {
+    cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(image);
+    cv::Mat tmp = cv::Mat(cv_ptr->image.size(), CV_8UC1);
+    cv::convertScaleAbs(cv_ptr->image, tmp, 1, 0.0);
+    cv_bridge::CvImagePtr cv_ptr2(new cv_bridge::CvImage());
+    cv_ptr2->encoding = "mono8";
+    cv_ptr2->image = tmp.clone();
+    cv_ptr2->header = cv_ptr->header;
+    new_image = *(cv_ptr2->toImageMsg());
+  }
+  cv_bridge::CvImagePtr bridge = cv_bridge::toCvCopy(new_image, new_image.encoding);
+  debug_pub_.publish(bridge->toImageMsg());
+  //  setCurrentImage(bridge->image);
+
+  input_bridge_ = cv_bridge::toCvCopy(new_image, "mono8");
+  output_bridge_ = cv_bridge::toCvCopy(new_image, "bgr8");
+  last_raw_image_ = output_bridge_->image.clone();
+  out_bridge_ = cv_bridge::toCvCopy(new_image, "mono8");
+  new_image_collected_ = true;
 }
 
 bool ROSCameraObserver::addTarget(boost::shared_ptr<Target> targ, Roi& roi, Cost_function cost_type)
@@ -136,24 +173,28 @@ void ROSCameraObserver::setCurrentImage(const cv::Mat& image)
   last_raw_image_ = image.clone();
   std::string encoding = "mono8";
   std_msgs::Header header;
-  if (!input_bridge_)
   {
-    input_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header, encoding, image));
-  }
-  encoding = "bgr8";
-  if (!output_bridge_)
-  {
-    output_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header, encoding, image));
-  }
-  encoding = "mono8";
-  if (!out_bridge_)
-  {
-    out_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header, encoding, image));
-  }
-  output_bridge_->image = image.clone();
-  input_bridge_->image = image.clone();
-  out_bridge_->image = image.clone();
-  new_image_collected_ = true;
+    boost::lock_guard<boost::mutex> lock(image_lock_);
+
+    if (!input_bridge_)
+    {
+      input_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header, encoding, image));
+    }
+    encoding = "bgr8";
+    if (!output_bridge_)
+    {
+      output_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header, encoding, image));
+    }
+    encoding = "mono8";
+    if (!out_bridge_)
+    {
+      out_bridge_ = cv_bridge::CvImagePtr(new cv_bridge::CvImage(header, encoding, image));
+    }
+    output_bridge_->image = image.clone();
+    input_bridge_->image = image.clone();
+    out_bridge_->image = image.clone();
+    new_image_collected_ = true;
+  }  // end of image_lock_ mutex
 }
 
 int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
@@ -161,26 +202,27 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
   bool successful_find = false;
   bool flipped_successful_find = false;
 
-  if (input_bridge_->image.cols < input_roi_.width || input_bridge_->image.rows < input_roi_.height)
-  {
-    ROS_ERROR("ROI too big for image size ( image = %d by %d roi= %d %d )", input_bridge_->image.cols,
-              input_bridge_->image.rows, input_roi_.width, input_roi_.height);
-    return 0;
-  }
-  ROS_DEBUG("roi size = %d %d", input_roi_.height, input_roi_.width);
-  ROS_DEBUG("image size = %d %d", input_bridge_->image.rows, input_bridge_->image.cols);
-  image_roi_ = input_bridge_->image(input_roi_);
+  {  // mutex protected area
+    boost::lock_guard<boost::mutex> lock(image_lock_);
+    if (input_bridge_->image.cols < input_roi_.width || input_bridge_->image.rows < input_roi_.height)
+    {
+      ROS_ERROR("ROI too big for image size ( image = %d by %d roi= %d %d )", input_bridge_->image.cols,
+                input_bridge_->image.rows, input_roi_.width, input_roi_.height);
+      return 0;
+    }
+    ROS_DEBUG("roi size = %d %d", input_roi_.height, input_roi_.width);
+    ROS_DEBUG("image size = %d %d", input_bridge_->image.rows, input_bridge_->image.cols);
+    image_roi_ = input_bridge_->image(input_roi_);
 
-  // Do a min/max normalization for maximum contrast
-  // input_bridge_ is known to be a mono8 image (max = 255)
-  if (normalize_calibration_image_)
-  {
-    cv::Mat norm_img = image_roi_.clone();
-    cv::normalize(image_roi_, norm_img, 0, 255, cv::NORM_MINMAX);
-    image_roi_ = norm_img;
-  }
-
-  ROS_DEBUG("image_roi_ size = %d %d", image_roi_.rows, image_roi_.cols);
+    // Do a min/max normalization for maximum contrast
+    // input_bridge_ is known to be a mono8 image (max = 255)
+    if (normalize_calibration_image_)
+    {
+      cv::Mat norm_img = image_roi_.clone();
+      cv::normalize(image_roi_, norm_img, 0, 255, cv::NORM_MINMAX);
+      image_roi_ = norm_img;
+    }
+  }  // end mutex protected area
   observation_pts_.clear();
   std::vector<cv::KeyPoint> key_points;
   ROS_DEBUG("Pattern type %d, rows %d, cols %d", pattern_, pattern_rows_, pattern_cols_);
@@ -386,8 +428,7 @@ int ROSCameraObserver::getObservations(CameraObservations& cam_obs)
           large_point.y = centers[start_last_row].y;
           if (usual_ordering)
           {  // right side up, no rotation, order is natural, starting from upper left, reads like book
-            for (int i = 0; i < (int)centers.size(); i++)
-              observation_pts_.push_back(centers[i]);
+            for (int i = 0; i < (int)centers.size(); i++) observation_pts_.push_back(centers[i]);
           }
           else
           {  // unusual ordering 99 89 87 86...9 then 98 88 78... 8
