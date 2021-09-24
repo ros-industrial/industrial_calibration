@@ -92,7 +92,7 @@ target_link_libraries(dual_call_service ${catkin_LIBRARIES})
 target_link_libraries(target_locator_srv ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(stereo_locator_srv ${catkin_LIBRARIES} ${CERES_LIBRARIES})
 target_link_libraries(stereo_pose_stats ${catkin_LIBRARIES} ${CERES_LIBRARIES})
-target_link_libraries(target_tracker ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${OPENCV_LIBRARIES})
+target_link_libraries(target_tracker ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
 
 install(
   TARGETS
