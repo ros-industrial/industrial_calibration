@@ -1,7 +1,7 @@
 #pragma once
 
-#include <ical_core/serialization/problems.h>
-#include <ical_core/target_finders/utils/utils.h>
+#include <industrial_calibration/serialization/problems.h>
+#include <industrial_calibration/target_finders/utils/utils.h>
 
 #if __GNUC__ >= 8
 #include <filesystem>

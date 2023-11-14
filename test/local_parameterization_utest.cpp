@@ -1,5 +1,5 @@
-#include <ical_core/optimizations/utils/maximum_likelihood.h>
-#include <ical_core/optimizations/utils/local_parameterization.h>
+#include <industrial_calibration/optimizations/utils/maximum_likelihood.h>
+#include <industrial_calibration/optimizations/utils/local_parameterization.h>
 
 #include <ceres/problem.h>
 #include <ceres/dynamic_autodiff_cost_function.h>

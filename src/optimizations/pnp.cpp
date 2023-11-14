@@ -1,6 +1,6 @@
-#include <ical_core/optimizations/pnp.h>
-#include <ical_core/cost_functions/pnp.h>
-#include <ical_core/optimizations/utils/covariance_analysis.h>
+#include <industrial_calibration/optimizations/pnp.h>
+#include <industrial_calibration/cost_functions/pnp.h>
+#include <industrial_calibration/optimizations/utils/covariance_analysis.h>
 
 #include <ceres/ceres.h>
 

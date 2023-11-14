@@ -1,5 +1,5 @@
-#include <ical_core/optimizations/analysis/statistics.h>
-#include <ical_core/exceptions.h>
+#include <industrial_calibration/optimizations/analysis/statistics.h>
+#include <industrial_calibration/exceptions.h>
 
 #include <numeric>
 #include <Eigen/SVD>

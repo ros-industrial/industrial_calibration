@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include <ical_core/optimizations/analysis/camera_intrinsic_calibration_analysis.h>
-#include <ical_core_tests/utilities.h>
-#include <ical_core_tests/observation_creator.h>
+#include <industrial_calibration/optimizations/analysis/camera_intrinsic_calibration_analysis.h>
+#include <industrial_calibration_tests/utilities.h>
+#include <industrial_calibration_tests/observation_creator.h>
 #include <memory>
 
 using namespace industrial_calibration;

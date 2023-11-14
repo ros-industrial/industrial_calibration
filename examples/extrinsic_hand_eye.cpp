@@ -1,10 +1,10 @@
-﻿#include <ical_core/optimizations/extrinsic_hand_eye.h>
-#include <ical_core/optimizations/analysis/homography_analysis.h>
-#include <ical_core/optimizations/analysis/statistics.h>
-#include <ical_core/optimizations/pnp.h>
-#include <ical_core/serialization/problems.h>
-#include <ical_core/target_finders/target_finder_plugin.h>
-#include <ical_core/target_finders/utils/utils.h>
+﻿#include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
+#include <industrial_calibration/optimizations/analysis/homography_analysis.h>
+#include <industrial_calibration/optimizations/analysis/statistics.h>
+#include <industrial_calibration/optimizations/pnp.h>
+#include <industrial_calibration/serialization/problems.h>
+#include <industrial_calibration/target_finders/target_finder_plugin.h>
+#include <industrial_calibration/target_finders/utils/utils.h>
 // Utilities
 #include "utils.h"
 
@@ -104,7 +104,7 @@ PnPComparisonStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& problem, co
     Eigen::Isometry3d camera_to_target = opt_result.camera_mount_to_camera.inverse() * obs.to_camera_mount.inverse() *
                                          obs.to_target_mount * opt_result.target_mount_to_target;
 
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
     // Reproject the target points into the image using the results of the calibration
     reproject(camera_to_target, obs.correspondence_set, problem.intr, images[i]);
 #endif
@@ -152,7 +152,7 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const Params& params,
   problem.camera_mount_to_camera_guess = params.camera_mount_to_camera_guess;
 
   // Create a named OpenCV window for viewing the images
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
   cv::namedWindow(WINDOW, cv::WINDOW_NORMAL);
 #endif
 
@@ -186,7 +186,7 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const Params& params,
       problem.observations.push_back(obs);
       found_images.push_back(params.images[i]);
 
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
       // Show the points we detected
       TargetFeatures target_features = params.target_finder->findTargetFeatures(params.images[i]);
       cv::imshow(WINDOW, params.target_finder->drawTargetFeatures(params.images[i], target_features));
@@ -196,7 +196,7 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const Params& params,
     catch (const std::runtime_error& ex)
     {
       std::cerr << "Image " << i << ": '" << ex.what() << "'" << std::endl;
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
       cv::imshow(WINDOW, params.images[i]);
       cv::waitKey();
 #endif
@@ -310,7 +310,7 @@ Observation2D3D createTargetOnWristObservation(const Eigen::Isometry3d& pose,
   return obs;
 };
 
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
 
 int main(int argc, char** argv)
 {

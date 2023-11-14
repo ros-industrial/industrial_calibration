@@ -1,6 +1,6 @@
-#include <ical_core/target_finders/modified_circle_grid_target_finder.h>
-#include <ical_core/target_finders/utils/circle_detector.h>
-#include <ical_core/exceptions.h>
+#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
+#include <industrial_calibration/target_finders/utils/circle_detector.h>
+#include <industrial_calibration/exceptions.h>
 
 #include <opencv2/calib3d.hpp>
 #include <memory>

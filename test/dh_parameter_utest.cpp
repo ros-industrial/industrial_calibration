@@ -1,4 +1,4 @@
-#include <ical_core_tests/dh_chain_observation_creator.h>
+#include <industrial_calibration_tests/dh_chain_observation_creator.h>
 #include <random>
 #include <gtest/gtest.h>
 

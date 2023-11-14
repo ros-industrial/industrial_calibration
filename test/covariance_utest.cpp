@@ -1,6 +1,6 @@
-#include <ical_core/optimizations/utils/covariance_analysis.h>
-#include <ical_core_tests/circle_fit.h>
-#include <ical_core/exceptions.h>
+#include <industrial_calibration/optimizations/utils/covariance_analysis.h>
+#include <industrial_calibration_tests/circle_fit.h>
+#include <industrial_calibration/exceptions.h>
 
 #include <ceres/ceres.h>
 #include <cmath>

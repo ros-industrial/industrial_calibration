@@ -1,8 +1,8 @@
-#include <ical_core/target_finders/target_finder_plugin.h>
-#include <ical_core/exceptions.h>
-#include <ical_core/target_finders/aruco_grid_target_finder.h>
-#include <ical_core/target_finders/charuco_grid_target_finder.h>
-#include <ical_core/target_finders/modified_circle_grid_target_finder.h>
+#include <industrial_calibration/target_finders/target_finder_plugin.h>
+#include <industrial_calibration/exceptions.h>
+#include <industrial_calibration/target_finders/aruco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/charuco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
 
 #include <cxxabi.h>
 #include <iostream>

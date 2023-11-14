@@ -2,7 +2,7 @@
  * ArUco gridboard detector, following the same pattern as ModifiedCircleGridTargetFinder.
  * Author: Joseph Schornak
  */
-#include <ical_core/target_finders/aruco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/aruco_grid_target_finder.h>
 
 namespace
 {

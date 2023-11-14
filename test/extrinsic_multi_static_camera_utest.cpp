@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include <ical_core/optimizations/extrinsic_multi_static_camera.h>
-#include <ical_core/optimizations/utils/ceres_math_utilities.h>
-#include <ical_core_tests/utilities.h>
-#include <ical_core_tests/observation_creator.h>
+#include <industrial_calibration/optimizations/extrinsic_multi_static_camera.h>
+#include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
+#include <industrial_calibration_tests/utilities.h>
+#include <industrial_calibration_tests/observation_creator.h>
 
 using namespace industrial_calibration;
 

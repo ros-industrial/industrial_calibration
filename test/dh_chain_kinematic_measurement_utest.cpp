@@ -1,10 +1,10 @@
-#include <ical_core/optimizations/analysis/statistics.h>
-#include <ical_core/optimizations/dh_chain_kinematic_calibration.h>
-#include <ical_core/cost_functions/dh_chain_kinematic_calibration.h>
-#include <ical_core/optimizations/utils/local_parameterization.h>
-#include <ical_core_tests/dh_chain_observation_creator.h>
-#include <ical_core_tests/utilities.h>
-#include <ical_core_tests/observation_creator.h>
+#include <industrial_calibration/optimizations/analysis/statistics.h>
+#include <industrial_calibration/optimizations/dh_chain_kinematic_calibration.h>
+#include <industrial_calibration/cost_functions/dh_chain_kinematic_calibration.h>
+#include <industrial_calibration/optimizations/utils/local_parameterization.h>
+#include <industrial_calibration_tests/dh_chain_observation_creator.h>
+#include <industrial_calibration_tests/utilities.h>
+#include <industrial_calibration_tests/observation_creator.h>
 
 #include <gtest/gtest.h>
 

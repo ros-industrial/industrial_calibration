@@ -1,5 +1,5 @@
-#include <ical_core/target_finders/charuco_grid_target_finder.h>
-#include <ical_core/exceptions.h>
+#include <industrial_calibration/target_finders/charuco_grid_target_finder.h>
+#include <industrial_calibration/exceptions.h>
 
 namespace
 {

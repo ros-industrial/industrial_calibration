@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.5.1)
 # Extract package name and version from package.xml
 find_package(ros_industrial_cmake_boilerplate REQUIRED)
 extract_package_metadata(pkg)
-
 project(${pkg_extracted_name} VERSION ${pkg_extracted_version} LANGUAGES CXX)
 
 find_package(Eigen3 REQUIRED)
@@ -63,10 +62,10 @@ target_link_libraries(${PROJECT_NAME}
     opencv_imgcodecs)
 target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 17)
 target_clang_tidy(${PROJECT_NAME}
-  ENABLE ${ICAL_ENABLE_CLANG_TIDY}
-  WARNINGS_AS_ERRORS ${ICAL_ENABLE_TESTING}
+  ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY}
+  WARNINGS_AS_ERRORS ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING}
   CHECKS ${DEFAULT_CLANG_TIDY_CHECKS})
-target_code_coverage(${PROJECT_NAME} INTERFACE ALL ENABLE ${ICAL_ENABLE_TESTING})
+target_code_coverage(${PROJECT_NAME} INTERFACE ALL ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
 
 # Install the library
 install(
@@ -81,9 +80,9 @@ install(
 install(DIRECTORY include/ DESTINATION include/)
 
 # Unit tests
-if(${ICAL_ENABLE_TESTING})
+if(${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
   enable_testing()
-  add_run_tests_target(ENABLE ${ICAL_ENABLE_RUN_TESTING})
+  add_run_tests_target(ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_RUN_TESTING})
   add_subdirectory(test)
 endif()
 

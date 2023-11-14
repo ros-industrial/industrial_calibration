@@ -1,7 +1,7 @@
-#include <ical_core/optimizations/pnp.h>
-#include <ical_core/target_finders/target_finder_plugin.h>
-#include <ical_core/target_finders/utils/utils.h>
-#include <ical_core/serialization/types.h>
+#include <industrial_calibration/optimizations/pnp.h>
+#include <industrial_calibration/target_finders/target_finder_plugin.h>
+#include <industrial_calibration/target_finders/utils/utils.h>
+#include <industrial_calibration/serialization/types.h>
 // Utilities
 #include "utils.h"
 
@@ -98,7 +98,7 @@ std::tuple<PnPResult, Eigen::Isometry3d> run()
   // Find correspondences between the known target and the features in the image
   params.correspondences = target_finder->findCorrespondences(image);
 
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
   // Display the features
   cv::namedWindow(WINDOW, cv::WINDOW_NORMAL);
 
@@ -124,7 +124,7 @@ std::tuple<PnPResult, Eigen::Isometry3d> run()
   return std::make_tuple(pnp_result, camera_to_target_cv);
 }
 
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
 
 int main(int argc, char** argv)
 {

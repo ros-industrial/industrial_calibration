@@ -1,7 +1,7 @@
-#include <ical_core/serialization/problems.h>
-#include <ical_core_tests/utilities.h>
-#include <ical_core_tests/observation_creator.h>
-#include <ical_core/exceptions.h>
+#include <industrial_calibration/serialization/problems.h>
+#include <industrial_calibration_tests/utilities.h>
+#include <industrial_calibration_tests/observation_creator.h>
+#include <industrial_calibration/exceptions.h>
 
 #include <gtest/gtest.h>
 #include <fstream>

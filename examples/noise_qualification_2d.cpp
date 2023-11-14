@@ -1,7 +1,7 @@
-#include <ical_core/optimizations/analysis/noise_qualification.h>
-#include <ical_core/target_finders/target_finder_plugin.h>
-#include <ical_core/target_finders/utils/utils.h>
-#include <ical_core/serialization/types.h>
+#include <industrial_calibration/optimizations/analysis/noise_qualification.h>
+#include <industrial_calibration/target_finders/target_finder_plugin.h>
+#include <industrial_calibration/target_finders/utils/utils.h>
+#include <industrial_calibration/serialization/types.h>
 
 #if __GNUC__ >= 8
 #include <filesystem>
@@ -41,7 +41,7 @@ PnPNoiseStat run()
   // Load the data file which specifies the location of the images on which to perform the noise qualification
   YAML::Node root = YAML::LoadFile((data_path / "data.yaml").string());
 
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
   cv::namedWindow(WINDOW, cv::WINDOW_NORMAL);
 #endif
 
@@ -62,7 +62,7 @@ PnPNoiseStat run()
       if (target_features.empty()) throw std::runtime_error("Failed to find any target features");
       std::cout << "Found " << target_features.size() << " target features" << std::endl;
 
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
       // Show the points we detected
       cv::imshow(WINDOW, target_finder->drawTargetFeatures(image, target_features));
       cv::waitKey();
@@ -71,7 +71,7 @@ PnPNoiseStat run()
     catch (const std::runtime_error& ex)
     {
       std::cout << "Image " << i << ": '" << ex.what() << "'" << std::endl;
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
       cv::imshow(WINDOW, image);
       cv::waitKey();
 #endif
@@ -103,7 +103,7 @@ PnPNoiseStat run()
   return result;
 }
 
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
 
 int main(int argc, char** argv)
 {

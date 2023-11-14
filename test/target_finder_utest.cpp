@@ -1,10 +1,10 @@
-#include <ical_core/target_finders/target_finder.h>
+#include <industrial_calibration/target_finders/target_finder.h>
 // Implementations
-#include <ical_core/target_finders/modified_circle_grid_target_finder.h>
-#include <ical_core/target_finders/charuco_grid_target_finder.h>
-#include <ical_core/target_finders/aruco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
+#include <industrial_calibration/target_finders/charuco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/aruco_grid_target_finder.h>
 // Analysis
-#include <ical_core/optimizations/analysis/homography_analysis.h>
+#include <industrial_calibration/optimizations/analysis/homography_analysis.h>
 
 #include <numeric>
 #include <gtest/gtest.h>

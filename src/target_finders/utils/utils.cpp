@@ -1,6 +1,6 @@
-#include <ical_core/target_finders/utils/utils.h>
-#include <ical_core/exceptions.h>
-#include <ical_core/optimizations/utils/ceres_math_utilities.h>
+#include <industrial_calibration/target_finders/utils/utils.h>
+#include <industrial_calibration/exceptions.h>
+#include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>

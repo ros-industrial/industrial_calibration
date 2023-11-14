@@ -1,6 +1,6 @@
-#include <ical_core/optimizations/analysis/noise_qualification.h>
-#include <ical_core/optimizations/pnp.h>
-#include <ical_core/exceptions.h>
+#include <industrial_calibration/optimizations/analysis/noise_qualification.h>
+#include <industrial_calibration/optimizations/pnp.h>
+#include <industrial_calibration/exceptions.h>
 
 namespace industrial_calibration
 {

@@ -20,9 +20,9 @@ jobs:
              ADDITIONAL_DEBS: 'git clang-tidy',
              UPSTREAM_WORKSPACE: 'dependencies.rosinstall',
              VERBOSE_TESTS: true,
-             TARGET_CMAKE_ARGS: "-DICAL_ENABLE_TESTING=ON -DICAL_ENABLE_RUN_TESTING=OFF -DICAL_ENABLE_CLANG_TIDY=ON",
+             TARGET_CMAKE_ARGS: "-DINDUSTRIAL_CALIBRATION_ENABLE_TESTING=ON -DINDUSTRIAL_CALIBRATION_ENABLE_RUN_TESTING=OFF -DINDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY=ON",
              CTEST_OUTPUT_ON_FAILURE: true,
-             AFTER_SCRIPT: "cd $target_ws/build/ical_core && ctest -V"}
+             AFTER_SCRIPT: "cd $target_ws/build/industrial_calibration && ctest -V"}
           - {BADGE: bionic,
              OS_NAME: ubuntu,
              OS_CODE_NAME: bionic,
@@ -31,9 +31,9 @@ jobs:
              ADDITIONAL_DEBS: 'git clang-tidy',
              UPSTREAM_WORKSPACE: 'dependencies.rosinstall',
              VERBOSE_TESTS: true,
-             TARGET_CMAKE_ARGS: "-DICAL_ENABLE_TESTING=ON -DICAL_ENABLE_RUN_TESTING=OFF -DICAL_ENABLE_CLANG_TIDY=ON",
+             TARGET_CMAKE_ARGS: "-DINDUSTRIAL_CALIBRATION_ENABLE_TESTING=ON -DINDUSTRIAL_CALIBRATION_ENABLE_RUN_TESTING=OFF -DINDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY=ON",
              CTEST_OUTPUT_ON_FAILURE: true,
-             AFTER_SCRIPT: "cd $target_ws/build/ical_core && ctest -V"}
+             AFTER_SCRIPT: "cd $target_ws/build/industrial_calibration && ctest -V"}
           - {BADGE: clang-format,
              OS_NAME: ubuntu,
              OS_CODE_NAME: focal,

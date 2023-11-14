@@ -1,5 +1,5 @@
-#include <ical_core_tests/pose_generator.h>
-#include <ical_core_tests/utilities.h>
+#include <industrial_calibration_tests/pose_generator.h>
+#include <industrial_calibration_tests/utilities.h>
 
 namespace industrial_calibration
 {

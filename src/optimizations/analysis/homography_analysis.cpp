@@ -1,6 +1,6 @@
-#include <ical_core/optimizations/analysis/homography_analysis.h>
-#include <ical_core/types.h>
-#include <ical_core/exceptions.h>
+#include <industrial_calibration/optimizations/analysis/homography_analysis.h>
+#include <industrial_calibration/types.h>
+#include <industrial_calibration/exceptions.h>
 
 #include <Eigen/Dense>
 

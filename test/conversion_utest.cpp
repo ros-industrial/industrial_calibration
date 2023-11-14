@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <ical_core/optimizations/utils/ceres_math_utilities.h>
+#include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
 
 using namespace industrial_calibration;
 

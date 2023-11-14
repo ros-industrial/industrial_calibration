@@ -23,32 +23,32 @@ target_compile_definitions(${PROJECT_NAME}_pnp PRIVATE EXAMPLE_DATA_DIR="${CMAKE
 target_cxx_version(${PROJECT_NAME}_pnp PUBLIC VERSION 17)
 
 # Build unit tests from the examples
-if(${ICAL_ENABLE_TESTING})
+if(${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
   find_gtest()
 
   # Hand-eye calibration
   add_gtest_discover_tests(${PROJECT_NAME}_extrinsic_hand_eye)
   add_dependencies(run_tests ${PROJECT_NAME}_extrinsic_hand_eye)
   target_link_libraries(${PROJECT_NAME}_extrinsic_hand_eye PRIVATE GTest::GTest GTest::Main)
-  target_compile_definitions(${PROJECT_NAME}_extrinsic_hand_eye PUBLIC ICAL_ENABLE_TESTING)
+  target_compile_definitions(${PROJECT_NAME}_extrinsic_hand_eye PUBLIC INDUSTRIAL_CALIBRATION_ENABLE_TESTING)
 
   # Kinematic calibration
   add_gtest_discover_tests(${PROJECT_NAME}_kinematic_calibration)
   add_dependencies(run_tests ${PROJECT_NAME}_kinematic_calibration)
   target_link_libraries(${PROJECT_NAME}_kinematic_calibration PRIVATE GTest::GTest GTest::Main)
-  target_compile_definitions(${PROJECT_NAME}_kinematic_calibration PUBLIC ICAL_ENABLE_TESTING)
+  target_compile_definitions(${PROJECT_NAME}_kinematic_calibration PUBLIC INDUSTRIAL_CALIBRATION_ENABLE_TESTING)
 
   # Noise qualification
   add_gtest_discover_tests(${PROJECT_NAME}_noise_qualification_2d)
   add_dependencies(run_tests ${PROJECT_NAME}_noise_qualification_2d)
   target_link_libraries(${PROJECT_NAME}_noise_qualification_2d PRIVATE GTest::GTest GTest::Main)
-  target_compile_definitions(${PROJECT_NAME}_noise_qualification_2d PUBLIC ICAL_ENABLE_TESTING)
+  target_compile_definitions(${PROJECT_NAME}_noise_qualification_2d PUBLIC INDUSTRIAL_CALIBRATION_ENABLE_TESTING)
 
   # PnP
   add_gtest_discover_tests(${PROJECT_NAME}_pnp)
   add_dependencies(run_tests ${PROJECT_NAME}_pnp)
   target_link_libraries(${PROJECT_NAME}_pnp PRIVATE GTest::GTest GTest::Main)
-  target_compile_definitions(${PROJECT_NAME}_pnp PUBLIC ICAL_ENABLE_TESTING)
+  target_compile_definitions(${PROJECT_NAME}_pnp PUBLIC INDUSTRIAL_CALIBRATION_ENABLE_TESTING)
 endif()
 
 # Install the example executables so they can be run independently later if needed

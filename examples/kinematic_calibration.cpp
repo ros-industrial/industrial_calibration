@@ -1,7 +1,7 @@
-#include <ical_core/exceptions.h>
-#include <ical_core/optimizations/analysis/statistics.h>
-#include <ical_core/optimizations/dh_chain_kinematic_calibration.h>
-#include <ical_core/serialization/eigen.h>
+#include <industrial_calibration/exceptions.h>
+#include <industrial_calibration/optimizations/analysis/statistics.h>
+#include <industrial_calibration/optimizations/dh_chain_kinematic_calibration.h>
+#include <industrial_calibration/serialization/eigen.h>
 
 #if __GNUC__ >= 8
 #include <filesystem>
@@ -297,7 +297,7 @@ std::tuple<KinematicCalibrationResult, Stats, Stats> run()
   return std::make_tuple(result_opt_dh, stats_opt_dh, stats_static_dh);
 }
 
-#ifndef ICAL_ENABLE_TESTING
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
 
 int main(int argc, char** argv)
 {
