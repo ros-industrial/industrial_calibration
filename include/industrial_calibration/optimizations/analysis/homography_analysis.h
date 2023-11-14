@@ -41,7 +41,9 @@ struct GridCorrespondenceSampler : CorrespondenceSampler
  */
 struct RandomCorrespondenceSampler : CorrespondenceSampler
 {
-  RandomCorrespondenceSampler(const std::size_t n_correspondences_, const std::size_t n_samples_);
+  RandomCorrespondenceSampler(const std::size_t n_correspondences_,
+                              const std::size_t n_samples_,
+                              const unsigned seed_ = std::random_device{}());
 
   virtual std::vector<std::size_t> getSampleCorrespondenceIndices() const final override;
 
@@ -51,6 +53,8 @@ struct RandomCorrespondenceSampler : CorrespondenceSampler
    * Typically a lower number of samples (i.e. 4) does not produce an accurate homography transform; one quarter to half
    * the total number of correspondences is a good rule of thumb */
   const std::size_t n_samples;
+  /** @brief Random seed */
+  const unsigned seed;
 };
 
 /**
