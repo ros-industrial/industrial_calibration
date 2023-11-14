@@ -41,8 +41,7 @@ struct GridCorrespondenceSampler : CorrespondenceSampler
  */
 struct RandomCorrespondenceSampler : CorrespondenceSampler
 {
-  RandomCorrespondenceSampler(const std::size_t n_correspondences_,
-                              const std::size_t n_samples_,
+  RandomCorrespondenceSampler(const std::size_t n_correspondences_, const std::size_t n_samples_,
                               const unsigned seed_ = std::random_device{}());
 
   virtual std::vector<std::size_t> getSampleCorrespondenceIndices() const final override;

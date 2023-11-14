@@ -64,16 +64,17 @@ TEST(DHChain, FKWithJointSubsetTest)
 TEST(DHChain, generateObservations3D)
 {
   const std::size_t n = 100;
-  auto observations = test::createObservations(test::createABBIRB2400(), DHChain(std::vector<DHTransform>{}), Eigen::Isometry3d::Identity(),
+  auto observations = test::createObservations(test::createABBIRB2400(), DHChain(std::vector<DHTransform>{}),
                                                Eigen::Isometry3d::Identity(), Eigen::Isometry3d::Identity(),
-                                               test::Target(5, 5, 0.025), n);
+                                               Eigen::Isometry3d::Identity(), test::Target(5, 5, 0.025), n);
   EXPECT_EQ(observations.size(), n);
 }
 
 class DHChainObservationGeneration : public ::testing::Test
 {
 public:
-  DHChainObservationGeneration() : camera_chain(test::createABBIRB2400()), target_chain(std::vector<DHTransform>{}), target(7, 5, 0.025)
+  DHChainObservationGeneration()
+    : camera_chain(test::createABBIRB2400()), target_chain(std::vector<DHTransform>{}), target(7, 5, 0.025)
   {
     // Create a transform to the tool0 of the robot at it's all-zero position
     camera_base_to_target_base = camera_chain.getFK<double>(Eigen::VectorXd::Zero(camera_chain.dof()));

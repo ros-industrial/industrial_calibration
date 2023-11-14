@@ -177,7 +177,8 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const Params& params,
 
       // Check that a homography matrix can accurately reproject the observed points onto the expected target points
       // within a defined threshold
-      RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(), obs.correspondence_set.size() / 3, RANDOM_SEED);
+      RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(), obs.correspondence_set.size() / 3,
+                                                 RANDOM_SEED);
       Eigen::VectorXd homography_error = calculateHomographyError(obs.correspondence_set, random_sampler);
       if (homography_error.array().mean() > params.homography_threshold)
         throw std::runtime_error("Homography error exceeds threshold (" +

@@ -15,7 +15,7 @@ struct as_if;
 
 template <typename T>
 struct convert;
-}
+}  // namespace YAML
 
 namespace industrial_calibration
 {

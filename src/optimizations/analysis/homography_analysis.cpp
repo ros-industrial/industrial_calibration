@@ -43,8 +43,7 @@ std::vector<std::size_t> GridCorrespondenceSampler::getSampleCorrespondenceIndic
 }
 
 RandomCorrespondenceSampler::RandomCorrespondenceSampler(const std::size_t n_correspondences_,
-                                                         const std::size_t n_samples_,
-                                                         const unsigned seed_)
+                                                         const std::size_t n_samples_, const unsigned seed_)
   : n_correspondences(n_correspondences_), n_samples(n_samples_), seed(seed_)
 {
   const unsigned min_samples = 4;

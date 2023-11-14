@@ -23,8 +23,7 @@ struct ProblemCreator
     Eigen::Isometry3d out(pose);
     switch (init)
     {
-      case InitialConditions::RANDOM_AROUND_ANSWER:
-      {
+      case InitialConditions::RANDOM_AROUND_ANSWER: {
         const double spatial_noise = 0.1;                  // +/- 0.1 meters
         const double angular_noise = 20.0 * M_PI / 180.0;  // +/- 20 degrees
         out = test::perturbPose(pose, spatial_noise, angular_noise);
