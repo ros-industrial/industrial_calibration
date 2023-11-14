@@ -1,4 +1,0 @@
-string[] joint_names
-float64[] joint_values
----
-std_msgs/Empty empty

@@ -1,7 +1,0 @@
-<library path="lib/librgbd_depth_correction">
-  <class name="rgbd_depth_correction/DepthCorrectionNodelet" type="rgbd_depth_correction::DepthCorrectionNodelet" base_class_type="nodelet::Nodelet">
-    <description>
-      Corrects point cloud depth
-    </description>
-  </class>
-</library>
