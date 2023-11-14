@@ -113,4 +113,12 @@ Eigen::Isometry3d DHChain::getBaseOffset() const
   return base_offset_;
 }
 
+Eigen::Isometry3d DHChain::getRelativeTransform(int joint_index, double value) const
+{
+  if (joint_index < 0 || joint_index >= static_cast<int>(transforms_.size()))
+    throw std::runtime_error("getRelativeTransform, Invalid joint index");
+
+  return transforms_[joint_index].createRelativeTransform(value);
+}
+
 }  // namespace industrial_calibration

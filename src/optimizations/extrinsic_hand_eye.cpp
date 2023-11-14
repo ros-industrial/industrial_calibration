@@ -87,9 +87,9 @@ ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem2D3D& params)
     labels_target_mount_to_target.emplace_back(params.label_target_mount_to_target + "_" + label_isometry);
   }
 
-  std::vector<std::vector<std::string>> param_labels;
-  param_labels.push_back(labels_camera_mount_to_camera);
-  param_labels.push_back(labels_target_mount_to_target);
+  std::map<const double*, std::vector<std::string>> param_labels;
+  param_labels[internal_camera_to_wrist.values.data()] = labels_camera_mount_to_camera;
+  param_labels[internal_base_to_target.values.data()] = labels_target_mount_to_target;
 
   result.covariance = computeCovariance(problem, param_labels);
 
@@ -150,9 +150,9 @@ ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem3D3D& params)
     labels_target_mount_to_target.emplace_back(params.label_target_mount_to_target + "_" + label_isometry);
   }
 
-  std::vector<std::vector<std::string>> param_labels;
-  param_labels.push_back(labels_camera_mount_to_camera);
-  param_labels.push_back(labels_target_mount_to_target);
+  std::map<const double*, std::vector<std::string>> param_labels;
+  param_labels[internal_camera_to_wrist.values.data()] = labels_camera_mount_to_camera;
+  param_labels[internal_base_to_target.values.data()] = labels_target_mount_to_target;
 
   result.covariance = computeCovariance(problem, param_labels);
 

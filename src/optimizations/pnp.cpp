@@ -51,8 +51,9 @@ PnPResult optimize(const PnPProblem& params)
   {
     labels_camera_to_target_guess_quaternion.emplace_back(params.label_camera_to_target_guess + "_" + label_r);
   }
-  std::vector<std::vector<std::string>> param_labels = { labels_camera_to_target_guess_translation,
-                                                         labels_camera_to_target_guess_quaternion };
+  std::map<const double*, std::vector<std::string>> param_labels;
+  param_labels[cam_to_tgt_translation.data()] = labels_camera_to_target_guess_translation;
+  param_labels[cam_to_tgt_angle_axis.data()] = labels_camera_to_target_guess_quaternion;
 
   result.covariance = computeCovariance(
       problem, std::vector<const double*>({ cam_to_tgt_translation.data(), cam_to_tgt_angle_axis.data() }),
@@ -107,8 +108,9 @@ PnPResult optimize(const PnPProblem3D& params)
   {
     labels_camera_to_target_guess_quaternion.emplace_back(params.label_camera_to_target_guess + "_" + label_r);
   }
-  std::vector<std::vector<std::string>> param_labels = { labels_camera_to_target_guess_translation,
-                                                         labels_camera_to_target_guess_quaternion };
+  std::map<const double*, std::vector<std::string>> param_labels;
+  param_labels[cam_to_tgt_translation.data()] = labels_camera_to_target_guess_translation;
+  param_labels[cam_to_tgt_angle_axis.data()] = labels_camera_to_target_guess_quaternion;
 
   result.covariance = computeCovariance(
       problem, std::vector<const double*>({ cam_to_tgt_translation.data(), cam_to_tgt_angle_axis.data() }),

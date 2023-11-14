@@ -11,7 +11,7 @@ namespace industrial_calibration
  */
 struct CameraIntrinsics
 {
-  std::array<double, 4> values;
+  std::array<double, 4> values{ 0.0, 0.0, 0.0, 0.0 };
 
   double& fx()
   {
@@ -207,7 +207,7 @@ struct Pose6d
   {
   }
 
-  std::array<double, 6> values;
+  std::array<double, 6> values{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
   double& rx()
   {

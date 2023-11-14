@@ -69,7 +69,7 @@ ExtrinsicMultiStaticCameraMovingTargetResult optimize(const ExtrinsicMultiStatic
   }
   param_blocks.push_back(internal_wrist_to_target.values.data());
 
-  std::vector<std::vector<std::string>> param_labels;
+  std::map<const double*, std::vector<std::string>> param_labels;
 
   // compose labels "camera_mount_to_camera_x", etc.
   for (std::size_t index_camera = 0; index_camera < internal_camera_to_base.size(); index_camera++)
@@ -80,7 +80,7 @@ ExtrinsicMultiStaticCameraMovingTargetResult optimize(const ExtrinsicMultiStatic
       labels_base_to_camera.emplace_back(params.label_base_to_camera + std::to_string(index_camera) + "_" +
                                          label_isometry);
     }
-    param_labels.push_back(labels_base_to_camera);
+    param_labels[internal_camera_to_base[index_camera].values.data()] = labels_base_to_camera;
   }
 
   // compose labels "target_mount_to_target_x", etc.
@@ -89,7 +89,7 @@ ExtrinsicMultiStaticCameraMovingTargetResult optimize(const ExtrinsicMultiStatic
   {
     labels_wrist_to_target.emplace_back(params.label_wrist_to_target + "_" + label_isometry);
   }
-  param_labels.push_back(labels_wrist_to_target);
+  param_labels[internal_wrist_to_target.values.data()] = labels_wrist_to_target;
 
   result.covariance = computeCovariance(problem, param_blocks, param_labels);
 

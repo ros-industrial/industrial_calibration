@@ -81,64 +81,55 @@ struct EigenQuaternionPlus
 /**
  * @brief Adds subset parameterization for all parameter blocks for a given problem
  * @param problem - Ceres optimization problem
- * @param masks - an array of masks indicating the index of the parameters that should be held constant.
- *   - The array must be the same size as the number of parameter blocks in the problem
- *   - Individual mask vectors cannot mask all parameters in a block
- * @param parameter_blocks - Ceres parameter blocks in the same order as the input masks
+ * @param param_masks - A map of parameter to an array of masks indicating the index of the parameters that should be
+ * held constant.
+ *   - The map must be the same size as the number of parameter blocks in the problem
+ *   - If all parameters are masked it sets that block to constant
  * @throws OptimizationException
  */
-template <std::size_t N_BLOCKS>
-void addSubsetParameterization(ceres::Problem& problem, const std::array<std::vector<int>, N_BLOCKS>& masks,
-                               const std::array<double*, N_BLOCKS>& parameter_blocks)
+void addSubsetParameterization(ceres::Problem& problem, const std::map<const double*, std::vector<int>>& param_masks)
 {
-  // Make sure the Ceres problem has the same number of blocks as the input
-  if (problem.NumParameterBlocks() != N_BLOCKS)
-  {
-    std::stringstream ss;
-    ss << "Input parameter block size does not match Ceres problem parameter block size (" << N_BLOCKS
-       << " != " << problem.NumParameterBlocks() << ")";
-    throw OptimizationException(ss.str());
-  }
+  if (param_masks.empty()) return;
 
-  if (parameter_blocks.size() != masks.size())
-  {
-    std::stringstream ss;
-    ss << "Parameter block count does not match number of masks (" << parameter_blocks.size() << " != " << masks.size();
-    throw OptimizationException(ss.str());
-  }
+  std::vector<double*> parameter_blocks;
+  problem.GetParameterBlocks(&parameter_blocks);
 
   // Set identity local parameterization on individual variables that we want to remain constant
-  for (std::size_t i = 0; i < parameter_blocks.size(); ++i)
+  for (const auto& p : parameter_blocks)
   {
-    std::size_t block_size = problem.ParameterBlockSize(parameter_blocks.at(i));
-    std::vector<int> mask = masks.at(i);
-
-    if (mask.size() > 0)
+    std::size_t block_size = problem.ParameterBlockSize(p);
+    auto it = param_masks.find(p);
+    if (it != param_masks.end())
     {
-      // Sort the array and remove duplicate indices
-      std::sort(mask.begin(), mask.end());
-      auto last = std::unique(mask.begin(), mask.end());
-      mask.erase(last, mask.end());
+      std::vector<int> mask = it->second;
 
-      // Check that the max index is not greater than the number of elements in the block
-      auto it = std::max_element(mask.begin(), mask.end());
-      if (static_cast<std::size_t>(*it) >= block_size)
+      if (mask.size() > 0)
       {
-        std::stringstream ss;
-        ss << "The largest mask index cannot be larger than or equal to the parameter block size (" << *it
-           << " >= " << block_size << ")";
-        throw OptimizationException(ss.str());
-      }
+        // Sort the array and remove duplicate indices
+        std::sort(mask.begin(), mask.end());
+        auto last = std::unique(mask.begin(), mask.end());
+        mask.erase(last, mask.end());
 
-      // Set local parameterization on the indices or set the entire block constant
-      if (mask.size() >= block_size)
-      {
-        problem.SetParameterBlockConstant(parameter_blocks.at(i));
-      }
-      else
-      {
-        ceres::LocalParameterization* lp = new ceres::SubsetParameterization(block_size, mask);
-        problem.SetParameterization(parameter_blocks[i], lp);
+        // Check that the max index is not greater than the number of elements in the block
+        auto it = std::max_element(mask.begin(), mask.end());
+        if (static_cast<std::size_t>(*it) >= block_size)
+        {
+          std::stringstream ss;
+          ss << "The largest mask index cannot be larger than or equal to the parameter block size (" << *it
+             << " >= " << block_size << ")";
+          throw OptimizationException(ss.str());
+        }
+
+        // Set local parameterization on the indices or set the entire block constant
+        if (mask.size() >= block_size)
+        {
+          problem.SetParameterBlockConstant(p);
+        }
+        else
+        {
+          ceres::LocalParameterization* lp = new ceres::SubsetParameterization(block_size, mask);
+          problem.SetParameterization(p, lp);
+        }
       }
     }
   }

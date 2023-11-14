@@ -231,6 +231,14 @@ public:
    */
   Eigen::Isometry3d getBaseOffset() const;
 
+  /**
+   * @brief Get a joints relative joint transform
+   * @param joint_index The joint index
+   * @param value The joint value
+   * @return The joint relative transform
+   */
+  Eigen::Isometry3d getRelativeTransform(int joint_index, double value) const;
+
 protected:
   /** @brief The DH transforms that make up the chain */
   std::vector<DHTransform> transforms_;

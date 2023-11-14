@@ -584,8 +584,14 @@ TEST(CovarianceAnalysis, CovarianceAnalysisFunctions)
   EXPECT_NEAR(0.0, result.y_center, 1e-5);
   EXPECT_NEAR(1.0, result.radius, 1e-5);
 
-  std::vector<std::vector<std::string>> labels_all({ { "circle_x" }, { "circle_y" }, { "circle_r" } });
-  std::vector<std::vector<std::string>> labels_x_r({ { "circle_x" }, { "circle_r" } });
+  std::map<const double*, std::vector<std::string>> labels_all;
+  labels_all[params_internal.data()] = { "circle_x" };
+  labels_all[params_internal.data() + 1] = { "circle_y" };
+  labels_all[params_internal.data() + 2] = { "circle_r" };
+
+  std::map<const double*, std::vector<std::string>> labels_x_r;
+  labels_x_r[params_internal.data()] = { "circle_x" };
+  labels_x_r[params_internal.data() + 2] = { "circle_r" };
 
   std::vector<const double*> param_blocks_x_r(2);
   param_blocks_x_r[0] = params_internal.data();
@@ -653,15 +659,16 @@ TEST(CovarianceAnalysis, CovarianceAnalysisFunctions)
 
   // expect exception if number of labels for a parameter block is different from the number of parameters in that block
   // in the problem
-  std::vector<std::vector<std::string>> labels_x_r_wrong_size(
-      { { "circle_x", "circle_x_extra_entry" }, { "circle_r" } });
+  std::map<const double*, std::vector<std::string>> labels_x_r_wrong_size;
+  labels_x_r_wrong_size[params_internal.data()] = { "circle_x", "circle_x_extra_entry" };
+  labels_x_r_wrong_size[params_internal.data() + 2] = { "circle_r" };
   EXPECT_THROW(computeCovariance(problem, param_blocks_x_r, labels_x_r_wrong_size), CovarianceException);
 
   // expect exception with empty parameter block vector
   EXPECT_THROW(computeCovariance(problem, std::vector<const double*>(), labels_all), CovarianceException);
 
   // expect exception with empty labels vector
-  EXPECT_THROW(computeCovariance(problem, param_blocks_x_r, std::vector<std::vector<std::string>>()),
+  EXPECT_THROW(computeCovariance(problem, param_blocks_x_r, std::map<const double*, std::vector<std::string>>()),
                CovarianceException);
 }
 

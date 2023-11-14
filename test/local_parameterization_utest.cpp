@@ -32,19 +32,12 @@ TEST(LocalParameterizationTests, SubsetParameterization)
   cost_block->SetNumResiduals(params.size());
   problem.AddResidualBlock(cost_block, nullptr, params.data());
 
-  // Wrong number of vectors
-  {
-    std::array<std::vector<int>, 3> mask;
-    EXPECT_THROW(addSubsetParameterization(problem, mask, { { params.data() } }), OptimizationException);
-    EXPECT_EQ(problem.GetParameterization(params.data()), nullptr);
-  }
-
   // All values
   {
-    std::array<std::vector<int>, 1> mask;
-    mask.at(0).resize(params.size());
-    std::iota(mask.at(0).begin(), mask.at(0).end(), 0);
-    EXPECT_NO_THROW(addSubsetParameterization(problem, mask, { { params.data() } }));
+    std::map<const double*, std::vector<int>> mask;
+    mask[params.data()] = std::vector<int>(params.size());
+    std::iota(mask[params.data()].begin(), mask[params.data()].end(), 0);
+    EXPECT_NO_THROW(addSubsetParameterization(problem, mask));
 
     // Expect there to be no parameterization, but the entire block should be constant
     EXPECT_EQ(problem.GetParameterization(params.data()), nullptr);
@@ -53,17 +46,18 @@ TEST(LocalParameterizationTests, SubsetParameterization)
 
   // Index out of range
   {
-    std::array<std::vector<int>, 1> mask;
+    std::map<const double*, std::vector<int>> mask;
+    mask[params.data()] = std::vector<int>(params.size());
     int bad_idx = params.size() * 2;
-    mask.at(0).insert(mask.at(0).begin(), { bad_idx, 0, 1, 2 });
-    EXPECT_THROW(addSubsetParameterization(problem, mask, { { params.data() } }), OptimizationException);
+    mask[params.data()].insert(mask[params.data()].begin(), { bad_idx, 0, 1, 2 });
+    EXPECT_THROW(addSubsetParameterization(problem, mask), OptimizationException);
     EXPECT_EQ(problem.GetParameterization(params.data()), nullptr);
   }
 
   // Empty mask
   {
-    std::array<std::vector<int>, 1> mask;
-    EXPECT_NO_THROW(addSubsetParameterization(problem, mask, { { params.data() } }));
+    std::map<const double*, std::vector<int>> mask;
+    EXPECT_NO_THROW(addSubsetParameterization(problem, mask));
     // An empty mask should not have added any local parameterization
     EXPECT_EQ(problem.GetParameterization(params.data()), nullptr);
   }
@@ -71,13 +65,14 @@ TEST(LocalParameterizationTests, SubsetParameterization)
   // Hold the zero-th row constant
   Eigen::ArrayXXd original_params = params;
   {
-    std::array<std::vector<int>, 1> mask;
+    std::map<const double*, std::vector<int>> mask;
+    mask[params.data()] = std::vector<int>();
     // Remember, Eigen stores values internally in column-wise order
     for (Eigen::Index i = 0; i < params.cols(); ++i)
     {
-      mask.at(0).push_back(i * params.rows());
+      mask[params.data()].push_back(i * params.rows());
     }
-    EXPECT_NO_THROW(addSubsetParameterization(problem, mask, { { params.data() } }));
+    EXPECT_NO_THROW(addSubsetParameterization(problem, mask));
     EXPECT_NE(problem.GetParameterization(params.data()), nullptr);
   }
 

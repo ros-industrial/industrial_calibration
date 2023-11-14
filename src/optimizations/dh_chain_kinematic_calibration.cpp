@@ -22,6 +22,51 @@ Eigen::Isometry3d createTransform(const Eigen::Vector3d& t, const Eigen::Vector3
   return result;
 }
 
+void printLabels(const std::string& block_name, const std::vector<std::string>& param_labels)
+{
+  std::cout << block_name << ":" << std::endl;
+  if (param_labels.empty())
+  {
+    std::cout << "    - Constant" << std::endl;
+    return;
+  }
+
+  for (const auto& param_label : param_labels)
+    std::cout << "    - " << param_label << std::endl;
+}
+
+void printOptimizationLabels(ceres::Problem& problem, const std::map<const double*, std::string>& names,
+                             const std::map<const double*, std::vector<std::string>>& labels,
+                             const std::map<const double*, std::vector<int>>& masks)
+{
+  std::vector<double*> blocks;
+  problem.GetParameterBlocks(&blocks);
+
+  // Extract optimization labels
+  for (double* b : blocks)
+  {
+    std::vector<std::string> sub_label;
+    if (!problem.IsParameterBlockConstant(b))
+    {
+      std::vector<std::string> label = labels.at(b);
+      const std::vector<int>& mask = masks.at(b);
+      if (mask.empty())
+      {
+        sub_label = label;
+      }
+      else
+      {
+        sub_label.reserve(label.size());
+        for (std::size_t j = 0; j < label.size(); ++j)
+        {
+          if (std::find(mask.begin(), mask.end(), j) == mask.end()) sub_label.push_back(label.at(j));
+        }
+      }
+    }
+    printLabels(names.at(b), sub_label);
+  }
+}
+
 KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& params)
 {
   // Initialize the optimization variables
@@ -97,9 +142,14 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& param
       DualDHChain2D3DCost::constructParameters(camera_chain_dh_offsets, target_chain_dh_offsets, t_cm_to_c, aa_cm_to_c,
                                                t_tm_to_t, aa_tm_to_t, t_ccb_to_tcb, aa_ccb_to_tcb);
 
-  std::vector<std::vector<std::string>> param_labels = DualDHChain2D3DCost::constructParameterLabels(
-      camera_chain_param_labels, target_chain_param_labels, t_cm_to_c_labels, aa_cm_to_c_labels, t_tm_to_t_labels,
-      aa_tm_to_t_labels, t_ccb_to_tcb_labels, aa_ccb_to_tcb_labels);
+  std::map<const double*, std::vector<std::string>> param_labels = DualDHChain2D3DCost::constructParameterLabels(
+      parameters, camera_chain_param_labels, target_chain_param_labels, t_cm_to_c_labels, aa_cm_to_c_labels,
+      t_tm_to_t_labels, aa_tm_to_t_labels, t_ccb_to_tcb_labels, aa_ccb_to_tcb_labels);
+
+  std::map<const double*, std::vector<int>> param_masks =
+      DualDHChain2D3DCost::constructParameterMasks(parameters, params.mask);
+
+  std::map<const double*, std::string> param_names = DualDHChain2D3DCost::constructParameterNames(parameters);
 
   // Set up the problem
   ceres::Problem problem;
@@ -146,9 +196,7 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& param
   if (params.target_chain.dof() == 0) problem.SetParameterBlockConstant(target_chain_dh_offsets.data());
 
   // Add subset parameterization to mask variables that shouldn't be optimized
-  std::array<double*, 8> tmp;
-  std::copy_n(parameters.begin(), tmp.size(), tmp.begin());
-  addSubsetParameterization(problem, params.mask, tmp);
+  addSubsetParameterization(problem, param_masks);
 
   // Add a cost to drive the camera chain DH parameters towards an expected mean
   if (params.camera_chain.dof() != 0 && !problem.IsParameterBlockConstant(parameters[0]))
@@ -181,6 +229,9 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& param
 
     problem.AddResidualBlock(cost_block, nullptr, target_chain_dh_offsets.data());
   }
+
+  // Print optimization parameter labels
+  printOptimizationLabels(problem, param_names, param_labels, param_masks);
 
   // Setup the Ceres optimization parameters
   ceres::Solver::Options options;
@@ -216,8 +267,7 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& param
 
   ceres::Covariance::Options cov_options = DefaultCovarianceOptions();
   cov_options.null_space_rank = -1;  // automatically drop terms below min_reciprocal_condition_number
-  result.covariance = computeCovariance(problem, std::vector<const double*>(parameters.begin(), parameters.end()),
-                                        param_labels, cov_options);
+  result.covariance = computeCovariance(problem, param_labels, param_masks, cov_options);
 
   return result;
 }
@@ -298,9 +348,14 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblemPose6D& par
       DualDHChainMeasurementCost::constructParameters(camera_chain_dh_offsets, target_chain_dh_offsets, t_cm_to_c,
                                                       aa_cm_to_c, t_tm_to_t, aa_tm_to_t, t_ccb_to_tcb, aa_ccb_to_tcb);
 
-  std::vector<std::vector<std::string>> param_labels = DualDHChainMeasurementCost::constructParameterLabels(
-      camera_chain_param_labels, target_chain_param_labels, t_cm_to_c_labels, aa_cm_to_c_labels, t_tm_to_t_labels,
-      aa_tm_to_t_labels, t_ccb_to_tcb_labels, aa_ccb_to_tcb_labels);
+  std::map<const double*, std::vector<std::string>> param_labels = DualDHChainMeasurementCost::constructParameterLabels(
+      parameters, camera_chain_param_labels, target_chain_param_labels, t_cm_to_c_labels, aa_cm_to_c_labels,
+      t_tm_to_t_labels, aa_tm_to_t_labels, t_ccb_to_tcb_labels, aa_ccb_to_tcb_labels);
+
+  std::map<const double*, std::vector<int>> param_masks =
+      DualDHChainMeasurementCost::constructParameterMasks(parameters, params.mask);
+
+  std::map<const double*, std::string> param_names = DualDHChainMeasurementCost::constructParameterNames(parameters);
 
   // Set up the problem
   ceres::Problem problem;
@@ -343,9 +398,7 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblemPose6D& par
   if (params.target_chain.dof() == 0) problem.SetParameterBlockConstant(target_chain_dh_offsets.data());
 
   // Add subset parameterization to mask variables that shouldn't be optimized
-  std::array<double*, 8> tmp;
-  std::copy_n(parameters.begin(), tmp.size(), tmp.begin());
-  addSubsetParameterization(problem, params.mask, tmp);
+  addSubsetParameterization(problem, param_masks);
 
   // Add a cost to drive the camera chain DH parameters towards an expected mean
   if (params.camera_chain.dof() != 0 && !problem.IsParameterBlockConstant(parameters[0]))
@@ -379,6 +432,9 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblemPose6D& par
     problem.AddResidualBlock(cost_block, nullptr, target_chain_dh_offsets.data());
   }
 
+  // Print optimization parameter labels
+  printOptimizationLabels(problem, param_names, param_labels, param_masks);
+
   // Solve the optimization
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
@@ -407,8 +463,7 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblemPose6D& par
 
   ceres::Covariance::Options cov_options = DefaultCovarianceOptions();
   cov_options.null_space_rank = -1;  // automatically drop terms below min_reciprocal_condition_number
-  result.covariance = computeCovariance(problem, std::vector<const double*>(parameters.begin(), parameters.end()),
-                                        param_labels, cov_options);
+  result.covariance = computeCovariance(problem, param_labels, param_masks, cov_options);
 
   return result;
 }

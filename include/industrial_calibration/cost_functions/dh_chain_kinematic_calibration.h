@@ -5,6 +5,7 @@
 #include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
 
 #include <ceres/fpclassify.h>
+#include <map>
 
 namespace industrial_calibration
 {
@@ -62,44 +63,76 @@ public:
     return parameters;
   }
 
-  static std::vector<std::vector<std::string>>
-  constructParameterLabels(const std::vector<std::array<std::string, 4>>& camera_chain_labels,
-                           const std::vector<std::array<std::string, 4>>& target_chain_labels,
-                           const std::array<std::string, 3>& camera_mount_to_camera_position_labels,
-                           const std::array<std::string, 3>& camera_mount_to_camera_angle_axis_labels,
-                           const std::array<std::string, 3>& target_mount_to_target_position_labels,
-                           const std::array<std::string, 3>& target_mount_to_target_angle_axis_labels,
-                           const std::array<std::string, 3>& camera_chain_base_to_target_chain_base_position_labels,
-                           const std::array<std::string, 3>& camera_chain_base_to_target_chain_base_angle_axis_labels)
+  static std::map<const double*, std::vector<std::string>> constructParameterLabels(
+      const std::vector<double*>& parameters, const std::vector<std::array<std::string, 4>>& camera_chain_labels,
+      const std::vector<std::array<std::string, 4>>& target_chain_labels,
+      const std::array<std::string, 3>& camera_mount_to_camera_position_labels,
+      const std::array<std::string, 3>& camera_mount_to_camera_angle_axis_labels,
+      const std::array<std::string, 3>& target_mount_to_target_position_labels,
+      const std::array<std::string, 3>& target_mount_to_target_angle_axis_labels,
+      const std::array<std::string, 3>& camera_chain_base_to_target_chain_base_position_labels,
+      const std::array<std::string, 3>& camera_chain_base_to_target_chain_base_angle_axis_labels)
   {
-    std::vector<std::vector<std::string>> param_labels;
+    // Eigen is column major so need to store labels column major
+    std::map<const double*, std::vector<std::string>> param_labels;
     std::vector<std::string> cc_labels_concatenated;
-    for (auto cc_label : camera_chain_labels)
+    for (std::size_t c = 0; c < 4; ++c)
     {
-      cc_labels_concatenated.insert(cc_labels_concatenated.end(), cc_label.begin(), cc_label.end());
+      for (auto cc_label : camera_chain_labels)
+        cc_labels_concatenated.push_back(cc_label.at(c));
     }
-    param_labels.push_back(cc_labels_concatenated);
+    param_labels[parameters[0]] = cc_labels_concatenated;
 
+    // Eigen is column major so need to store labels column major
     std::vector<std::string> tc_labels_concatenated;
-    for (auto tc_label : target_chain_labels)
+    for (std::size_t c = 0; c < 4; ++c)
     {
-      tc_labels_concatenated.insert(tc_labels_concatenated.end(), tc_label.begin(), tc_label.end());
+      for (auto tc_label : target_chain_labels)
+        tc_labels_concatenated.push_back(tc_label.at(c));
     }
-    param_labels.push_back(tc_labels_concatenated);
+    param_labels[parameters[1]] = tc_labels_concatenated;
 
-    param_labels.emplace_back(camera_mount_to_camera_position_labels.begin(),
-                              camera_mount_to_camera_position_labels.end());
-    param_labels.emplace_back(camera_mount_to_camera_angle_axis_labels.begin(),
-                              camera_mount_to_camera_angle_axis_labels.end());
-    param_labels.emplace_back(target_mount_to_target_position_labels.begin(),
-                              target_mount_to_target_position_labels.end());
-    param_labels.emplace_back(target_mount_to_target_angle_axis_labels.begin(),
-                              target_mount_to_target_angle_axis_labels.end());
-    param_labels.emplace_back(camera_chain_base_to_target_chain_base_position_labels.begin(),
-                              camera_chain_base_to_target_chain_base_position_labels.end());
-    param_labels.emplace_back(camera_chain_base_to_target_chain_base_angle_axis_labels.begin(),
-                              camera_chain_base_to_target_chain_base_angle_axis_labels.end());
+    param_labels[parameters[2]] = std::vector<std::string>(camera_mount_to_camera_position_labels.begin(),
+                                                           camera_mount_to_camera_position_labels.end());
+    param_labels[parameters[3]] = std::vector<std::string>(camera_mount_to_camera_angle_axis_labels.begin(),
+                                                           camera_mount_to_camera_angle_axis_labels.end());
+    param_labels[parameters[4]] = std::vector<std::string>(target_mount_to_target_position_labels.begin(),
+                                                           target_mount_to_target_position_labels.end());
+    param_labels[parameters[5]] = std::vector<std::string>(target_mount_to_target_angle_axis_labels.begin(),
+                                                           target_mount_to_target_angle_axis_labels.end());
+    param_labels[parameters[6]] =
+        std::vector<std::string>(camera_chain_base_to_target_chain_base_position_labels.begin(),
+                                 camera_chain_base_to_target_chain_base_position_labels.end());
+    param_labels[parameters[7]] =
+        std::vector<std::string>(camera_chain_base_to_target_chain_base_angle_axis_labels.begin(),
+                                 camera_chain_base_to_target_chain_base_angle_axis_labels.end());
     return param_labels;
+  }
+
+  static std::map<const double*, std::vector<int>> constructParameterMasks(const std::vector<double*>& parameters,
+                                                                           const std::array<std::vector<int>, 8>& masks)
+  {
+    assert(parameters.size() == masks.size());
+    std::map<const double*, std::vector<int>> param_masks;
+    for (std::size_t i = 0; i < parameters.size(); ++i)
+      param_masks[parameters[i]] = masks[i];
+
+    return param_masks;
+  }
+
+  static std::map<const double*, std::string> constructParameterNames(const std::vector<double*>& parameters)
+  {
+    std::map<const double*, std::string> names;
+    names[parameters[0]] = "Camera DH Parameters";
+    names[parameters[1]] = "Target DH Parameters";
+    names[parameters[2]] = "Camera Mount to Camera Position Parameters";
+    names[parameters[3]] = "Camera Mount to Camera Orientation Parameters";
+    names[parameters[4]] = "Target Mount to Target Position Parameters";
+    names[parameters[5]] = "Target Mount to Target Orientation Parameters";
+    names[parameters[6]] = "Camera Chain Base to Target Chain Base Position Parameters";
+    names[parameters[7]] = "Camera Chain Base to Target Chain Base Orientation Parameters";
+
+    return names;
   }
 
 protected:
