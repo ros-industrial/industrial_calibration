@@ -1,4 +1,4 @@
-#include <industrial_calibration/optimizations/utils/covariance_analysis.h>
+#include <industrial_calibration/optimizations/analysis/covariance_analysis.h>
 #include <industrial_calibration_tests/circle_fit.h>
 #include <industrial_calibration/exceptions.h>
 

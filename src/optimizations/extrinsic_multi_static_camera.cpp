@@ -2,7 +2,7 @@
 #include <industrial_calibration/cost_functions/extrinsic_multi_static_camera.h>
 #include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
 #include <industrial_calibration/types.h>
-#include <industrial_calibration/optimizations/utils/covariance_analysis.h>
+#include <industrial_calibration/optimizations/analysis/covariance_analysis.h>
 
 #include <ceres/ceres.h>
 #include <iostream>

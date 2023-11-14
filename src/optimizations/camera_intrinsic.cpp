@@ -1,7 +1,7 @@
 #include <industrial_calibration/optimizations/camera_intrinsic.h>
 #include <industrial_calibration/cost_functions/camera_intrinsic.h>
 #include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
-#include <industrial_calibration/optimizations/utils/covariance_analysis.h>
+#include <industrial_calibration/optimizations/analysis/covariance_analysis.h>
 #include <industrial_calibration/optimizations/pnp.h>
 #include <industrial_calibration/exceptions.h>
 

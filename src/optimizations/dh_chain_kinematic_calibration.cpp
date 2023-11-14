@@ -1,7 +1,7 @@
 #include <industrial_calibration/optimizations/dh_chain_kinematic_calibration.h>
 #include <industrial_calibration/cost_functions/dh_chain_kinematic_calibration.h>
 #include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
-#include <industrial_calibration/optimizations/utils/covariance_analysis.h>
+#include <industrial_calibration/optimizations/analysis/covariance_analysis.h>
 #include <industrial_calibration/optimizations/utils/maximum_likelihood.h>
 #include <industrial_calibration/optimizations/utils/local_parameterization.h>
 

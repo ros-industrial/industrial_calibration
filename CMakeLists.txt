@@ -23,8 +23,6 @@ add_library(${PROJECT_NAME} SHARED
   src/dh_chain.cpp
   # Optimization Utilities
   src/optimizations/utils/ceres_math_utilities.cpp
-  src/optimizations/utils/covariance_types.cpp
-  src/optimizations/utils/covariance_analysis.cpp
   # Optimizations
   src/optimizations/pnp.cpp
   src/optimizations/camera_intrinsic.cpp
@@ -34,6 +32,8 @@ add_library(${PROJECT_NAME} SHARED
   src/optimizations/multi_camera_pnp.cpp
   # Optimization Analysis
   src/optimizations/analysis/camera_intrinsic_calibration_analysis.cpp
+  src/optimizations/analysis/covariance_types.cpp
+  src/optimizations/analysis/covariance_analysis.cpp
   src/optimizations/analysis/homography_analysis.cpp
   src/optimizations/analysis/statistics.cpp
   src/optimizations/analysis/noise_qualification.cpp
