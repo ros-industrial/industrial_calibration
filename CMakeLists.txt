@@ -18,7 +18,8 @@ if(NOT TARGET Eigen3::Eigen)
   set_property(TARGET Eigen3::Eigen PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS})
 endif()
 
-add_library(${PROJECT_NAME} SHARED
+add_library(
+  ${PROJECT_NAME} SHARED
   # Common
   src/dh_chain.cpp
   # Optimization Utilities
@@ -44,28 +45,33 @@ add_library(${PROJECT_NAME} SHARED
   src/target_finders/modified_circle_grid_target_finder.cpp
   src/target_finders/aruco_grid_target_finder.cpp
   src/target_finders/charuco_grid_target_finder.cpp
-  src/target_finders/target_finder_plugins.cpp
-)
-target_include_directories(${PROJECT_NAME} PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>")
+  src/target_finders/target_finder_plugins.cpp)
+target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+                                                  "$<INSTALL_INTERFACE:include>")
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CERES_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}
-  PUBLIC
-    Eigen3::Eigen
-    ${CERES_LIBRARIES}
-    yaml-cpp
-    opencv_core
-    opencv_aruco
-    opencv_features2d
-    opencv_imgproc
-    opencv_imgcodecs)
+target_link_libraries(
+  ${PROJECT_NAME}
+  PUBLIC Eigen3::Eigen
+         ${CERES_LIBRARIES}
+         yaml-cpp
+         opencv_core
+         opencv_aruco
+         opencv_features2d
+         opencv_imgproc
+         opencv_imgcodecs)
 target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 17)
-target_clang_tidy(${PROJECT_NAME}
+target_clang_tidy(
+  ${PROJECT_NAME}
   ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY}
-  WARNINGS_AS_ERRORS ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING}
-  CHECKS ${DEFAULT_CLANG_TIDY_CHECKS})
-target_code_coverage(${PROJECT_NAME} INTERFACE ALL ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
+         WARNINGS_AS_ERRORS
+         ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING}
+         CHECKS
+         ${DEFAULT_CLANG_TIDY_CHECKS})
+target_code_coverage(
+  ${PROJECT_NAME}
+  INTERFACE
+  ALL
+  ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
 
 # Install headers
 install(DIRECTORY include/ DESTINATION include/)
@@ -82,12 +88,10 @@ add_subdirectory(examples)
 
 # Package configuration
 configure_package(
-  NAMESPACE
-    industrial_calibration
-  TARGETS
-    ${PROJECT_NAME}
-  DEPENDENCIES
-    Eigen3
-    OpenCV
-    Ceres
-    yaml-cpp)
+  NAMESPACE industrial_calibration
+  TARGETS ${PROJECT_NAME}
+          DEPENDENCIES
+          Eigen3
+          OpenCV
+          Ceres
+          yaml-cpp)
