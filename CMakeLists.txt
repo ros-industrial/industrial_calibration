@@ -67,15 +67,6 @@ target_clang_tidy(${PROJECT_NAME}
   CHECKS ${DEFAULT_CLANG_TIDY_CHECKS})
 target_code_coverage(${PROJECT_NAME} INTERFACE ALL ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
 
-# Install the library
-install(
-  TARGETS ${PROJECT_NAME}
-  EXPORT ${PROJECT_NAME}-targets
-  RUNTIME DESTINATION bin
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-)
-
 # Install headers
 install(DIRECTORY include/ DESTINATION include/)
 
@@ -90,6 +81,13 @@ endif()
 add_subdirectory(examples)
 
 # Package configuration
-install(EXPORT ${PROJECT_NAME}-targets NAMESPACE "industrial_calibration::" DESTINATION lib/cmake/${PROJECT_NAME})
-export(EXPORT ${PROJECT_NAME}-targets NAMESPACE "industrial_calibration::" FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-targets.cmake)
-configure_package()
+configure_package(
+  NAMESPACE
+    industrial_calibration
+  TARGETS
+    ${PROJECT_NAME}
+  DEPENDENCIES
+    Eigen3
+    OpenCV
+    Ceres
+    yaml-cpp)
