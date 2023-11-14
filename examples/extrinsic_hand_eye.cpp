@@ -21,7 +21,8 @@ using path = std::experimental::filesystem::path;
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-const std::string WINDOW = "window";
+static const std::string WINDOW = "window";
+static const unsigned RANDOM_SEED = 1;
 
 using namespace industrial_calibration;
 using VectorEigenIsometry = std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>;
@@ -176,7 +177,7 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const Params& params,
 
       // Check that a homography matrix can accurately reproject the observed points onto the expected target points
       // within a defined threshold
-      RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(), obs.correspondence_set.size() / 3);
+      RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(), obs.correspondence_set.size() / 3, RANDOM_SEED);
       Eigen::VectorXd homography_error = calculateHomographyError(obs.correspondence_set, random_sampler);
       if (homography_error.array().mean() > params.homography_threshold)
         throw std::runtime_error("Homography error exceeds threshold (" +
