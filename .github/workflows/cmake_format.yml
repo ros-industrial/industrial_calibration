@@ -1,0 +1,25 @@
+name: CMake-Format
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  cmake_lang:
+    name: CMake Format
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run CMake Lang Format Check
+        run: |
+          sudo pip3 install cmakelang
+          RED='\033[0;31m'
+          NC='\033[0m' # No Color
+          ./.run-cmake-format
+          output=$(git diff)
+          if [ -n "$output" ]; then printf "${RED}CMake format error: run script './.run-cmake-format'${NC}\n"; fi
+          if [ -n "$output" ]; then printf "${RED}${output}${NC}\n"; fi
+          if [ -n "$output" ]; then exit 1; else exit 0; fi

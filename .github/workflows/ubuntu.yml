@@ -1,0 +1,36 @@
+name: Ubuntu
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ci:
+    name: ${{ matrix.distro }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [focal, jammy]
+    container:
+      image: ubuntu:${{ matrix.distro }}
+      env:
+        DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: target_ws/src
+      - name: Build
+        uses: tesseract-robotics/colcon-action@v1
+        with:
+          ccache-enabled: false
+          rosdep-enabled: true
+          ros-enabled: false
+          vcs-file: dependencies.repos
+          target-path: target_ws/src
+          target-args: '-DCMAKE_BUILD_TYPE=Debug -DINDUSTRIAL_CALIBRATION_ENABLE_TESTING=ON -DINDUSTRIAL_CALIBRATION_ENABLE_RUN_TESTING=OFF -DINDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY=ON'
+          run-tests: true
