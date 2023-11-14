@@ -226,7 +226,7 @@ std::tuple<KinematicCalibrationResult, Stats, Stats> run()
   KinematicMeasurement::Set measurements = loadMeasurements((data_dir / "measurements.yaml").string());
 
   // Create the problem
-  KinematicCalibrationProblemPose6D problem(DHChain({}), createTwoAxisPositioner());
+  KinematicCalibrationProblemPose6D problem(DHChain(std::vector<DHTransform>{}), createTwoAxisPositioner());
 
   // Add the observations
   problem.observations = measurements;

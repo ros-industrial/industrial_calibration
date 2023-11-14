@@ -59,7 +59,7 @@ ProblemCreator<ExtrinsicHandEyeProblem2D3D>::createProblem(const Eigen::Isometry
   problem.camera_mount_to_camera_guess = createPose(true_camera, init);
 
   DHChain camera_chain = test::createABBIRB2400();
-  DHChain target_chain({});
+  DHChain target_chain(std::vector<DHTransform>{});
   problem.observations = test::createObservations(camera_chain, target_chain, true_camera,
                                                   Eigen::Isometry3d::Identity(), true_target, target, camera, 100);
   return problem;
@@ -79,7 +79,7 @@ ProblemCreator<ExtrinsicHandEyeProblem3D3D>::createProblem(const Eigen::Isometry
   problem.camera_mount_to_camera_guess = createPose(true_camera, init);
 
   DHChain camera_chain = test::createABBIRB2400();
-  DHChain target_chain({});
+  DHChain target_chain(std::vector<DHTransform>{});
   problem.observations = test::createObservations(camera_chain, target_chain, true_camera,
                                                   Eigen::Isometry3d::Identity(), true_target, target, 100);
   return problem;

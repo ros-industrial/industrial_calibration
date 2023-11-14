@@ -7,6 +7,16 @@
 #include <utility>
 #include <vector>
 
+// Forward declaration of YAML functions for serialization
+namespace YAML
+{
+template <typename T, typename S>
+struct as_if;
+
+template <typename T>
+struct convert;
+}
+
 namespace industrial_calibration
 {
 /**
@@ -44,9 +54,7 @@ using Vector2 = Eigen::Matrix<T, 2, 1>;
 struct DHTransform
 {
   DHTransform(const Eigen::Vector4d& params_, DHJointType type_);
-
   DHTransform(const Eigen::Vector4d& params_, DHJointType type_, const std::string& name_);
-
   DHTransform(const Eigen::Vector4d& params_, DHJointType type_, const std::string& name_, std::size_t random_seed);
 
   /**
@@ -109,9 +117,9 @@ struct DHTransform
    *  r: The linear offset in X
    *  alpha: The rotational offset about X
    */
-  const Eigen::Vector4d params;
+  Eigen::Vector4d params;
   /** @brief The type of actuation of the joint */
-  const DHJointType type;
+  DHJointType type;
   /** @brief Joint maximum value */
   double max = M_PI;
   /** @brief Joint minimum value */
@@ -119,7 +127,11 @@ struct DHTransform
   /** @brief Label for this transform */
   std::string name;
   /** @brief Seed for random number generator */
-  const std::size_t random_seed;
+  std::size_t random_seed;
+
+protected:
+  friend struct YAML::as_if<DHTransform, void>;
+  DHTransform() = default;
 };
 
 /**
@@ -224,6 +236,10 @@ protected:
   std::vector<DHTransform> transforms_;
   /** @brief Fixed transform offset to the beginning of the chain */
   Eigen::Isometry3d base_offset_;
+
+  friend struct YAML::convert<DHChain>;
+  friend struct YAML::as_if<DHChain, void>;
+  DHChain() = default;
 };
 
 }  // namespace industrial_calibration

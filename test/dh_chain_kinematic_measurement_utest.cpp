@@ -20,7 +20,7 @@ public:
    */
   DHChainMeasurementTest()
     : camera_chain_truth(test::perturbDHChain(test::createABBIRB2400(), 1.0e-3))
-    , target_chain_truth({})
+    , target_chain_truth(std::vector<DHTransform>{})
     , problem(camera_chain_truth, target_chain_truth)
     , orientation_weight(100.0)
   {

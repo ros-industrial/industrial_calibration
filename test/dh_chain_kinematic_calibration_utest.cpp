@@ -25,7 +25,7 @@ public:
    */
   DHChainCalTest()
     : camera_chain(test::perturbDHChain(test::createABBIRB2400(), 1.0e-3))
-    , target_chain({})
+    , target_chain(std::vector<DHTransform>{})
     , problem(camera_chain, target_chain)
   {
   }
