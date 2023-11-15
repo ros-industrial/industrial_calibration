@@ -1,4 +1,0 @@
-<?xml version="1.0" ?>
-<launch>
-  <node pkg="calibration_guis" type="calibration_guis" name="calibration_gui" output="screen"/>
-</launch>
