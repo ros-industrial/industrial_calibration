@@ -4,7 +4,7 @@
 #include <industrial_calibration/dh_chain.h>
 #include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
 
-#include <ceres/fpclassify.h>
+#include <ceres/jet.h>
 #include <map>
 
 namespace industrial_calibration
