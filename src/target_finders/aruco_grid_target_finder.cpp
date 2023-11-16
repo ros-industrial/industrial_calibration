@@ -3,6 +3,7 @@
  * Author: Joseph Schornak
  */
 #include <industrial_calibration/target_finders/aruco_grid_target_finder.h>
+#include <industrial_calibration/serialization.h>
 
 namespace
 {
@@ -121,6 +122,18 @@ cv::Mat ArucoGridBoardTargetFinder::drawTargetFeatures(const cv::Mat& image,
   }
   cv::aruco::drawDetectedMarkers(image, marker_corners, marker_ids);
   return image;
+}
+
+TargetFinder::ConstPtr ArucoGridTargetFinderFactory::create(const YAML::Node& config) const
+{
+  auto cols = getMember<int>(config, "cols");
+  auto rows = getMember<int>(config, "rows");
+  auto aruco_marker_dim = getMember<float>(config, "aruco_marker_dim");
+  auto marker_gap = getMember<float>(config, "marker_gap");
+  auto dictionary = getMember<int>(config, "dictionary");
+
+  ArucoGridTarget target(rows, cols, aruco_marker_dim, marker_gap, dictionary);
+  return std::make_shared<const ArucoGridBoardTargetFinder>(target);
 }
 
 }  // namespace industrial_calibration

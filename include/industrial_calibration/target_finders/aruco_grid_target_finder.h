@@ -79,4 +79,10 @@ protected:
   const ArucoGridTarget target_;
 };
 
+struct ArucoGridTargetFinderFactory : public TargetFinderFactory
+{
+public:
+  TargetFinder::ConstPtr create(const YAML::Node& config) const override;
+};
+
 }  // namespace industrial_calibration

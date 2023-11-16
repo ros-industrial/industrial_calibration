@@ -1,6 +1,7 @@
 #include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
 #include <industrial_calibration/target_finders/utils/circle_detector.h>
 #include <industrial_calibration/exceptions.h>
+#include <industrial_calibration/serialization.h>
 
 #include <opencv2/calib3d.hpp>
 #include <memory>
@@ -496,6 +497,31 @@ cv::Mat ModifiedCircleGridTargetFinder::drawTargetFeatures(const cv::Mat& image,
   }
 
   return renderObservations(out_image, cv_obs, target_);
+}
+
+TargetFinder::ConstPtr ModifiedCircleGridTargetFinderFactory::create(const YAML::Node& config) const
+{
+  int rows = getMember<int>(config, "rows");
+  int cols = getMember<int>(config, "cols");
+  double spacing = getMember<double>(config, "spacing");
+  ModifiedCircleGridTarget target(rows, cols, spacing);
+
+  TargetFinder::ConstPtr finder;
+  if (config["circle_detector_params"])
+  {
+    finder =
+        std::make_shared<const ModifiedCircleGridTargetFinder>(target, getMember<CircleDetectorParams>(config, "circle_"
+                                                                                                               "detecto"
+                                                                                                               "r_"
+                                                                                                               "param"
+                                                                                                               "s"));
+  }
+  else
+  {
+    finder = std::make_unique<const ModifiedCircleGridTargetFinder>(target);
+  }
+
+  return finder;
 }
 
 }  // namespace industrial_calibration

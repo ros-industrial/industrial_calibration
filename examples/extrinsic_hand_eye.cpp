@@ -2,7 +2,8 @@
 #include <industrial_calibration/optimizations/analysis/homography_analysis.h>
 #include <industrial_calibration/optimizations/analysis/statistics.h>
 #include <industrial_calibration/optimizations/pnp.h>
-#include <industrial_calibration/target_finders/target_finder_plugin.h>
+#include <industrial_calibration/target_finders/charuco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
 #include <industrial_calibration/target_finders/utils/utils.h>
 // Utilities
 #include "utils.h"
@@ -132,7 +133,7 @@ struct Params
 {
   double homography_threshold{ 2.0 };
   CameraIntrinsics intr;
-  std::unique_ptr<TargetFinderPlugin> target_finder;
+  TargetFinder::ConstPtr target_finder;
   std::vector<cv::Mat> images;
   VectorEigenIsometry poses;
   Eigen::Isometry3d target_mount_to_target_guess{ Eigen::Isometry3d::Identity() };
@@ -258,9 +259,9 @@ Params loadModifiedCircleGridCalibrationData()
   params.intr = intr.as<CameraIntrinsics>();
 
   // Load the target finder
-  YAML::Node target_finder_config = YAML::LoadFile((data_dir / "target_finder.yaml").string())["target_finder"];
-  params.target_finder = std::make_unique<ModifiedCircleGridTargetFinderPlugin>();
-  params.target_finder->init(target_finder_config);
+  YAML::Node target_finder_config = YAML::LoadFile((data_dir / "target_finder.yaml").string());
+  ModifiedCircleGridTargetFinderFactory factory;
+  params.target_finder = factory.create(target_finder_config);
 
   return params;
 }
@@ -284,9 +285,9 @@ Params loadCharucoGridCalibrationData()
   params.intr = intr.as<CameraIntrinsics>();
 
   // Load the target finder
-  YAML::Node target_finder_config = YAML::LoadFile((data_dir / "target_finder.yaml").string())["target_finder"];
-  params.target_finder = std::make_unique<CharucoGridTargetFinderPlugin>();
-  params.target_finder->init(target_finder_config);
+  YAML::Node target_finder_config = YAML::LoadFile((data_dir / "target_finder.yaml").string());
+  CharucoGridTargetFinderFactory factory;
+  params.target_finder = factory.create(target_finder_config);
 
   return params;
 }
@@ -299,7 +300,7 @@ Observation2D3D createCameraOnWristObservation(const Eigen::Isometry3d& pose,
   obs.to_target_mount = Eigen::Isometry3d::Identity();
   obs.correspondence_set = correspondences;
   return obs;
-};
+}
 
 Observation2D3D createTargetOnWristObservation(const Eigen::Isometry3d& pose,
                                                const Correspondence2D3D::Set& correspondences)
@@ -309,7 +310,7 @@ Observation2D3D createTargetOnWristObservation(const Eigen::Isometry3d& pose,
   obs.to_target_mount = pose;
   obs.correspondence_set = correspondences;
   return obs;
-};
+}
 
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
 

@@ -1,5 +1,5 @@
 #include <industrial_calibration/optimizations/pnp.h>
-#include <industrial_calibration/target_finders/target_finder_plugin.h>
+#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
 #include <industrial_calibration/target_finders/utils/utils.h>
 // Utilities
 #include "utils.h"
@@ -75,8 +75,8 @@ std::tuple<PnPResult, Eigen::Isometry3d> run()
 
   // Load the target finder
   YAML::Node target_finder_config = YAML::LoadFile((data_path / "target_finder.yaml").string());
-  auto target_finder = std::make_unique<ModifiedCircleGridTargetFinderPlugin>();
-  target_finder->init(target_finder_config["target_finder"]);
+  ModifiedCircleGridTargetFinderFactory factory;
+  auto target_finder = factory.create(target_finder_config);
 
   // Solve
   PnPProblem params;

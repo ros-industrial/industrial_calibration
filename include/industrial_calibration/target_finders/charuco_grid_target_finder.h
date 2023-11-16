@@ -79,4 +79,10 @@ protected:
   const CharucoGridTarget target_;
 };
 
+struct CharucoGridTargetFinderFactory : public TargetFinderFactory
+{
+public:
+  TargetFinder::ConstPtr create(const YAML::Node& config) const override;
+};
+
 }  // namespace industrial_calibration

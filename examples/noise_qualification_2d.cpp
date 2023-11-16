@@ -1,5 +1,5 @@
 #include <industrial_calibration/optimizations/analysis/noise_qualification.h>
-#include <industrial_calibration/target_finders/target_finder_plugin.h>
+#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
 #include <industrial_calibration/target_finders/utils/utils.h>
 #include <industrial_calibration/serialization.h>
 
@@ -27,8 +27,8 @@ PnPNoiseStat run()
 
   // Load the target finder
   YAML::Node target_finder_config = YAML::LoadFile((data_path / "target_finder.yaml").string());
-  auto target_finder = std::make_unique<ModifiedCircleGridTargetFinderPlugin>();
-  target_finder->init(target_finder_config["target_finder"]);
+  ModifiedCircleGridTargetFinderFactory factory;
+  auto target_finder = factory.create(target_finder_config);
 
   // Load camera intrinsics
   YAML::Node camera_params = YAML::LoadFile((data_path / "camera_intr.yaml").string());
