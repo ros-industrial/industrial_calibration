@@ -14,7 +14,7 @@ target_cxx_version(${PROJECT_NAME}_kinematic_calibration PUBLIC VERSION 17)
 
 # Noise qualification example
 add_executable(${PROJECT_NAME}_noise_qualification_2d noise_qualification_2d.cpp)
-target_link_libraries(${PROJECT_NAME}_noise_qualification_2d PRIVATE ${PROJECT_NAME} opencv_highgui stdc++fs)
+target_link_libraries(${PROJECT_NAME}_noise_qualification_2d PRIVATE ${PROJECT_NAME} opencv_highgui stdc++fs boost_plugin_loader::boost_plugin_loader)
 target_compile_definitions(${PROJECT_NAME}_noise_qualification_2d
                            PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 target_cxx_version(${PROJECT_NAME}_noise_qualification_2d PUBLIC VERSION 17)

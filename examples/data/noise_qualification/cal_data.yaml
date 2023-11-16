@@ -1,0 +1,70 @@
+# List of images relative to a data directory
+# In this example case all the images are the same to produce a zero-noise result
+data:
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+  - image: images/0.png
+
+# Nominal Kinect sensor camera intrinsic parameters
+intrinsics:
+  fx: 550.0 # pixels
+  fy: 550.0 # pixels
+  cx: 320.0
+  cy: 240.0
+
+# Pose guess
+camera_to_target_guess:
+  x: 0.00330134
+  y: 0.0778156
+  z: 0.77218
+  qx: 0.999656
+  qy: 0.00396669
+  qz: 0.020924
+  qw: 0.0152998
+
+# 10x10 modified circle grid target finder
+target_finder:
+  type: ModifiedCircleGridTargetFinder
+  rows: 10
+  cols: 10
+  spacing: 0.0254 # (meters between dot centers)
+  circle_detector_params:
+    minThreshold: 20
+    maxThreshold: 220
+    nThresholds: 20
+
+    minRepeatability: 3
+    circleInclusionRadius: 5
+    maxRadiusDiff: 5
+
+    maxAverageEllipseError: 0.02
+
+    filterByColor: true
+    circleColor: 0
+
+    filterByArea: true
+    minArea: 25.0
+    maxArea: 5000.0
+
+    filterByCircularity: false
+    minCircularity: 0.8
+    maxCircularity: 99999999.0
+
+    filterByInertia: false
+    minInertiaRatio: 0.1
+    maxInertiaRatio: 99999999.0
+
+    filterByConvexity: true
+    minConvexity: 0.95
+    maxConvexity: 99999999.0

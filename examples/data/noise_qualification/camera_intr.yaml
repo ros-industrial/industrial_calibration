@@ -1,6 +1,0 @@
-# Nominal Kinect sensor camera intrinsic parameters
-intrinsics:
-  fx: 550.0 # pixels
-  fy: 550.0 # pixels
-  cx: 320.0
-  cy: 240.0
