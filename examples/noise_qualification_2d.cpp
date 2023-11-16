@@ -1,15 +1,7 @@
 #include <industrial_calibration/optimizations/analysis/noise_qualification.h>
 #include <industrial_calibration/target_finders/target_finder.h>
-#include <industrial_calibration/target_finders/utils/utils.h>
+#include <industrial_calibration/utils.h>
 #include <industrial_calibration/serialization.h>
-
-#if __GNUC__ >= 8
-#include <filesystem>
-using path = std::filesystem::path;
-#else
-#include <experimental/filesystem>
-using path = std::experimental::filesystem::path;
-#endif
 
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include <iostream>
@@ -21,7 +13,7 @@ using namespace industrial_calibration;
 
 std::string WINDOW = "window";
 
-PnPNoiseStat run(const std::filesystem::path& calibration_file)
+PnPNoiseStat run(const path& calibration_file)
 {
   // Parse parameters
   YAML::Node config = YAML::LoadFile(calibration_file.string());

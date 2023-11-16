@@ -1,16 +1,7 @@
 #include <industrial_calibration/optimizations/pnp.h>
 #include <industrial_calibration/target_finders/target_finder.h>
-#include <industrial_calibration/target_finders/utils/utils.h>
-// Utilities
-#include "utils.h"
-
-#if __GNUC__ >= 8
-#include <filesystem>
-using path = std::filesystem::path;
-#else
-#include <experimental/filesystem>
-using path = std::experimental::filesystem::path;
-#endif
+#include <industrial_calibration/utils.h>
+#include <industrial_calibration/serialization.h>
 
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include <iostream>
@@ -61,7 +52,7 @@ static Eigen::Isometry3d solveCVPnP(const CameraIntrinsics& intr, const Correspo
  * position/orientation difference bewteen the two results
  * @return a tuple containing the industrial calibration and OpenCV PnP optimization results, respectively
  */
-std::tuple<PnPResult, Eigen::Isometry3d> run(const std::filesystem::path& calibration_file)
+std::tuple<PnPResult, Eigen::Isometry3d> run(const path& calibration_file)
 {
   YAML::Node config = YAML::LoadFile(calibration_file.string());
 

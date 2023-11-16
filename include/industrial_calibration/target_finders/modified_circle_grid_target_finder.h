@@ -1,7 +1,7 @@
 #pragma once
 
 #include <industrial_calibration/target_finders/target_finder.h>
-#include <industrial_calibration/target_finders/utils/circle_detector.h>
+#include <industrial_calibration/target_finders/circle_detector.h>
 
 namespace industrial_calibration
 {

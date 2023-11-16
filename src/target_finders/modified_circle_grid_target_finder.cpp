@@ -1,5 +1,5 @@
 #include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
-#include <industrial_calibration/target_finders/utils/circle_detector.h>
+#include <industrial_calibration/target_finders/circle_detector.h>
 #include <industrial_calibration/exceptions.h>
 #include <industrial_calibration/serialization.h>
 

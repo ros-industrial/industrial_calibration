@@ -3,17 +3,8 @@
 #include <industrial_calibration/optimizations/analysis/statistics.h>
 #include <industrial_calibration/optimizations/pnp.h>
 #include <industrial_calibration/target_finders/target_finder.h>
-#include <industrial_calibration/target_finders/utils/utils.h>
-// Utilities
-#include "utils.h"
-
-#if __GNUC__ >= 8
-#include <filesystem>
-using path = std::filesystem::path;
-#else
-#include <experimental/filesystem>
-using path = std::experimental::filesystem::path;
-#endif
+#include <industrial_calibration/utils.h>
+#include <industrial_calibration/serialization.h>
 
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include <iostream>
@@ -131,8 +122,7 @@ PnPComparisonStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& problem, co
 
 using ObservationGenerator = std::function<Observation2D3D(const Eigen::Isometry3d&, const Correspondence2D3D::Set&)>;
 
-std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const std::filesystem::path& calibration_file,
-                                                           ObservationGenerator obs_gen)
+std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const path& calibration_file, ObservationGenerator obs_gen)
 {
   // Now we create our calibration problem
   ExtrinsicHandEyeProblem2D3D problem;
