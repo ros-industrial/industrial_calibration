@@ -43,9 +43,7 @@ struct HemispherePoseGenerator : PoseGenerator
   {
   }
 
-  inline HemispherePoseGenerator() : HemispherePoseGenerator(2.0, 10, 10, 0.0, Eigen::Isometry3d::Identity())
-  {
-  }
+  inline HemispherePoseGenerator() : HemispherePoseGenerator(2.0, 10, 10, 0.0, Eigen::Isometry3d::Identity()) {}
 
   virtual std::vector<Eigen::Isometry3d> generate(const Eigen::Isometry3d& target_origin) override final;
 
@@ -72,9 +70,7 @@ struct ConicalPoseGenerator : PoseGenerator
   {
   }
 
-  inline ConicalPoseGenerator() : ConicalPoseGenerator(1.0, 2.0, 20, 0.0, Eigen::Isometry3d::Identity())
-  {
-  }
+  inline ConicalPoseGenerator() : ConicalPoseGenerator(1.0, 2.0, 20, 0.0, Eigen::Isometry3d::Identity()) {}
 
   virtual std::vector<Eigen::Isometry3d> generate(const Eigen::Isometry3d& target_origin) override final;
 
@@ -101,9 +97,7 @@ struct GridPoseGenerator : PoseGenerator
   {
   }
 
-  inline GridPoseGenerator() : GridPoseGenerator(0.2, 2.0, 10, 0.0, Eigen::Isometry3d::Identity())
-  {
-  }
+  inline GridPoseGenerator() : GridPoseGenerator(0.2, 2.0, 10, 0.0, Eigen::Isometry3d::Identity()) {}
 
   virtual std::vector<Eigen::Isometry3d> generate(const Eigen::Isometry3d& target_origin) override final;
 

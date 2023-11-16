@@ -73,9 +73,7 @@ public:
                         camera_base_to_target_base, target, camera, n_observations));
   }
 
-  virtual void applyMasks()
-  {
-  }
+  virtual void applyMasks() {}
 
   virtual void analyzeResults(const KinematicCalibrationResult& result)
   {

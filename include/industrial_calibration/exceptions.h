@@ -10,9 +10,7 @@ namespace industrial_calibration
 class ICalException : public std::runtime_error
 {
 public:
-  ICalException(const std::string& what) : std::runtime_error(what)
-  {
-  }
+  ICalException(const std::string& what) : std::runtime_error(what) {}
 };
 
 /**

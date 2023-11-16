@@ -24,10 +24,7 @@ public:
     return finder_->drawTargetFeatures(image, target_features);
   }
 
-  const Target& target() const override final
-  {
-    return finder_->target();
-  }
+  const Target& target() const override final { return finder_->target(); }
 
   virtual void init(const YAML::Node& config) = 0;
 

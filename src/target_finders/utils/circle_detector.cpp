@@ -347,9 +347,7 @@ std::vector<cv::KeyPoint> detectKeyPoints(const std::vector<std::vector<CircleDe
   return keypoints;
 }
 
-CircleDetector::CircleDetector(const CircleDetectorParams& parameters) : params(parameters)
-{
-}
+CircleDetector::CircleDetector(const CircleDetectorParams& parameters) : params(parameters) {}
 
 void CircleDetector::detect(cv::InputArray input, std::vector<cv::KeyPoint>& keypoints, cv::InputArray)
 {

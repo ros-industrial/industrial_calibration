@@ -72,10 +72,7 @@ Eigen::VectorXd DHChain::createUniformlyRandomPose() const
   return joints;
 }
 
-std::size_t DHChain::dof() const
-{
-  return transforms_.size();
-}
+std::size_t DHChain::dof() const { return transforms_.size(); }
 
 Eigen::MatrixX4d DHChain::getDHTable() const
 {
@@ -108,10 +105,7 @@ std::vector<std::array<std::string, 4>> DHChain::getParamLabels() const
   return out;
 }
 
-Eigen::Isometry3d DHChain::getBaseOffset() const
-{
-  return base_offset_;
-}
+Eigen::Isometry3d DHChain::getBaseOffset() const { return base_offset_; }
 
 Eigen::Isometry3d DHChain::getRelativeTransform(int joint_index, double value) const
 {
