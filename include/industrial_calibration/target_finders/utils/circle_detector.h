@@ -1,5 +1,7 @@
 #pragma once
 
+#include <industrial_calibration/serialization.h>
+
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>
@@ -102,3 +104,46 @@ protected:
 };
 
 }  // namespace industrial_calibration
+
+using namespace industrial_calibration;
+
+namespace YAML
+{
+template<>
+struct convert<CircleDetectorParams>
+{
+  using T = CircleDetectorParams;
+  inline static bool decode(const Node& node, T& val)
+  {
+    val.nThresholds = getMember<decltype(val.nThresholds)>(node, "nThresholds");
+    val.minThreshold = getMember<decltype(val.minThreshold)>(node, "minThreshold");
+    val.maxThreshold = getMember<decltype(val.maxThreshold)>(node, "maxThreshold");
+    val.minRepeatability = getMember<decltype(val.minRepeatability)>(node, "minRepeatability");
+    val.circleInclusionRadius = getMember<decltype(val.circleInclusionRadius)>(node, "circleInclusionRadius");
+    val.maxRadiusDiff = getMember<decltype(val.maxRadiusDiff)>(node, "maxRadiusDiff");
+    val.maxAverageEllipseError = getMember<decltype(val.maxAverageEllipseError)>(node, "maxAverageEllipseError");
+
+    val.filterByColor = getMember<decltype(val.filterByColor)>(node, "filterByColor");
+    val.circleColor = static_cast<unsigned short>(getMember<int>(node, "circleColor"));
+
+    val.filterByArea = getMember<decltype(val.filterByArea)>(node, "filterByArea");
+    val.minArea = getMember<decltype(val.minArea)>(node, "minArea");
+    val.maxArea = getMember<decltype(val.maxArea)>(node, "maxArea");
+
+    val.filterByCircularity = getMember<decltype(val.filterByCircularity)>(node, "filterByCircularity");
+    val.minCircularity = getMember<decltype(val.minCircularity)>(node, "minCircularity");
+    val.maxCircularity = getMember<decltype(val.maxCircularity)>(node, "maxCircularity");
+
+    val.filterByInertia = getMember<decltype(val.filterByInertia)>(node, "filterByInertia");
+    val.minInertiaRatio = getMember<decltype(val.minInertiaRatio)>(node, "minInertiaRatio");
+    val.maxInertiaRatio = getMember<decltype(val.maxInertiaRatio)>(node, "maxInertiaRatio");
+
+    val.filterByConvexity = getMember<decltype(val.filterByConvexity)>(node, "filterByConvexity");
+    val.minConvexity = getMember<decltype(val.minConvexity)>(node, "minConvexity");
+    val.maxConvexity = getMember<decltype(val.maxConvexity)>(node, "maxConvexity");
+
+    return true;
+  }
+};
+
+} // namespace YAML
