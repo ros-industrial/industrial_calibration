@@ -1,6 +1,7 @@
 #pragma once
 
 #include <industrial_calibration/exceptions.h>
+#include <industrial_calibration/serialization.h>
 
 #include <Eigen/Geometry>
 #include <memory>
@@ -251,3 +252,67 @@ protected:
 };
 
 }  // namespace industrial_calibration
+
+using namespace industrial_calibration;
+
+namespace YAML
+{
+template <>
+struct convert<DHTransform>
+{
+  using T = DHTransform;
+  static bool decode(const Node& n, T& val)
+  {
+    // Joint type
+    switch (static_cast<DHJointType>(n["type"].as<unsigned>()))
+    {
+      case DHJointType::LINEAR:
+        val.type = DHJointType::LINEAR;
+        break;
+      case DHJointType::REVOLUTE:
+        val.type = DHJointType::REVOLUTE;
+        break;
+      default:
+        throw std::runtime_error("Invalid joint type");
+    }
+
+    // DH offsets
+    {
+      YAML::Node d = n["d"];
+      YAML::Node theta = n["theta"];
+      YAML::Node r = n["r"];
+      YAML::Node alpha = n["alpha"];
+
+      Eigen::Vector4d params;
+      params << d.as<double>(), theta.as<double>(), r.as<double>(), alpha.as<double>();
+
+      val.params = params;
+    }
+
+    val.name = n["joint_name"].as<std::string>();
+
+    return true;
+  }
+};
+
+template <>
+struct convert<DHChain>
+{
+  using T = DHChain;
+  inline static bool decode(const Node& n, T& val)
+  {
+    val.base_offset_ = n["base_transform"].as<Eigen::Isometry3d>();
+
+    const YAML::Node& transforms = n["dh_transforms"];
+    val.transforms_.clear();
+    val.transforms_.reserve(transforms.size());
+    for (std::size_t i = 0; i < transforms.size(); i++)
+    {
+      val.transforms_.push_back(transforms[i].as<DHTransform>());
+    }
+
+    return true;
+  }
+};
+
+}  // namespace YAML

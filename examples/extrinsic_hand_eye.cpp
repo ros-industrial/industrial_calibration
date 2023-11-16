@@ -2,7 +2,6 @@
 #include <industrial_calibration/optimizations/analysis/homography_analysis.h>
 #include <industrial_calibration/optimizations/analysis/statistics.h>
 #include <industrial_calibration/optimizations/pnp.h>
-#include <industrial_calibration/serialization/problems.h>
 #include <industrial_calibration/target_finders/target_finder_plugin.h>
 #include <industrial_calibration/target_finders/utils/utils.h>
 // Utilities

@@ -1,7 +1,6 @@
 #include <industrial_calibration/exceptions.h>
 #include <industrial_calibration/optimizations/analysis/statistics.h>
 #include <industrial_calibration/optimizations/dh_chain_kinematic_calibration.h>
-#include <industrial_calibration/serialization/eigen.h>
 
 #if __GNUC__ >= 8
 #include <filesystem>

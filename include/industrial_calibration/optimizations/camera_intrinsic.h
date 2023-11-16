@@ -1,6 +1,7 @@
 #pragma once
 
 #include <industrial_calibration/optimizations/analysis/covariance_types.h>
+#include <industrial_calibration/camera_intrinsics.h>
 #include <industrial_calibration/types.h>
 
 namespace industrial_calibration

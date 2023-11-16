@@ -1,6 +1,5 @@
 #pragma once
 
-#include <industrial_calibration/serialization/problems.h>
 #include <industrial_calibration/target_finders/utils/utils.h>
 
 #if __GNUC__ >= 8

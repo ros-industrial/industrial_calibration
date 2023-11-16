@@ -1,7 +1,10 @@
 #pragma once
 
-#include <ceres/rotation.h>
 #include <industrial_calibration/types.h>
+#include <industrial_calibration/camera_intrinsics.h>
+#include <industrial_calibration/pose_6d.h>
+
+#include <ceres/rotation.h>
 
 namespace industrial_calibration
 {
