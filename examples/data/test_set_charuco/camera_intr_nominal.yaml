@@ -1,6 +1,0 @@
-# AVT Mako Gig-E Camera camera intrinsics (nominal)
-intrinsics:
-  fx: 1400.0 # pixels
-  fy: 1400.0 # pixels
-  cx: 800.0
-  cy: 600.0

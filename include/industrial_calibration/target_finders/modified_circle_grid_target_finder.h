@@ -61,4 +61,10 @@ protected:
   const CircleDetectorParams params_;
 };
 
+struct ModifiedCircleGridTargetFinderFactory : public TargetFinderFactory
+{
+public:
+  TargetFinder::ConstPtr create(const YAML::Node& config) const override;
+};
+
 }  // namespace industrial_calibration

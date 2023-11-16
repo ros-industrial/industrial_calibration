@@ -7,6 +7,11 @@
 #include <opencv2/core/mat.hpp>
 #include <vector>
 
+namespace YAML
+{
+class Node;
+}
+
 namespace industrial_calibration
 {
 /** @brief Typedef for an STL vector of Eigen vector objects. Use a specialized allocator in the case that types
@@ -48,6 +53,9 @@ struct Target
 class TargetFinder
 {
 public:
+  using Ptr = std::shared_ptr<TargetFinder>;
+  using ConstPtr = std::shared_ptr<const TargetFinder>;
+
   TargetFinder() = default;
   virtual ~TargetFinder() = default;
 
@@ -75,6 +83,20 @@ public:
    * @brief Finds correspondences from a set of images
    */
   Correspondence2D3D::Set findCorrespondences(const std::vector<cv::Mat>& images) const;
+};
+
+/** @brief Plugin interface for generating target finders */
+struct TargetFinderFactory
+{
+  using Ptr = std::shared_ptr<TargetFinderFactory>;
+  using ConstPtr = std::shared_ptr<const TargetFinderFactory>;
+
+  TargetFinderFactory() = default;
+  virtual ~TargetFinderFactory() = default;
+
+  virtual TargetFinder::ConstPtr create(const YAML::Node& config) const = 0;
+
+  static std::string getSection() { return TARGET_FINDER_SECTION; }
 };
 
 }  // namespace industrial_calibration
