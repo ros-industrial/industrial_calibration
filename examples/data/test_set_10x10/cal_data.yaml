@@ -1,30 +1,95 @@
-- pose: poses/0.yaml
-  image: images/0.png
-- pose: poses/1.yaml
-  image: images/1.png
-- pose: poses/10.yaml
-  image: images/10.png
-- pose: poses/11.yaml
-  image: images/11.png
-- pose: poses/12.yaml
-  image: images/12.png
-- pose: poses/13.yaml
-  image: images/13.png
-- pose: poses/14.yaml
-  image: images/14.png
-- pose: poses/2.yaml
-  image: images/2.png
-- pose: poses/3.yaml
-  image: images/3.png
-- pose: poses/4.yaml
-  image: images/4.png
-- pose: poses/5.yaml
-  image: images/5.png
-- pose: poses/6.yaml
-  image: images/6.png
-- pose: poses/7.yaml
-  image: images/7.png
-- pose: poses/8.yaml
-  image: images/8.png
-- pose: poses/9.yaml
-  image: images/9.png
+data:
+  - pose: poses/0.yaml
+    image: images/0.png
+  - pose: poses/1.yaml
+    image: images/1.png
+  - pose: poses/10.yaml
+    image: images/10.png
+  - pose: poses/11.yaml
+    image: images/11.png
+  - pose: poses/12.yaml
+    image: images/12.png
+  - pose: poses/13.yaml
+    image: images/13.png
+  - pose: poses/14.yaml
+    image: images/14.png
+  - pose: poses/2.yaml
+    image: images/2.png
+  - pose: poses/3.yaml
+    image: images/3.png
+  - pose: poses/4.yaml
+    image: images/4.png
+  - pose: poses/5.yaml
+    image: images/5.png
+  - pose: poses/6.yaml
+    image: images/6.png
+  - pose: poses/7.yaml
+    image: images/7.png
+  - pose: poses/8.yaml
+    image: images/8.png
+  - pose: poses/9.yaml
+    image: images/9.png
+
+# Nominal Kinect sensor camera intrinsic parameters
+intrinsics:
+  fx: 550.0 # pixels
+  fy: 550.0 # pixels
+  cx: 320.0
+  cy: 240.0
+
+# Pose guesses
+camera_mount_to_camera_guess:
+  x: 0.0  # Note: Until I fix this YOU NEED to make this a DOUBLE! Don't write just '0'.
+  y: 0.0
+  z: 0.0
+  qx: 0.0
+  qy: 0.0
+  qz: -0.7071068
+  qw: 0.7071068
+target_mount_to_target_guess:
+  x: 1.0
+  y: 0.0
+  z: 0.0
+  qx: 0.0
+  qy: 0.0
+  qz: -0.7071068
+  qw: 0.7071068
+
+# 10x10 modified circle grid target finder
+target_finder:
+  type: ModifiedCircleGridTargetFinder
+  rows: 10
+  cols: 10
+  spacing: 0.0254 # (meters between dot centers)
+  circle_detector_params:
+    minThreshold: 20
+    maxThreshold: 220
+    nThresholds: 20
+
+    minRepeatability: 3
+    circleInclusionRadius: 5
+    maxRadiusDiff: 5
+
+    maxAverageEllipseError: 0.02
+
+    filterByColor: true
+    circleColor: 0
+
+    filterByArea: true
+    minArea: 25.0
+    maxArea: 5000.0
+
+    filterByCircularity: false
+    minCircularity: 0.8
+    maxCircularity: 99999999.0
+
+    filterByInertia: false
+    minInertiaRatio: 0.1
+    maxInertiaRatio: 99999999.0
+
+    filterByConvexity: true
+    minConvexity: 0.95
+    maxConvexity: 99999999.0
+
+# Other parameters
+homography_threshold: 1.0

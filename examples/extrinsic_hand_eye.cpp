@@ -2,8 +2,7 @@
 #include <industrial_calibration/optimizations/analysis/homography_analysis.h>
 #include <industrial_calibration/optimizations/analysis/statistics.h>
 #include <industrial_calibration/optimizations/pnp.h>
-#include <industrial_calibration/target_finders/charuco_grid_target_finder.h>
-#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
+#include <industrial_calibration/target_finders/target_finder.h>
 #include <industrial_calibration/target_finders/utils/utils.h>
 // Utilities
 #include "utils.h"
@@ -16,6 +15,7 @@ using path = std::filesystem::path;
 using path = std::experimental::filesystem::path;
 #endif
 
+#include <boost_plugin_loader/plugin_loader.hpp>
 #include <iostream>
 #include <memory>
 #include <opencv2/highgui.hpp>
@@ -129,28 +129,39 @@ PnPComparisonStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& problem, co
   return stats;
 }
 
-struct Params
-{
-  double homography_threshold{ 2.0 };
-  CameraIntrinsics intr;
-  TargetFinder::ConstPtr target_finder;
-  std::vector<cv::Mat> images;
-  VectorEigenIsometry poses;
-  Eigen::Isometry3d target_mount_to_target_guess{ Eigen::Isometry3d::Identity() };
-  Eigen::Isometry3d camera_mount_to_camera_guess{ Eigen::Isometry3d::Identity() };
-};
-
 using ObservationGenerator = std::function<Observation2D3D(const Eigen::Isometry3d&, const Correspondence2D3D::Set&)>;
 
-std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const Params& params, ObservationGenerator obs_gen)
+std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const std::filesystem::path& calibration_file,
+                                                           ObservationGenerator obs_gen)
 {
   // Now we create our calibration problem
   ExtrinsicHandEyeProblem2D3D problem;
-  problem.intr = params.intr;  // Set the camera properties
 
-  // Our 'base to camera guess': A camera off to the side, looking at a point centered in front of the robot
-  problem.target_mount_to_target_guess = params.target_mount_to_target_guess;
-  problem.camera_mount_to_camera_guess = params.camera_mount_to_camera_guess;
+  YAML::Node config = YAML::LoadFile(calibration_file.string());
+
+  // Load the homography threshold
+  auto homography_threshold = getMember<double>(config, "homography_threshold");
+
+  // Load the pose guesses
+  problem.target_mount_to_target_guess = getMember<Eigen::Isometry3d>(config, "target_mount_to_target_guess");
+  problem.camera_mount_to_camera_guess = getMember<Eigen::Isometry3d>(config, "camera_mount_to_camera_guess");
+
+  // Load the images and poses
+  VectorEigenIsometry poses;
+  std::vector<cv::Mat> images;
+  std::tie(poses, images) = loadPoseImagePairs(calibration_file.parent_path(), getMember<YAML::Node>(config, "data"));
+
+  // Load the camera intrinsics
+  problem.intr = getMember<CameraIntrinsics>(config, "intrinsics");
+
+  // Load the target finder
+  boost_plugin_loader::PluginLoader loader;
+  loader.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
+  loader.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
+
+  YAML::Node target_finder_config = getMember<YAML::Node>(config, "target_finder");
+  auto factory = loader.createInstance<TargetFinderFactory>(getMember<std::string>(target_finder_config, "type"));
+  TargetFinder::ConstPtr target_finder = factory->create(target_finder_config);
 
   // Create a named OpenCV window for viewing the images
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
@@ -160,38 +171,38 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const Params& params,
   // Finally, we need to process our images into correspondence sets: for each dot in the
   // target this will be where that dot is in the target and where it was seen in the image.
   // Repeat for each image. We also tell where the wrist was when the image was taken.
-  problem.observations.reserve(params.images.size());
+  problem.observations.reserve(images.size());
 
   // The target may not be identified in all images, so let's keep track the indices of the images for which the
   // target was identified
   std::vector<cv::Mat> found_images;
-  found_images.reserve(params.images.size());
+  found_images.reserve(images.size());
 
-  for (std::size_t i = 0; i < params.images.size(); ++i)
+  for (std::size_t i = 0; i < images.size(); ++i)
   {
     // For each image we need to:
     try
     {
       // Try to find the correspondences with the target features in this image:
-      Observation2D3D obs = obs_gen(params.poses[i], params.target_finder->findCorrespondences(params.images[i]));
+      Observation2D3D obs = obs_gen(poses[i], target_finder->findCorrespondences(images[i]));
 
       // Check that a homography matrix can accurately reproject the observed points onto the expected target points
       // within a defined threshold
       RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(), obs.correspondence_set.size() / 3,
                                                  RANDOM_SEED);
       Eigen::VectorXd homography_error = calculateHomographyError(obs.correspondence_set, random_sampler);
-      if (homography_error.array().mean() > params.homography_threshold)
+      if (homography_error.array().mean() > homography_threshold)
         throw std::runtime_error("Homography error exceeds threshold (" +
                                  std::to_string(homography_error.array().mean()) + ")");
 
       // Add the observations to the problem
       problem.observations.push_back(obs);
-      found_images.push_back(params.images[i]);
+      found_images.push_back(images[i]);
 
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
       // Show the points we detected
-      TargetFeatures target_features = params.target_finder->findTargetFeatures(params.images[i]);
-      cv::imshow(WINDOW, params.target_finder->drawTargetFeatures(params.images[i], target_features));
+      TargetFeatures target_features = target_finder->findTargetFeatures(images[i]);
+      cv::imshow(WINDOW, target_finder->drawTargetFeatures(images[i], target_features));
       cv::waitKey();
 #endif
     }
@@ -199,7 +210,7 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const Params& params,
     {
       std::cerr << "Image " << i << ": '" << ex.what() << "'" << std::endl;
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
-      cv::imshow(WINDOW, params.images[i]);
+      cv::imshow(WINDOW, images[i]);
       cv::waitKey();
 #endif
       continue;
@@ -240,58 +251,6 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const Params& params,
   return std::make_tuple(opt_result, stats);
 }
 
-Params loadModifiedCircleGridCalibrationData()
-{
-  Params params;
-
-  const path data_dir = path(EXAMPLE_DATA_DIR) / path("test_set_10x10");
-
-  // Load the pose guesses
-  YAML::Node pose_guesses = YAML::LoadFile((data_dir / "pose_initial_guesses.yaml").string());
-  params.target_mount_to_target_guess = pose_guesses["base_to_target_guess"].as<Eigen::Isometry3d>();
-  params.camera_mount_to_camera_guess = pose_guesses["wrist_to_camera_guess"].as<Eigen::Isometry3d>();
-
-  // Load the images and poses
-  std::tie(params.poses, params.images) = loadPoseImagePairs(data_dir);
-
-  // Load the camera intrinsics
-  YAML::Node intr = YAML::LoadFile((data_dir / "camera_intr.yaml").string())["intrinsics"];
-  params.intr = intr.as<CameraIntrinsics>();
-
-  // Load the target finder
-  YAML::Node target_finder_config = YAML::LoadFile((data_dir / "target_finder.yaml").string());
-  ModifiedCircleGridTargetFinderFactory factory;
-  params.target_finder = factory.create(target_finder_config);
-
-  return params;
-}
-
-Params loadCharucoGridCalibrationData()
-{
-  Params params;
-
-  const path data_dir = path(EXAMPLE_DATA_DIR) / path("test_set_charuco");
-
-  // Load the pose guesses
-  YAML::Node pose_guesses = YAML::LoadFile((data_dir / "pose_initial_guesses.yaml").string());
-  params.target_mount_to_target_guess = pose_guesses["wrist_to_target_guess"].as<Eigen::Isometry3d>();
-  params.camera_mount_to_camera_guess = pose_guesses["base_to_camera_guess"].as<Eigen::Isometry3d>();
-
-  // Load the images and poses
-  std::tie(params.poses, params.images) = loadPoseImagePairs(data_dir);
-
-  // Load the camera intrinsics
-  YAML::Node intr = YAML::LoadFile((data_dir / "camera_intr.yaml").string())["intrinsics"];
-  params.intr = intr.as<CameraIntrinsics>();
-
-  // Load the target finder
-  YAML::Node target_finder_config = YAML::LoadFile((data_dir / "target_finder.yaml").string());
-  CharucoGridTargetFinderFactory factory;
-  params.target_finder = factory.create(target_finder_config);
-
-  return params;
-}
-
 Observation2D3D createCameraOnWristObservation(const Eigen::Isometry3d& pose,
                                                const Correspondence2D3D::Set& correspondences)
 {
@@ -319,12 +278,16 @@ int main(int argc, char** argv)
   try
   {
     // Modified circle grid target
-    printTitle("Camera on wrist, modified circle grid target");
-    run(loadModifiedCircleGridCalibrationData(), createCameraOnWristObservation);
+    {
+      printTitle("Camera on wrist, modified circle grid target");
+      const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_10x10") / "cal_data.yaml";
+      run(calibration_file.string(), createCameraOnWristObservation);
+    }
 
     // ChArUco grid target
+    const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_charuco") / "cal_data.yaml";
     printTitle("Target on wrist, ChArUco grid target");
-    run(loadCharucoGridCalibrationData(), createTargetOnWristObservation);
+    run(calibration_file.string(), createTargetOnWristObservation);
     return 0;
   }
   catch (const std::exception& ex)
@@ -340,9 +303,11 @@ int main(int argc, char** argv)
 
 TEST(ExtrinsicHandEyeCalibration, ModifiedCircleGridTarget)
 {
+  const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_10x10") / "cal_data.yaml";
+
   ExtrinsicHandEyeResult result;
   PnPComparisonStats stats;
-  std::tie(result, stats) = run(loadModifiedCircleGridCalibrationData(), createCameraOnWristObservation);
+  std::tie(result, stats) = run(calibration_file, createCameraOnWristObservation);
 
   // Expect the optimization to converge with low* residual error (in pixels)
   // Note: the camera parameters used in this calibration were un-calibrated values and the images are somewhat low
@@ -358,9 +323,11 @@ TEST(ExtrinsicHandEyeCalibration, ModifiedCircleGridTarget)
 
 TEST(ExtrinsicHandEyeCalibration, ChArUcoGridTarget)
 {
+  const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_charuco") / "cal_data.yaml";
+
   ExtrinsicHandEyeResult result;
   PnPComparisonStats stats;
-  std::tie(result, stats) = run(loadCharucoGridCalibrationData(), createTargetOnWristObservation);
+  std::tie(result, stats) = run(calibration_file, createTargetOnWristObservation);
 
   // Expect the optimization to converge with low residual error (in pixels)
   ASSERT_TRUE(result.converged);

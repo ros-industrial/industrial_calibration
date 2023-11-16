@@ -18,13 +18,12 @@ using VectorEigenIsometry = std::vector<Eigen::Isometry3d, Eigen::aligned_alloca
 
 namespace industrial_calibration
 {
-std::tuple<VectorEigenIsometry, std::vector<cv::Mat>> loadPoseImagePairs(const path& data_dir)
+std::tuple<VectorEigenIsometry, std::vector<cv::Mat>> loadPoseImagePairs(const path& data_dir, const YAML::Node& data)
 {
   VectorEigenIsometry poses;
   std::vector<cv::Mat> images;
 
   // Load the images and poses
-  YAML::Node data = YAML::LoadFile((data_dir / "cal_data.yaml").string());
   poses.reserve(data.size());
   images.reserve(data.size());
 
