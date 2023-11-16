@@ -1,7 +1,6 @@
 #include <industrial_calibration/optimizations/pnp.h>
 #include <industrial_calibration/target_finders/target_finder_plugin.h>
 #include <industrial_calibration/target_finders/utils/utils.h>
-#include <industrial_calibration/serialization/types.h>
 // Utilities
 #include "utils.h"
 

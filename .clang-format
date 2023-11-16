@@ -7,7 +7,7 @@ AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: None
+AllowShortFunctionsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakTemplateDeclarations: true
 AlwaysBreakBeforeMultilineStrings: false

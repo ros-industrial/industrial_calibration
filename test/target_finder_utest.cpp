@@ -18,9 +18,7 @@ using namespace industrial_calibration;
 class TargetFinderTestFixture : public ::testing::Test
 {
 public:
-  TargetFinderTestFixture() : ::testing::Test(), homography_error_threshold(1.0)
-  {
-  }
+  TargetFinderTestFixture() : ::testing::Test(), homography_error_threshold(1.0) {}
 
   void runTest()
   {
@@ -227,40 +225,19 @@ public:
   ArucoGridTarget target;
 };
 
-TEST_F(ModifiedCircleGridFinderTest, findTargetFeatures)
-{
-  this->runTest();
-}
+TEST_F(ModifiedCircleGridFinderTest, findTargetFeatures) { this->runTest(); }
 
-TEST_F(CharucoFinderTest, findTargetFeatures)
-{
-  this->runTest();
-}
+TEST_F(CharucoFinderTest, findTargetFeatures) { this->runTest(); }
 
-TEST_F(CharucoFinderPredefinedBoardTest, findTargetFeatures)
-{
-  this->runTest();
-}
+TEST_F(CharucoFinderPredefinedBoardTest, findTargetFeatures) { this->runTest(); }
 
-TEST_F(ObscuredCharucoFinderTest, findTargetFeatures)
-{
-  this->runTest();
-}
+TEST_F(ObscuredCharucoFinderTest, findTargetFeatures) { this->runTest(); }
 
-TEST_F(OneFeatureCharucoFinderTest, findTargetFeatures)
-{
-  this->runTest();
-}
+TEST_F(OneFeatureCharucoFinderTest, findTargetFeatures) { this->runTest(); }
 
-TEST_F(ArucoFinderTest, findTargetFeatures)
-{
-  this->runTest();
-}
+TEST_F(ArucoFinderTest, findTargetFeatures) { this->runTest(); }
 
-TEST_F(ArucoFinderPredefinedBoardTest, findTargetFeatures)
-{
-  this->runTest();
-}
+TEST_F(ArucoFinderPredefinedBoardTest, findTargetFeatures) { this->runTest(); }
 
 int main(int argc, char** argv)
 {

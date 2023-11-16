@@ -14,9 +14,7 @@ namespace industrial_calibration
 class CircleDistCost
 {
 public:
-  CircleDistCost(const double& x, const double& y) : x_(x), y_(y)
-  {
-  }
+  CircleDistCost(const double& x, const double& y) : x_(x), y_(y) {}
 
   /**
    * @brief One formulation of a residual function for error relative to the center of a circle.

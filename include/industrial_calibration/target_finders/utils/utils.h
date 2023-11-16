@@ -1,6 +1,6 @@
 #pragma once
 
-#include <industrial_calibration/types.h>
+#include <industrial_calibration/camera_intrinsics.h>
 
 #include <Eigen/Dense>
 #include <opencv2/core/mat.hpp>

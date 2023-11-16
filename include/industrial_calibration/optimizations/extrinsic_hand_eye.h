@@ -17,6 +17,7 @@
 #pragma once
 
 #include <industrial_calibration/types.h>
+#include <industrial_calibration/camera_intrinsics.h>
 #include <industrial_calibration/optimizations/analysis/covariance_types.h>
 
 #include <Eigen/Dense>
@@ -77,3 +78,33 @@ ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem2D3D& params);
 ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem3D3D& params);
 
 }  // namespace industrial_calibration
+
+namespace YAML
+{
+class Node;
+
+template <typename T>
+struct convert;
+
+template <>
+struct convert<industrial_calibration::ExtrinsicHandEyeProblem2D3D>
+{
+  static Node encode(const industrial_calibration::ExtrinsicHandEyeProblem2D3D& rhs);
+  static bool decode(const Node& node, industrial_calibration::ExtrinsicHandEyeProblem2D3D& rhs);
+};
+
+template <>
+struct convert<industrial_calibration::ExtrinsicHandEyeProblem3D3D>
+{
+  static Node encode(const industrial_calibration::ExtrinsicHandEyeProblem3D3D& rhs);
+  static bool decode(const Node& node, industrial_calibration::ExtrinsicHandEyeProblem3D3D& rhs);
+};
+
+template <>
+struct convert<industrial_calibration::ExtrinsicHandEyeResult>
+{
+  static Node encode(const industrial_calibration::ExtrinsicHandEyeResult& rhs);
+  static bool decode(const YAML::Node& node, industrial_calibration::ExtrinsicHandEyeResult& rhs);
+};
+
+}  // namespace YAML

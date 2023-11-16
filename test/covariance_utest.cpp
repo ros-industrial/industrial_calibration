@@ -220,10 +220,7 @@ protected:
 class CircleFitUnit_OneObs : public CircleFitUnit_PerfectObservations_RandomGuess
 {
 protected:
-  void setObservations() override
-  {
-    observations.emplace_back(Eigen::Vector2d(0.0, 0.0));
-  }
+  void setObservations() override { observations.emplace_back(Eigen::Vector2d(0.0, 0.0)); }
 };
 
 TEST_F(CircleFitUnit_PerfectObservations_RandomGuess, FitCircleToPerfectObs)

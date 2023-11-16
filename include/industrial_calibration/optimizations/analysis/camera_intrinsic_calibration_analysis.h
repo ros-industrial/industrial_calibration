@@ -1,6 +1,7 @@
 #pragma once
 
 #include <industrial_calibration/types.h>
+#include <industrial_calibration/camera_intrinsics.h>
 
 namespace industrial_calibration
 {

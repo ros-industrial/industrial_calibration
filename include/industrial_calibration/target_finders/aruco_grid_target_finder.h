@@ -73,10 +73,7 @@ public:
    */
   virtual cv::Mat drawTargetFeatures(const cv::Mat& image, const TargetFeatures& target_features) const override;
 
-  virtual const Target& target() const override
-  {
-    return target_;
-  }
+  virtual const Target& target() const override { return target_; }
 
 protected:
   const ArucoGridTarget target_;

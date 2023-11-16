@@ -251,3 +251,24 @@ protected:
 };
 
 }  // namespace industrial_calibration
+
+namespace YAML
+{
+class Node;
+
+template <typename T>
+struct convert;
+
+template <>
+struct convert<industrial_calibration::DHTransform>
+{
+  static bool decode(const Node& n, industrial_calibration::DHTransform& val);
+};
+
+template <>
+struct convert<industrial_calibration::DHChain>
+{
+  inline static bool decode(const Node& n, industrial_calibration::DHChain& val);
+};
+
+}  // namespace YAML

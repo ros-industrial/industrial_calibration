@@ -7,259 +7,6 @@
 namespace industrial_calibration
 {
 /**
- * @brief Structure representing camera intrinsic parameters for a pin-hole model camera
- */
-struct CameraIntrinsics
-{
-  std::array<double, 4> values{ 0.0, 0.0, 0.0, 0.0 };
-
-  double& fx()
-  {
-    return values[0];
-  }
-  double& fy()
-  {
-    return values[1];
-  }
-  double& cx()
-  {
-    return values[2];
-  }
-  double& cy()
-  {
-    return values[3];
-  }
-
-  const double& fx() const
-  {
-    return values[0];
-  }
-  const double& fy() const
-  {
-    return values[1];
-  }
-  const double& cx() const
-  {
-    return values[2];
-  }
-  const double& cy() const
-  {
-    return values[3];
-  }
-
-  inline bool operator==(const CameraIntrinsics& rhs) const
-  {
-    return values == rhs.values;
-  }
-};
-
-template <typename T>
-struct CalibCameraIntrinsics
-{
-  const T* data;
-
-  CalibCameraIntrinsics(const T* data) : data(data)
-  {
-  }
-
-  const T& fx() const
-  {
-    return data[0];
-  }
-  const T& fy() const
-  {
-    return data[1];
-  }
-  const T& cx() const
-  {
-    return data[2];
-  }
-  const T& cy() const
-  {
-    return data[3];
-  }
-
-  const T& k1() const
-  {
-    return data[4];
-  }
-  const T& k2() const
-  {
-    return data[5];
-  }
-  const T& p1() const
-  {
-    return data[6];
-  }
-  const T& p2() const
-  {
-    return data[7];
-  }
-  const T& k3() const
-  {
-    return data[8];
-  }
-
-  constexpr static std::size_t size()
-  {
-    return 9;
-  }
-};
-
-template <typename T>
-struct MutableCalibCameraIntrinsics
-{
-  T* data;
-
-  MutableCalibCameraIntrinsics(T* data) : data(data)
-  {
-  }
-
-  const T& fx() const
-  {
-    return data[0];
-  }
-  const T& fy() const
-  {
-    return data[1];
-  }
-  const T& cx() const
-  {
-    return data[2];
-  }
-  const T& cy() const
-  {
-    return data[3];
-  }
-
-  const T& k1() const
-  {
-    return data[4];
-  }
-  const T& k2() const
-  {
-    return data[5];
-  }
-  const T& p1() const
-  {
-    return data[6];
-  }
-  const T& p2() const
-  {
-    return data[7];
-  }
-  const T& k3() const
-  {
-    return data[8];
-  }
-
-  T& fx()
-  {
-    return data[0];
-  }
-  T& fy()
-  {
-    return data[1];
-  }
-  T& cx()
-  {
-    return data[2];
-  }
-  T& cy()
-  {
-    return data[3];
-  }
-
-  T& k1()
-  {
-    return data[4];
-  }
-  T& k2()
-  {
-    return data[5];
-  }
-  T& p1()
-  {
-    return data[6];
-  }
-  T& p2()
-  {
-    return data[7];
-  }
-  T& k3()
-  {
-    return data[8];
-  }
-
-  constexpr static std::size_t size()
-  {
-    return 9;
-  }
-};
-
-/**
- * @brief Representation of an isometry homogeneous transform for better integration with Ceres
- */
-struct Pose6d
-{
-  Pose6d() = default;
-  Pose6d(std::array<double, 6> l) : values(l)
-  {
-  }
-
-  std::array<double, 6> values{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-
-  double& rx()
-  {
-    return values[0];
-  }
-  double& ry()
-  {
-    return values[1];
-  }
-  double& rz()
-  {
-    return values[2];
-  }
-  double& x()
-  {
-    return values[3];
-  }
-  double& y()
-  {
-    return values[4];
-  }
-  double& z()
-  {
-    return values[5];
-  }
-  const double& rx() const
-  {
-    return values[0];
-  }
-  const double& ry() const
-  {
-    return values[1];
-  }
-  const double& rz() const
-  {
-    return values[2];
-  }
-  const double& x() const
-  {
-    return values[3];
-  }
-  const double& y() const
-  {
-    return values[4];
-  }
-  const double& z() const
-  {
-    return values[5];
-  }
-};
-
-/**
  * @brief A pair of corresponding features in a N-dimensional sensor "image" and 3D target
  */
 template <Eigen::Index IMAGE_DIM, Eigen::Index WORLD_DIM>
@@ -316,9 +63,7 @@ template <Eigen::Index IMAGE_DIM, Eigen::Index WORLD_DIM>
 struct Observation
 {
   using Set = std::vector<Observation<IMAGE_DIM, WORLD_DIM>>;
-  Observation() : to_camera_mount(Eigen::Isometry3d::Identity()), to_target_mount(Eigen::Isometry3d::Identity())
-  {
-  }
+  Observation() : to_camera_mount(Eigen::Isometry3d::Identity()), to_target_mount(Eigen::Isometry3d::Identity()) {}
 
   Observation(const Eigen::Isometry3d& to_camera_mount_, const Eigen::Isometry3d& to_target_mount_)
     : to_camera_mount(to_camera_mount_), to_target_mount(to_target_mount_)
@@ -401,3 +146,26 @@ struct KinematicMeasurement
 };
 
 }  // namespace industrial_calibration
+
+namespace YAML
+{
+class Node;
+
+template <typename T>
+struct convert;
+
+template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
+struct convert<industrial_calibration::Correspondence<SENSOR_DIM, WORLD_DIM>>
+{
+  static Node encode(const industrial_calibration::Correspondence<SENSOR_DIM, WORLD_DIM>& corr);
+  static bool decode(const YAML::Node& node, industrial_calibration::Correspondence<SENSOR_DIM, WORLD_DIM>& rhs);
+};
+
+template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
+struct convert<industrial_calibration::Observation<SENSOR_DIM, WORLD_DIM>>
+{
+  static Node encode(const industrial_calibration::Observation<SENSOR_DIM, WORLD_DIM>& obs);
+  static bool decode(const YAML::Node& node, industrial_calibration::Observation<SENSOR_DIM, WORLD_DIM>& obs);
+};
+
+}  // namespace YAML

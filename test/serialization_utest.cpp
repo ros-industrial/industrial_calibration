@@ -1,7 +1,8 @@
-#include <industrial_calibration/serialization/problems.h>
+#include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
+#include <industrial_calibration/serialization.h>
+#include <industrial_calibration/exceptions.h>
 #include <industrial_calibration_tests/utilities.h>
 #include <industrial_calibration_tests/observation_creator.h>
-#include <industrial_calibration/exceptions.h>
 
 #include <gtest/gtest.h>
 #include <fstream>

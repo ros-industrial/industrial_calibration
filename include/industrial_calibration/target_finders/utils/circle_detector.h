@@ -102,3 +102,20 @@ protected:
 };
 
 }  // namespace industrial_calibration
+
+using namespace industrial_calibration;
+
+namespace YAML
+{
+class Node;
+
+template <typename T>
+struct convert;
+
+template <>
+struct convert<CircleDetectorParams>
+{
+  static bool decode(const Node& node, CircleDetectorParams& val);
+};
+
+}  // namespace YAML
