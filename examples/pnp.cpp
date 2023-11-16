@@ -1,5 +1,5 @@
 #include <industrial_calibration/optimizations/pnp.h>
-#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
+#include <industrial_calibration/target_finders/target_finder.h>
 #include <industrial_calibration/target_finders/utils/utils.h>
 // Utilities
 #include "utils.h"
@@ -12,6 +12,7 @@ using path = std::filesystem::path;
 using path = std::experimental::filesystem::path;
 #endif
 
+#include <boost_plugin_loader/plugin_loader.hpp>
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
@@ -60,42 +61,45 @@ static Eigen::Isometry3d solveCVPnP(const CameraIntrinsics& intr, const Correspo
  * position/orientation difference bewteen the two results
  * @return a tuple containing the industrial calibration and OpenCV PnP optimization results, respectively
  */
-std::tuple<PnPResult, Eigen::Isometry3d> run()
+std::tuple<PnPResult, Eigen::Isometry3d> run(const std::filesystem::path& calibration_file)
 {
-  const path data_path = path(EXAMPLE_DATA_DIR) / path("test_set_10x10");
+  YAML::Node config = YAML::LoadFile(calibration_file.string());
 
-  YAML::Node data_node = YAML::LoadFile((data_path / "cal_data.yaml").string());
+  auto data = getMember<YAML::Node>(config, "data");
 
   // Load the image
-  const std::string image_path = data_node[0]["image"].as<std::string>();
-  const cv::Mat image = cv::imread((data_path / "images" / "0.png").string());
-
-  // Load the camera intrinsics
-  YAML::Node intr_config = YAML::LoadFile((data_path / "camera_intr.yaml").string());
+  auto image_relative_path = getMember<std::string>(data[0], "image");
+  const cv::Mat image = cv::imread((calibration_file.parent_path() / image_relative_path).string());
 
   // Load the target finder
-  YAML::Node target_finder_config = YAML::LoadFile((data_path / "target_finder.yaml").string());
-  ModifiedCircleGridTargetFinderFactory factory;
-  auto target_finder = factory.create(target_finder_config);
+  boost_plugin_loader::PluginLoader loader;
+  loader.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
+  loader.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
+
+  auto target_finder_config = getMember<YAML::Node>(config, "target_finder");
+  auto factory = loader.createInstance<TargetFinderFactory>(getMember<std::string>(target_finder_config, "type"));
+  auto target_finder = factory->create(target_finder_config);
 
   // Solve
-  PnPProblem params;
-  params.intr = intr_config["intrinsics"].as<CameraIntrinsics>();
+  PnPProblem problem;
+
+  // Load the camera intrinsics
+  problem.intr = getMember<CameraIntrinsics>(config, "intrinsics");
 
   // Create an initial guess for the camera to target transform
   {
-    const std::string pose_path = data_node[0]["pose"].as<std::string>();
-    const Eigen::Isometry3d base_to_wrist = YAML::LoadFile((data_path / pose_path).string()).as<Eigen::Isometry3d>();
+    auto pose_relative_path = getMember<std::string>(data[0], "pose");
+    const Eigen::Isometry3d target_mount_to_camera_mount =
+        YAML::LoadFile((calibration_file.parent_path() / pose_relative_path).string()).as<Eigen::Isometry3d>();
+    auto camera_mount_to_camera = getMember<Eigen::Isometry3d>(config, "camera_mount_to_camera_guess");
+    auto target_mount_to_target = getMember<Eigen::Isometry3d>(config, "target_mount_to_target_guess");
 
-    YAML::Node pose_guess_config = YAML::LoadFile((data_path / "pose_initial_guesses.yaml").string());
-    const Eigen::Isometry3d wrist_to_camera = pose_guess_config["wrist_to_camera_guess"].as<Eigen::Isometry3d>();
-    const Eigen::Isometry3d base_to_target = pose_guess_config["base_to_target_guess"].as<Eigen::Isometry3d>();
-
-    params.camera_to_target_guess = (base_to_wrist * wrist_to_camera).inverse() * base_to_target;
+    problem.camera_to_target_guess =
+        (target_mount_to_camera_mount * camera_mount_to_camera).inverse() * target_mount_to_target;
   }
 
   // Find correspondences between the known target and the features in the image
-  params.correspondences = target_finder->findCorrespondences(image);
+  problem.correspondences = target_finder->findCorrespondences(image);
 
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
   // Display the features
@@ -106,7 +110,7 @@ std::tuple<PnPResult, Eigen::Isometry3d> run()
   cv::waitKey();
 #endif
 
-  PnPResult pnp_result = optimize(params);
+  PnPResult pnp_result = optimize(problem);
 
   printOptResults(pnp_result.converged, pnp_result.initial_cost_per_obs, pnp_result.final_cost_per_obs);
   std::cout << std::endl;
@@ -115,7 +119,7 @@ std::tuple<PnPResult, Eigen::Isometry3d> run()
   std::cout << std::endl;
 
   // Solve with OpenCV for comparison
-  const Eigen::Isometry3d camera_to_target_cv = solveCVPnP(params.intr, params.correspondences);
+  const Eigen::Isometry3d camera_to_target_cv = solveCVPnP(problem.intr, problem.correspondences);
 
   printTransform(camera_to_target_cv, "Camera", "Target", "OPENCV: CAMERA TO TARGET");
   std::cout << std::endl;
@@ -129,7 +133,8 @@ int main(int argc, char** argv)
 {
   try
   {
-    run();
+    const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_10x10") / "cal_data.yaml";
+    run(calibration_file);
   }
   catch (const std::exception& ex)
   {
@@ -146,9 +151,10 @@ int main(int argc, char** argv)
 
 TEST(PnPExample, CalibratePnP)
 {
+  const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_10x10") / "cal_data.yaml";
   PnPResult result;
   Eigen::Isometry3d camera_to_target_cv;
-  ASSERT_NO_THROW(std::tie(result, camera_to_target_cv) = run());
+  ASSERT_NO_THROW(std::tie(result, camera_to_target_cv) = run(calibration_file));
 
   // Expect that the optimization converged with low residual error (in pixels)
   ASSERT_TRUE(result.converged);

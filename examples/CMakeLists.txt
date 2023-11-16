@@ -21,7 +21,7 @@ target_cxx_version(${PROJECT_NAME}_noise_qualification_2d PUBLIC VERSION 17)
 
 # PnP example
 add_executable(${PROJECT_NAME}_pnp pnp.cpp)
-target_link_libraries(${PROJECT_NAME}_pnp PRIVATE ${PROJECT_NAME} opencv_highgui stdc++fs)
+target_link_libraries(${PROJECT_NAME}_pnp PRIVATE ${PROJECT_NAME} opencv_highgui stdc++fs boost_plugin_loader::boost_plugin_loader)
 target_compile_definitions(${PROJECT_NAME}_pnp PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 target_cxx_version(${PROJECT_NAME}_pnp PUBLIC VERSION 17)
 
