@@ -1,7 +1,5 @@
 #pragma once
 
-#include <industrial_calibration/serialization.h>
-
 #include <array>
 #include <vector>
 #include <Eigen/Dense>
@@ -149,54 +147,25 @@ struct KinematicMeasurement
 
 }  // namespace industrial_calibration
 
-using namespace industrial_calibration;
-
 namespace YAML
 {
+class Node;
+
+template <typename T>
+struct convert;
+
 template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
-struct convert<Correspondence<SENSOR_DIM, WORLD_DIM>>
+struct convert<industrial_calibration::Correspondence<SENSOR_DIM, WORLD_DIM>>
 {
-  using T = Correspondence<SENSOR_DIM, WORLD_DIM>;
-
-  static Node encode(const T& corr)
-  {
-    YAML::Node node;
-    node["in_image"] = corr.in_image;
-    node["in_target"] = corr.in_target;
-    return node;
-  }
-
-  static bool decode(const YAML::Node& node, T& rhs)
-  {
-    rhs.in_image = getMember<decltype(rhs.in_image)>(node, "in_image");
-    rhs.in_target = getMember<decltype(rhs.in_target)>(node, "in_target");
-
-    return true;
-  }
+  static Node encode(const industrial_calibration::Correspondence<SENSOR_DIM, WORLD_DIM>& corr);
+  static bool decode(const YAML::Node& node, industrial_calibration::Correspondence<SENSOR_DIM, WORLD_DIM>& rhs);
 };
 
 template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
-struct convert<Observation<SENSOR_DIM, WORLD_DIM>>
+struct convert<industrial_calibration::Observation<SENSOR_DIM, WORLD_DIM>>
 {
-  using T = Observation<SENSOR_DIM, WORLD_DIM>;
-
-  static Node encode(const T& obs)
-  {
-    YAML::Node node;
-    node["correspondences"] = obs.correspondence_set;
-    node["to_target_mount"] = obs.to_target_mount;
-    node["to_camera_mount"] = obs.to_camera_mount;
-    return node;
-  }
-
-  static bool decode(const YAML::Node& node, T& obs)
-  {
-    obs.correspondence_set = getMember<decltype(obs.correspondence_set)>(node, "correspondences");
-    obs.to_target_mount = getMember<decltype(obs.to_target_mount)>(node, "to_target_mount");
-    obs.to_camera_mount = getMember<decltype(obs.to_camera_mount)>(node, "to_camera_mount");
-
-    return true;
-  }
+  static Node encode(const industrial_calibration::Observation<SENSOR_DIM, WORLD_DIM>& obs);
+  static bool decode(const YAML::Node& node, industrial_calibration::Observation<SENSOR_DIM, WORLD_DIM>& obs);
 };
 
 }  // namespace YAML

@@ -1,6 +1,7 @@
 #include <industrial_calibration/optimizations/analysis/noise_qualification.h>
 #include <industrial_calibration/target_finders/target_finder_plugin.h>
 #include <industrial_calibration/target_finders/utils/utils.h>
+#include <industrial_calibration/serialization.h>
 
 #if __GNUC__ >= 8
 #include <filesystem>

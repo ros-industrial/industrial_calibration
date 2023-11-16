@@ -21,7 +21,9 @@ endif()
 add_library(
   ${PROJECT_NAME} SHARED
   # Common
+  src/camera_intrinsics.cpp
   src/dh_chain.cpp
+  src/types.cpp
   # Optimization Utilities
   src/optimizations/utils/ceres_math_utilities.cpp
   # Optimizations

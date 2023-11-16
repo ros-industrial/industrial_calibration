@@ -1,7 +1,5 @@
 #pragma once
 
-#include <industrial_calibration/serialization.h>
-
 #include <array>
 
 namespace industrial_calibration
@@ -81,34 +79,18 @@ struct MutableCalibCameraIntrinsics
 
 }  // namespace industrial_calibration
 
-using namespace industrial_calibration;
-
 namespace YAML
 {
+class Node;
+
+template <typename T>
+struct convert;
+
 template <>
-struct convert<CameraIntrinsics>
+struct convert<industrial_calibration::CameraIntrinsics>
 {
-  using T = CameraIntrinsics;
-
-  static Node encode(const T& rhs)
-  {
-    YAML::Node node;
-    node["cx"] = rhs.cx();
-    node["cy"] = rhs.cy();
-    node["fx"] = rhs.fx();
-    node["fy"] = rhs.fy();
-    return node;
-  }
-
-  static bool decode(const YAML::Node& node, T& rhs)
-  {
-    rhs.cx() = getMember<double>(node, "cx");
-    rhs.cy() = getMember<double>(node, "cy");
-    rhs.fx() = getMember<double>(node, "fx");
-    rhs.fy() = getMember<double>(node, "fy");
-
-    return true;
-  }
+  static Node encode(const industrial_calibration::CameraIntrinsics& rhs);
+  static bool decode(const YAML::Node& node, industrial_calibration::CameraIntrinsics& rhs);
 };
 
 }  // namespace YAML

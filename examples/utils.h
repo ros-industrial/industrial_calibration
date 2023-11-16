@@ -1,6 +1,7 @@
 #pragma once
 
 #include <industrial_calibration/target_finders/utils/utils.h>
+#include <industrial_calibration/serialization.h>
 
 #if __GNUC__ >= 8
 #include <filesystem>
@@ -12,7 +13,6 @@ using path = std::experimental::filesystem::path;
 #include <Eigen/Geometry>
 #include <iostream>
 #include <opencv2/imgproc/types_c.h>
-#include <yaml-cpp/yaml.h>
 
 using VectorEigenIsometry = std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>;
 
