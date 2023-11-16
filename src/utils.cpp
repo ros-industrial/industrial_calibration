@@ -1,23 +1,46 @@
-#pragma once
-
-#include <industrial_calibration/target_finders/utils/utils.h>
+#include <industrial_calibration/utils.h>
+#include <industrial_calibration/exceptions.h>
+#include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
 #include <industrial_calibration/serialization.h>
 
-#if __GNUC__ >= 8
-#include <filesystem>
-using path = std::filesystem::path;
-#else
-#include <experimental/filesystem>
-using path = std::experimental::filesystem::path;
-#endif
-#include <Eigen/Geometry>
 #include <iostream>
-#include <opencv2/imgproc/types_c.h>
-
-using VectorEigenIsometry = std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>;
+#include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 namespace industrial_calibration
 {
+std::vector<cv::Point2d> getReprojections(const Eigen::Isometry3d& camera_to_target, const CameraIntrinsics& intr,
+                                          const std::vector<Eigen::Vector3d>& target_points)
+{
+  std::vector<cv::Point2d> reprojections;
+  for (const auto& point_in_target : target_points)
+  {
+    Eigen::Vector3d in_camera = camera_to_target * point_in_target;
+
+    double uv[2];
+    projectPoint(intr, in_camera.data(), uv);
+
+    reprojections.push_back(cv::Point2d(uv[0], uv[1]));
+  }
+  return reprojections;
+}
+
+void drawReprojections(const std::vector<cv::Point2d>& reprojections, int size, cv::Scalar color, cv::Mat& image)
+{
+  for (const auto& pt : reprojections)
+  {
+    cv::circle(image, pt, size, color);
+  }
+}
+
+cv::Mat readImageOpenCV(const std::string& path)
+{
+  cv::Mat image = cv::imread(path, cv::IMREAD_COLOR);
+  if (image.data == nullptr) throw BadFileException("Failed to load file at: '" + path + "'");
+
+  return image;
+}
+
 std::tuple<VectorEigenIsometry, std::vector<cv::Mat>> loadPoseImagePairs(const path& data_dir, const YAML::Node& data)
 {
   VectorEigenIsometry poses;
@@ -39,7 +62,7 @@ std::tuple<VectorEigenIsometry, std::vector<cv::Mat>> loadPoseImagePairs(const p
   return std::make_tuple(poses, images);
 }
 
-inline std::string getStringRPY(const Eigen::Vector3d& rpy)
+std::string getStringRPY(const Eigen::Vector3d& rpy)
 {
   std::stringstream s;
   s << "rpy=\"" << rpy(2) << "(" << rpy(2) * 180 / M_PI << " deg) " << rpy(1) << "(" << rpy(1) * 180 / M_PI << " deg) "
@@ -47,28 +70,28 @@ inline std::string getStringRPY(const Eigen::Vector3d& rpy)
   return s.str();
 }
 
-inline std::string getStringXYZ(const Eigen::Vector3d& xyz)
+std::string getStringXYZ(const Eigen::Vector3d& xyz)
 {
   std::stringstream s;
   s << "xyz=\"" << xyz(0) << " " << xyz(1) << " " << xyz(2) << "\"";
   return s.str();
 }
 
-inline std::string getStringQuaternion(const Eigen::Quaterniond& q)
+std::string getStringQuaternion(const Eigen::Quaterniond& q)
 {
   std::stringstream s;
   s << "qxyzw=\"" << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << "\"";
   return s.str();
 }
 
-inline std::string getStringIntrinsics(const std::array<double, 4>& values)
+std::string getStringIntrinsics(const std::array<double, 4>& values)
 {
   std::stringstream s;
   s << "Intr:\nfx = " << values[0] << "\tfy = " << values[1] << "\ncx = " << values[2] << "\tcy = " << values[3];
   return s.str();
 }
 
-inline std::string getStringDistortion(const std::array<double, 5>& values)
+std::string getStringDistortion(const std::array<double, 5>& values)
 {
   std::stringstream s;
   s << "Distortions:\n"
@@ -77,7 +100,7 @@ inline std::string getStringDistortion(const std::array<double, 5>& values)
   return s.str();
 }
 
-inline void printTitle(const std::string& title, int width = 80)
+void printTitle(const std::string& title, int width)
 {
   int length = title.length() + 8;
   if (length < width) length = width;
@@ -100,8 +123,8 @@ inline void printTitle(const std::string& title, int width = 80)
   std::cout << full << std::endl;
 }
 
-inline void printTransform(const Eigen::Isometry3d& transform, const std::string& parent_frame,
-                           const std::string& child_frame, const std::string& description)
+void printTransform(const Eigen::Isometry3d& transform, const std::string& parent_frame, const std::string& child_frame,
+                    const std::string& description)
 {
   std::cout << description << ":" << std::endl << transform.matrix() << std::endl << std::endl;
   std::cout << "--- URDF Format " << parent_frame << " to " << child_frame << " ---" << std::endl;
@@ -112,9 +135,8 @@ inline void printTransform(const Eigen::Isometry3d& transform, const std::string
   std::cout << getStringQuaternion(q) << std::endl;
 }
 
-inline void printTransformDiff(const Eigen::Isometry3d& transform1, const Eigen::Isometry3d& transform2,
-                               const std::string& parent_frame, const std::string& child_frame,
-                               const std::string& description)
+void printTransformDiff(const Eigen::Isometry3d& transform1, const Eigen::Isometry3d& transform2,
+                        const std::string& parent_frame, const std::string& child_frame, const std::string& description)
 {
   Eigen::Isometry3d delta = transform1.inverse() * transform2;
   Eigen::AngleAxisd aa(delta.linear());
@@ -134,20 +156,20 @@ inline void printTransformDiff(const Eigen::Isometry3d& transform1, const Eigen:
   std::cout << "DELTA A: " << (180.0 * aa.angle() / M_PI) << " and " << getStringRPY(rpy) << std::endl;
 }
 
-inline void printOptResults(bool converged, double initial_cost_per_obs, double final_cost_per_obs)
+void printOptResults(bool converged, double initial_cost_per_obs, double final_cost_per_obs)
 {
   std::cout << "Did converge?: " << converged << std::endl;
   std::cout << "Initial cost?: " << std::sqrt(initial_cost_per_obs) << " (pixels per feature)" << std::endl;
   std::cout << "Final cost?: " << std::sqrt(final_cost_per_obs) << " (pixels per feature)" << std::endl;
 }
 
-inline void printCameraIntrinsics(const std::array<double, 4>& values, const std::string& description)
+void printCameraIntrinsics(const std::array<double, 4>& values, const std::string& description)
 {
   std::cout << description << ":" << std::endl;
   std::cout << getStringIntrinsics(values) << std::endl;
 }
 
-inline void printCameraDistortion(const std::array<double, 5>& values, const std::string& description)
+void printCameraDistortion(const std::array<double, 5>& values, const std::string& description)
 {
   std::cout << description << ":" << std::endl;
   std::cout << getStringDistortion(values) << std::endl;

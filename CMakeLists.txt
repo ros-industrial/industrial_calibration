@@ -25,6 +25,7 @@ add_library(
   src/camera_intrinsics.cpp
   src/dh_chain.cpp
   src/types.cpp
+  src/utils.cpp
   # Optimization Utilities
   src/optimizations/utils/ceres_math_utilities.cpp
   # Optimizations
@@ -42,8 +43,7 @@ add_library(
   src/optimizations/analysis/statistics.cpp
   src/optimizations/analysis/noise_qualification.cpp
   # Target Finders
-  src/target_finders/utils/circle_detector.cpp
-  src/target_finders/utils/utils.cpp
+  src/target_finders/circle_detector.cpp
   src/target_finders/target_finder.cpp
   src/target_finders/modified_circle_grid_target_finder.cpp
   src/target_finders/aruco_grid_target_finder.cpp
