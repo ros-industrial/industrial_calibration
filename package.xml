@@ -12,6 +12,7 @@
   <license>Apache 2.0</license>
 
   <build_depend>ros_industrial_cmake_boilerplate</build_depend>
+  <depend>boost_plugin_loader</depend>
   <depend>libceres-dev</depend>
   <depend>libopencv-dev</depend>
   <depend>eigen</depend>
