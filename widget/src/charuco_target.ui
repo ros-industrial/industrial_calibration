@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CharucoTarget</class>
+ <widget class="QWidget" name="CharucoTarget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>221</width>
+    <height>182</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Rows</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QSpinBox" name="rowSpinBox">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Cols</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QSpinBox" name="colSpinBox">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Checker Size (m)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QDoubleSpinBox" name="checkerSizeDoubleSpinBox"/>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Marker Size (m)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QDoubleSpinBox" name="markerSizeDoubleSpinBox"/>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Dictionary</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QComboBox" name="dictComboBox">
+     <item>
+      <property name="text">
+       <string>DICT_4x4_50</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_4x4_100</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_4x4_250</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_4x4_1000</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_5x5_50</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_5x5_100</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_5x5_250</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_5x5_1000</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_6X6_50</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_6X6_100</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_6X6_250</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_6X6_1000</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_7X7_50</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_7X7_100</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_7X7_250</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_7X7_1000</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_ARUCO_ORIGINAL</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_APRILTAG_16h5</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_APRILTAG_25h9</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_APRILTAG_36h10</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_APRILTAG_36h11</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
