@@ -6,6 +6,8 @@
 #include "widget/transform_guess.h"
 #include "widget/camera_intrinsics.h"
 #include "widget/charuco_target.h"
+#include "widget/aruco_target.h"
+#include "widget/circle_target.h"
 #include <boost_plugin_loader/plugin_loader.h>
 
 template<typename WidgetT>
@@ -55,15 +57,17 @@ ICWidget::ICWidget(QWidget *parent) :
   setup<TransformGuess>(this, target_transform_guess_dialog_, ui_->targetGuessToolButton);
   setup<CameraIntrinsics>(this, camera_intrinsics_dialog_, ui_->CameraIntrinsicsToolButton);
   setup<CharucoTarget>(this, charuco_target_dialog_);
+  setup<ArucoTarget>(this, aruco_target_dialog_);
+  setup<CircleTarget>(this, circle_target_dialog_);
 
   connect(ui_->targetToolButton, &QAbstractButton::clicked, [this](){
     QString target_type = ui_->targetComboBox->currentText();
     if(target_type == "ChArUco Grid")
       charuco_target_dialog_->show();
     else if(target_type == "ArUco Grid")
-      emit log("hey you should create the ArUco widget");
+      aruco_target_dialog_->show();
     else
-      emit log("hey you should create the circle widget");
+      circle_target_dialog_->show();
   });
 
 }

@@ -14,12 +14,18 @@ add_library(
   src/camera_intrinsics.ui
   src/camera_intrinsics.cpp
   include/widget/camera_intrinsics.h
+  src/transform_guess.ui
+  src/transform_guess.cpp
+  include/widget/transform_guess.h
   src/charuco_target.ui
   src/charuco_target.cpp
   include/widget/charuco_target.h
-  src/transform_guess.ui
-  src/transform_guess.cpp
-  include/widget/transform_guess.h)
+  src/aruco_target.ui
+  src/aruco_target.cpp
+  include/widget/aruco_target.h
+  src/circle_target.ui
+  src/circle_target.cpp
+  include/widget/circle_target.h)
 target_include_directories(${PROJECT_NAME}_widget PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>")

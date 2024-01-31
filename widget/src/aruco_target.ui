@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CharucoTarget</class>
- <widget class="QWidget" name="CharucoTarget">
+ <class>ArucoTarget</class>
+ <widget class="QWidget" name="ArucoTarget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>328</width>
-    <height>182</height>
+    <width>322</width>
+    <height>145</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -44,45 +44,23 @@
    </item>
    <item row="2" column="0">
     <widget class="QLabel" name="label_3">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Checker Size (m)</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QDoubleSpinBox" name="checkerSizeDoubleSpinBox"/>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_4">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
      <property name="text">
       <string>Marker Size (m)</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
+   <item row="2" column="1">
     <widget class="QDoubleSpinBox" name="markerSizeDoubleSpinBox"/>
    </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="label_5">
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_4">
      <property name="text">
       <string>Dictionary</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
-    <widget class="QComboBox" name="dictComboBox">
+   <item row="3" column="1">
+    <widget class="QComboBox" name="dictionaryComboBox">
      <item>
       <property name="text">
        <string>DICT_4X4_50</string>
@@ -120,7 +98,7 @@
      </item>
      <item>
       <property name="text">
-       <string>DICT_5x5_1000</string>
+       <string>DICT_5X5_1000</string>
       </property>
      </item>
      <item>
@@ -146,11 +124,6 @@
      <item>
       <property name="text">
        <string>DICT_7X7_50</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>DICT_7X7_100</string>
       </property>
      </item>
      <item>
