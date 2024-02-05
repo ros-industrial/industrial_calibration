@@ -2,6 +2,7 @@
 #define TRANSFORM_GUESS_H
 
 #include <QWidget>
+#include <yaml-cpp/yaml.h>
 
 namespace Ui {
 class TransformGuess;
@@ -15,8 +16,11 @@ public:
   explicit TransformGuess(QWidget *parent = nullptr);
   ~TransformGuess();
 
+  void configure(const YAML::Node& node);
+  YAML::Node save();
+
 private:
-  Ui::TransformGuess *ui;
+  Ui::TransformGuess *ui_;
 };
 
 #endif // TRANSFORM_GUESS_H

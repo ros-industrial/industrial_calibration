@@ -2,6 +2,7 @@
 #define CIRCLE_TARGET_H
 
 #include <QWidget>
+#include <yaml-cpp/yaml.h>
 
 namespace Ui {
 class CircleTarget;
@@ -15,8 +16,11 @@ public:
   explicit CircleTarget(QWidget *parent = nullptr);
   ~CircleTarget();
 
+  void configure(const YAML::Node& node);
+  YAML::Node save();
+
 private:
-  Ui::CircleTarget *ui;
+  Ui::CircleTarget *ui_;
 };
 
 #endif // CIRCLE_TARGET_H

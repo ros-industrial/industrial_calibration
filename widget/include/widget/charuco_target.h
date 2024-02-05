@@ -2,6 +2,7 @@
 #define CHARUCO_TARGET_H
 
 #include <QWidget>
+#include <yaml-cpp/yaml.h>
 
 namespace Ui {
 class CharucoTarget;
@@ -15,8 +16,11 @@ public:
   explicit CharucoTarget(QWidget *parent = nullptr);
   ~CharucoTarget();
 
+  void configure(const YAML::Node& node);
+  YAML::Node save();
+
 private:
-  Ui::CharucoTarget *ui;
+  Ui::CharucoTarget *ui_;
 };
 
 #endif // CHARUCO_TARGET_H

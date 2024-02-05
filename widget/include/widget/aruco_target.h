@@ -2,6 +2,7 @@
 #define ARUCO_TARGET_H
 
 #include <QWidget>
+#include <yaml-cpp/yaml.h>
 
 namespace Ui {
 class ArucoTarget;
@@ -15,8 +16,11 @@ public:
   explicit ArucoTarget(QWidget *parent = nullptr);
   ~ArucoTarget();
 
+  void configure(const YAML::Node& node);
+  YAML::Node save();
+
 private:
-  Ui::ArucoTarget *ui;
+  Ui::ArucoTarget *ui_;
 };
 
 #endif // ARUCO_TARGET_H

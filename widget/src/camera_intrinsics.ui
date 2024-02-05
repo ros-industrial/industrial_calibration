@@ -22,7 +22,11 @@
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QDoubleSpinBox" name="fxDoubleSpinBox"/>
+    <widget class="QDoubleSpinBox" name="fxDoubleSpinBox">
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
    </item>
    <item row="1" column="0">
     <widget class="QLabel" name="label_2">
@@ -32,7 +36,11 @@
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QDoubleSpinBox" name="fyDoubleSpinBox"/>
+    <widget class="QDoubleSpinBox" name="fyDoubleSpinBox">
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
    </item>
    <item row="2" column="0">
     <widget class="QLabel" name="label_3">
@@ -42,7 +50,11 @@
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QDoubleSpinBox" name="cxDoubleSpinBox"/>
+    <widget class="QDoubleSpinBox" name="cxDoubleSpinBox">
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
    </item>
    <item row="3" column="0">
     <widget class="QLabel" name="label_4">
@@ -52,7 +64,11 @@
     </widget>
    </item>
    <item row="3" column="1">
-    <widget class="QDoubleSpinBox" name="cyDoubleSpinBox"/>
+    <widget class="QDoubleSpinBox" name="cyDoubleSpinBox">
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

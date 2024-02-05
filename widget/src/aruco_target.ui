@@ -50,7 +50,11 @@
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QDoubleSpinBox" name="markerSizeDoubleSpinBox"/>
+    <widget class="QDoubleSpinBox" name="markerSizeDoubleSpinBox">
+     <property name="decimals">
+      <number>3</number>
+     </property>
+    </widget>
    </item>
    <item row="3" column="0">
     <widget class="QLabel" name="label_4">
@@ -60,7 +64,7 @@
     </widget>
    </item>
    <item row="3" column="1">
-    <widget class="QComboBox" name="dictionaryComboBox">
+    <widget class="QComboBox" name="dictComboBox">
      <item>
       <property name="text">
        <string>DICT_4X4_50</string>

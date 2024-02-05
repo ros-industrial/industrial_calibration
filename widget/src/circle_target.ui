@@ -59,6 +59,19 @@
      </property>
     </widget>
    </item>
+   <item row="3" column="0">
+    <spacer name="verticalSpacer_8">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
    <item row="4" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
@@ -66,30 +79,10 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
-    <widget class="QSpinBox" name="minThreshSpinBox">
-     <property name="minimum">
-      <number>0</number>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-    </widget>
-   </item>
    <item row="5" column="0">
     <widget class="QLabel" name="label_5">
      <property name="text">
       <string>Max Threshold</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="1">
-    <widget class="QSpinBox" name="maxThreshSpinBox">
-     <property name="minimum">
-      <number>0</number>
-     </property>
-     <property name="maximum">
-      <number>255</number>
      </property>
     </widget>
    </item>
@@ -101,7 +94,7 @@
     </widget>
    </item>
    <item row="6" column="1">
-    <widget class="QSpinBox" name="numThreshSpinBox">
+    <widget class="QSpinBox" name="numThresholdSpinBox">
      <property name="minimum">
       <number>0</number>
      </property>
@@ -140,35 +133,21 @@
      </property>
     </widget>
    </item>
-   <item row="10" column="1">
-    <widget class="QDoubleSpinBox" name="circleInclusionRadiusDoubleSpinBox">
-     <property name="maximum">
-      <double>1000000000.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="0" colspan="2">
-    <widget class="QLabel" name="label_8">
-     <property name="text">
-      <string>Circle Inclusion Radius (px)</string>
-     </property>
-    </widget>
-   </item>
-   <item row="12" column="0">
+   <item row="13" column="0">
     <widget class="QLabel" name="label_9">
      <property name="text">
       <string>Max Radius Diff  (px)</string>
      </property>
     </widget>
    </item>
-   <item row="12" column="1">
+   <item row="13" column="1">
     <widget class="QDoubleSpinBox" name="maxRadiusDiffDoubleSpinBox">
      <property name="maximum">
       <double>1000000000.000000000000000</double>
      </property>
     </widget>
    </item>
-   <item row="13" column="0">
+   <item row="14" column="0">
     <spacer name="verticalSpacer_2">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -181,14 +160,14 @@
      </property>
     </spacer>
    </item>
-   <item row="14" column="0">
+   <item row="15" column="0">
     <widget class="QLabel" name="label_10">
      <property name="text">
       <string>Max Avg Ellipse Error</string>
      </property>
     </widget>
    </item>
-   <item row="14" column="1">
+   <item row="15" column="1">
     <widget class="QDoubleSpinBox" name="maxAvgEllipseErrorDoubleSpinBox">
      <property name="decimals">
       <number>3</number>
@@ -198,7 +177,7 @@
      </property>
     </widget>
    </item>
-   <item row="15" column="0">
+   <item row="16" column="0">
     <spacer name="verticalSpacer_3">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -211,14 +190,14 @@
      </property>
     </spacer>
    </item>
-   <item row="16" column="0">
+   <item row="17" column="0">
     <widget class="QCheckBox" name="filterByColorCheckBox">
      <property name="text">
       <string>Filter By Color</string>
      </property>
     </widget>
    </item>
-   <item row="16" column="1">
+   <item row="17" column="1">
     <spacer name="horizontalSpacer">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -231,15 +210,15 @@
      </property>
     </spacer>
    </item>
-   <item row="17" column="0">
+   <item row="18" column="0">
     <widget class="QLabel" name="label_12">
      <property name="text">
       <string>Circle Color</string>
      </property>
     </widget>
    </item>
-   <item row="17" column="1">
-    <widget class="QSpinBox" name="colorSpinBox">
+   <item row="18" column="1">
+    <widget class="QSpinBox" name="circleColorSpinBox">
      <property name="minimum">
       <number>0</number>
      </property>
@@ -248,7 +227,7 @@
      </property>
     </widget>
    </item>
-   <item row="18" column="0">
+   <item row="19" column="0">
     <spacer name="verticalSpacer_4">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -261,14 +240,14 @@
      </property>
     </spacer>
    </item>
-   <item row="19" column="0">
+   <item row="20" column="0">
     <widget class="QCheckBox" name="filterByAreaCheckBox">
      <property name="text">
       <string>Filter by Area</string>
      </property>
     </widget>
    </item>
-   <item row="19" column="1">
+   <item row="20" column="1">
     <spacer name="horizontalSpacer_2">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -281,14 +260,14 @@
      </property>
     </spacer>
    </item>
-   <item row="20" column="0">
+   <item row="21" column="0">
     <widget class="QLabel" name="label_14">
      <property name="text">
       <string>Min Area (px^2)</string>
      </property>
     </widget>
    </item>
-   <item row="20" column="1">
+   <item row="21" column="1">
     <widget class="QDoubleSpinBox" name="minAreaDoubleSpinBox">
      <property name="decimals">
       <number>3</number>
@@ -298,14 +277,14 @@
      </property>
     </widget>
    </item>
-   <item row="21" column="0">
+   <item row="22" column="0">
     <widget class="QLabel" name="label_15">
      <property name="text">
       <string>Max Area (px^2)</string>
      </property>
     </widget>
    </item>
-   <item row="21" column="1">
+   <item row="22" column="1">
     <widget class="QDoubleSpinBox" name="maxAreaDoubleSpinBox">
      <property name="decimals">
       <number>3</number>
@@ -316,168 +295,6 @@
     </widget>
    </item>
    <item row="24" column="0">
-    <widget class="QCheckBox" name="filterByCircularityCheckBox">
-     <property name="text">
-      <string>Filter by Circularity</string>
-     </property>
-    </widget>
-   </item>
-   <item row="24" column="1">
-    <spacer name="horizontalSpacer_4">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>142</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="25" column="0">
-    <widget class="QLabel" name="label_17">
-     <property name="text">
-      <string>Min Circularity</string>
-     </property>
-    </widget>
-   </item>
-   <item row="25" column="1">
-    <widget class="QDoubleSpinBox" name="minCircularityDoubleSpinBox">
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="maximum">
-      <double>1000000000.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="26" column="0">
-    <widget class="QLabel" name="label_18">
-     <property name="text">
-      <string>Max Circularity</string>
-     </property>
-    </widget>
-   </item>
-   <item row="26" column="1">
-    <widget class="QDoubleSpinBox" name="maxCircularityDoubleSpinBox">
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="maximum">
-      <double>1000000000.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="28" column="0">
-    <widget class="QCheckBox" name="filterByInertiaCheckBox">
-     <property name="text">
-      <string>Filter by Inertia</string>
-     </property>
-    </widget>
-   </item>
-   <item row="28" column="1">
-    <spacer name="horizontalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>142</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="29" column="0">
-    <widget class="QLabel" name="label_20">
-     <property name="text">
-      <string>Min Inertia Ratio</string>
-     </property>
-    </widget>
-   </item>
-   <item row="29" column="1">
-    <widget class="QDoubleSpinBox" name="minInertiaSpinBox">
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="maximum">
-      <double>1000000000.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="30" column="0">
-    <widget class="QLabel" name="label_21">
-     <property name="text">
-      <string>Max Inertia Ratio</string>
-     </property>
-    </widget>
-   </item>
-   <item row="30" column="1">
-    <widget class="QDoubleSpinBox" name="maxInertiaSpinBox">
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="maximum">
-      <double>1000000000.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="32" column="0">
-    <widget class="QCheckBox" name="filterByConvexityCheckBox">
-     <property name="text">
-      <string>Filter by Convexity</string>
-     </property>
-    </widget>
-   </item>
-   <item row="32" column="1">
-    <spacer name="horizontalSpacer_5">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>142</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="33" column="0">
-    <widget class="QLabel" name="label_23">
-     <property name="text">
-      <string>Min Convexity</string>
-     </property>
-    </widget>
-   </item>
-   <item row="33" column="1">
-    <widget class="QDoubleSpinBox" name="minConvexitySpinBox">
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="maximum">
-      <double>1000000000.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="34" column="0">
-    <widget class="QLabel" name="label_24">
-     <property name="text">
-      <string>Max Convexity</string>
-     </property>
-    </widget>
-   </item>
-   <item row="34" column="1">
-    <widget class="QDoubleSpinBox" name="maxConvexitySpinBox">
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="maximum">
-      <double>1000000000.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="23" column="0">
     <spacer name="verticalSpacer_5">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -490,7 +307,61 @@
      </property>
     </spacer>
    </item>
+   <item row="25" column="0">
+    <widget class="QCheckBox" name="filterByCircularityCheckBox">
+     <property name="text">
+      <string>Filter by Circularity</string>
+     </property>
+    </widget>
+   </item>
+   <item row="25" column="1">
+    <spacer name="horizontalSpacer_4">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>142</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="26" column="0">
+    <widget class="QLabel" name="label_17">
+     <property name="text">
+      <string>Min Circularity</string>
+     </property>
+    </widget>
+   </item>
+   <item row="26" column="1">
+    <widget class="QDoubleSpinBox" name="minCircularityDoubleSpinBox">
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
    <item row="27" column="0">
+    <widget class="QLabel" name="label_18">
+     <property name="text">
+      <string>Max Circularity</string>
+     </property>
+    </widget>
+   </item>
+   <item row="27" column="1">
+    <widget class="QDoubleSpinBox" name="maxCircularityDoubleSpinBox">
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="28" column="0">
     <spacer name="verticalSpacer_6">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -503,7 +374,61 @@
      </property>
     </spacer>
    </item>
+   <item row="29" column="0">
+    <widget class="QCheckBox" name="filterByInertiaCheckBox">
+     <property name="text">
+      <string>Filter by Inertia</string>
+     </property>
+    </widget>
+   </item>
+   <item row="29" column="1">
+    <spacer name="horizontalSpacer_3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>142</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="30" column="0">
+    <widget class="QLabel" name="label_20">
+     <property name="text">
+      <string>Min Inertia Ratio</string>
+     </property>
+    </widget>
+   </item>
+   <item row="30" column="1">
+    <widget class="QDoubleSpinBox" name="minInertiaRatioDoubleSpinBox">
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
    <item row="31" column="0">
+    <widget class="QLabel" name="label_21">
+     <property name="text">
+      <string>Max Inertia Ratio</string>
+     </property>
+    </widget>
+   </item>
+   <item row="31" column="1">
+    <widget class="QDoubleSpinBox" name="maxInertiaRatioDoubleSpinBox">
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="32" column="0">
     <spacer name="verticalSpacer_7">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -516,18 +441,87 @@
      </property>
     </spacer>
    </item>
-   <item row="3" column="0">
-    <spacer name="verticalSpacer_8">
+   <item row="33" column="0">
+    <widget class="QCheckBox" name="filterByConvexityCheckBox">
+     <property name="text">
+      <string>Filter by Convexity</string>
+     </property>
+    </widget>
+   </item>
+   <item row="33" column="1">
+    <spacer name="horizontalSpacer_5">
      <property name="orientation">
-      <enum>Qt::Vertical</enum>
+      <enum>Qt::Horizontal</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>20</width>
-       <height>40</height>
+       <width>142</width>
+       <height>20</height>
       </size>
      </property>
     </spacer>
+   </item>
+   <item row="34" column="0">
+    <widget class="QLabel" name="label_23">
+     <property name="text">
+      <string>Min Convexity</string>
+     </property>
+    </widget>
+   </item>
+   <item row="34" column="1">
+    <widget class="QDoubleSpinBox" name="minConvexityDoubleSpinBox">
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="35" column="0">
+    <widget class="QLabel" name="label_24">
+     <property name="text">
+      <string>Max Convexity</string>
+     </property>
+    </widget>
+   </item>
+   <item row="35" column="1">
+    <widget class="QDoubleSpinBox" name="maxConvexityDoubleSpinBox">
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="label_8">
+     <property name="text">
+      <string>Circle Inclusion Radius (px)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1">
+    <widget class="QDoubleSpinBox" name="circleInclusionRadiusDoubleSpinBox">
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QDoubleSpinBox" name="minThresholdDoubleSpinBox">
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QDoubleSpinBox" name="maxThresholdDoubleSpinBox">
+     <property name="maximum">
+      <double>1000000000.000000000000000</double>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
