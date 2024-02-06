@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1278</width>
-    <height>965</height>
+    <width>1100</width>
+    <height>668</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+  <layout class="QHBoxLayout" name="horizontalLayout_8">
+   <item>
     <widget class="QSplitter" name="splitter">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -255,15 +255,21 @@
        </item>
       </layout>
      </widget>
-     <widget class="QLabel" name="imageLabel">
-      <property name="text">
-       <string>TextLabel</string>
-      </property>
-     </widget>
+     <widget class="ImageWidget" name="imageWidget" native="true"/>
     </widget>
    </item>
   </layout>
+  <zorder>imageWidget</zorder>
+  <zorder>splitter</zorder>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ImageWidget</class>
+   <extends>QWidget</extends>
+   <header>widget/image_widget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

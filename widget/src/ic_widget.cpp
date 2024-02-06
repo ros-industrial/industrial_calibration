@@ -6,12 +6,14 @@
 #include <QStandardPaths>
 #include <QFileDialog>
 #include <QDir>
+#include <QFile>
 #include <fstream>
 #include "widget/transform_guess.h"
 #include "widget/camera_intrinsics.h"
 #include "widget/charuco_target.h"
 #include "widget/aruco_target.h"
 #include "widget/circle_target.h"
+#include "widget/image_widget.h"
 
 template<typename WidgetT>
 class ICDialog : public QDialog
@@ -220,19 +222,19 @@ void ICWidget::updateProgressBar()
 
 void ICWidget::drawImage(const QString& filepath)
 {
-  QPixmap image(filepath);
-  if (!image.isNull()) 
-  {
-    image = image.scaled(ui_->imageLabel->size(), Qt::KeepAspectRatio);
-    ui_->imageLabel->setPixmap(image);
-  }
-  else
+  QFile file(filepath);
+  if (!file.exists())
   {
     updateLog(filepath + " is invalid");
+    return;
   }
+
+  ui_->imageWidget->setImage(filepath);
+  update();
 
   // Call update progress somewhere else if also loading pose data?
   updateProgressBar();
+  
 }
 
 void ICWidget::getNextSample()
@@ -244,7 +246,6 @@ void ICWidget::getNextSample()
   }
   const QString img_path = data_dir + "/images/" + QString::number(ui_->progressBar->value()) + ".png";
   drawImage(img_path);
-
 }
 
 void ICWidget::calibrate()

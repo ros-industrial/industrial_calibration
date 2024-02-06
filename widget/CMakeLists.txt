@@ -25,7 +25,9 @@ add_library(
   include/widget/aruco_target.h
   src/circle_target.ui
   src/circle_target.cpp
-  include/widget/circle_target.h)
+  include/widget/circle_target.h
+  src/image_widget.cpp
+  include/widget/image_widget.h)
 target_include_directories(${PROJECT_NAME}_widget PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>")
