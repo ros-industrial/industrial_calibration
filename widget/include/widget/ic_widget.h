@@ -24,9 +24,11 @@ private:
   void loadConfig();
   void saveConfig();
   void calibrate();
+  void updateProgressBar();
+  void drawImage(const QString& filepath);
   void getNextSample();
   void saveResults();
-  void onUpdateLog(const QString& message);
+  void updateLog(const QString& message);
 
   QDialog* camera_transform_guess_dialog_;
   QDialog* target_transform_guess_dialog_;
@@ -34,9 +36,8 @@ private:
   QDialog* charuco_target_dialog_;
   QDialog* aruco_target_dialog_;
   QDialog* circle_target_dialog_;
+  QString data_dir;
 
-signals:
-  void log(const QString& message);
 };
 
 #endif // IC_WIDGET_H

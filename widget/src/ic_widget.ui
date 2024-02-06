@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>746</width>
-    <height>739</height>
+    <width>1278</width>
+    <height>965</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_5">
-   <item>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
     <widget class="QSplitter" name="splitter">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -207,6 +207,13 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_7">
           <item>
+           <widget class="QPushButton" name="calibratePushButton">
+            <property name="text">
+             <string>Calibrate</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
              <widget class="QProgressBar" name="progressBar">
@@ -223,13 +230,6 @@
              </widget>
             </item>
            </layout>
-          </item>
-          <item>
-           <widget class="QPushButton" name="calibratePushButton">
-            <property name="text">
-             <string>Calibrate</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </widget>
@@ -255,7 +255,11 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="widget" native="true"/>
+     <widget class="QLabel" name="imageLabel">
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
     </widget>
    </item>
   </layout>

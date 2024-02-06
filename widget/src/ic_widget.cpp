@@ -5,6 +5,7 @@
 #include <QScrollBar>
 #include <QStandardPaths>
 #include <QFileDialog>
+#include <QDir>
 #include <fstream>
 #include "widget/transform_guess.h"
 #include "widget/camera_intrinsics.h"
@@ -48,7 +49,6 @@ ICWidget::ICWidget(QWidget *parent) :
   });
 
   // Set up push buttons
-  connect(this, &ICWidget::log, this, &ICWidget::onUpdateLog);
   connect(ui_->loadConfigPushButton, &QPushButton::clicked, this, &ICWidget::loadConfig);
   connect(ui_->saveConfigPushButton, &QPushButton::clicked, this, &ICWidget::saveConfig);
   connect(ui_->nextPushButton, &QPushButton::clicked, this, &ICWidget::getNextSample);
@@ -80,7 +80,7 @@ ICWidget::~ICWidget()
   delete ui_;
 }
 
-void ICWidget::onUpdateLog(const QString& message)
+void ICWidget::updateLog(const QString& message)
 {
   ui_->textEditLog->append(message);
 }
@@ -92,7 +92,7 @@ void ICWidget::loadConfig()
   const QString file = QFileDialog::getOpenFileName(this, "Load calibration config", home, "YAML files (*.yaml *.yml)");
   if (file.isNull())
   {
-    emit log("Unable to load file, filepath is null");
+    updateLog("Unable to load file, filepath is null");
     return;
   }
   ui_->configLineEdit->setText(file);
@@ -130,7 +130,7 @@ void ICWidget::loadConfig()
       auto dialog = dynamic_cast<ICDialog<CharucoTarget>*>(charuco_target_dialog_);
       dialog->widget->configure(node["target_finder"]);
     }
-    else if(type == "CharucoGridTargetFinder")
+    else if(type == "ArucoGridTargetFinder")
     {
       ui_->targetComboBox->setCurrentIndex(1);
       auto dialog = dynamic_cast<ICDialog<ArucoTarget>*>(aruco_target_dialog_);
@@ -144,12 +144,12 @@ void ICWidget::loadConfig()
     }
     else
     {
-      emit log("Unrecognized target finder type"); // print target finder types as hint?
+      updateLog("Unrecognized target finder type"); // print target finder types as hint?
       return;
     }
 
   }
-  emit log("calibration config loaded from: " + file);
+  updateLog("Calibration config loaded from: " + file);
 }
 
 void ICWidget::saveConfig()
@@ -160,7 +160,7 @@ void ICWidget::saveConfig()
   
   if (file.isNull())
   {
-    emit log("Invalid filepath, filepath is null");
+    updateLog("Invalid filepath, filepath is null");
     return;
   }
   
@@ -210,22 +210,73 @@ void ICWidget::saveConfig()
   fout << node;
   fout.close();
   
-  emit log("Calibration config saved to: " + file);
+  updateLog("Calibration config saved to: " + file);
+}
+
+void ICWidget::updateProgressBar()
+{
+  ui_->progressBar->setValue(ui_->progressBar->value()+1);
+}
+
+void ICWidget::drawImage(const QString& filepath)
+{
+  QPixmap image(filepath);
+  if (!image.isNull()) 
+  {
+    image = image.scaled(ui_->imageLabel->size(), Qt::KeepAspectRatio);
+    ui_->imageLabel->setPixmap(image);
+  }
+  else
+  {
+    updateLog(filepath + " is invalid");
+  }
+
+  // Call update progress somewhere else if also loading pose data?
+  updateProgressBar();
 }
 
 void ICWidget::getNextSample()
 {
-  emit log("Save sample coming soon to a robot near you!");
+  if (data_dir.isNull())
+  {
+    updateLog("Path to data folder is null, specify the directory using the 'Calibrate' button");
+    return;
+  }
+  const QString img_path = data_dir + "/images/" + QString::number(ui_->progressBar->value()) + ".png";
+  drawImage(img_path);
+
 }
 
 void ICWidget::calibrate()
 {
-  emit log("Calibration coming soon to a robot near you!");
+  // Provide directory or provide YAML with absolute/relative paths to data or both YAML and directory?
+  const QString home = QStandardPaths::standardLocations(QStandardPaths::HomeLocation).at(0);
+  const QString dir = QFileDialog::getExistingDirectory(this, "Select data directory", home);
+
+  if (dir.isNull())
+  {
+    updateLog("Invalid directory, path is null");
+    return;
+  }
+  data_dir = dir;
+
+  updateLog("Opened directory: " + data_dir);
+
+  // Set up progress bar
+  QDir directory(data_dir + "/images");
+  QStringList files = directory.entryList(QDir::Files);
+  int num_imgs = files.size();
+  ui_->progressBar->setMaximum(num_imgs);
+  ui_->progressBar->setMinimum(0);
+  ui_->progressBar->setValue(0);
+  
+  // Show first image
+  drawImage(data_dir + "/images" + "/0.png");
 }
 
 void ICWidget::saveResults()
 {
   const QString home = QStandardPaths::standardLocations(QStandardPaths::HomeLocation).at(0);
   const QString file = QFileDialog::getSaveFileName(this, "Save results", home, "YAML files (*.yaml *.yml)");
-  emit log("Save results coming soon to a robot near you!");
+  updateLog("Save results coming soon to a robot near you!");
 }
