@@ -3,24 +3,26 @@
 
 ImageWidget::ImageWidget(QWidget* parent) : QWidget(parent)
 {
-  image = QPixmap(size());
-  image.fill(Qt::white);
+  image_original_ = QPixmap(size());
+  image_original_.fill(Qt::white);
+  image_scaled_ = image_original_;
 }
   
 void ImageWidget::setImage(const QString& filepath)
 {
-  image.load(filepath);
+  image_original_.load(filepath);
+  image_scaled_ = image_original_;
 }
   
 void ImageWidget::paintEvent(QPaintEvent *event)
 {
   QWidget::paintEvent(event);
   QPainter painter(this);
-  painter.drawPixmap(rect(), image);
+  painter.drawPixmap(rect(), image_scaled_);
 }
 
 void ImageWidget::resizeEvent(QResizeEvent *event)
 {
-  image = image.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  image_scaled_ = image_original_.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
   update();  // Trigger a repaint
 }

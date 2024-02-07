@@ -242,10 +242,17 @@ void ICWidget::getNextSample()
   if (data_dir.isNull())
   {
     updateLog("Path to data folder is null, specify the directory using the 'Calibrate' button");
-    return;
   }
-  const QString img_path = data_dir + "/images/" + QString::number(ui_->progressBar->value()) + ".png";
-  drawImage(img_path);
+  else if (ui_->progressBar->value() == ui_->progressBar->maximum())
+  {
+    updateLog("All " + QString::number(ui_->progressBar->maximum()) + " images previewed. STAHP IT!");
+  } 
+  else
+  {
+    const QString img_path = data_dir + "/images/" + QString::number(ui_->progressBar->value()) + ".png";
+    drawImage(img_path);
+  }
+  
 }
 
 void ICWidget::calibrate()

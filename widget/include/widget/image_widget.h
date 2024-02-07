@@ -18,7 +18,8 @@ protected:
   void resizeEvent(QResizeEvent *event) override;
   
 private:
-  QPixmap image;  // The image to be drawn
+  QPixmap image_original_;  // original image to load and be scaled
+  QPixmap image_scaled_;  // scaled image to be drawn
 };
 
 #endif // IMAGE_WIDGET_H
