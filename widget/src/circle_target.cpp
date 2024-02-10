@@ -6,6 +6,18 @@ CircleTarget::CircleTarget(QWidget *parent) :
   ui_(new Ui::CircleTarget)
 {
   ui_->setupUi(this);
+
+  ui_->frame_filter_area->setEnabled(ui_->filterByAreaCheckBox->isChecked());
+  ui_->frame_filter_circularity->setEnabled(ui_->filterByCircularityCheckBox->isChecked());
+  ui_->frame_filter_color->setEnabled(ui_->filterByColorCheckBox->isChecked());
+  ui_->frame_filter_convexity->setEnabled(ui_->filterByConvexityCheckBox->isChecked());
+  ui_->frame_filter_inertia->setEnabled(ui_->filterByInertiaCheckBox->isChecked());
+
+  connect(ui_->filterByAreaCheckBox, &QCheckBox::clicked, ui_->frame_filter_area, &QGroupBox::setEnabled);
+  connect(ui_->filterByCircularityCheckBox, &QCheckBox::clicked, ui_->frame_filter_circularity, &QGroupBox::setEnabled);
+  connect(ui_->filterByColorCheckBox, &QCheckBox::clicked, ui_->frame_filter_color, &QGroupBox::setEnabled);
+  connect(ui_->filterByConvexityCheckBox, &QCheckBox::clicked, ui_->frame_filter_convexity, &QGroupBox::setEnabled);
+  connect(ui_->filterByInertiaCheckBox, &QCheckBox::clicked, ui_->frame_filter_inertia, &QGroupBox::setEnabled);
 }
 
 CircleTarget::~CircleTarget()
@@ -21,8 +33,8 @@ void CircleTarget::configure(const YAML::Node& node)
 
   auto& subnode = node["circle_detector_params"];
 
-  ui_->minThresholdDoubleSpinBox->setValue(subnode["minThreshold"].as<double>());
-  ui_->maxThresholdDoubleSpinBox->setValue(subnode["maxThreshold"].as<double>());
+  ui_->minThresholdSpinBox->setValue(subnode["minThreshold"].as<double>());
+  ui_->maxThresholdSpinBox->setValue(subnode["maxThreshold"].as<double>());
   ui_->numThresholdSpinBox->setValue(subnode["nThresholds"].as<int>());
   
   ui_->minRepeatSpinBox->setValue(subnode["minRepeatability"].as<int>());
@@ -63,8 +75,8 @@ YAML::Node CircleTarget::save()
   YAML::Node subnode;
   node["circle_detector_params"] = subnode;
 
-  subnode["minThreshold"] = ui_->minThresholdDoubleSpinBox->value();
-  subnode["maxThreshold"] = ui_->maxThresholdDoubleSpinBox->value();
+  subnode["minThreshold"] = ui_->minThresholdSpinBox->value();
+  subnode["maxThreshold"] = ui_->maxThresholdSpinBox->value();
   subnode["nThresholds"] = ui_->numThresholdSpinBox->value();
   
   subnode["minRepeatability"] = ui_->minRepeatSpinBox->value();
