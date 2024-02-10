@@ -5,6 +5,7 @@
 
 class QDialog;
 class QAbstractButton;
+class AspectRatioPixmapLabel;
 
 namespace Ui {
 class ICWidget;
@@ -37,7 +38,7 @@ private:
   QDialog* aruco_target_dialog_;
   QDialog* circle_target_dialog_;
   QString data_dir;
-
+  AspectRatioPixmapLabel* image_label_;
 };
 
 #endif // IC_WIDGET_H

@@ -7,6 +7,11 @@
 #include <QFileDialog>
 #include <QDir>
 #include <QFile>
+#include <QLabel>
+#include <QImageReader>
+#include <QMessageBox>
+#include <QPixmap>
+
 #include <fstream>
 #include "widget/transform_guess.h"
 #include "widget/camera_intrinsics.h"
@@ -44,6 +49,12 @@ ICWidget::ICWidget(QWidget *parent) :
   ui_(new Ui::ICWidget)
 {
   ui_->setupUi(this);
+
+  image_label_ = new AspectRatioPixmapLabel(this);
+  image_label_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+  image_label_->setScaledContents(false);
+
+  ui_->splitter->addWidget(image_label_);
 
   // Move the text edit scroll bar to the maximum limit whenever it is resized
   connect(ui_->textEditLog->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {
@@ -229,12 +240,25 @@ void ICWidget::drawImage(const QString& filepath)
     return;
   }
 
-  ui_->imageWidget->setImage(filepath);
-  update();
+  QImageReader reader(filepath);
+  reader.setAutoTransform(true);
+  const QImage newImage = reader.read();
 
-  // Call update progress somewhere else if also loading pose data?
-  updateProgressBar();
-  
+  if (newImage.isNull())
+  {
+    QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
+                             tr("Cannot load %1: %2")
+                             .arg(QDir::toNativeSeparators(filepath), reader.errorString()));
+  }
+  else
+  {
+      image_label_->setPixmap(QPixmap::fromImage(newImage));
+
+      update();
+
+      // Call update progress somewhere else if also loading pose data?
+      updateProgressBar();
+  }
 }
 
 void ICWidget::getNextSample()

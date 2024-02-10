@@ -6,18 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1100</width>
+    <width>491</width>
     <height>668</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_8">
+  <layout class="QVBoxLayout" name="verticalLayout_5">
    <item>
     <widget class="QSplitter" name="splitter">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="childrenCollapsible">
+      <bool>false</bool>
      </property>
      <widget class="QWidget" name="verticalLayoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -255,21 +258,10 @@
        </item>
       </layout>
      </widget>
-     <widget class="ImageWidget" name="imageWidget" native="true"/>
     </widget>
    </item>
   </layout>
-  <zorder>imageWidget</zorder>
-  <zorder>splitter</zorder>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>ImageWidget</class>
-   <extends>QWidget</extends>
-   <header>widget/image_widget.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
