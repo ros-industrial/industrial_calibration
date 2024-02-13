@@ -8,7 +8,6 @@
 
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include <iostream>
-#include <memory>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
@@ -122,7 +121,7 @@ PnPComparisonStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& problem, co
 
 using ObservationGenerator = std::function<Observation2D3D(const Eigen::Isometry3d&, const Correspondence2D3D::Set&)>;
 
-std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const path& calibration_file, ObservationGenerator obs_gen)
+std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const path& calibration_file, bool static_camera)
 {
   // Now we create our calibration problem
   ExtrinsicHandEyeProblem2D3D problem;
@@ -174,7 +173,18 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const path& calibrati
     try
     {
       // Try to find the correspondences with the target features in this image:
-      Observation2D3D obs = obs_gen(poses[i], target_finder->findCorrespondences(images[i]));
+      Observation2D3D obs;
+      if (static_camera)
+      {
+        obs.to_camera_mount = Eigen::Isometry3d::Identity();
+        obs.to_target_mount = poses[i];
+      }
+      else
+      {
+        obs.to_camera_mount = poses[i];
+        obs.to_target_mount = Eigen::Isometry3d::Identity();
+      }
+      obs.correspondence_set = target_finder->findCorrespondences(images[i]);
 
       // Check that a homography matrix can accurately reproject the observed points onto the expected target points
       // within a defined threshold
@@ -241,26 +251,6 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const path& calibrati
   return std::make_tuple(opt_result, stats);
 }
 
-Observation2D3D createCameraOnWristObservation(const Eigen::Isometry3d& pose,
-                                               const Correspondence2D3D::Set& correspondences)
-{
-  Observation2D3D obs;
-  obs.to_camera_mount = pose;
-  obs.to_target_mount = Eigen::Isometry3d::Identity();
-  obs.correspondence_set = correspondences;
-  return obs;
-}
-
-Observation2D3D createTargetOnWristObservation(const Eigen::Isometry3d& pose,
-                                               const Correspondence2D3D::Set& correspondences)
-{
-  Observation2D3D obs;
-  obs.to_camera_mount = Eigen::Isometry3d::Identity();
-  obs.to_target_mount = pose;
-  obs.correspondence_set = correspondences;
-  return obs;
-}
-
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
 
 int main(int argc, char** argv)
@@ -271,13 +261,13 @@ int main(int argc, char** argv)
     {
       printTitle("Camera on wrist, modified circle grid target");
       const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_10x10") / "cal_data.yaml";
-      run(calibration_file.string(), createCameraOnWristObservation);
+      run(calibration_file.string(), false);
     }
 
     // ChArUco grid target
     const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_charuco") / "cal_data.yaml";
     printTitle("Target on wrist, ChArUco grid target");
-    run(calibration_file.string(), createTargetOnWristObservation);
+    run(calibration_file.string(), true);
     return 0;
   }
   catch (const std::exception& ex)
@@ -297,7 +287,7 @@ TEST(ExtrinsicHandEyeCalibration, ModifiedCircleGridTarget)
 
   ExtrinsicHandEyeResult result;
   PnPComparisonStats stats;
-  std::tie(result, stats) = run(calibration_file, createCameraOnWristObservation);
+  std::tie(result, stats) = run(calibration_file, false);
 
   // Expect the optimization to converge with low* residual error (in pixels)
   // Note: the camera parameters used in this calibration were un-calibrated values and the images are somewhat low
@@ -317,7 +307,7 @@ TEST(ExtrinsicHandEyeCalibration, ChArUcoGridTarget)
 
   ExtrinsicHandEyeResult result;
   PnPComparisonStats stats;
-  std::tie(result, stats) = run(calibration_file, createTargetOnWristObservation);
+  std::tie(result, stats) = run(calibration_file, true);
 
   // Expect the optimization to converge with low residual error (in pixels)
   ASSERT_TRUE(result.converged);
