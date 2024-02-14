@@ -86,7 +86,7 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
 
   // The target may not be identified in all images, so let's keep track the indices of the images for which the
   // target was identified
-  std::vector<cv::Mat> found_images;
+  std::vector<std::size_t> found_images;
   found_images.reserve(images.size());
 
   for (std::size_t i = 0; i < images.size(); ++i)
@@ -119,7 +119,7 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
 
       // Add the observations to the problem
       problem.observations.push_back(obs);
-      found_images.push_back(images[i]);
+      found_images.push_back(i);
 
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
       // Show the points we detected
@@ -169,7 +169,7 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
 
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
   // Reproject the target points into the image using the results of the calibration and visualize
-  for (std::size_t i = 0; i < found_images.size(); ++i)
+  for (std::size_t i = 0; i < problem.observations.size(); ++i)
   {
     const Observation2D3D& obs = problem.observations.at(i);
 
@@ -177,7 +177,7 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
     Eigen::Isometry3d camera_to_target = opt_result.camera_mount_to_camera.inverse() * obs.to_camera_mount.inverse() *
                                          obs.to_target_mount * opt_result.target_mount_to_target;
 
-    reproject(camera_to_target, obs.correspondence_set, problem.intr, found_images[i]);
+    reproject(camera_to_target, obs.correspondence_set, problem.intr, images.at(found_images.at(i)));
   }
 #endif
 
