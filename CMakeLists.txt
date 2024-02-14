@@ -42,6 +42,7 @@ add_library(
   src/optimizations/analysis/homography_analysis.cpp
   src/optimizations/analysis/statistics.cpp
   src/optimizations/analysis/noise_qualification.cpp
+  src/optimizations/analysis/projection.cpp
   # Target Finders
   src/target_finders/circle_detector.cpp
   src/target_finders/target_finder.cpp
