@@ -147,6 +147,9 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
   printOptResults(opt_result.converged, opt_result.initial_cost_per_obs, opt_result.final_cost_per_obs);
   std::cout << std::endl;
 
+  // Compute the projected 3D error for comparison
+  std::cout << analyze3dProjectionError(problem, opt_result) << std::endl << std::endl;
+
   Eigen::Isometry3d c = opt_result.camera_mount_to_camera;
   printTransform(c, "Camera Mount", "Camera", "CAMERA MOUNT TO CAMERA");
   std::cout << std::endl;
