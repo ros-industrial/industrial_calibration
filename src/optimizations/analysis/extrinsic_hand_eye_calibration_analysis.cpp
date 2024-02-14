@@ -6,6 +6,15 @@
 
 namespace industrial_calibration
 {
+std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEyeAnalysisStats& stats)
+{
+  stream << "Difference in camera to target transform between extrinsic calibration and PnP optimization\n"
+         << "Position:\n\tMean (m): " << stats.pos_diff_mean << "\n\tStd. Dev. (m): " << stats.pos_diff_stdev << "\n"
+         << "Orientation:\n\tMean (deg): " << stats.ori_diff_mean * 180.0 / M_PI
+         << "\n\tStd. Dev. (deg): " << stats.ori_diff_stdev * 180.0 / M_PI;
+  return stream;
+}
+
 ExtrinsicHandEyeAnalysisStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& problem,
                                              const ExtrinsicHandEyeResult& opt_result)
 {
@@ -46,6 +55,14 @@ ExtrinsicHandEyeAnalysisStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& 
   std::tie(stats.ori_diff_mean, stats.ori_diff_stdev) = computeStats(ori_diff_acc);
 
   return stats;
+}
+
+std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEye3dProjectionStats& stats)
+{
+  stream << "3D reprojection error statistics:"
+         << "\n\tMean +/- Std. Dev. (m): " << stats.mean << " +/- " << stats.stdev << "\n\tMin (m): " << stats.min
+         << "\n\tMax (m): " << stats.max;
+  return stream;
 }
 
 ExtrinsicHandEye3dProjectionStats analyze3dProjectionError(const ExtrinsicHandEyeProblem2D3D& problem,

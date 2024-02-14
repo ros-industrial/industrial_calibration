@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 namespace industrial_calibration
 {
 class ExtrinsicHandEyeProblem2D3D;
@@ -16,6 +18,7 @@ struct ExtrinsicHandEyeAnalysisStats
   double ori_diff_mean;
   double ori_diff_stdev;
 };
+std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEyeAnalysisStats& stats);
 
 /**
  * @brief Analyzes the results of the hand eye calibration by measuring the difference between the calibrated camera to
@@ -34,6 +37,7 @@ struct ExtrinsicHandEye3dProjectionStats
   double mean;
   double stdev;
 };
+std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEye3dProjectionStats& stats);
 
 ExtrinsicHandEye3dProjectionStats analyze3dProjectionError(const ExtrinsicHandEyeProblem2D3D& problem,
                                                            const ExtrinsicHandEyeResult& opt_result);
