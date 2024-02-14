@@ -59,6 +59,7 @@ target_mount_to_target_guess:
 
 # Other parameters
 homography_threshold: 2.0
+static_camera: true
 
 # ChArUco grid target finder
 target_finder:
