@@ -162,13 +162,7 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
   // parameters We will then see how much this transform differs from the same transform calculated using the results
   // of the extrinsic calibration
   ExtrinsicHandEyeAnalysisStats stats = analyzeResults(problem, opt_result);
-
-  std::cout << "Difference in camera to target transform between extrinsic calibration and PnP optimization"
-            << std::endl;
-  std::cout << "Position:\n\tMean (m): " << stats.pos_diff_mean << "\n\tStd. Dev. (m): " << stats.pos_diff_stdev
-            << std::endl;
-  std::cout << "Orientation:\n\tMean (deg): " << stats.ori_diff_mean * 180.0 / M_PI
-            << "\n\tStd. Dev. (deg): " << stats.ori_diff_stdev * 180.0 / M_PI << std::endl;
+  std::cout << stats << std::endl << std::endl;
 
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
   // Reproject the target points into the image using the results of the calibration and visualize
