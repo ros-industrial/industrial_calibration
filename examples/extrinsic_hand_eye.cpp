@@ -119,14 +119,15 @@ PnPComparisonStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& problem, co
   return stats;
 }
 
-using ObservationGenerator = std::function<Observation2D3D(const Eigen::Isometry3d&, const Correspondence2D3D::Set&)>;
-
-std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const path& calibration_file, bool static_camera)
+std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const path& calibration_file)
 {
   // Now we create our calibration problem
   ExtrinsicHandEyeProblem2D3D problem;
 
   YAML::Node config = YAML::LoadFile(calibration_file.string());
+
+  // Load the flag that indicates whether the camera was static during the calibration
+  bool static_camera = getMember<bool>(config, "static_camera");
 
   // Load the homography threshold
   auto homography_threshold = getMember<double>(config, "homography_threshold");
@@ -261,13 +262,13 @@ int main(int argc, char** argv)
     {
       printTitle("Camera on wrist, modified circle grid target");
       const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_10x10") / "cal_data.yaml";
-      run(calibration_file.string(), false);
+      run(calibration_file.string());
     }
 
     // ChArUco grid target
     const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_charuco") / "cal_data.yaml";
     printTitle("Target on wrist, ChArUco grid target");
-    run(calibration_file.string(), true);
+    run(calibration_file.string());
     return 0;
   }
   catch (const std::exception& ex)
@@ -287,7 +288,7 @@ TEST(ExtrinsicHandEyeCalibration, ModifiedCircleGridTarget)
 
   ExtrinsicHandEyeResult result;
   PnPComparisonStats stats;
-  std::tie(result, stats) = run(calibration_file, false);
+  std::tie(result, stats) = run(calibration_file);
 
   // Expect the optimization to converge with low* residual error (in pixels)
   // Note: the camera parameters used in this calibration were un-calibrated values and the images are somewhat low
@@ -307,7 +308,7 @@ TEST(ExtrinsicHandEyeCalibration, ChArUcoGridTarget)
 
   ExtrinsicHandEyeResult result;
   PnPComparisonStats stats;
-  std::tie(result, stats) = run(calibration_file, true);
+  std::tie(result, stats) = run(calibration_file);
 
   // Expect the optimization to converge with low residual error (in pixels)
   ASSERT_TRUE(result.converged);

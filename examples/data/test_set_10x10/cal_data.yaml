@@ -93,3 +93,4 @@ target_finder:
 
 # Other parameters
 homography_threshold: 1.0
+static_camera: false
