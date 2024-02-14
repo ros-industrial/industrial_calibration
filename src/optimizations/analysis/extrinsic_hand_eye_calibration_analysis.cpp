@@ -1,5 +1,7 @@
 #include <industrial_calibration/optimizations/analysis/extrinsic_hand_eye_calibration_analysis.h>
 #include <industrial_calibration/optimizations/analysis/statistics.h>
+#include <industrial_calibration/optimizations/analysis/projection.h>
+#include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
 #include <industrial_calibration/optimizations/pnp.h>
 
 namespace industrial_calibration
@@ -42,6 +44,22 @@ ExtrinsicHandEyeAnalysisStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& 
   ExtrinsicHandEyeAnalysisStats stats;
   std::tie(stats.pos_diff_mean, stats.pos_diff_stdev) = computeStats(pos_diff_acc);
   std::tie(stats.ori_diff_mean, stats.ori_diff_stdev) = computeStats(ori_diff_acc);
+
+  return stats;
+}
+
+ExtrinsicHandEye3dProjectionStats analyze3dProjectionError(const ExtrinsicHandEyeProblem2D3D& problem,
+                                                           const ExtrinsicHandEyeResult& opt_result)
+{
+  Eigen::ArrayXd error = compute3DProjectionError(problem.observations, problem.intr, opt_result.camera_mount_to_camera,
+                                                  opt_result.target_mount_to_target);
+
+  // Compute stats
+  ExtrinsicHandEye3dProjectionStats stats;
+  stats.mean = error.mean();
+  stats.stdev = std::sqrt((error - error.mean()).square().sum() / (error.size() - 1));
+  stats.min = error.minCoeff();
+  stats.max = error.maxCoeff();
 
   return stats;
 }
