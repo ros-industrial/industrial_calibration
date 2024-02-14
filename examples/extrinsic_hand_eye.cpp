@@ -1,7 +1,6 @@
 ﻿#include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
 #include <industrial_calibration/optimizations/analysis/homography_analysis.h>
-#include <industrial_calibration/optimizations/analysis/statistics.h>
-#include <industrial_calibration/optimizations/pnp.h>
+#include <industrial_calibration/optimizations/analysis/extrinsic_hand_eye_calibration_analysis.h>
 #include <industrial_calibration/target_finders/target_finder.h>
 #include <industrial_calibration/utils.h>
 #include <industrial_calibration/serialization.h>
@@ -16,25 +15,6 @@ static const unsigned RANDOM_SEED = 1;
 
 using namespace industrial_calibration;
 using VectorEigenIsometry = std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>;
-
-/**
- * @brief Performs a PnP optimization for comparison to the calibrated camera to target transform
- * @param camera_to_target - calibrated transformation from the camera frame to the target frame
- * @param correspondence_set
- * @param intr
- * @return
- */
-Eigen::Isometry3d estimatePnP(const Eigen::Isometry3d& camera_to_target,
-                              const Correspondence2D3D::Set& correspondence_set, const CameraIntrinsics& intr)
-{
-  PnPProblem pb;
-  pb.camera_to_target_guess = camera_to_target;
-  pb.correspondences = correspondence_set;
-  pb.intr = intr;
-  PnPResult r = optimize(pb);
-
-  return r.camera_to_target;
-}
 
 /**
  * @brief Reprojects target points into the image using the calibrated transform
@@ -60,66 +40,7 @@ void reproject(const Eigen::Isometry3d& camera_to_target, const Correspondence2D
   cv::waitKey();
 }
 
-struct PnPComparisonStats
-{
-  double pos_diff_mean;
-  double pos_diff_stdev;
-  double ori_diff_mean;
-  double ori_diff_stdev;
-};
-
-/**
- * @brief Analyzes the results of the hand eye calibration by measuring the difference between the calibrated camera to
- * target transform and a PnP optimization estimation of the same transform
- * @param problem
- * @param opt_result
- * @param images
- * @param window_name
- */
-PnPComparisonStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& problem, const ExtrinsicHandEyeResult& opt_result,
-                                  const std::vector<cv::Mat>& images)
-{
-  // Create accumulators to more easily calculate the mean and standard deviation of the position and orientation
-  // differences
-  std::vector<double> pos_diff_acc, ori_diff_acc;
-  pos_diff_acc.reserve(images.size());
-  ori_diff_acc.reserve(images.size());
-
-  // Iterate over all of the images in which an observation of the target was made
-  for (std::size_t i = 0; i < images.size(); ++i)
-  {
-    // Get the observation
-    const Observation2D3D& obs = problem.observations.at(i);
-
-    // Calculate the optimized transform from the camera to the target for the ith observation
-    Eigen::Isometry3d camera_to_target = opt_result.camera_mount_to_camera.inverse() * obs.to_camera_mount.inverse() *
-                                         obs.to_target_mount * opt_result.target_mount_to_target;
-
-#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
-    // Reproject the target points into the image using the results of the calibration
-    reproject(camera_to_target, obs.correspondence_set, problem.intr, images[i]);
-#endif
-
-    // Get the same transformation from a PnP optimization with the known camera intrinsic parameters
-    Eigen::Isometry3d camera_to_target_pnp = estimatePnP(camera_to_target, obs.correspondence_set, problem.intr);
-
-    // Calculate the difference between the two transforms
-    Eigen::Isometry3d diff = camera_to_target.inverse() * camera_to_target_pnp;
-
-    // Accumulate the differences
-    pos_diff_acc.push_back(diff.translation().norm());
-    ori_diff_acc.push_back(Eigen::Quaterniond(camera_to_target.linear())
-                               .angularDistance(Eigen::Quaterniond(camera_to_target_pnp.linear())));
-  }
-
-  PnPComparisonStats stats;
-  std::tie(stats.pos_diff_mean, stats.pos_diff_stdev) = computeStats(pos_diff_acc);
-  std::tie(stats.ori_diff_mean, stats.ori_diff_stdev) = computeStats(ori_diff_acc);
-
-  return stats;
-}
-
-std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const path& calibration_file)
+std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path& calibration_file)
 {
   // Now we create our calibration problem
   ExtrinsicHandEyeProblem2D3D problem;
@@ -240,7 +161,7 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const path& calibrati
   // The PnP optimization will give us an estimate of the camera to target transform using our input camera intrinsic
   // parameters We will then see how much this transform differs from the same transform calculated using the results
   // of the extrinsic calibration
-  PnPComparisonStats stats = analyzeResults(problem, opt_result, found_images);
+  ExtrinsicHandEyeAnalysisStats stats = analyzeResults(problem, opt_result);
 
   std::cout << "Difference in camera to target transform between extrinsic calibration and PnP optimization"
             << std::endl;
@@ -248,6 +169,20 @@ std::tuple<ExtrinsicHandEyeResult, PnPComparisonStats> run(const path& calibrati
             << std::endl;
   std::cout << "Orientation:\n\tMean (deg): " << stats.ori_diff_mean * 180.0 / M_PI
             << "\n\tStd. Dev. (deg): " << stats.ori_diff_stdev * 180.0 / M_PI << std::endl;
+
+#ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
+  // Reproject the target points into the image using the results of the calibration and visualize
+  for (std::size_t i = 0; i < found_images.size(); ++i)
+  {
+    const Observation2D3D& obs = problem.observations.at(i);
+
+    // Calculate the optimized transform from the camera to the target for the ith observation
+    Eigen::Isometry3d camera_to_target = opt_result.camera_mount_to_camera.inverse() * obs.to_camera_mount.inverse() *
+                                         obs.to_target_mount * opt_result.target_mount_to_target;
+
+    reproject(camera_to_target, obs.correspondence_set, problem.intr, found_images[i]);
+  }
+#endif
 
   return std::make_tuple(opt_result, stats);
 }
@@ -287,7 +222,7 @@ TEST(ExtrinsicHandEyeCalibration, ModifiedCircleGridTarget)
   const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_10x10") / "cal_data.yaml";
 
   ExtrinsicHandEyeResult result;
-  PnPComparisonStats stats;
+  ExtrinsicHandEyeAnalysisStats stats;
   std::tie(result, stats) = run(calibration_file);
 
   // Expect the optimization to converge with low* residual error (in pixels)
@@ -307,7 +242,7 @@ TEST(ExtrinsicHandEyeCalibration, ChArUcoGridTarget)
   const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_charuco") / "cal_data.yaml";
 
   ExtrinsicHandEyeResult result;
-  PnPComparisonStats stats;
+  ExtrinsicHandEyeAnalysisStats stats;
   std::tie(result, stats) = run(calibration_file);
 
   // Expect the optimization to converge with low residual error (in pixels)
