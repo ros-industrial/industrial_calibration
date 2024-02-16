@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <industrial_calibration/optimizations/analysis/camera_intrinsic_calibration_analysis.h>
+#include <industrial_calibration/analysis/camera_intrinsic_calibration_analysis.h>
 #include <industrial_calibration_tests/utilities.h>
 #include <industrial_calibration_tests/observation_creator.h>
 #include <memory>

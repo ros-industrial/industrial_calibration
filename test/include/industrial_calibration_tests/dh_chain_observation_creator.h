@@ -1,7 +1,7 @@
 #pragma once
 
-#include <industrial_calibration/dh_chain.h>
-#include <industrial_calibration/types.h>
+#include <industrial_calibration/core/dh_chain.h>
+#include <industrial_calibration/core/types.h>
 #include <industrial_calibration_tests/utilities.h>
 
 namespace industrial_calibration

@@ -1,7 +1,7 @@
-#include <industrial_calibration/optimizations/analysis/statistics.h>
-#include <industrial_calibration/cost_functions/dh_chain_kinematic_calibration.h>
+#include <industrial_calibration/analysis/statistics.h>
+#include <industrial_calibration/optimizations/dh_chain_kinematic_calibration_cost.h>
 #include <industrial_calibration/optimizations/dh_chain_kinematic_calibration.h>
-#include <industrial_calibration/optimizations/utils/local_parameterization.h>
+#include <industrial_calibration/optimizations/local_parameterization.h>
 #include <industrial_calibration_tests/dh_chain_observation_creator.h>
 #include <industrial_calibration_tests/utilities.h>
 #include <industrial_calibration_tests/observation_creator.h>

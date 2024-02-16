@@ -1,7 +1,7 @@
-#include <industrial_calibration/optimizations/analysis/noise_qualification.h>
+#include "utils.h"
+#include <industrial_calibration/analysis/noise_qualification.h>
 #include <industrial_calibration/target_finders/target_finder.h>
-#include <industrial_calibration/utils.h>
-#include <industrial_calibration/serialization.h>
+#include <industrial_calibration/core/serialization.h>
 
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include <iostream>

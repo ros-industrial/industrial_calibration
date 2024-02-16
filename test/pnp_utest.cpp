@@ -1,5 +1,5 @@
 #include <industrial_calibration/optimizations/pnp.h>
-#include <industrial_calibration/optimizations/analysis/statistics.h>
+#include <industrial_calibration/analysis/statistics.h>
 #include <industrial_calibration_tests/observation_creator.h>
 #include <industrial_calibration_tests/utilities.h>
 

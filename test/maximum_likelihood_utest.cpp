@@ -1,4 +1,4 @@
-#include <industrial_calibration/optimizations/utils/maximum_likelihood.h>
+#include <industrial_calibration/optimizations/maximum_likelihood.h>
 
 #include <ceres/problem.h>
 #include <ceres/dynamic_autodiff_cost_function.h>

@@ -1,6 +1,6 @@
-#include <industrial_calibration/optimizations/analysis/covariance_analysis.h>
+#include <industrial_calibration/optimizations/covariance_analysis.h>
 #include <industrial_calibration_tests/circle_fit.h>
-#include <industrial_calibration/exceptions.h>
+#include <industrial_calibration/core/exceptions.h>
 
 #include <ceres/ceres.h>
 #include <cmath>

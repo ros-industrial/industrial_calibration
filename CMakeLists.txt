@@ -5,101 +5,10 @@ find_package(ros_industrial_cmake_boilerplate REQUIRED)
 extract_package_metadata(pkg)
 project(${pkg_extracted_name} VERSION ${pkg_extracted_version} LANGUAGES CXX)
 
-find_package(boost_plugin_loader REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED)
-find_package(Ceres REQUIRED)
-find_package(yaml-cpp REQUIRED)
-
-# Create targets if necessary
-if(NOT TARGET Eigen3::Eigen)
-  find_package(Threads REQUIRED)
-  add_library(Eigen3::Eigen IMPORTED INTERFACE)
-  set_property(TARGET Eigen3::Eigen PROPERTY INTERFACE_COMPILE_DEFINITIONS ${EIGEN3_DEFINITIONS})
-  set_property(TARGET Eigen3::Eigen PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS})
-endif()
-
-add_library(
-  ${PROJECT_NAME} SHARED
-  # Common
-  src/camera_intrinsics.cpp
-  src/dh_chain.cpp
-  src/types.cpp
-  src/utils.cpp
-  # Optimization Utilities
-  src/optimizations/utils/ceres_math_utilities.cpp
-  # Optimizations
-  src/optimizations/pnp.cpp
-  src/optimizations/camera_intrinsic.cpp
-  src/optimizations/dh_chain_kinematic_calibration.cpp
-  src/optimizations/extrinsic_hand_eye.cpp
-  src/optimizations/extrinsic_multi_static_camera.cpp
-  src/optimizations/multi_camera_pnp.cpp
-  # Optimization Analysis
-  src/optimizations/analysis/camera_intrinsic_calibration_analysis.cpp
-  src/optimizations/analysis/covariance_types.cpp
-  src/optimizations/analysis/covariance_analysis.cpp
-  src/optimizations/analysis/extrinsic_hand_eye_calibration_analysis.cpp
-  src/optimizations/analysis/homography_analysis.cpp
-  src/optimizations/analysis/noise_qualification.cpp
-  src/optimizations/analysis/projection.cpp
-  src/optimizations/analysis/statistics.cpp
-  # Target Finders
-  src/target_finders/circle_detector.cpp
-  src/target_finders/target_finder.cpp
-  src/target_finders/modified_circle_grid_target_finder.cpp
-  src/target_finders/aruco_grid_target_finder.cpp
-  src/target_finders/charuco_grid_target_finder.cpp)
-target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                                                  "$<INSTALL_INTERFACE:include>")
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CERES_INCLUDE_DIRS})
-target_link_libraries(
-  ${PROJECT_NAME}
-  PUBLIC Eigen3::Eigen
-         ${CERES_LIBRARIES}
-         yaml-cpp
-         opencv_core
-         opencv_aruco
-         opencv_features2d
-         opencv_imgproc
-         opencv_imgcodecs)
-target_compile_definitions(
-  ${PROJECT_NAME}
-  PUBLIC TARGET_FINDER_SECTION="target" INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV="INDUSTRIAL_CALIBRATION_PLUGINS"
-         INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES="${PROJECT_NAME}_plugins")
-target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 17)
-target_clang_tidy(
-  ${PROJECT_NAME}
-  ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY}
-         WARNINGS_AS_ERRORS
-         ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING}
-         CHECKS
-         ${DEFAULT_CLANG_TIDY_CHECKS})
-target_code_coverage(
-  ${PROJECT_NAME}
-  INTERFACE
-  ALL
-  ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
-
-# Plugin loader
-add_library(${PROJECT_NAME}_plugins SHARED src/plugins.cpp)
-target_link_libraries(${PROJECT_NAME}_plugins PUBLIC ${PROJECT_NAME} boost_plugin_loader::boost_plugin_loader)
-target_cxx_version(${PROJECT_NAME}_plugins PUBLIC VERSION 17)
-target_clang_tidy(
-  ${PROJECT_NAME}_plugins
-  ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY}
-         WARNINGS_AS_ERRORS
-         ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING}
-         CHECKS
-         ${DEFAULT_CLANG_TIDY_CHECKS})
-target_code_coverage(
-  ${PROJECT_NAME}_plugins
-  INTERFACE
-  ALL
-  ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
-
-# Install headers
-install(DIRECTORY include/ DESTINATION include/)
+add_subdirectory(core)
+add_subdirectory(optimizations)
+add_subdirectory(analysis)
+add_subdirectory(target_finders)
 
 # Unit tests
 if(${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
@@ -108,17 +17,14 @@ if(${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
   add_subdirectory(test)
 endif()
 
-# Calibration examples
+# Examples
 add_subdirectory(examples)
 
 # Package configuration
 configure_package(
-  NAMESPACE industrial_calibration
-  TARGETS ${PROJECT_NAME}
-          ${PROJECT_NAME}_plugins
-          DEPENDENCIES
-          boost_plugin_loader
-          Eigen3
-          OpenCV
-          Ceres
-          yaml-cpp)
+  SUPPORTED_COMPONENTS
+  core
+  optimizations
+  analysis
+  target_finders
+  examples)

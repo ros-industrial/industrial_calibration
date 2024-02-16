@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <random>
-#include <industrial_calibration/optimizations/analysis/homography_analysis.h>
+#include <industrial_calibration/analysis/homography_analysis.h>
 #include <industrial_calibration_tests/observation_creator.h>
 #include <industrial_calibration_tests/utilities.h>
 

@@ -4,7 +4,7 @@
 #include <industrial_calibration/target_finders/charuco_grid_target_finder.h>
 #include <industrial_calibration/target_finders/aruco_grid_target_finder.h>
 // Analysis
-#include <industrial_calibration/optimizations/analysis/homography_analysis.h>
+#include <industrial_calibration/analysis/homography_analysis.h>
 
 #include <numeric>
 #include <gtest/gtest.h>
