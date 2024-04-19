@@ -46,7 +46,7 @@ the use of this software, even if advised of the possibility of such damage.
 // Slight Modification of OpenCV function to use ellipse fitting rather than
 // center of mass of contour to provide the location of the circle.
 
-#include <industrial_calibration/target_finders/circle_detector.h>
+#include <industrial_calibration/target_finders/opencv/circle_detector.h>
 #include <industrial_calibration/core/exceptions.h>
 #include <industrial_calibration/core/serialization.h>
 

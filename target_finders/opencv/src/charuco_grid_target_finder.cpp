@@ -1,4 +1,4 @@
-#include <industrial_calibration/target_finders/charuco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/opencv/charuco_grid_target_finder.h>
 #include <industrial_calibration/core/exceptions.h>
 #include <industrial_calibration/core/serialization.h>
 
@@ -134,7 +134,7 @@ cv::Mat CharucoGridBoardTargetFinder::drawTargetFeatures(const cv::Mat& image,
   return image;
 }
 
-TargetFinder2D3D::ConstPtr CharucoGridTargetFinderFactory::create(const YAML::Node& config) const
+TargetFinderOpenCV::ConstPtr CharucoGridTargetFinderFactory::create(const YAML::Node& config) const
 {
   auto cols = getMember<int>(config, "cols");
   auto rows = getMember<int>(config, "rows");

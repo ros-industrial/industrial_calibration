@@ -4,7 +4,7 @@
  */
 #pragma once
 
-#include <industrial_calibration/target_finders/target_finder.h>
+#include <industrial_calibration/target_finders/opencv/target_finder.h>
 
 #include <Eigen/Dense>
 #include <map>
@@ -53,7 +53,7 @@ struct CharucoGridTarget : public Target2D3D
  * @brief This class finds 2D features from images of a specified ChArUco gridboard target.
  * The main advantage of this kind of target is that partial views still provide usable correspondences.
  */
-class CharucoGridBoardTargetFinder : public TargetFinder2D3D
+class CharucoGridBoardTargetFinder : public TargetFinderOpenCV
 {
 public:
   CharucoGridBoardTargetFinder(const CharucoGridTarget& target);
@@ -79,10 +79,10 @@ protected:
   const CharucoGridTarget target_;
 };
 
-struct CharucoGridTargetFinderFactory : public TargetFinderFactory2D3D
+struct CharucoGridTargetFinderFactory : public TargetFinderFactoryOpenCV
 {
 public:
-  TargetFinder2D3D::ConstPtr create(const YAML::Node& config) const override;
+  TargetFinderOpenCV::ConstPtr create(const YAML::Node& config) const override;
 };
 
 }  // namespace industrial_calibration

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <industrial_calibration/target_finders/target_finder.h>
-#include <industrial_calibration/target_finders/circle_detector.h>
+#include <industrial_calibration/target_finders/opencv/target_finder.h>
+#include <industrial_calibration/target_finders/opencv/circle_detector.h>
 
 namespace industrial_calibration
 {
@@ -33,7 +33,7 @@ struct ModifiedCircleGridTarget : Target2D3D
  * @brief This class finds 2D features (circle centers) from images of a known ModifiedCircleGridTarget.
  * All points must be seen or it will fail. Features are returned in the same order as points are defined in the target.
  */
-class ModifiedCircleGridTargetFinder : public TargetFinder2D3D
+class ModifiedCircleGridTargetFinder : public TargetFinderOpenCV
 {
 public:
   ModifiedCircleGridTargetFinder(const ModifiedCircleGridTarget& target);
@@ -61,10 +61,10 @@ protected:
   const CircleDetectorParams params_;
 };
 
-struct ModifiedCircleGridTargetFinderFactory : public TargetFinderFactory2D3D
+struct ModifiedCircleGridTargetFinderFactory : public TargetFinderFactoryOpenCV
 {
 public:
-  TargetFinder2D3D::ConstPtr create(const YAML::Node& config) const override;
+  TargetFinderOpenCV::ConstPtr create(const YAML::Node& config) const override;
 };
 
 }  // namespace industrial_calibration

@@ -2,7 +2,7 @@
  * ArUco gridboard detector, following the same pattern as ModifiedCircleGridTargetFinder.
  * Author: Joseph Schornak
  */
-#include <industrial_calibration/target_finders/aruco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/opencv/aruco_grid_target_finder.h>
 #include <industrial_calibration/core/serialization.h>
 
 namespace
@@ -124,7 +124,7 @@ cv::Mat ArucoGridBoardTargetFinder::drawTargetFeatures(const cv::Mat& image,
   return image;
 }
 
-TargetFinder2D3D::ConstPtr ArucoGridTargetFinderFactory::create(const YAML::Node& config) const
+TargetFinderOpenCV::ConstPtr ArucoGridTargetFinderFactory::create(const YAML::Node& config) const
 {
   auto cols = getMember<int>(config, "cols");
   auto rows = getMember<int>(config, "rows");

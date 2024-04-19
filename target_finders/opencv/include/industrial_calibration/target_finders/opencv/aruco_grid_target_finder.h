@@ -1,6 +1,6 @@
 #pragma once
 
-#include <industrial_calibration/target_finders/target_finder.h>
+#include <industrial_calibration/target_finders/opencv/target_finder.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/aruco.hpp>
@@ -51,7 +51,7 @@ struct ArucoGridTarget : Target2D3D
  * Target features are returned as a map where the marker ID is the key and the image coordinates of the
  * marker corners are the mapped value.
  */
-class ArucoGridBoardTargetFinder : public TargetFinder2D3D
+class ArucoGridBoardTargetFinder : public TargetFinderOpenCV
 {
 public:
   ArucoGridBoardTargetFinder(const ArucoGridTarget& target);
@@ -79,10 +79,10 @@ protected:
   const ArucoGridTarget target_;
 };
 
-struct ArucoGridTargetFinderFactory : public TargetFinderFactory2D3D
+struct ArucoGridTargetFinderFactory : public TargetFinderFactoryOpenCV
 {
 public:
-  TargetFinder2D3D::ConstPtr create(const YAML::Node& config) const override;
+  TargetFinderOpenCV::ConstPtr create(const YAML::Node& config) const override;
 };
 
 }  // namespace industrial_calibration

@@ -5,10 +5,19 @@ find_package(ros_industrial_cmake_boilerplate REQUIRED)
 extract_package_metadata(pkg)
 project(${pkg_extracted_name} VERSION ${pkg_extracted_version} LANGUAGES CXX)
 
+set(SUPPORTED_COMPONENTS "")
+
 add_subdirectory(core)
+list(APPEND SUPPORTED_COMPONENTS core)
+
 add_subdirectory(optimizations)
+list(APPEND SUPPORTED_COMPONENTS core)
+
 add_subdirectory(analysis)
+list(APPEND SUPPORTED_COMPONENTS core)
+
 add_subdirectory(target_finders)
+# The target_finders manages the addition of its own supported components
 
 # Unit tests
 if(${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
@@ -21,10 +30,4 @@ endif()
 add_subdirectory(examples)
 
 # Package configuration
-configure_package(
-  SUPPORTED_COMPONENTS
-  core
-  optimizations
-  analysis
-  target_finders
-  examples)
+configure_package(SUPPORTED_COMPONENTS ${SUPPORTED_COMPONENTS})

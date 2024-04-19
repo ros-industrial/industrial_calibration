@@ -1,5 +1,5 @@
-#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
-#include <industrial_calibration/target_finders/circle_detector.h>
+#include <industrial_calibration/target_finders/opencv/modified_circle_grid_target_finder.h>
+#include <industrial_calibration/target_finders/opencv/circle_detector.h>
 #include <industrial_calibration/core/exceptions.h>
 #include <industrial_calibration/core/serialization.h>
 
@@ -499,14 +499,14 @@ cv::Mat ModifiedCircleGridTargetFinder::drawTargetFeatures(const cv::Mat& image,
   return renderObservations(out_image, cv_obs, target_);
 }
 
-TargetFinder2D3D::ConstPtr ModifiedCircleGridTargetFinderFactory::create(const YAML::Node& config) const
+TargetFinderOpenCV::ConstPtr ModifiedCircleGridTargetFinderFactory::create(const YAML::Node& config) const
 {
   int rows = getMember<int>(config, "rows");
   int cols = getMember<int>(config, "cols");
   double spacing = getMember<double>(config, "spacing");
   ModifiedCircleGridTarget target(rows, cols, spacing);
 
-  TargetFinder2D3D::ConstPtr finder;
+  TargetFinderOpenCV::ConstPtr finder;
   if (config["circle_detector_params"])
   {
     finder =
