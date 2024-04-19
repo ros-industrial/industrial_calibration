@@ -1,6 +1,6 @@
 #include <industrial_calibration_tests/dh_chain_observation_creator.h>
 #include <industrial_calibration_tests/observation_creator.h>
-#include <industrial_calibration/exceptions.h>
+#include <industrial_calibration/core/exceptions.h>
 
 namespace industrial_calibration
 {

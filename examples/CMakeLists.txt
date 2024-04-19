@@ -1,8 +1,11 @@
+find_package(boost_plugin_loader REQUIRED)
+
 # Hand-eye calibration example
 add_executable(${PROJECT_NAME}_extrinsic_hand_eye extrinsic_hand_eye.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_extrinsic_hand_eye
-  PRIVATE ${PROJECT_NAME}
+  PRIVATE ${PROJECT_NAME}_analysis
+          ${PROJECT_NAME}_target_finders
           opencv_highgui
           stdc++fs
           boost_plugin_loader::boost_plugin_loader)
@@ -12,7 +15,8 @@ target_cxx_version(${PROJECT_NAME}_extrinsic_hand_eye PUBLIC VERSION 17)
 
 # Kinematic calibration example
 add_executable(${PROJECT_NAME}_kinematic_calibration kinematic_calibration.cpp)
-target_link_libraries(${PROJECT_NAME}_kinematic_calibration PRIVATE ${PROJECT_NAME} stdc++fs)
+target_link_libraries(${PROJECT_NAME}_kinematic_calibration PRIVATE ${PROJECT_NAME}_analysis
+                                                                    ${PROJECT_NAME}_target_finders)
 target_compile_definitions(${PROJECT_NAME}_kinematic_calibration
                            PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 target_cxx_version(${PROJECT_NAME}_kinematic_calibration PUBLIC VERSION 17)
@@ -21,7 +25,8 @@ target_cxx_version(${PROJECT_NAME}_kinematic_calibration PUBLIC VERSION 17)
 add_executable(${PROJECT_NAME}_noise_qualification_2d noise_qualification_2d.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_noise_qualification_2d
-  PRIVATE ${PROJECT_NAME}
+  PRIVATE ${PROJECT_NAME}_analysis
+          ${PROJECT_NAME}_target_finders
           opencv_highgui
           stdc++fs
           boost_plugin_loader::boost_plugin_loader)
@@ -33,7 +38,8 @@ target_cxx_version(${PROJECT_NAME}_noise_qualification_2d PUBLIC VERSION 17)
 add_executable(${PROJECT_NAME}_pnp pnp.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_pnp
-  PRIVATE ${PROJECT_NAME}
+  PRIVATE ${PROJECT_NAME}_analysis
+          ${PROJECT_NAME}_target_finders
           opencv_highgui
           stdc++fs
           boost_plugin_loader::boost_plugin_loader)
@@ -69,15 +75,18 @@ if(${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
   target_compile_definitions(${PROJECT_NAME}_pnp PUBLIC INDUSTRIAL_CALIBRATION_ENABLE_TESTING)
 endif()
 
-# Install the example executables so they can be run independently later if needed
-install(
-  TARGETS ${PROJECT_NAME}_extrinsic_hand_eye
-          ${PROJECT_NAME}_kinematic_calibration
-          ${PROJECT_NAME}_noise_qualification_2d
-          ${PROJECT_NAME}_pnp
-  RUNTIME DESTINATION bin/examples
-  LIBRARY DESTINATION lib/examples
-  ARCHIVE DESTINATION lib/examples)
-
 # Install the data directory
 install(DIRECTORY data DESTINATION share/${PROJECT_NAME})
+
+configure_component(
+  COMPONENT
+  examples
+  NAMESPACE
+  industrial_calibration
+  TARGETS
+  ${PROJECT_NAME}_extrinsic_hand_eye
+  ${PROJECT_NAME}_kinematic_calibration
+  ${PROJECT_NAME}_noise_qualification_2d
+  ${PROJECT_NAME}_pnp
+  DEPENDENCIES
+  "industrial_calibration COMPONENTS applications")

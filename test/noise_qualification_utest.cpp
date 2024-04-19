@@ -1,6 +1,6 @@
-#include <industrial_calibration/optimizations/analysis/noise_qualification.h>
+#include <industrial_calibration/analysis/noise_qualification.h>
 #include <industrial_calibration/optimizations/pnp.h>
-#include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
+#include <industrial_calibration/optimizations/ceres_math_utilities.h>
 #include <industrial_calibration_tests/utilities.h>
 #include <industrial_calibration_tests/observation_creator.h>
 

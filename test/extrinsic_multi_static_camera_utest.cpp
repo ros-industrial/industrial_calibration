@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <industrial_calibration/optimizations/extrinsic_multi_static_camera.h>
-#include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
+#include <industrial_calibration/optimizations/ceres_math_utilities.h>
 #include <industrial_calibration_tests/utilities.h>
 #include <industrial_calibration_tests/observation_creator.h>
 

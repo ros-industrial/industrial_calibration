@@ -1,7 +1,7 @@
 #include <industrial_calibration_tests/observation_creator.h>
-#include <industrial_calibration/optimizations/utils/ceres_math_utilities.h>
 #include <industrial_calibration_tests/pose_generator.h>
-#include <industrial_calibration/exceptions.h>
+#include <industrial_calibration/optimizations/ceres_math_utilities.h>
+#include <industrial_calibration/core/exceptions.h>
 
 namespace industrial_calibration
 {
