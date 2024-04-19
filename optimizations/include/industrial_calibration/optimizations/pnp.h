@@ -48,6 +48,7 @@ struct PnPResult
 
   CovarianceResult covariance;
 };
+std::ostream& operator<<(std::ostream& stream, const PnPResult& result);
 
 /** @brief Performs the PnP optimization */
 PnPResult optimize(const PnPProblem& params);

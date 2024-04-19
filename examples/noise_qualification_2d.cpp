@@ -1,6 +1,6 @@
-#include "utils.h"
 #include <industrial_calibration/analysis/noise_qualification.h>
 #include <industrial_calibration/target_finders/target_finder.h>
+#include <industrial_calibration/target_finders/utils.h>
 #include <industrial_calibration/core/serialization.h>
 
 #include <boost_plugin_loader/plugin_loader.hpp>
@@ -8,6 +8,14 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <yaml-cpp/yaml.h>
+
+#if __has_include(<filesystem>)
+#include <filesystem>
+using path = std::filesystem::path;
+#else
+#include <experimental/filesystem>
+using path = std::experimental::filesystem::path;
+#endif
 
 using namespace industrial_calibration;
 

@@ -38,6 +38,7 @@ struct CameraIntrinsicResult
 
   CovarianceResult covariance;
 };
+std::ostream& operator<<(std::ostream& stream, const CameraIntrinsicResult& result);
 
 /** @brief Performs the camera intrinsic calibration */
 CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params);

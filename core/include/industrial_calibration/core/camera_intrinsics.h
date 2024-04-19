@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <ostream>
 
 namespace industrial_calibration
 {
@@ -23,6 +24,7 @@ struct CameraIntrinsics
 
   inline bool operator==(const CameraIntrinsics& rhs) const { return values == rhs.values; }
 };
+std::ostream& operator<<(std::ostream& stream, const CameraIntrinsics& intr);
 
 template <typename T>
 struct CalibCameraIntrinsics

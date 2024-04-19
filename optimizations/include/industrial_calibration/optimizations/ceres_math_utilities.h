@@ -92,6 +92,25 @@ inline Eigen::Matrix<T, 2, 1> projectPoint(const CameraIntrinsics& intr, const E
 }
 
 template <typename T>
+using VectorVector2 = std::vector<Eigen::Matrix<T, 2, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, 2, 1>>>;
+
+template <typename T>
+using VectorVector3 = std::vector<Eigen::Matrix<T, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, 3, 1>>>;
+
+template <typename T>
+VectorVector2<T> projectPoints(const Eigen::Transform<T, 3, Eigen::Isometry>& camera_to_target,
+                               const CameraIntrinsics& intr, const VectorVector3<T>& target_points)
+{
+  VectorVector2<T> reprojections;
+  for (const auto& point_in_target : target_points)
+  {
+    Eigen::Matrix<T, 3, 1> in_camera = camera_to_target * point_in_target;
+    reprojections.push_back(projectPoint<T>(intr, in_camera));
+  }
+  return reprojections;
+}
+
+template <typename T>
 void projectPoints2(const T* const camera_intr, const T* const pt_in_camera, T* pt_in_image)
 {
   T xp1 = pt_in_camera[0];

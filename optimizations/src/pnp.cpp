@@ -1,11 +1,29 @@
 #include <industrial_calibration/optimizations/pnp.h>
 #include <industrial_calibration/optimizations/pnp_cost.h>
 #include <industrial_calibration/optimizations/covariance_analysis.h>
+#include <industrial_calibration/core/serialization.h>
 
 #include <ceres/ceres.h>
 
 namespace industrial_calibration
 {
+std::ostream& operator<<(std::ostream& stream, const PnPResult& result)
+{
+  stream << "Optimization " << (result.converged ? "converged" : "did not converge") << "\n";
+  stream << "Initial cost per observation (pixels): " << std::sqrt(result.initial_cost_per_obs) << "\n";
+  stream << "Final cost per obsrevation (pixels): " << std::sqrt(result.final_cost_per_obs);
+
+  if (result.converged)
+  {
+    std::stringstream ss;
+    ss << "Camera to target transform\n";
+    writeTransform(ss, result.camera_to_target);
+    stream << "\n" << ss.str();
+  }
+
+  return stream;
+}
+
 PnPResult optimize(const PnPProblem& params)
 {
   // Create the optimization variables from the input guess

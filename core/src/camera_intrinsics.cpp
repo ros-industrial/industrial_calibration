@@ -26,3 +26,13 @@ bool convert<CameraIntrinsics>::decode(const YAML::Node& node, CameraIntrinsics&
 }
 
 }  // namespace YAML
+
+namespace industrial_calibration
+{
+std::ostream& operator<<(std::ostream& stream, const CameraIntrinsics& intr)
+{
+  stream << "fx = " << intr.fx() << "\tfy = " << intr.fy() << "\ncx = " << intr.cx() << "\tcy = " << intr.cy();
+  return stream;
+}
+
+}  // namespace industrial_calibration

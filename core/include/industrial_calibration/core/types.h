@@ -1,8 +1,9 @@
 #pragma once
 
-#include <array>
 #include <vector>
 #include <Eigen/Dense>
+
+using VectorEigenIsometry = std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>;
 
 namespace industrial_calibration
 {

@@ -1,8 +1,9 @@
-﻿#include "utils.h"
-#include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
+﻿#include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
+#include <industrial_calibration/optimizations/ceres_math_utilities.h>
 #include <industrial_calibration/analysis/homography_analysis.h>
 #include <industrial_calibration/analysis/extrinsic_hand_eye_calibration_analysis.h>
 #include <industrial_calibration/target_finders/target_finder.h>
+#include <industrial_calibration/target_finders/utils.h>
 #include <industrial_calibration/core/serialization.h>
 
 #include <boost_plugin_loader/plugin_loader.hpp>
@@ -10,11 +11,39 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
+#if __has_include(<filesystem>)
+#include <filesystem>
+using path = std::filesystem::path;
+#else
+#include <experimental/filesystem>
+using path = std::experimental::filesystem::path;
+#endif
+
 static const std::string WINDOW = "window";
 static const unsigned RANDOM_SEED = 1;
 
 using namespace industrial_calibration;
-using VectorEigenIsometry = std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>;
+
+std::tuple<VectorEigenIsometry, std::vector<cv::Mat>> loadPoseImagePairs(const path& data_dir, const YAML::Node& data)
+{
+  VectorEigenIsometry poses;
+  std::vector<cv::Mat> images;
+
+  // Load the images and poses
+  poses.reserve(data.size());
+  images.reserve(data.size());
+
+  for (std::size_t i = 0; i < data.size(); ++i)
+  {
+    const std::string pose_file = data[i]["pose"].as<std::string>();
+    poses.push_back(YAML::LoadFile((data_dir / pose_file).string()).as<Eigen::Isometry3d>());
+
+    const std::string image_file = (data_dir / data[i]["image"].as<std::string>()).string();
+    images.push_back(readImageOpenCV(image_file));
+  }
+
+  return std::make_tuple(poses, images);
+}
 
 /**
  * @brief Reprojects target points into the image using the calibrated transform
@@ -28,11 +57,11 @@ using VectorEigenIsometry = std::vector<Eigen::Isometry3d, Eigen::aligned_alloca
 void reproject(const Eigen::Isometry3d& camera_to_target, const Correspondence2D3D::Set& correspondence_set,
                const CameraIntrinsics& intr, const cv::Mat& image)
 {
-  std::vector<Eigen::Vector3d> target_points;
+  VectorVector3<double> target_points;
   target_points.reserve(correspondence_set.size());
   std::transform(correspondence_set.begin(), correspondence_set.end(), std::back_inserter(target_points),
                  [](const Correspondence2D3D& corr) { return corr.in_target; });
-  std::vector<cv::Point2d> reprojections = getReprojections(camera_to_target, intr, target_points);
+  VectorVector2<double> reprojections = projectPoints<double>(camera_to_target, intr, target_points);
 
   cv::Mat frame = image.clone();
   drawReprojections(reprojections, 3, cv::Scalar(0, 0, 255), frame);
@@ -143,22 +172,11 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
   ExtrinsicHandEyeResult opt_result = optimize(problem);
 
   // Report results
-  std::cout << std::endl;
-  printOptResults(opt_result.converged, opt_result.initial_cost_per_obs, opt_result.final_cost_per_obs);
-  std::cout << std::endl;
+  std::cout << std::endl << opt_result << std::endl;
+  std::cout << opt_result.covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
 
   // Compute the projected 3D error for comparison
   std::cout << analyze3dProjectionError(problem, opt_result) << std::endl << std::endl;
-
-  Eigen::Isometry3d c = opt_result.camera_mount_to_camera;
-  printTransform(c, "Camera Mount", "Camera", "CAMERA MOUNT TO CAMERA");
-  std::cout << std::endl;
-
-  Eigen::Isometry3d t = opt_result.target_mount_to_target;
-  printTransform(t, "Target Mount", "Target", "TARGET MOUNT TO TARGET");
-  std::cout << std::endl;
-
-  std::cout << opt_result.covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
 
   // Now let's compare the results of our extrinsic calibration with a PnP optimization for every observation.
   // The PnP optimization will give us an estimate of the camera to target transform using our input camera intrinsic
@@ -192,15 +210,18 @@ int main(int argc, char** argv)
   {
     // Modified circle grid target
     {
-      printTitle("Camera on wrist, modified circle grid target");
+      std::cout << std::endl << "Camera on wrist, modified circle grid target" << std::endl << std::endl;
       const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_10x10") / "cal_data.yaml";
       run(calibration_file.string());
     }
 
     // ChArUco grid target
-    const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_charuco") / "cal_data.yaml";
-    printTitle("Target on wrist, ChArUco grid target");
-    run(calibration_file.string());
+    {
+      const path calibration_file = path(EXAMPLE_DATA_DIR) / path("test_set_charuco") / "cal_data.yaml";
+      std::cout << std::endl << "Target on wrist, ChArUco target" << std::endl << std::endl;
+      run(calibration_file.string());
+    }
+
     return 0;
   }
   catch (const std::exception& ex)

@@ -1,7 +1,7 @@
 find_package(boost_plugin_loader REQUIRED)
 
 # Hand-eye calibration example
-add_executable(${PROJECT_NAME}_extrinsic_hand_eye extrinsic_hand_eye.cpp utils.cpp)
+add_executable(${PROJECT_NAME}_extrinsic_hand_eye extrinsic_hand_eye.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_extrinsic_hand_eye
   PRIVATE ${PROJECT_NAME}_analysis
@@ -14,14 +14,15 @@ target_compile_definitions(${PROJECT_NAME}_extrinsic_hand_eye
 target_cxx_version(${PROJECT_NAME}_extrinsic_hand_eye PUBLIC VERSION 17)
 
 # Kinematic calibration example
-add_executable(${PROJECT_NAME}_kinematic_calibration kinematic_calibration.cpp utils.cpp)
-target_link_libraries(${PROJECT_NAME}_kinematic_calibration PRIVATE ${PROJECT_NAME}_analysis ${PROJECT_NAME}_target_finders stdc++fs)
+add_executable(${PROJECT_NAME}_kinematic_calibration kinematic_calibration.cpp)
+target_link_libraries(${PROJECT_NAME}_kinematic_calibration PRIVATE ${PROJECT_NAME}_analysis
+                                                                    ${PROJECT_NAME}_target_finders)
 target_compile_definitions(${PROJECT_NAME}_kinematic_calibration
                            PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 target_cxx_version(${PROJECT_NAME}_kinematic_calibration PUBLIC VERSION 17)
 
 # Noise qualification example
-add_executable(${PROJECT_NAME}_noise_qualification_2d noise_qualification_2d.cpp utils.cpp)
+add_executable(${PROJECT_NAME}_noise_qualification_2d noise_qualification_2d.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_noise_qualification_2d
   PRIVATE ${PROJECT_NAME}_analysis
@@ -34,7 +35,7 @@ target_compile_definitions(${PROJECT_NAME}_noise_qualification_2d
 target_cxx_version(${PROJECT_NAME}_noise_qualification_2d PUBLIC VERSION 17)
 
 # PnP example
-add_executable(${PROJECT_NAME}_pnp pnp.cpp utils.cpp)
+add_executable(${PROJECT_NAME}_pnp pnp.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_pnp
   PRIVATE ${PROJECT_NAME}_analysis

@@ -73,6 +73,7 @@ struct ExtrinsicHandEyeResult
 
   CovarianceResult covariance;
 };
+std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEyeResult& result);
 
 ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem2D3D& params);
 ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem3D3D& params);

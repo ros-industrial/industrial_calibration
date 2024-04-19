@@ -1,4 +1,3 @@
-#include "utils.h"
 #include <industrial_calibration/optimizations/pnp.h>
 #include <industrial_calibration/target_finders/target_finder.h>
 #include <industrial_calibration/core/serialization.h>
@@ -8,6 +7,14 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <yaml-cpp/yaml.h>
+
+#if __has_include(<filesystem>)
+#include <filesystem>
+using path = std::filesystem::path;
+#else
+#include <experimental/filesystem>
+using path = std::experimental::filesystem::path;
+#endif
 
 using namespace industrial_calibration;
 
@@ -103,17 +110,14 @@ std::tuple<PnPResult, Eigen::Isometry3d> run(const path& calibration_file)
 
   PnPResult pnp_result = optimize(problem);
 
-  printOptResults(pnp_result.converged, pnp_result.initial_cost_per_obs, pnp_result.final_cost_per_obs);
-  std::cout << std::endl;
-
-  printTransform(pnp_result.camera_to_target, "Camera", "Target", "INDUSTRIAL CALIBRATION: CAMERA TO TARGET");
-  std::cout << std::endl;
+  std::cout << pnp_result << std::endl;
 
   // Solve with OpenCV for comparison
   const Eigen::Isometry3d camera_to_target_cv = solveCVPnP(problem.intr, problem.correspondences);
 
-  printTransform(camera_to_target_cv, "Camera", "Target", "OPENCV: CAMERA TO TARGET");
-  std::cout << std::endl;
+  std::stringstream ss;
+  writeTransform(ss, camera_to_target_cv);
+  std::cout << ss.str() << std::endl;
 
   return std::make_tuple(pnp_result, camera_to_target_cv);
 }

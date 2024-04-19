@@ -24,6 +24,25 @@ bool isPointVisible(const Pose6d& camera_to_camera_mount, const Pose6d& target_m
   return camera_point[2] > 0.0;
 }
 
+std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEyeResult& result)
+{
+  stream << "Optimization " << (result.converged ? "converged" : "did not converge") << "\n";
+  stream << "Initial cost per observation: " << std::sqrt(result.initial_cost_per_obs) << "\n";
+  stream << "Final cost per observation: " << std::sqrt(result.final_cost_per_obs);
+
+  if (result.converged)
+  {
+    std::stringstream ss;
+    ss << "Camera mount to camera transform\n";
+    writeTransform(ss, result.camera_mount_to_camera);
+    ss << "\nTarget mount to target transform\n";
+    writeTransform(ss, result.target_mount_to_target);
+    stream << "\n" << ss.str();
+  }
+
+  return stream;
+}
+
 ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem2D3D& params)
 {
   Pose6d internal_base_to_target = poseEigenToCal(params.target_mount_to_target_guess);

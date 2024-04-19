@@ -32,6 +32,22 @@ static Pose6d guessInitialPose()
   return poseEigenToCal(guess);
 }
 
+std::ostream& operator<<(std::ostream& stream, const CameraIntrinsicResult& result)
+{
+  stream << "Optimization " << (result.converged ? "converged" : "did not converge") << "\n"
+         << "Initial cost per observation (pixels): " << std::sqrt(result.initial_cost_per_obs) << "\n"
+         << "Final cost per observatoin (pixels): " << std::sqrt(result.final_cost_per_obs);
+  if (result.converged)
+  {
+    stream << "\n"
+           << "Calibrated intrinsics values: " << result.intrinsics << "\n"
+           << "Calibrated distortion values: k1 = " << result.distortions[0] << "\tk2 = " << result.distortions[1]
+           << "\tp1 = " << result.distortions[2] << "\tp2 = " << result.distortions[3]
+           << "\tk3 = " << result.distortions[4];
+  }
+  return stream;
+}
+
 CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
 {
   // Prepare data structure for the camera parameters to optimize
