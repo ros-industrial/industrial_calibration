@@ -10,7 +10,7 @@ namespace industrial_calibration
 /**
  * @brief Structure containing relevant data for a ArUco grid target
  */
-struct ArucoGridTarget : Target
+struct ArucoGridTarget : Target2D3D
 {
   /**
    * @brief Constructor
@@ -37,7 +37,7 @@ struct ArucoGridTarget : Target
    * @param target_features - Map of ArUco tag corners observed in an image
    * @return Set of corresponding features in the image to features in the ArUco grid target
    */
-  virtual Correspondence2D3D::Set createCorrespondences(const TargetFeatures& target_features) const override;
+  virtual Correspondence2D3D::Set createCorrespondences(const TargetFeatures2D& target_features) const override;
 
   /** @brief Representation of the ArUco grid target */
   cv::Ptr<cv::aruco::GridBoard> board;
@@ -51,7 +51,7 @@ struct ArucoGridTarget : Target
  * Target features are returned as a map where the marker ID is the key and the image coordinates of the
  * marker corners are the mapped value.
  */
-class ArucoGridBoardTargetFinder : public TargetFinder
+class ArucoGridBoardTargetFinder : public TargetFinder2D3D
 {
 public:
   ArucoGridBoardTargetFinder(const ArucoGridTarget& target);
@@ -63,7 +63,7 @@ public:
    * four corners defined in the same order as in the output of the function cv::aruco::DetectMarkers()
    * (e.g. clockwise from the "origin" corner).
    */
-  virtual TargetFeatures findTargetFeatures(const cv::Mat& image) const override;
+  virtual TargetFeatures2D findTargetFeatures(const cv::Mat& image) const override;
 
   /**
    * @brief A debugging utility that will draw a set of target features onto an image for
@@ -71,18 +71,18 @@ public:
    * @param image - The image of the target
    * @param target_features - The target features identified in the input image
    */
-  virtual cv::Mat drawTargetFeatures(const cv::Mat& image, const TargetFeatures& target_features) const override;
+  virtual cv::Mat drawTargetFeatures(const cv::Mat& image, const TargetFeatures2D& target_features) const override;
 
-  virtual const Target& target() const override { return target_; }
+  virtual const Target2D3D& target() const override { return target_; }
 
 protected:
   const ArucoGridTarget target_;
 };
 
-struct ArucoGridTargetFinderFactory : public TargetFinderFactory
+struct ArucoGridTargetFinderFactory : public TargetFinderFactory2D3D
 {
 public:
-  TargetFinder::ConstPtr create(const YAML::Node& config) const override;
+  TargetFinder2D3D::ConstPtr create(const YAML::Node& config) const override;
 };
 
 }  // namespace industrial_calibration

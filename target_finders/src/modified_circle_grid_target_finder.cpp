@@ -407,7 +407,7 @@ bool ModifiedCircleGridTarget::operator==(const ModifiedCircleGridTarget& other)
   return equal;
 }
 
-Correspondence2D3D::Set ModifiedCircleGridTarget::createCorrespondences(const TargetFeatures& target_features) const
+Correspondence2D3D::Set ModifiedCircleGridTarget::createCorrespondences(const TargetFeatures2D& target_features) const
 {
   std::vector<Eigen::Vector3d> target_points = createPoints();
   assert(target_features.size() == target_points.size());
@@ -461,14 +461,14 @@ ModifiedCircleGridTargetFinder::ModifiedCircleGridTargetFinder(const ModifiedCir
 {
 }
 
-TargetFeatures ModifiedCircleGridTargetFinder::findTargetFeatures(const cv::Mat& image) const
+TargetFeatures2D ModifiedCircleGridTargetFinder::findTargetFeatures(const cv::Mat& image) const
 {
   // Call modified circle finder
   std::vector<cv::Point2d> points =
       extractModifiedCircleGrid<CircleDetectorParams, CircleDetector, CircleDetector>(image, target_, params_);
 
   // Construct the output map
-  TargetFeatures observations;
+  TargetFeatures2D observations;
   for (unsigned i = 0; i < points.size(); ++i)
   {
     const cv::Point2d& pt = points.at(i);
@@ -481,7 +481,7 @@ TargetFeatures ModifiedCircleGridTargetFinder::findTargetFeatures(const cv::Mat&
 }
 
 cv::Mat ModifiedCircleGridTargetFinder::drawTargetFeatures(const cv::Mat& image,
-                                                           const TargetFeatures& target_features) const
+                                                           const TargetFeatures2D& target_features) const
 {
   // Draw all detected circles
   CircleDetector circle_detector_(params_);
@@ -499,14 +499,14 @@ cv::Mat ModifiedCircleGridTargetFinder::drawTargetFeatures(const cv::Mat& image,
   return renderObservations(out_image, cv_obs, target_);
 }
 
-TargetFinder::ConstPtr ModifiedCircleGridTargetFinderFactory::create(const YAML::Node& config) const
+TargetFinder2D3D::ConstPtr ModifiedCircleGridTargetFinderFactory::create(const YAML::Node& config) const
 {
   int rows = getMember<int>(config, "rows");
   int cols = getMember<int>(config, "cols");
   double spacing = getMember<double>(config, "spacing");
   ModifiedCircleGridTarget target(rows, cols, spacing);
 
-  TargetFinder::ConstPtr finder;
+  TargetFinder2D3D::ConstPtr finder;
   if (config["circle_detector_params"])
   {
     finder =

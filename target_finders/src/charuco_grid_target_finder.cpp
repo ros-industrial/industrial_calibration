@@ -53,7 +53,7 @@ bool CharucoGridTarget::operator==(const CharucoGridTarget& other) const
   return equal;
 }
 
-std::vector<Correspondence2D3D> CharucoGridTarget::createCorrespondences(const TargetFeatures& target_features) const
+std::vector<Correspondence2D3D> CharucoGridTarget::createCorrespondences(const TargetFeatures2D& target_features) const
 {
   std::vector<Correspondence2D3D> correspondences;
   correspondences.reserve(target_features.size());
@@ -74,7 +74,7 @@ CharucoGridBoardTargetFinder::CharucoGridBoardTargetFinder(const CharucoGridTarg
 {
 }
 
-TargetFeatures CharucoGridBoardTargetFinder::findTargetFeatures(const cv::Mat& image) const
+TargetFeatures2D CharucoGridBoardTargetFinder::findTargetFeatures(const cv::Mat& image) const
 {
   // Create a generic set of parameters
   // TODO: expose the setting of these parameters
@@ -97,7 +97,7 @@ TargetFeatures CharucoGridBoardTargetFinder::findTargetFeatures(const cv::Mat& i
                                                               charuco_corners, charuco_ids);
 
   // Create the map of observed features
-  TargetFeatures target_features;
+  TargetFeatures2D target_features;
   for (unsigned i = 0; i < static_cast<unsigned>(detected_corners); i++)
   {
     const cv::Point2f& corner = charuco_corners.at(i);
@@ -110,7 +110,7 @@ TargetFeatures CharucoGridBoardTargetFinder::findTargetFeatures(const cv::Mat& i
 }
 
 cv::Mat CharucoGridBoardTargetFinder::drawTargetFeatures(const cv::Mat& image,
-                                                         const TargetFeatures& target_features) const
+                                                         const TargetFeatures2D& target_features) const
 {
   std::vector<int> charuco_ids;
   charuco_ids.reserve(target_features.size());
@@ -134,7 +134,7 @@ cv::Mat CharucoGridBoardTargetFinder::drawTargetFeatures(const cv::Mat& image,
   return image;
 }
 
-TargetFinder::ConstPtr CharucoGridTargetFinderFactory::create(const YAML::Node& config) const
+TargetFinder2D3D::ConstPtr CharucoGridTargetFinderFactory::create(const YAML::Node& config) const
 {
   auto cols = getMember<int>(config, "cols");
   auto rows = getMember<int>(config, "rows");

@@ -8,7 +8,7 @@ namespace industrial_calibration
 /**
  * @brief Structure containing the necessary data to represent a modified circle grid target
  */
-struct ModifiedCircleGridTarget : Target
+struct ModifiedCircleGridTarget : Target2D3D
 {
   /**
    * @brief Constructor
@@ -20,7 +20,7 @@ struct ModifiedCircleGridTarget : Target
 
   bool operator==(const ModifiedCircleGridTarget& other) const;
 
-  virtual Correspondence2D3D::Set createCorrespondences(const TargetFeatures& target_features) const override;
+  virtual Correspondence2D3D::Set createCorrespondences(const TargetFeatures2D& target_features) const override;
 
   std::vector<Eigen::Vector3d> createPoints() const;
 
@@ -33,7 +33,7 @@ struct ModifiedCircleGridTarget : Target
  * @brief This class finds 2D features (circle centers) from images of a known ModifiedCircleGridTarget.
  * All points must be seen or it will fail. Features are returned in the same order as points are defined in the target.
  */
-class ModifiedCircleGridTargetFinder : public TargetFinder
+class ModifiedCircleGridTargetFinder : public TargetFinder2D3D
 {
 public:
   ModifiedCircleGridTargetFinder(const ModifiedCircleGridTarget& target);
@@ -44,15 +44,15 @@ public:
    * @param image
    * @return
    */
-  virtual TargetFeatures findTargetFeatures(const cv::Mat& image) const override;
+  virtual TargetFeatures2D findTargetFeatures(const cv::Mat& image) const override;
 
   /**
    * @brief A debugging utility that will draw target features onto an image for display purposes.
    * Usually you want to call findTargetFeatures() above then this with the result.
    */
-  virtual cv::Mat drawTargetFeatures(const cv::Mat& image, const TargetFeatures& target_features) const override;
+  virtual cv::Mat drawTargetFeatures(const cv::Mat& image, const TargetFeatures2D& target_features) const override;
 
-  virtual const Target& target() const override { return target_; }
+  virtual const Target2D3D& target() const override { return target_; }
 
   inline const CircleDetectorParams& getCircleDetectorParams() const { return params_; }
 
@@ -61,10 +61,10 @@ protected:
   const CircleDetectorParams params_;
 };
 
-struct ModifiedCircleGridTargetFinderFactory : public TargetFinderFactory
+struct ModifiedCircleGridTargetFinderFactory : public TargetFinderFactory2D3D
 {
 public:
-  TargetFinder::ConstPtr create(const YAML::Node& config) const override;
+  TargetFinder2D3D::ConstPtr create(const YAML::Node& config) const override;
 };
 
 }  // namespace industrial_calibration
