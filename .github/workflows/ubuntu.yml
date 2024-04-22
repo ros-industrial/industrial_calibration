@@ -5,6 +5,11 @@ on:
     branches:
       - master
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '*-format'
+      - '.gitignore'
   workflow_dispatch:
 
 jobs:
@@ -25,7 +30,7 @@ jobs:
         with:
           path: target_ws/src
       - name: Build
-        uses: tesseract-robotics/colcon-action@v1
+        uses: tesseract-robotics/colcon-action@v6
         with:
           ccache-enabled: false
           rosdep-enabled: true
