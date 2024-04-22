@@ -13,7 +13,7 @@ target_include_directories(
                                                "$<INSTALL_INTERFACE:include>")
 target_link_libraries(
   ${PROJECT_NAME}_target_finders_opencv
-  PUBLIC ${PROJECT_NAME}
+  PUBLIC ${PROJECT_NAME}_core
          opencv_core
          opencv_aruco
          opencv_features2d
@@ -23,7 +23,7 @@ target_compile_definitions(
   ${PROJECT_NAME}_target_finders_opencv
   PUBLIC TARGET_FINDER_SECTION="target" INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV="INDUSTRIAL_CALIBRATION_plugins"
          INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES="${PROJECT_NAME}_plugins_opencv")
-target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 17)
+target_cxx_version(${PROJECT_NAME}_target_finders_opencv PUBLIC VERSION 17)
 target_clang_tidy(
   ${PROJECT_NAME}_target_finders_opencv
   ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY}

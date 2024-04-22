@@ -9,7 +9,7 @@ add_library(
 target_include_directories(${PROJECT_NAME}_analysis PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                            "$<INSTALL_INTERFACE:include>")
 target_link_libraries(${PROJECT_NAME}_analysis PUBLIC ${PROJECT_NAME}_optimizations)
-target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 17)
+target_cxx_version(${PROJECT_NAME}_analysis PUBLIC VERSION 17)
 target_clang_tidy(
   ${PROJECT_NAME}_analysis
   ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY}
@@ -34,4 +34,4 @@ configure_component(
   TARGETS
   ${PROJECT_NAME}_analysis
   DEPENDENCIES
-  "industrial_calibration COMPONENTS core")
+  "industrial_calibration COMPONENTS optimizations")

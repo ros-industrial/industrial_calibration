@@ -89,4 +89,4 @@ configure_component(
   ${PROJECT_NAME}_noise_qualification_2d
   ${PROJECT_NAME}_pnp
   DEPENDENCIES
-  "industrial_calibration COMPONENTS applications")
+  "industrial_calibration COMPONENTS analysis target_finders_opencv")
