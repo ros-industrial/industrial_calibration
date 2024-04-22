@@ -10,16 +10,16 @@ namespace industrial_calibration
 /**
  * @brief A pair of corresponding features in a N-dimensional sensor "image" and 3D target
  */
-template <Eigen::Index IMAGE_DIM, Eigen::Index WORLD_DIM>
+template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
 struct Correspondence
 {
-  using Set = std::vector<Correspondence<IMAGE_DIM, WORLD_DIM>>;
+  using Set = std::vector<Correspondence<SENSOR_DIM, WORLD_DIM>>;
   Correspondence()
-    : in_image(Eigen::Matrix<double, IMAGE_DIM, 1>::Zero()), in_target(Eigen::Matrix<double, WORLD_DIM, 1>::Zero())
+    : in_image(Eigen::Matrix<double, SENSOR_DIM, 1>::Zero()), in_target(Eigen::Matrix<double, WORLD_DIM, 1>::Zero())
   {
   }
 
-  Correspondence(const Eigen::Matrix<double, IMAGE_DIM, 1>& in_image_,
+  Correspondence(const Eigen::Matrix<double, SENSOR_DIM, 1>& in_image_,
                  const Eigen::Matrix<double, WORLD_DIM, 1>& in_target_)
     : in_target(in_target_), in_image(in_image_)
   {
@@ -33,7 +33,7 @@ struct Correspondence
   }
 
   /** @brief N-dimensional location of the feature relative to the sensor */
-  Eigen::Matrix<double, IMAGE_DIM, 1> in_image;
+  Eigen::Matrix<double, SENSOR_DIM, 1> in_image;
 
   /** @brief N-dimensional location of the feature relative to the target origin */
   Eigen::Matrix<double, WORLD_DIM, 1> in_target;
@@ -60,10 +60,10 @@ using Correspondence3DSet [[deprecated]] = Correspondence3D3D::Set;
  * Keep in mind that the optimization itself determines the final calibrated transforms from these "mount" frames to the
  * camera and target.
  */
-template <Eigen::Index IMAGE_DIM, Eigen::Index WORLD_DIM>
+template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
 struct Observation
 {
-  using Set = std::vector<Observation<IMAGE_DIM, WORLD_DIM>>;
+  using Set = std::vector<Observation<SENSOR_DIM, WORLD_DIM>>;
   Observation() : to_camera_mount(Eigen::Isometry3d::Identity()), to_target_mount(Eigen::Isometry3d::Identity()) {}
 
   Observation(const Eigen::Isometry3d& to_camera_mount_, const Eigen::Isometry3d& to_target_mount_)
@@ -80,7 +80,7 @@ struct Observation
   }
 
   /** @brief A set of feature correspondences between the sensor output and target */
-  typename Correspondence<IMAGE_DIM, WORLD_DIM>::Set correspondence_set;
+  typename Correspondence<SENSOR_DIM, WORLD_DIM>::Set correspondence_set;
   /** @brief The transform to the frame to which the camera is mounted. */
   Eigen::Isometry3d to_camera_mount;
   /** @brief The transform to the frame to which the target is mounted. */
@@ -94,7 +94,7 @@ using Observation3D3D = Observation<3, 3>;
 /**
  * @brief A set of data representing a single observation of a calibration target
  */
-template <Eigen::Index IMAGE_DIM, Eigen::Index WORLD_DIM>
+template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
 struct KinematicObservation
 {
   using Set = std::vector<KinematicObservation>;
@@ -106,7 +106,7 @@ struct KinematicObservation
   }
 
   /** @brief A set of feature correspondences between the sensor output and target */
-  typename Correspondence<IMAGE_DIM, WORLD_DIM>::Set correspondence_set;
+  typename Correspondence<SENSOR_DIM, WORLD_DIM>::Set correspondence_set;
   /** @brief The joint values of the camera kinematic chain for the observation */
   Eigen::VectorXd camera_chain_joints;
   /** @brief The joint values of the target kinematic chain for the observation */

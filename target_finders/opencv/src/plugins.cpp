@@ -1,6 +1,6 @@
-#include <industrial_calibration/target_finders/aruco_grid_target_finder.h>
-#include <industrial_calibration/target_finders/charuco_grid_target_finder.h>
-#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
+#include <industrial_calibration/target_finders/opencv/aruco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/opencv/charuco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/opencv/modified_circle_grid_target_finder.h>
 
 #include <boost_plugin_loader/macros.h>
 #define EXPORT_TARGET_FINDER_PLUGIN(DERIVED_CLASS, ALIAS)                                                              \

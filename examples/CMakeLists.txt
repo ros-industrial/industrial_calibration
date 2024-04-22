@@ -5,7 +5,7 @@ add_executable(${PROJECT_NAME}_extrinsic_hand_eye extrinsic_hand_eye.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_extrinsic_hand_eye
   PRIVATE ${PROJECT_NAME}_analysis
-          ${PROJECT_NAME}_target_finders
+          ${PROJECT_NAME}_target_finders_opencv
           opencv_highgui
           stdc++fs
           boost_plugin_loader::boost_plugin_loader)
@@ -16,7 +16,7 @@ target_cxx_version(${PROJECT_NAME}_extrinsic_hand_eye PUBLIC VERSION 17)
 # Kinematic calibration example
 add_executable(${PROJECT_NAME}_kinematic_calibration kinematic_calibration.cpp)
 target_link_libraries(${PROJECT_NAME}_kinematic_calibration PRIVATE ${PROJECT_NAME}_analysis
-                                                                    ${PROJECT_NAME}_target_finders)
+                                                                    ${PROJECT_NAME}_target_finders_opencv)
 target_compile_definitions(${PROJECT_NAME}_kinematic_calibration
                            PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 target_cxx_version(${PROJECT_NAME}_kinematic_calibration PUBLIC VERSION 17)
@@ -26,7 +26,7 @@ add_executable(${PROJECT_NAME}_noise_qualification_2d noise_qualification_2d.cpp
 target_link_libraries(
   ${PROJECT_NAME}_noise_qualification_2d
   PRIVATE ${PROJECT_NAME}_analysis
-          ${PROJECT_NAME}_target_finders
+          ${PROJECT_NAME}_target_finders_opencv
           opencv_highgui
           stdc++fs
           boost_plugin_loader::boost_plugin_loader)
@@ -39,7 +39,7 @@ add_executable(${PROJECT_NAME}_pnp pnp.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_pnp
   PRIVATE ${PROJECT_NAME}_analysis
-          ${PROJECT_NAME}_target_finders
+          ${PROJECT_NAME}_target_finders_opencv
           opencv_highgui
           stdc++fs
           boost_plugin_loader::boost_plugin_loader)

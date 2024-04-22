@@ -2,7 +2,7 @@
  * ArUco gridboard detector, following the same pattern as ModifiedCircleGridTargetFinder.
  * Author: Joseph Schornak
  */
-#include <industrial_calibration/target_finders/aruco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/opencv/aruco_grid_target_finder.h>
 #include <industrial_calibration/core/serialization.h>
 
 namespace
@@ -59,7 +59,7 @@ bool ArucoGridTarget::operator==(const ArucoGridTarget& other) const
   return equal;
 }
 
-Correspondence2D3D::Set ArucoGridTarget::createCorrespondences(const TargetFeatures& target_features) const
+Correspondence2D3D::Set ArucoGridTarget::createCorrespondences(const TargetFeatures2D& target_features) const
 {
   Correspondence2D3D::Set correspondences;
   correspondences.reserve(target_features.size());
@@ -81,9 +81,9 @@ ArucoGridBoardTargetFinder::ArucoGridBoardTargetFinder(const ArucoGridTarget& ta
 {
 }
 
-TargetFeatures ArucoGridBoardTargetFinder::findTargetFeatures(const cv::Mat& image) const
+TargetFeatures2D ArucoGridBoardTargetFinder::findTargetFeatures(const cv::Mat& image) const
 {
-  TargetFeatures map_ids_to_obs_corners;
+  TargetFeatures2D map_ids_to_obs_corners;
 
   std::vector<std::vector<cv::Point2f>> marker_corners, rejected_candidates;
   std::vector<int> marker_ids;
@@ -108,7 +108,7 @@ TargetFeatures ArucoGridBoardTargetFinder::findTargetFeatures(const cv::Mat& ima
 }
 
 cv::Mat ArucoGridBoardTargetFinder::drawTargetFeatures(const cv::Mat& image,
-                                                       const TargetFeatures& target_features) const
+                                                       const TargetFeatures2D& target_features) const
 {
   std::vector<int> marker_ids;
   std::vector<std::vector<cv::Point2f>> marker_corners;
@@ -124,7 +124,7 @@ cv::Mat ArucoGridBoardTargetFinder::drawTargetFeatures(const cv::Mat& image,
   return image;
 }
 
-TargetFinder::ConstPtr ArucoGridTargetFinderFactory::create(const YAML::Node& config) const
+TargetFinderOpenCV::ConstPtr ArucoGridTargetFinderFactory::create(const YAML::Node& config) const
 {
   auto cols = getMember<int>(config, "cols");
   auto rows = getMember<int>(config, "rows");

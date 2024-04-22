@@ -2,8 +2,8 @@
 #include <industrial_calibration/optimizations/ceres_math_utilities.h>
 #include <industrial_calibration/analysis/homography_analysis.h>
 #include <industrial_calibration/analysis/extrinsic_hand_eye_calibration_analysis.h>
-#include <industrial_calibration/target_finders/target_finder.h>
-#include <industrial_calibration/target_finders/utils.h>
+#include <industrial_calibration/target_finders/opencv/target_finder.h>
+#include <industrial_calibration/target_finders/opencv/utils.h>
 #include <industrial_calibration/core/serialization.h>
 
 #include <boost_plugin_loader/plugin_loader.hpp>
@@ -100,8 +100,8 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
   loader.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
 
   YAML::Node target_finder_config = getMember<YAML::Node>(config, "target_finder");
-  auto factory = loader.createInstance<TargetFinderFactory>(getMember<std::string>(target_finder_config, "type"));
-  TargetFinder::ConstPtr target_finder = factory->create(target_finder_config);
+  auto factory = loader.createInstance<TargetFinderFactoryOpenCV>(getMember<std::string>(target_finder_config, "type"));
+  TargetFinderOpenCV::ConstPtr target_finder = factory->create(target_finder_config);
 
   // Create a named OpenCV window for viewing the images
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
@@ -152,7 +152,7 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
 
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING
       // Show the points we detected
-      TargetFeatures target_features = target_finder->findTargetFeatures(images[i]);
+      TargetFeatures2D target_features = target_finder->findTargetFeatures(images[i]);
       cv::imshow(WINDOW, target_finder->drawTargetFeatures(images[i], target_features));
       cv::waitKey();
 #endif

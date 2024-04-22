@@ -1,5 +1,5 @@
 #include <industrial_calibration/optimizations/pnp.h>
-#include <industrial_calibration/target_finders/target_finder.h>
+#include <industrial_calibration/target_finders/opencv/target_finder.h>
 #include <industrial_calibration/core/serialization.h>
 
 #include <boost_plugin_loader/plugin_loader.hpp>
@@ -75,7 +75,7 @@ std::tuple<PnPResult, Eigen::Isometry3d> run(const path& calibration_file)
   loader.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
 
   auto target_finder_config = getMember<YAML::Node>(config, "target_finder");
-  auto factory = loader.createInstance<TargetFinderFactory>(getMember<std::string>(target_finder_config, "type"));
+  auto factory = loader.createInstance<TargetFinderFactoryOpenCV>(getMember<std::string>(target_finder_config, "type"));
   auto target_finder = factory->create(target_finder_config);
 
   // Solve
@@ -103,7 +103,7 @@ std::tuple<PnPResult, Eigen::Isometry3d> run(const path& calibration_file)
   // Display the features
   cv::namedWindow(WINDOW, cv::WINDOW_NORMAL);
 
-  TargetFeatures target_features = target_finder->findTargetFeatures(image);
+  TargetFeatures2D target_features = target_finder->findTargetFeatures(image);
   cv::imshow(WINDOW, target_finder->drawTargetFeatures(image, target_features));
   cv::waitKey();
 #endif

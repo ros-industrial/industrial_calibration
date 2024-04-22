@@ -1,4 +1,4 @@
-#include <industrial_calibration/target_finders/utils.h>
+#include <industrial_calibration/target_finders/opencv/utils.h>
 #include <industrial_calibration/core/exceptions.h>
 #include <industrial_calibration/core/serialization.h>
 

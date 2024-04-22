@@ -1,8 +1,8 @@
-#include <industrial_calibration/target_finders/target_finder.h>
+#include <industrial_calibration/target_finders/opencv/target_finder.h>
 // Implementations
-#include <industrial_calibration/target_finders/modified_circle_grid_target_finder.h>
-#include <industrial_calibration/target_finders/charuco_grid_target_finder.h>
-#include <industrial_calibration/target_finders/aruco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/opencv/modified_circle_grid_target_finder.h>
+#include <industrial_calibration/target_finders/opencv/charuco_grid_target_finder.h>
+#include <industrial_calibration/target_finders/opencv/aruco_grid_target_finder.h>
 // Analysis
 #include <industrial_calibration/analysis/homography_analysis.h>
 
@@ -27,7 +27,7 @@ public:
     ASSERT_FALSE(m.empty());
 
     // Find the target features
-    TargetFeatures target_features = this->finder->findTargetFeatures(m);
+    TargetFeatures2D target_features = this->finder->findTargetFeatures(m);
 
     ASSERT_EQ(target_features.size(), expected_ids.size());
 
@@ -52,7 +52,7 @@ public:
     }
   }
 
-  std::shared_ptr<TargetFinder> finder;
+  std::shared_ptr<TargetFinderOpenCV> finder;
   std::string filename;
   std::vector<unsigned> expected_ids;
   std::shared_ptr<CorrespondenceSampler> corr_sampler;

@@ -149,7 +149,7 @@ add_dependencies(run_tests ${PROJECT_NAME}_serialization_tests)
 add_executable(${PROJECT_NAME}_target_finder_test target_finder_utest.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_target_finder_test
-  PRIVATE ${PROJECT_NAME}_target_finders
+  PRIVATE ${PROJECT_NAME}_target_finders_opencv
           ${PROJECT_NAME}_analysis
           GTest::GTest
           GTest::Main)

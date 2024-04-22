@@ -4,7 +4,7 @@
  */
 #pragma once
 
-#include <industrial_calibration/target_finders/target_finder.h>
+#include <industrial_calibration/target_finders/opencv/target_finder.h>
 
 #include <Eigen/Dense>
 #include <map>
@@ -15,7 +15,7 @@ namespace industrial_calibration
 /**
  * @brief Structure containing relevant data for a ChArUco grid target
  */
-struct CharucoGridTarget : public Target
+struct CharucoGridTarget : public Target2D3D
 {
   /**
    * @brief Constructor
@@ -41,7 +41,7 @@ struct CharucoGridTarget : public Target
    * @param target_features - Map of observed chessboard intersections and their IDs
    * @return Set of corresponding features in the image to features in the ChArUco target
    */
-  virtual Correspondence2D3D::Set createCorrespondences(const TargetFeatures& target_features) const override;
+  virtual Correspondence2D3D::Set createCorrespondences(const TargetFeatures2D& target_features) const override;
 
   /** @brief Representation of the ChArUco board target */
   cv::Ptr<cv::aruco::CharucoBoard> board;
@@ -53,7 +53,7 @@ struct CharucoGridTarget : public Target
  * @brief This class finds 2D features from images of a specified ChArUco gridboard target.
  * The main advantage of this kind of target is that partial views still provide usable correspondences.
  */
-class CharucoGridBoardTargetFinder : public TargetFinder
+class CharucoGridBoardTargetFinder : public TargetFinderOpenCV
 {
 public:
   CharucoGridBoardTargetFinder(const CharucoGridTarget& target);
@@ -63,7 +63,7 @@ public:
    * @param image - Input image, ideally containing a ChArUco grid target.
    * @return Map matching marker ID numbers to the 2D position of the chessboard intersections
    */
-  virtual TargetFeatures findTargetFeatures(const cv::Mat& image) const override;
+  virtual TargetFeatures2D findTargetFeatures(const cv::Mat& image) const override;
 
   /**
    * @brief A debugging utility that will draw target features set onto an input image for display purposes
@@ -71,18 +71,18 @@ public:
    * @param target_features - Chessboard intersections (obtained by calling @ref findTargetFeatures)
    * @return An image with the chessboard intersections and IDs overlaid on the input image
    */
-  virtual cv::Mat drawTargetFeatures(const cv::Mat& image, const TargetFeatures& target_features) const override;
+  virtual cv::Mat drawTargetFeatures(const cv::Mat& image, const TargetFeatures2D& target_features) const override;
 
-  virtual const Target& target() const override { return target_; }
+  virtual const Target2D3D& target() const override { return target_; }
 
 protected:
   const CharucoGridTarget target_;
 };
 
-struct CharucoGridTargetFinderFactory : public TargetFinderFactory
+struct CharucoGridTargetFinderFactory : public TargetFinderFactoryOpenCV
 {
 public:
-  TargetFinder::ConstPtr create(const YAML::Node& config) const override;
+  TargetFinderOpenCV::ConstPtr create(const YAML::Node& config) const override;
 };
 
 }  // namespace industrial_calibration

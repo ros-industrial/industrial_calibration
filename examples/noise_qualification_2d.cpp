@@ -1,6 +1,6 @@
 #include <industrial_calibration/analysis/noise_qualification.h>
-#include <industrial_calibration/target_finders/target_finder.h>
-#include <industrial_calibration/target_finders/utils.h>
+#include <industrial_calibration/target_finders/opencv/target_finder.h>
+#include <industrial_calibration/target_finders/opencv/utils.h>
 #include <industrial_calibration/core/serialization.h>
 
 #include <boost_plugin_loader/plugin_loader.hpp>
@@ -32,7 +32,7 @@ PnPNoiseStat run(const path& calibration_file)
   loader.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
 
   auto target_finder_config = getMember<YAML::Node>(config, "target_finder");
-  auto factory = loader.createInstance<TargetFinderFactory>(getMember<std::string>(target_finder_config, "type"));
+  auto factory = loader.createInstance<TargetFinderFactoryOpenCV>(getMember<std::string>(target_finder_config, "type"));
   auto target_finder = factory->create(target_finder_config);
 
   // Load camera intrinsics
@@ -58,7 +58,7 @@ PnPNoiseStat run(const path& calibration_file)
     static cv::Mat image = readImageOpenCV((calibration_file.parent_path() / img_path).string());
 
     // Find the observations in the image
-    TargetFeatures target_features;
+    TargetFeatures2D target_features;
     try
     {
       target_features = target_finder->findTargetFeatures(image);
