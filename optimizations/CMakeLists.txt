@@ -16,8 +16,8 @@ add_library(
 target_include_directories(${PROJECT_NAME}_optimizations PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                                 "$<INSTALL_INTERFACE:include>")
 target_include_directories(${PROJECT_NAME}_optimizations SYSTEM PUBLIC ${CERES_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_optimizations PUBLIC ${PROJECT_NAME} ${CERES_LIBRARIES})
-target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 17)
+target_link_libraries(${PROJECT_NAME}_optimizations PUBLIC ${PROJECT_NAME}_core ${CERES_LIBRARIES})
+target_cxx_version(${PROJECT_NAME}_optimizations PUBLIC VERSION 17)
 target_clang_tidy(
   ${PROJECT_NAME}_optimizations
   ENABLE ${INDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY}

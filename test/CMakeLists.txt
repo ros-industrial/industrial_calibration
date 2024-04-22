@@ -45,7 +45,6 @@ add_executable(${PROJECT_NAME}_extrinsic_hand_eye_dh_chain_tests extrinsic_hand_
 target_link_libraries(${PROJECT_NAME}_extrinsic_hand_eye_dh_chain_tests PRIVATE ${PROJECT_NAME}_test_support
                                                                                 GTest::GTest GTest::Main)
 add_gtest_discover_tests(${PROJECT_NAME}_extrinsic_hand_eye_dh_chain_tests)
-add_dependencies(${PROJECT_NAME}_extrinsic_hand_eye_dh_chain_tests ${PROJECT_NAME})
 add_dependencies(run_tests ${PROJECT_NAME}_extrinsic_hand_eye_dh_chain_tests)
 
 # Covariance The expectations for the covariance matrices of these tests tends to be flaky due to random number
@@ -136,12 +135,7 @@ add_dependencies(run_tests ${PROJECT_NAME}_local_parameterization_tests)
 
 # Serialization
 add_executable(${PROJECT_NAME}_serialization_tests serialization_utest.cpp)
-target_link_libraries(
-  ${PROJECT_NAME}_serialization_tests
-  PRIVATE ${PROJECT_NAME}
-          ${PROJECT_NAME}_test_support
-          GTest::GTest
-          GTest::Main)
+target_link_libraries(${PROJECT_NAME}_serialization_tests PRIVATE ${PROJECT_NAME}_test_support GTest::GTest GTest::Main)
 add_gtest_discover_tests(${PROJECT_NAME}_serialization_tests)
 add_dependencies(run_tests ${PROJECT_NAME}_serialization_tests)
 
