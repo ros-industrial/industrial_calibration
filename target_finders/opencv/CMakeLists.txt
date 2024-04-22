@@ -58,6 +58,9 @@ target_code_coverage(
 # Install headers
 install(DIRECTORY include/ DESTINATION include)
 
+# Install the modified circle grid target generator script
+install(FILES script/modified_circle_grid_target_generator.py DESTINATION bin)
+
 configure_component(
   COMPONENT
   target_finders_opencv
