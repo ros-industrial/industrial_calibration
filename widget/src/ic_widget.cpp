@@ -126,7 +126,7 @@ void ICWidget::loadConfig()
         auto camera_mount_to_camera = getMember<YAML::Node>(node, "camera_mount_to_camera_guess");
         auto target_mount_to_target = getMember<YAML::Node>(node, "target_mount_to_target_guess");
         auto homography_threshold = getMember<double>(node, "homography_threshold");
-        auto eye_in_hand = getMember<bool>(node, "eye_in_hand");
+        auto static_camera = getMember<bool>(node, "static_camera");
         auto target_finder_config = getMember<YAML::Node>(node, "target_finder");
 
         // Load parameters
@@ -145,7 +145,7 @@ void ICWidget::loadConfig()
         target_dialogs_.at(target_type)->widget->configure(target_finder_config);
 
         // Sensor configuration (historically industrical calibration yaml files don't include this)
-        ui_->check_box_eye_in_hand->setChecked(eye_in_hand);
+        ui_->check_box_static_camera->setChecked(static_camera);
 
         ui_->line_edit_config->setText(config_file);
         QMessageBox::information(this, "Success", "Successfully loaded calibration configuration");
@@ -179,7 +179,7 @@ void ICWidget::saveConfig()
   QString target_type = ui_->combo_box_target_finder->currentText();
   node["target_finder"] = target_dialogs_.at(target_type)->widget->save();
 
-  node["eye_in_hand"] = ui_->check_box_eye_in_hand->isChecked();
+  node["static_camera"] = ui_->check_box_static_camera->isChecked();
 
   std::ofstream fout(file.toStdString());
   fout << node;
@@ -216,7 +216,7 @@ void ICWidget::loadData()
         problem_->target_mount_to_target_guess = target_transform_guess_dialog_->widget->save().as<Eigen::Isometry3d>();
         problem_->intr = camera_intrinsics_dialog_->widget->save().as<CameraIntrinsics>();
 
-        YAML::Node data = YAML::LoadFile(data_file.toStdString());
+        auto data = getMember<YAML::Node>(YAML::LoadFile(data_file.toStdString()), "data");
 
         // Reset the table widget
         ui_->table_widget_data->clearContents();
@@ -249,10 +249,10 @@ void ICWidget::loadData()
                 // Populate an observation
                 Observation2D3D obs;
 
-                if(ui_->check_box_eye_in_hand->isChecked())
-                    obs.to_camera_mount = pose;
-                else
+                if(ui_->check_box_static_camera->isChecked())
                     obs.to_target_mount = pose;
+                else
+                    obs.to_camera_mount = pose;
 
                 obs.correspondence_set = target_finder_->findCorrespondences(image);
 

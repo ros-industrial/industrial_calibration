@@ -187,9 +187,9 @@
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="check_box_eye_in_hand">
+            <widget class="QCheckBox" name="check_box_static_camera">
              <property name="text">
-              <string>Hand-in-eye</string>
+              <string>Static camera</string>
              </property>
             </widget>
            </item>
@@ -266,12 +266,12 @@
                 </attribute>
                 <column>
                  <property name="text">
-                  <string>Features</string>
+                  <string>Feature Count</string>
                  </property>
                 </column>
                 <column>
                  <property name="text">
-                  <string>Homography</string>
+                  <string>Mean Homography Error</string>
                  </property>
                 </column>
                </widget>
