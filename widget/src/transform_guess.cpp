@@ -4,7 +4,7 @@
 #include <Eigen/Geometry>
 
 TransformGuess::TransformGuess(QWidget *parent) :
-  QWidget(parent),
+  ConfigurableWidget(parent),
   ui_(new Ui::TransformGuess)
 {
   ui_->setupUi(this);
@@ -36,7 +36,7 @@ void TransformGuess::configure(const YAML::Node& node)
   ui_->yawDoubleSpinBox->setValue(euler[2]);
 }
 
-YAML::Node TransformGuess::save()
+YAML::Node TransformGuess::save() const
 {
   YAML::Node node;
   node["x"] = ui_->xDoubleSpinBox->value();
@@ -47,10 +47,9 @@ YAML::Node TransformGuess::save()
   double yaw = ui_->yawDoubleSpinBox->value();
 
   // Convert rpy to quaternion
-  Eigen::AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
-  Eigen::AngleAxisd pitchAngle(pitch, Eigen::Vector3d::UnitY());
-  Eigen::AngleAxisd yawAngle(yaw, Eigen::Vector3d::UnitZ());
-  Eigen::Quaterniond quaternion = yawAngle * pitchAngle * rollAngle;
+  Eigen::Quaterniond quaternion = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()) *
+                                  Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+                                  Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
 
   node["qx"] = quaternion.x();
   node["qy"] = quaternion.y();

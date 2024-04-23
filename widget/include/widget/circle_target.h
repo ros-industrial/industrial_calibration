@@ -1,23 +1,20 @@
 #ifndef CIRCLE_TARGET_H
 #define CIRCLE_TARGET_H
 
-#include <QWidget>
-#include <yaml-cpp/yaml.h>
+#include "configurable_widget.h"
 
 namespace Ui {
 class CircleTarget;
 }
 
-class CircleTarget : public QWidget
+class CircleTarget : public ConfigurableWidget
 {
-  Q_OBJECT
-
 public:
   explicit CircleTarget(QWidget *parent = nullptr);
   ~CircleTarget();
 
-  void configure(const YAML::Node& node);
-  YAML::Node save();
+  void configure(const YAML::Node& node) override;
+  YAML::Node save() const override;
 
 private:
   Ui::CircleTarget *ui_;

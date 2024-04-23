@@ -1,19 +1,19 @@
 #include "widget/camera_intrinsics.h"
 #include "ui_camera_intrinsics.h"
 
-CameraIntrinsics::CameraIntrinsics(QWidget *parent) :
-  QWidget(parent),
+CameraIntrinsicsWidget::CameraIntrinsicsWidget(QWidget *parent) :
+  ConfigurableWidget(parent),
   ui_(new Ui::CameraIntrinsics)
 {
   ui_->setupUi(this);
 }
 
-CameraIntrinsics::~CameraIntrinsics()
+CameraIntrinsicsWidget::~CameraIntrinsicsWidget()
 {
   delete ui_;
 }
 
-void CameraIntrinsics::configure(const YAML::Node& node)
+void CameraIntrinsicsWidget::configure(const YAML::Node& node)
 {
   ui_->fxDoubleSpinBox->setValue(node["fx"].as<double>());
   ui_->fyDoubleSpinBox->setValue(node["fy"].as<double>());
@@ -21,7 +21,7 @@ void CameraIntrinsics::configure(const YAML::Node& node)
   ui_->cyDoubleSpinBox->setValue(node["cy"].as<double>());
 }
 
-YAML::Node CameraIntrinsics::save()
+YAML::Node CameraIntrinsicsWidget::save() const
 {
   YAML::Node node;
   node["fx"] = ui_->fxDoubleSpinBox->value();

@@ -2,7 +2,7 @@
 #include "ui_aruco_target.h"
 
 ArucoTarget::ArucoTarget(QWidget *parent) :
-  QWidget(parent),
+    ConfigurableWidget(parent),
   ui_(new Ui::ArucoTarget)
 {
   ui_->setupUi(this);
@@ -21,7 +21,7 @@ void ArucoTarget::configure(const YAML::Node& node)
   ui_->dictComboBox->setCurrentIndex(node["dictionary"].as<int>());
 }
 
-YAML::Node ArucoTarget::save()
+YAML::Node ArucoTarget::save() const
 {
   YAML::Node node;
   node["type"] = "ArucoGridTargetFinder";

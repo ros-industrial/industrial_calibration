@@ -1,23 +1,20 @@
 #ifndef CHARUCO_TARGET_H
 #define CHARUCO_TARGET_H
 
-#include <QWidget>
-#include <yaml-cpp/yaml.h>
+#include "configurable_widget.h"
 
 namespace Ui {
 class CharucoTarget;
 }
 
-class CharucoTarget : public QWidget
+class CharucoTarget : public ConfigurableWidget
 {
-  Q_OBJECT
-
 public:
   explicit CharucoTarget(QWidget *parent = nullptr);
   ~CharucoTarget();
 
-  void configure(const YAML::Node& node);
-  YAML::Node save();
+  void configure(const YAML::Node& node) override;
+  YAML::Node save() const override;
 
 private:
   Ui::CharucoTarget *ui_;

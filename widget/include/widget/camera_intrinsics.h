@@ -1,25 +1,23 @@
 #ifndef CAMERA_INTRINSICS_H
 #define CAMERA_INTRINSICS_H
 
-#include <QWidget>
-#include <yaml-cpp/yaml.h>
+#include "configurable_widget.h"
 
 namespace Ui {
 class CameraIntrinsics;
 }
 
-class CameraIntrinsics : public QWidget
+class CameraIntrinsicsWidget : public ConfigurableWidget
 {
   Q_OBJECT
 
 public:
-  explicit CameraIntrinsics(QWidget *parent = nullptr);
-  ~CameraIntrinsics();
+  explicit CameraIntrinsicsWidget(QWidget *parent = nullptr);
+  ~CameraIntrinsicsWidget();
 
-    
-  void configure(const YAML::Node& node);
-  YAML::Node save();
-  
+  void configure(const YAML::Node& node) override;
+  YAML::Node save() const override;
+
 private:
   Ui::CameraIntrinsics *ui_;
 };

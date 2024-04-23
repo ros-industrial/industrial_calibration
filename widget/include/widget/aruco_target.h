@@ -1,23 +1,20 @@
 #ifndef ARUCO_TARGET_H
 #define ARUCO_TARGET_H
 
-#include <QWidget>
-#include <yaml-cpp/yaml.h>
+#include "configurable_widget.h"
 
 namespace Ui {
 class ArucoTarget;
 }
 
-class ArucoTarget : public QWidget
+class ArucoTarget : public ConfigurableWidget
 {
-  Q_OBJECT
-
 public:
   explicit ArucoTarget(QWidget *parent = nullptr);
   ~ArucoTarget();
 
-  void configure(const YAML::Node& node);
-  YAML::Node save();
+  void configure(const YAML::Node& node) override;
+  YAML::Node save() const override;
 
 private:
   Ui::ArucoTarget *ui_;

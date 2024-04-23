@@ -2,7 +2,7 @@
 #include "ui_circle_target.h"
 
 CircleTarget::CircleTarget(QWidget *parent) :
-  QWidget(parent),
+    ConfigurableWidget(parent),
   ui_(new Ui::CircleTarget)
 {
   ui_->setupUi(this);
@@ -63,7 +63,7 @@ void CircleTarget::configure(const YAML::Node& node)
   ui_->maxConvexityDoubleSpinBox->setValue(subnode["maxConvexity"].as<double>());
 }
 
-YAML::Node CircleTarget::save()
+YAML::Node CircleTarget::save() const
 {
   YAML::Node node;
   node["type"] = "ModifiedCircleGridTargetFinder";

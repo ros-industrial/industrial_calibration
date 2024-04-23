@@ -1,14 +1,13 @@
 #ifndef TRANSFORM_GUESS_H
 #define TRANSFORM_GUESS_H
 
-#include <QWidget>
-#include <yaml-cpp/yaml.h>
+#include "configurable_widget.h"
 
 namespace Ui {
 class TransformGuess;
 }
 
-class TransformGuess : public QWidget
+class TransformGuess : public ConfigurableWidget
 {
   Q_OBJECT
 
@@ -16,8 +15,8 @@ public:
   explicit TransformGuess(QWidget *parent = nullptr);
   ~TransformGuess();
 
-  void configure(const YAML::Node& node);
-  YAML::Node save();
+  void configure(const YAML::Node& node) override;
+  YAML::Node save() const override;
 
 private:
   Ui::TransformGuess *ui_;

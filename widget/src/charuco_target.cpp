@@ -2,7 +2,7 @@
 #include "ui_charuco_target.h"
 
 CharucoTarget::CharucoTarget(QWidget *parent) :
-  QWidget(parent),
+    ConfigurableWidget(parent),
   ui_(new Ui::CharucoTarget)
 {
   ui_->setupUi(this);
@@ -22,7 +22,7 @@ void CharucoTarget::configure(const YAML::Node& node)
   ui_->dictComboBox->setCurrentIndex(node["dictionary"].as<int>());
 }
 
-YAML::Node CharucoTarget::save()
+YAML::Node CharucoTarget::save() const
 {
   YAML::Node node;
   node["type"] = "CharucoGridTargetFinder";
