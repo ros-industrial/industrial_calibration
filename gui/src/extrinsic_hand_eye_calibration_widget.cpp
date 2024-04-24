@@ -306,7 +306,11 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(int row, int col)
         // Save the homography error to the table
         homography_item->setData(Qt::EditRole, QString::number(homography_error_mean));
 
-        notes_item->setData(Qt::EditRole, "");
+        // Check homography threshold and update notes/row color
+        if(homography_error_mean > ui_->double_spin_box_homography->value())
+            notes_item->setData(Qt::EditRole, "Homography threshold violated");
+        else
+            notes_item->setData(Qt::EditRole, "");
     }
     catch(const std::exception& ex)
     {
@@ -385,12 +389,19 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
 
                 // Conditionally add the observation to the problem if the mean homography error is less than the threshold
                 if (homography_error_mean < ui_->double_spin_box_homography->value())
+                {
                     problem.observations.push_back(obs);
+                    notes_item->setData(Qt::EditRole, "");
+                }
+                else
+                {
+                    // Update the notes
+                    notes_item->setData(Qt::EditRole, "Observation excluded from calibration due to homography threshold violation");
+                }
 
                 // Update the table widget
                 features_item->setData(Qt::EditRole, QString::number(obs.correspondence_set.size()));
                 homography_item->setData(Qt::EditRole, QString::number(homography_error_mean));
-                notes_item->setData(Qt::EditRole, "");
             }
             catch (const std::exception& ex)
             {
