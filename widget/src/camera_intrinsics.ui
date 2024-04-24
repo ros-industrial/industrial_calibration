@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>123</width>
+    <width>173</width>
     <height>141</height>
    </rect>
   </property>
@@ -22,7 +22,7 @@
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QDoubleSpinBox" name="fxDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_fx">
      <property name="maximum">
       <double>1000000000.000000000000000</double>
      </property>
@@ -36,7 +36,7 @@
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QDoubleSpinBox" name="fyDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_fy">
      <property name="maximum">
       <double>1000000000.000000000000000</double>
      </property>
@@ -50,7 +50,7 @@
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QDoubleSpinBox" name="cxDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_cx">
      <property name="maximum">
       <double>1000000000.000000000000000</double>
      </property>
@@ -64,7 +64,7 @@
     </widget>
    </item>
    <item row="3" column="1">
-    <widget class="QDoubleSpinBox" name="cyDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_cy">
      <property name="maximum">
       <double>1000000000.000000000000000</double>
      </property>
