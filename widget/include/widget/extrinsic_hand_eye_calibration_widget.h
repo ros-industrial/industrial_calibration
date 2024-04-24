@@ -1,3 +1,5 @@
+#pragma once
+
 #include <industrial_calibration/target_finders/opencv/target_finder.h>
 
 #include <boost_plugin_loader/plugin_loader.h>

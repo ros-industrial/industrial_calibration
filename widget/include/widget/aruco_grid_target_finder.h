@@ -1,6 +1,6 @@
 #pragma once
 
-#include <industrial_calibration/widget/configurable_widget.h>
+#include "configurable_widget.h"
 
 namespace Ui {
 class ArucoGridTargetFinder;
