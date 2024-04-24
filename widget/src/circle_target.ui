@@ -27,7 +27,7 @@
        <rect>
         <x>0</x>
         <y>-316</y>
-        <width>371</width>
+        <width>394</width>
         <height>973</height>
        </rect>
       </property>
@@ -79,10 +79,13 @@
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="spacingDoubleSpinBox">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.010000000000000</double>
             </property>
            </widget>
           </item>
@@ -104,6 +107,9 @@
           </item>
           <item row="0" column="1">
            <widget class="QDoubleSpinBox" name="circleInclusionRadiusDoubleSpinBox">
+            <property name="decimals">
+             <number>6</number>
+            </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>
             </property>
@@ -125,6 +131,9 @@
           </item>
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="maxRadiusDiffDoubleSpinBox">
+            <property name="decimals">
+             <number>6</number>
+            </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>
             </property>
@@ -133,7 +142,7 @@
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="maxAvgEllipseErrorDoubleSpinBox">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1.000000000000000</double>
@@ -282,7 +291,7 @@
           <item row="0" column="1">
            <widget class="QDoubleSpinBox" name="maxAreaDoubleSpinBox">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>
@@ -299,7 +308,7 @@
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="minAreaDoubleSpinBox">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>
@@ -335,7 +344,7 @@
           <item row="0" column="1">
            <widget class="QDoubleSpinBox" name="minCircularityDoubleSpinBox">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>
@@ -352,7 +361,7 @@
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="maxCircularityDoubleSpinBox">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>
@@ -388,7 +397,7 @@
           <item row="0" column="1">
            <widget class="QDoubleSpinBox" name="minInertiaRatioDoubleSpinBox">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>
@@ -405,7 +414,7 @@
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="maxInertiaRatioDoubleSpinBox">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>
@@ -441,7 +450,7 @@
           <item row="0" column="1">
            <widget class="QDoubleSpinBox" name="minConvexityDoubleSpinBox">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>
@@ -458,7 +467,7 @@
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="maxConvexityDoubleSpinBox">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1000000000.000000000000000</double>

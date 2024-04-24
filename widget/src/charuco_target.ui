@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>328</width>
+    <width>330</width>
     <height>182</height>
    </rect>
   </property>
@@ -58,7 +58,10 @@
    <item row="2" column="1">
     <widget class="QDoubleSpinBox" name="checkerSizeDoubleSpinBox">
      <property name="decimals">
-      <number>3</number>
+      <number>6</number>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
      </property>
     </widget>
    </item>
@@ -78,7 +81,10 @@
    <item row="3" column="1">
     <widget class="QDoubleSpinBox" name="markerSizeDoubleSpinBox">
      <property name="decimals">
-      <number>3</number>
+      <number>6</number>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
      </property>
     </widget>
    </item>
