@@ -1,5 +1,6 @@
-#include <industrial_calibration/gui/transform_guess.h>
 #include "ui_transform_guess.h"
+#include <industrial_calibration/gui/transform_guess.h>
+#include <industrial_calibration/core/serialization.h>
 
 namespace industrial_calibration
 {
@@ -17,15 +18,13 @@ TransformGuess::~TransformGuess()
 
 void TransformGuess::configure(const YAML::Node& node)
 {
-    ui_->double_spin_box_x->setValue(node["x"].as<double>());
-    ui_->double_spin_box_y->setValue(node["y"].as<double>());
-    ui_->double_spin_box_z->setValue(node["z"].as<double>());
-
-    // Convert from quaternion to rpy
-    ui_->double_spin_box_qx->setValue(node["qx"].as<double>());
-    ui_->double_spin_box_qy->setValue(node["qy"].as<double>());
-    ui_->double_spin_box_qz->setValue(node["qz"].as<double>());
-    ui_->double_spin_box_qw->setValue(node["qw"].as<double>());
+    ui_->double_spin_box_x->setValue(getMember<double>(node, "x"));
+    ui_->double_spin_box_y->setValue(getMember<double>(node, "y"));
+    ui_->double_spin_box_z->setValue(getMember<double>(node, "z"));
+    ui_->double_spin_box_qx->setValue(getMember<double>(node, "qx"));
+    ui_->double_spin_box_qy->setValue(getMember<double>(node, "qy"));
+    ui_->double_spin_box_qz->setValue(getMember<double>(node, "qz"));
+    ui_->double_spin_box_qw->setValue(getMember<double>(node, "qw"));
 }
 
 YAML::Node TransformGuess::save() const

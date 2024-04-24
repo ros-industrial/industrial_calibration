@@ -1,5 +1,6 @@
-#include <industrial_calibration/gui/charuco_grid_target_finder.h>
 #include "ui_charuco_grid_target_finder.h"
+#include <industrial_calibration/gui/charuco_grid_target_finder.h>
+#include <industrial_calibration/core/serialization.h>
 
 namespace industrial_calibration
 {
@@ -17,11 +18,11 @@ CharucoGridTargetFinderWidget::~CharucoGridTargetFinderWidget()
 
 void CharucoGridTargetFinderWidget::configure(const YAML::Node& node)
 {
-    ui_->rowSpinBox->setValue(node["rows"].as<int>());
-    ui_->colSpinBox->setValue(node["cols"].as<int>());
-    ui_->checkerSizeDoubleSpinBox->setValue(node["chessboard_dim"].as<double>());
-    ui_->markerSizeDoubleSpinBox->setValue(node["aruco_marker_dim"].as<double>());
-    ui_->dictComboBox->setCurrentIndex(node["dictionary"].as<int>());
+    ui_->rowSpinBox->setValue(getMember<int>(node, "rows"));
+    ui_->colSpinBox->setValue(getMember<int>(node, "cols"));
+    ui_->checkerSizeDoubleSpinBox->setValue(getMember<double>(node, "chessboard_dim"));
+    ui_->markerSizeDoubleSpinBox->setValue(getMember<double>(node, "aruco_marker_dim"));
+    ui_->dictComboBox->setCurrentIndex(getMember<int>(node, "dictionary"));
 }
 
 YAML::Node CharucoGridTargetFinderWidget::save() const

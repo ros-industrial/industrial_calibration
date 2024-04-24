@@ -1,5 +1,6 @@
-#include <industrial_calibration/gui/aruco_grid_target_finder.h>
 #include "ui_aruco_grid_target_finder.h"
+#include <industrial_calibration/gui/aruco_grid_target_finder.h>
+#include <industrial_calibration/core/serialization.h>
 
 namespace industrial_calibration
 {
@@ -17,10 +18,10 @@ ArucoGridTargetFinderWidget::~ArucoGridTargetFinderWidget()
 
 void ArucoGridTargetFinderWidget::configure(const YAML::Node& node)
 {
-    ui_->rowSpinBox->setValue(node["rows"].as<int>());
-    ui_->colSpinBox->setValue(node["cols"].as<int>());
-    ui_->markerSizeDoubleSpinBox->setValue(node["aruco_marker_dim"].as<double>());
-    ui_->dictComboBox->setCurrentIndex(node["dictionary"].as<int>());
+    ui_->rowSpinBox->setValue(getMember<int>(node, "rows"));
+    ui_->colSpinBox->setValue(getMember<int>(node, "cols"));
+    ui_->markerSizeDoubleSpinBox->setValue(getMember<double>(node, "aruco_marker_dim"));
+    ui_->dictComboBox->setCurrentIndex(getMember<int>(node, "dictionary"));
 }
 
 YAML::Node ArucoGridTargetFinderWidget::save() const
