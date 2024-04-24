@@ -85,6 +85,7 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget *pa
     ui_->table_widget_data->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui_->table_widget_data->resizeColumnsToContents();
     ui_->table_widget_data->horizontalHeader()->stretchLastSection();
+    ui_->table_widget_data->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     // Set up dialog boxes
     camera_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_camera_guess);
