@@ -320,11 +320,11 @@
       </widget>
       <widget class="QGroupBox" name="groupBox">
        <property name="title">
-        <string>Log</string>
+        <string>Results</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QTextEdit" name="text_edit_log">
+         <widget class="QTextEdit" name="text_edit_results">
           <property name="readOnly">
            <bool>true</bool>
           </property>

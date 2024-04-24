@@ -96,8 +96,8 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget *pa
     target_dialogs_["ModifiedCircleGridTargetFinder"] = setup<ModifiedCircleGridTargetFinderWidget>(this);
 
     // Move the text edit scroll bar to the maximum limit whenever it is resized
-    connect(ui_->text_edit_log->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {
-        ui_->text_edit_log->verticalScrollBar()->setSliderPosition(ui_->text_edit_log->verticalScrollBar()->maximum());
+    connect(ui_->text_edit_results->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {
+        ui_->text_edit_results->verticalScrollBar()->setSliderPosition(ui_->text_edit_results->verticalScrollBar()->maximum());
     });
 
     // Set up push buttons
@@ -306,7 +306,6 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(int row, int col)
         // Save the homography error to the table
         homography_item->setData(Qt::EditRole, QString::number(homography_error_mean));
 
-        // Update the notes
         notes_item->setData(Qt::EditRole, "");
     }
     catch(const std::exception& ex)
@@ -418,8 +417,8 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
         ExtrinsicHandEyeAnalysisStats stats = analyzeResults(problem, *result_);
         ss << stats << std::endl << std::endl;
 
-        ui_->text_edit_log->clear();
-        ui_->text_edit_log->append(QString::fromStdString(ss.str()));
+        ui_->text_edit_results->clear();
+        ui_->text_edit_results->append(QString::fromStdString(ss.str()));
 
         QApplication::restoreOverrideCursor();
         if (result_->converged)
