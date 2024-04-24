@@ -38,19 +38,6 @@ static const int COL_NOTES = 2;
 
 namespace industrial_calibration
 {
-class ConfigurableWidgetDialog : public QDialog
-{
-public:
-    ConfigurableWidgetDialog(ConfigurableWidget* widget_, QWidget* parent = nullptr) : QDialog(parent), widget(widget_)
-    {
-        auto* vl = new QVBoxLayout(this);
-        vl->addWidget(widget);
-        setWindowTitle("");
-    }
-
-    ConfigurableWidget* widget;
-};
-
 template<typename WidgetT>
 ConfigurableWidgetDialog* setup(QWidget* const parent, QAbstractButton* const button = nullptr)
 {

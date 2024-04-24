@@ -8,5 +8,12 @@ ConfigurableWidget::ConfigurableWidget(QWidget* parent)
 {
 }
 
+ConfigurableWidgetDialog::ConfigurableWidgetDialog(ConfigurableWidget* widget_, QWidget* parent) : QDialog(parent), widget(widget_)
+{
+    auto* vl = new QVBoxLayout(this);
+    vl->addWidget(widget);
+    setWindowTitle("");
+}
+
 } // namespace industrial_calibration
 
