@@ -29,6 +29,11 @@
 #include <QVBoxLayout>
 
 static const unsigned RANDOM_SEED = 1;
+static const int IMAGE_FILE_NAME_ROLE = Qt::UserRole + 1;
+static const int POSE_FILE_NAME_ROLE = Qt::UserRole + 2;
+static const int COL_FEATURES = 0;
+static const int COL_HOMOGRAPHY = 1;
+static const int COL_NOTES = 2;
 
 ICDialog::ICDialog(ConfigurableWidget* widget_, QWidget* parent) : QDialog(parent), widget(widget_)
 {
@@ -67,6 +72,20 @@ ICWidget::ICWidget(QWidget *parent) :
 {
   ui_->setupUi(this);
 
+  // Configure the table widget
+  ui_->table_widget_data->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  ui_->table_widget_data->resizeColumnsToContents();
+  ui_->table_widget_data->horizontalHeader()->stretchLastSection();
+
+  // Set up dialog boxes
+  camera_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_camera_guess);
+  target_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_target_guess);
+  camera_intrinsics_dialog_ = setup<CameraIntrinsicsWidget>(this, ui_->tool_button_camera_intrinsics);
+
+  target_dialogs_["CharucoGridTargetFinder"] = setup<CharucoTarget>(this);
+  target_dialogs_["ArucoGridTargetFinder"] = setup<ArucoTarget>(this);
+  target_dialogs_["ModifiedCircleGridTargetFinder"] = setup<CircleTarget>(this);
+
   // Move the text edit scroll bar to the maximum limit whenever it is resized
   connect(ui_->text_edit_log->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {
     ui_->text_edit_log->verticalScrollBar()->setSliderPosition(ui_->text_edit_log->verticalScrollBar()->maximum());
@@ -77,15 +96,6 @@ ICWidget::ICWidget(QWidget *parent) :
   connect(ui_->push_button_save_config, &QPushButton::clicked, this, &ICWidget::saveConfig);
   connect(ui_->push_button_calibrate, &QPushButton::clicked, this, &ICWidget::calibrate);
   connect(ui_->push_button_save, &QPushButton::clicked, this, &ICWidget::saveResults);
-
-  // Set up dialog boxes
-  camera_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_camera_guess);
-  target_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_target_guess);
-  camera_intrinsics_dialog_ = setup<CameraIntrinsicsWidget>(this, ui_->tool_button_camera_intrinsics);
-
-  target_dialogs_["CharucoGridTargetFinder"] = setup<CharucoTarget>(this);
-  target_dialogs_["ArucoGridTargetFinder"] = setup<ArucoTarget>(this);
-  target_dialogs_["ModifiedCircleGridTargetFinder"] = setup<CircleTarget>(this);
 
   connect(ui_->tool_button_target_finder, &QAbstractButton::clicked, [this](){
     QString type = ui_->combo_box_target_finder->currentText();
@@ -203,16 +213,6 @@ void ICWidget::loadData()
 
     try
     {
-        // Load the target finder
-        loadTargetFinder();
-
-        // Create the calibration problem
-        problem_ = std::make_shared<industrial_calibration::ExtrinsicHandEyeProblem2D3D>();
-
-        problem_->camera_mount_to_camera_guess = camera_transform_guess_dialog_->widget->save().as<Eigen::Isometry3d>();
-        problem_->target_mount_to_target_guess = target_transform_guess_dialog_->widget->save().as<Eigen::Isometry3d>();
-        problem_->intr = camera_intrinsics_dialog_->widget->save().as<CameraIntrinsics>();
-
         auto data = getMember<YAML::Node>(YAML::LoadFile(data_file.toStdString()), "data");
 
         // Reset the table widget
@@ -224,16 +224,127 @@ void ICWidget::loadData()
             const YAML::Node& entry = data[i];
 
             QString image_file = data_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "image")));
+            QString pose_file = data_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "pose")));
+
+            // Add a column entry for the number of detected features
+            auto features_item = new QTableWidgetItem("-");
+            features_item->setData(IMAGE_FILE_NAME_ROLE, image_file);
+            features_item->setData(POSE_FILE_NAME_ROLE, pose_file);
+            ui_->table_widget_data->setItem(i, COL_FEATURES, features_item);
+
+            // Add a column entry for the homography error
+            auto homography_item = new QTableWidgetItem("-");
+            ui_->table_widget_data->setItem(i, COL_HOMOGRAPHY, homography_item);
+
+            // Add a column entry for notes
+            auto notes_item = new QTableWidgetItem("");
+            ui_->table_widget_data->setItem(i, COL_NOTES, notes_item);
+        }
+
+        ui_->line_edit_data->setText(data_file);
+        ui_->table_widget_data->resizeColumnsToContents();
+        ui_->table_widget_data->horizontalHeader()->stretchLastSection();
+    }
+    catch(const std::exception& ex)
+    {
+        ui_->table_widget_data->clearContents();
+        QMessageBox::warning(this, "Error", ex.what());
+    }
+}
+
+void ICWidget::drawImage(int row, int col)
+{
+    QTableWidgetItem* features_item = ui_->table_widget_data->item(row, COL_FEATURES);
+    QTableWidgetItem* homography_item = ui_->table_widget_data->item(row, COL_HOMOGRAPHY);
+    QTableWidgetItem* notes_item = ui_->table_widget_data->item(row, COL_NOTES);
+
+    if (features_item == nullptr)
+        return;
+
+    QVariant data = features_item->data(IMAGE_FILE_NAME_ROLE);
+    if(data.isNull() || !data.canConvert<QString>())
+        return;
+
+    QString image_file = features_item->data(IMAGE_FILE_NAME_ROLE).value<QString>();
+    if(!QFile(image_file).exists())
+    {
+        notes_item->setData(Qt::EditRole, "Image file does not exist");
+        return;
+    }
+
+    try
+    {
+        loadTargetFinder();
+        cv::Mat image = cv::imread(image_file.toStdString());
+
+        // Attempt to detect the target in the image
+        industrial_calibration::TargetFeatures2D features = target_finder_->findTargetFeatures(image);
+        cv::Mat detected_image = target_finder_->drawTargetFeatures(image, features);
+
+        // Save the number of detected features to the table
+        features_item->setData(Qt::EditRole, QString::number(features.size()));
+
+        // Set the image
+        ui_->image_label->setPixmap(toQt(detected_image));
+        update();
+
+        // Attempt to compute the homography error
+        industrial_calibration::Correspondence2D3D::Set corrs = target_finder_->target().createCorrespondences(features);
+        industrial_calibration::RandomCorrespondenceSampler random_sampler(corrs.size(), corrs.size() / 3, RANDOM_SEED);
+        Eigen::VectorXd homography_error = industrial_calibration::calculateHomographyError(corrs, random_sampler);
+        double homography_error_mean = homography_error.array().mean();
+
+        // Save the homography error to the table
+        homography_item->setData(Qt::EditRole, QString::number(homography_error_mean));
+
+        // Update the notes
+        notes_item->setData(Qt::EditRole, "");
+    }
+    catch(const std::exception& ex)
+    {
+        cv::Mat image = cv::imread(image_file.toStdString());
+        ui_->image_label->setPixmap(toQt(image));
+        update();
+
+        features_item->setData(Qt::EditRole, "-");
+        homography_item->setData(Qt::EditRole, "-");
+        notes_item->setData(Qt::EditRole, ex.what());
+    }
+}
+
+void ICWidget::calibrate()
+{
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    try
+    {
+        // Load the target finder
+        loadTargetFinder();
+
+        // Create the calibration problem
+        industrial_calibration::ExtrinsicHandEyeProblem2D3D problem;
+        problem.camera_mount_to_camera_guess = camera_transform_guess_dialog_->widget->save().as<Eigen::Isometry3d>();
+        problem.target_mount_to_target_guess = target_transform_guess_dialog_->widget->save().as<Eigen::Isometry3d>();
+        problem.intr = camera_intrinsics_dialog_->widget->save().as<CameraIntrinsics>();
+
+        for(int i = 0; i < ui_->table_widget_data->rowCount(); ++i)
+        {
+            // Extract the table items
+            QTableWidgetItem* features_item = ui_->table_widget_data->item(i, COL_FEATURES);
+            QTableWidgetItem* homography_item = ui_->table_widget_data->item(i, COL_HOMOGRAPHY);
+            QTableWidgetItem* notes_item = ui_->table_widget_data->item(i, COL_NOTES);
+
+            QString image_file = features_item->data(IMAGE_FILE_NAME_ROLE).value<QString>();
             if(!QFile(image_file).exists())
             {
-                ui_->text_edit_log->append("Failed to find image file '" + image_file + "'");
+                notes_item->setData(Qt::EditRole, "Image file does not exist");
                 continue;
             }
 
-            QString pose_file = data_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "pose")));
-            if(!QFile(pose_file).exists())
+            QString pose_file = features_item->data(POSE_FILE_NAME_ROLE).value<QString>();
+            if(!QFile(image_file).exists())
             {
-                ui_->text_edit_log->append("Failed to find pose file '" + pose_file + "'");
+                notes_item->setData(Qt::EditRole, "Pose file does not exist");
                 continue;
             }
 
@@ -266,64 +377,22 @@ void ICWidget::loadData()
 
                 // Conditionally add the observation to the problem if the mean homography error is less than the threshold
                 if (homography_error_mean < ui_->double_spin_box_homography->value())
-                    problem_->observations.push_back(obs);
+                    problem.observations.push_back(obs);
 
-                // Add the homography error mean to the table item
-                auto features_item = new QTableWidgetItem(QString::number(obs.correspondence_set.size()));
-                auto homography_item = new QTableWidgetItem(QString::number(homography_error_mean));
-
-                // Add the detected image to the table item
-                cv::Mat image_detected = target_finder_->drawTargetFeatures(image, target_finder_->findTargetFeatures(image));
-                features_item->setData(Qt::UserRole, QVariant(toQt(image_detected)));
-
-                // Add the item to the table
-                ui_->table_widget_data->setItem(i, 0, features_item);
-                ui_->table_widget_data->setItem(i, 1, homography_item);
+                // Update the table widget
+                features_item->setData(Qt::EditRole, QString::number(obs.correspondence_set.size()));
+                homography_item->setData(Qt::EditRole, QString::number(homography_error_mean));
+                notes_item->setData(Qt::EditRole, "");
             }
             catch (const std::exception& ex)
             {
-                ui_->text_edit_log->append(ex.what());
+                notes_item->setData(Qt::EditRole, ex.what());
             }
         }
 
-        ui_->line_edit_data->setText(data_file);
-        ui_->table_widget_data->resizeColumnsToContents();
-    }
-    catch(const std::exception& ex)
-    {
-        ui_->table_widget_data->clearContents();
-        QMessageBox::warning(this, "Error", ex.what());
-    }
-}
-
-void ICWidget::drawImage(int row, int col)
-{
-    QTableWidgetItem* item = ui_->table_widget_data->item(row, 0);
-    if (item == nullptr)
-        return;
-
-    QVariant data = item->data(Qt::UserRole);
-    if(!data.isNull() && data.canConvert<QPixmap>())
-    {
-        ui_->image_label->setPixmap(data.value<QPixmap>());
-        update();
-    }
-}
-
-void ICWidget::calibrate()
-{
-    if(!problem_)
-    {
-        QMessageBox::warning(this, "Error", "Calibration problem has not yet been set up. Please load the calibration data first");
-        return;
-    }
-
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-
-    try
-    {
+        // Solve the calibration problem
         result_ = std::make_shared<industrial_calibration::ExtrinsicHandEyeResult>();
-        *result_ = industrial_calibration::optimize(*problem_);
+        *result_ = industrial_calibration::optimize(problem);
 
         // Report results
         std::stringstream ss;
@@ -331,22 +400,23 @@ void ICWidget::calibrate()
         ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
 
         // Compute the projected 3D error for comparison
-        ss << analyze3dProjectionError(*problem_, *result_) << std::endl << std::endl;
+        ss << analyze3dProjectionError(problem, *result_) << std::endl << std::endl;
 
         // Now let's compare the results of our extrinsic calibration with a PnP optimization for every observation.
         // The PnP optimization will give us an estimate of the camera to target transform using our input camera intrinsic
         // parameters We will then see how much this transform differs from the same transform calculated using the results
         // of the extrinsic calibration
-        ExtrinsicHandEyeAnalysisStats stats = analyzeResults(*problem_, *result_);
+        ExtrinsicHandEyeAnalysisStats stats = analyzeResults(problem, *result_);
         ss << stats << std::endl << std::endl;
 
+        ui_->text_edit_log->clear();
         ui_->text_edit_log->append(QString::fromStdString(ss.str()));
 
         QApplication::restoreOverrideCursor();
         if (result_->converged)
-            QMessageBox::information(this, "Success", "Successfully completed calibration. See log for more details");
+            QMessageBox::information(this, "Success", "Successfully completed calibration");
         else
-            QMessageBox::warning(this, "Error", "Calibration failed to converge. See log for more details");
+            QMessageBox::warning(this, "Error", "Calibration failed to converge");
     }
     catch(const std::exception& ex)
     {

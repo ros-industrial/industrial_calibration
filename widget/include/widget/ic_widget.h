@@ -17,7 +17,6 @@ class ICWidget;
 
 namespace industrial_calibration
 {
-class ExtrinsicHandEyeProblem2D3D;
 class ExtrinsicHandEyeResult;
 }
 
@@ -57,7 +56,6 @@ private:
   boost_plugin_loader::PluginLoader loader_;
   industrial_calibration::TargetFinderFactoryOpenCV::ConstPtr factory_;
 
-  std::shared_ptr<industrial_calibration::ExtrinsicHandEyeProblem2D3D> problem_;
   std::shared_ptr<industrial_calibration::ExtrinsicHandEyeResult> result_;
   industrial_calibration::TargetFinderOpenCV::ConstPtr target_finder_;
 };
