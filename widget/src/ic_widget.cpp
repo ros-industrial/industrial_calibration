@@ -142,7 +142,11 @@ void ICWidget::loadConfig()
 
         // Target
         QString target_type = QString::fromStdString(getMember<std::string>(target_finder_config, "type"));
+        int idx = ui_->combo_box_target_finder->findText(target_type);
+        if (idx < 0)
+            throw std::runtime_error("Unknown target type '" + target_type.toStdString() + "'");
         target_dialogs_.at(target_type)->widget->configure(target_finder_config);
+        ui_->combo_box_target_finder->setCurrentIndex(idx);
 
         // Sensor configuration (historically industrical calibration yaml files don't include this)
         ui_->check_box_static_camera->setChecked(static_camera);
