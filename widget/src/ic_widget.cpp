@@ -67,12 +67,6 @@ ICWidget::ICWidget(QWidget *parent) :
 {
   ui_->setupUi(this);
 
-  image_label_ = new AspectRatioPixmapLabel(this);
-  image_label_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-  image_label_->setScaledContents(false);
-
-  ui_->splitter->addWidget(image_label_);
-
   // Move the text edit scroll bar to the maximum limit whenever it is resized
   connect(ui_->text_edit_log->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {
     ui_->text_edit_log->verticalScrollBar()->setSliderPosition(ui_->text_edit_log->verticalScrollBar()->maximum());
@@ -289,6 +283,7 @@ void ICWidget::loadData()
             }
         }
 
+        ui_->table_widget_data->resizeColumnsToContents();
     }
     catch(const std::exception& ex)
     {
@@ -306,7 +301,7 @@ void ICWidget::drawImage(int row, int col)
     QVariant data = item->data(Qt::UserRole);
     if(!data.isNull() && data.canConvert<QPixmap>())
     {
-        image_label_->setPixmap(data.value<QPixmap>());
+        ui_->image_label->setPixmap(data.value<QPixmap>());
         update();
     }
 }
