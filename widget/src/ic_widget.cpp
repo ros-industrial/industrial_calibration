@@ -35,39 +35,45 @@ static const int COL_FEATURES = 0;
 static const int COL_HOMOGRAPHY = 1;
 static const int COL_NOTES = 2;
 
-ICDialog::ICDialog(ConfigurableWidget* widget_, QWidget* parent) : QDialog(parent), widget(widget_)
+namespace industrial_calibration
 {
-  auto* vl = new QVBoxLayout(this);
-  vl->addWidget(widget);
-  setWindowTitle("");
-}
+class ConfigurableWidgetDialog : public QDialog
+{
+public:
+    ConfigurableWidgetDialog(ConfigurableWidget* widget_, QWidget* parent = nullptr) : QDialog(parent), widget(widget_)
+    {
+        auto* vl = new QVBoxLayout(this);
+        vl->addWidget(widget);
+        setWindowTitle("");
+    }
+
+    ConfigurableWidget* widget;
+};
 
 template<typename WidgetT>
-ICDialog* setup(QWidget* const parent, QAbstractButton* const button = nullptr)
+ConfigurableWidgetDialog* setup(QWidget* const parent, QAbstractButton* const button = nullptr)
 {
-  auto* widget = new WidgetT(parent);
-  auto* dialog = new ICDialog(widget, parent);
+    auto* widget = new WidgetT(parent);
+    auto* dialog = new ConfigurableWidgetDialog(widget, parent);
 
-  // Optionally connect to button clicked signal
-  if (button != nullptr)
-  {
-    QObject::connect(button, &QAbstractButton::clicked, dialog, &QWidget::show);
-  }
+    // Optionally connect to button clicked signal
+    if (button != nullptr)
+    {
+        QObject::connect(button, &QAbstractButton::clicked, dialog, &QWidget::show);
+    }
 
-  return dialog;
+    return dialog;
 };
 
 QPixmap toQt(const cv::Mat& image)
 {
-  return QPixmap::fromImage(QImage(image.data,
-                                   image.cols,
-                                   image.rows,
-                                   image.step,
-                                   QImage::Format_RGB888).rgbSwapped());
+    return QPixmap::fromImage(QImage(image.data,
+                                     image.cols,
+                                     image.rows,
+                                     image.step,
+                                     QImage::Format_RGB888).rgbSwapped());
 }
 
-namespace industrial_calibration
-{
 ICWidget::ICWidget(QWidget *parent) :
     QWidget(parent),
     ui_(new Ui::ICWidget)

@@ -14,14 +14,7 @@ class ICWidget;
 namespace industrial_calibration
 {
 class ExtrinsicHandEyeResult;
-class ConfigurableWidget;
-
-class ICDialog : public QDialog
-{
-public:
-    ICDialog(ConfigurableWidget* widget_, QWidget* parent = nullptr);
-    ConfigurableWidget* widget;
-};
+class ConfigurableWidgetDialog;
 
 class ICWidget : public QWidget
 {
@@ -41,10 +34,10 @@ private:
     void saveResults();
 
     Ui::ICWidget *ui_;
-    ICDialog* camera_transform_guess_dialog_;
-    ICDialog* target_transform_guess_dialog_;
-    ICDialog* camera_intrinsics_dialog_;
-    std::map<QString, ICDialog*> target_dialogs_;
+    ConfigurableWidgetDialog* camera_transform_guess_dialog_;
+    ConfigurableWidgetDialog* target_transform_guess_dialog_;
+    ConfigurableWidgetDialog* camera_intrinsics_dialog_;
+    std::map<QString, ConfigurableWidgetDialog*> target_dialogs_;
 
     boost_plugin_loader::PluginLoader loader_;
     TargetFinderFactoryOpenCV::ConstPtr factory_;
