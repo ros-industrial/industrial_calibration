@@ -1,5 +1,4 @@
-#ifndef TRANSFORM_GUESS_H
-#define TRANSFORM_GUESS_H
+#pragma once
 
 #include "configurable_widget.h"
 
@@ -7,19 +6,21 @@ namespace Ui {
 class TransformGuess;
 }
 
+namespace industrial_calibration
+{
 class TransformGuess : public ConfigurableWidget
 {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  explicit TransformGuess(QWidget *parent = nullptr);
-  ~TransformGuess();
+    explicit TransformGuess(QWidget *parent = nullptr);
+    ~TransformGuess();
 
-  void configure(const YAML::Node& node) override;
-  YAML::Node save() const override;
+    void configure(const YAML::Node& node) override;
+    YAML::Node save() const override;
 
 private:
-  Ui::TransformGuess *ui_;
+    Ui::TransformGuess *ui_;
 };
 
-#endif // TRANSFORM_GUESS_H
+} // namespace industrial_calibration

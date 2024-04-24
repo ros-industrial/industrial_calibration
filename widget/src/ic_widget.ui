@@ -342,7 +342,7 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="AspectRatioPixmapLabel" name="image_label">
+        <widget class="industrial_calibration::AspectRatioPixmapLabel" name="image_label">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
            <horstretch>0</horstretch>
@@ -362,7 +362,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>AspectRatioPixmapLabel</class>
+   <class>industrial_calibration::AspectRatioPixmapLabel</class>
    <extends>QLabel</extends>
    <header>widget/image_widget.h</header>
   </customwidget>

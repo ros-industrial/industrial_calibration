@@ -16,7 +16,7 @@ int main(int argc, char** argv)
   QMainWindow w;
 
   // Create the IC widget
-  auto* widget = new ICWidget(&w);
+  auto* widget = new industrial_calibration::ICWidget(&w);
   w.setWindowTitle("");
 
   // Set the IC widget as the central widget and show

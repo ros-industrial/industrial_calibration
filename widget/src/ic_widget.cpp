@@ -66,53 +66,55 @@ QPixmap toQt(const cv::Mat& image)
                                    QImage::Format_RGB888).rgbSwapped());
 }
 
-ICWidget::ICWidget(QWidget *parent) :
-  QWidget(parent),
-  ui_(new Ui::ICWidget)
+namespace industrial_calibration
 {
-  ui_->setupUi(this);
+ICWidget::ICWidget(QWidget *parent) :
+    QWidget(parent),
+    ui_(new Ui::ICWidget)
+{
+    ui_->setupUi(this);
 
-  // Configure the table widget
-  ui_->table_widget_data->setEditTriggers(QAbstractItemView::NoEditTriggers);
-  ui_->table_widget_data->resizeColumnsToContents();
-  ui_->table_widget_data->horizontalHeader()->stretchLastSection();
+    // Configure the table widget
+    ui_->table_widget_data->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui_->table_widget_data->resizeColumnsToContents();
+    ui_->table_widget_data->horizontalHeader()->stretchLastSection();
 
-  // Set up dialog boxes
-  camera_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_camera_guess);
-  target_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_target_guess);
-  camera_intrinsics_dialog_ = setup<CameraIntrinsicsWidget>(this, ui_->tool_button_camera_intrinsics);
+    // Set up dialog boxes
+    camera_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_camera_guess);
+    target_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_target_guess);
+    camera_intrinsics_dialog_ = setup<CameraIntrinsicsWidget>(this, ui_->tool_button_camera_intrinsics);
 
-  target_dialogs_["CharucoGridTargetFinder"] = setup<CharucoTarget>(this);
-  target_dialogs_["ArucoGridTargetFinder"] = setup<ArucoTarget>(this);
-  target_dialogs_["ModifiedCircleGridTargetFinder"] = setup<CircleTarget>(this);
+    target_dialogs_["CharucoGridTargetFinder"] = setup<CharucoTarget>(this);
+    target_dialogs_["ArucoGridTargetFinder"] = setup<ArucoTarget>(this);
+    target_dialogs_["ModifiedCircleGridTargetFinder"] = setup<CircleTarget>(this);
 
-  // Move the text edit scroll bar to the maximum limit whenever it is resized
-  connect(ui_->text_edit_log->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {
-    ui_->text_edit_log->verticalScrollBar()->setSliderPosition(ui_->text_edit_log->verticalScrollBar()->maximum());
-  });
+    // Move the text edit scroll bar to the maximum limit whenever it is resized
+    connect(ui_->text_edit_log->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {
+        ui_->text_edit_log->verticalScrollBar()->setSliderPosition(ui_->text_edit_log->verticalScrollBar()->maximum());
+    });
 
-  // Set up push buttons
-  connect(ui_->push_button_load_config, &QPushButton::clicked, this, &ICWidget::loadConfig);
-  connect(ui_->push_button_save_config, &QPushButton::clicked, this, &ICWidget::saveConfig);
-  connect(ui_->push_button_calibrate, &QPushButton::clicked, this, &ICWidget::calibrate);
-  connect(ui_->push_button_save, &QPushButton::clicked, this, &ICWidget::saveResults);
+    // Set up push buttons
+    connect(ui_->push_button_load_config, &QPushButton::clicked, this, &ICWidget::loadConfig);
+    connect(ui_->push_button_save_config, &QPushButton::clicked, this, &ICWidget::saveConfig);
+    connect(ui_->push_button_calibrate, &QPushButton::clicked, this, &ICWidget::calibrate);
+    connect(ui_->push_button_save, &QPushButton::clicked, this, &ICWidget::saveResults);
 
-  connect(ui_->tool_button_target_finder, &QAbstractButton::clicked, [this](){
-    QString type = ui_->combo_box_target_finder->currentText();
-    target_dialogs_.at(type)->show();
-  });
+    connect(ui_->tool_button_target_finder, &QAbstractButton::clicked, [this](){
+        QString type = ui_->combo_box_target_finder->currentText();
+        target_dialogs_.at(type)->show();
+    });
 
-  connect(ui_->push_button_load_data, &QAbstractButton::clicked, this, &ICWidget::loadData);
-  connect(ui_->table_widget_data, &QTableWidget::cellPressed, this, &ICWidget::drawImage);
+    connect(ui_->push_button_load_data, &QAbstractButton::clicked, this, &ICWidget::loadData);
+    connect(ui_->table_widget_data, &QTableWidget::cellPressed, this, &ICWidget::drawImage);
 
-  // Set up the plugin loader
-  loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
-  loader_.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
+    // Set up the plugin loader
+    loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
+    loader_.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
 }
 
 ICWidget::~ICWidget()
 {
-  delete ui_;
+    delete ui_;
 }
 
 void ICWidget::loadConfig()
@@ -166,31 +168,31 @@ void ICWidget::loadConfig()
 
 void ICWidget::saveConfig()
 {
-  // Get filepath
-  const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
-  
-  if (file.isNull())
-      return;
-  
-  YAML::Node node;
-  // Camera intrinsics
-  node["intrinsics"] = camera_intrinsics_dialog_->widget->save();
+    // Get filepath
+    const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
 
-  // Transform guesses
-  node["camera_mount_to_camera_guess"] = camera_transform_guess_dialog_->widget->save();
-  node["target_mount_to_target_guess"] = target_transform_guess_dialog_->widget->save();
+    if (file.isNull())
+        return;
 
-  // Homography
-  node["homography_threshold"] = ui_->double_spin_box_homography->value();
+    YAML::Node node;
+    // Camera intrinsics
+    node["intrinsics"] = camera_intrinsics_dialog_->widget->save();
 
-  // Target
-  QString target_type = ui_->combo_box_target_finder->currentText();
-  node["target_finder"] = target_dialogs_.at(target_type)->widget->save();
+    // Transform guesses
+    node["camera_mount_to_camera_guess"] = camera_transform_guess_dialog_->widget->save();
+    node["target_mount_to_target_guess"] = target_transform_guess_dialog_->widget->save();
 
-  node["static_camera"] = ui_->check_box_static_camera->isChecked();
+    // Homography
+    node["homography_threshold"] = ui_->double_spin_box_homography->value();
 
-  std::ofstream fout(file.toStdString());
-  fout << node;
+    // Target
+    QString target_type = ui_->combo_box_target_finder->currentText();
+    node["target_finder"] = target_dialogs_.at(target_type)->widget->save();
+
+    node["static_camera"] = ui_->check_box_static_camera->isChecked();
+
+    std::ofstream fout(file.toStdString());
+    fout << node;
 }
 
 void ICWidget::loadTargetFinder()
@@ -199,7 +201,7 @@ void ICWidget::loadTargetFinder()
     QString target_type = ui_->combo_box_target_finder->currentText();
     YAML::Node target_finder_config = target_dialogs_.at(target_type)->widget->save();
 
-    factory_ = loader_.createInstance<industrial_calibration::TargetFinderFactoryOpenCV>(target_type.toStdString());
+    factory_ = loader_.createInstance<TargetFinderFactoryOpenCV>(target_type.toStdString());
     target_finder_ = factory_->create(target_finder_config);
 }
 
@@ -278,7 +280,7 @@ void ICWidget::drawImage(int row, int col)
         cv::Mat image = cv::imread(image_file.toStdString());
 
         // Attempt to detect the target in the image
-        industrial_calibration::TargetFeatures2D features = target_finder_->findTargetFeatures(image);
+        TargetFeatures2D features = target_finder_->findTargetFeatures(image);
         cv::Mat detected_image = target_finder_->drawTargetFeatures(image, features);
 
         // Save the number of detected features to the table
@@ -289,9 +291,9 @@ void ICWidget::drawImage(int row, int col)
         update();
 
         // Attempt to compute the homography error
-        industrial_calibration::Correspondence2D3D::Set corrs = target_finder_->target().createCorrespondences(features);
-        industrial_calibration::RandomCorrespondenceSampler random_sampler(corrs.size(), corrs.size() / 3, RANDOM_SEED);
-        Eigen::VectorXd homography_error = industrial_calibration::calculateHomographyError(corrs, random_sampler);
+        Correspondence2D3D::Set corrs = target_finder_->target().createCorrespondences(features);
+        RandomCorrespondenceSampler random_sampler(corrs.size(), corrs.size() / 3, RANDOM_SEED);
+        Eigen::VectorXd homography_error = calculateHomographyError(corrs, random_sampler);
         double homography_error_mean = homography_error.array().mean();
 
         // Save the homography error to the table
@@ -322,7 +324,7 @@ void ICWidget::calibrate()
         loadTargetFinder();
 
         // Create the calibration problem
-        industrial_calibration::ExtrinsicHandEyeProblem2D3D problem;
+        ExtrinsicHandEyeProblem2D3D problem;
         problem.camera_mount_to_camera_guess = camera_transform_guess_dialog_->widget->save().as<Eigen::Isometry3d>();
         problem.target_mount_to_target_guess = target_transform_guess_dialog_->widget->save().as<Eigen::Isometry3d>();
         problem.intr = camera_intrinsics_dialog_->widget->save().as<CameraIntrinsics>();
@@ -369,10 +371,10 @@ void ICWidget::calibrate()
                 obs.correspondence_set = target_finder_->findCorrespondences(image);
 
                 // Calculate homography error
-                industrial_calibration::RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(),
+                RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(),
                                                                                    obs.correspondence_set.size() / 3,
                                                                                    RANDOM_SEED);
-                Eigen::VectorXd homography_error = industrial_calibration::calculateHomographyError(obs.correspondence_set, random_sampler);
+                Eigen::VectorXd homography_error = calculateHomographyError(obs.correspondence_set, random_sampler);
                 double homography_error_mean = homography_error.array().mean();
 
                 // Conditionally add the observation to the problem if the mean homography error is less than the threshold
@@ -391,8 +393,8 @@ void ICWidget::calibrate()
         }
 
         // Solve the calibration problem
-        result_ = std::make_shared<industrial_calibration::ExtrinsicHandEyeResult>();
-        *result_ = industrial_calibration::optimize(problem);
+        result_ = std::make_shared<ExtrinsicHandEyeResult>();
+        *result_ = optimize(problem);
 
         // Report results
         std::stringstream ss;
@@ -437,3 +439,5 @@ void ICWidget::saveResults()
     std::ofstream f(file.toStdString());
     f << YAML::Node(*result_);
 }
+
+} // namespace industrial_calibration
