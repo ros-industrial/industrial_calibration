@@ -1,21 +1,21 @@
-#include "widget/charuco_target.h"
-#include "ui_charuco_target.h"
+#include "widget/charuco_grid_target_finder.h"
+#include "ui_charuco_grid_target_finder.h"
 
 namespace industrial_calibration
 {
-CharucoTarget::CharucoTarget(QWidget *parent) :
+CharucoGridTargetFinderWidget::CharucoGridTargetFinderWidget(QWidget *parent) :
     ConfigurableWidget(parent),
-    ui_(new Ui::CharucoTarget)
+    ui_(new Ui::CharucoGridTargetFinder)
 {
     ui_->setupUi(this);
 }
 
-CharucoTarget::~CharucoTarget()
+CharucoGridTargetFinderWidget::~CharucoGridTargetFinderWidget()
 {
     delete ui_;
 }
 
-void CharucoTarget::configure(const YAML::Node& node)
+void CharucoGridTargetFinderWidget::configure(const YAML::Node& node)
 {
     ui_->rowSpinBox->setValue(node["rows"].as<int>());
     ui_->colSpinBox->setValue(node["cols"].as<int>());
@@ -24,7 +24,7 @@ void CharucoTarget::configure(const YAML::Node& node)
     ui_->dictComboBox->setCurrentIndex(node["dictionary"].as<int>());
 }
 
-YAML::Node CharucoTarget::save() const
+YAML::Node CharucoGridTargetFinderWidget::save() const
 {
     YAML::Node node;
     node["type"] = "CharucoGridTargetFinder";

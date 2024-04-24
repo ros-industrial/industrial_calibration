@@ -20,9 +20,9 @@ add_library(
   src/transform_guess.ui
   src/transform_guess.cpp
   include/widget/transform_guess.h
-  src/charuco_target.ui
-  src/charuco_target.cpp
-  include/widget/charuco_target.h
+  src/charuco_grid_target_finder.ui
+  src/charuco_grid_target_finder.cpp
+  include/widget/charuco_grid_target_finder.h
   src/aruco_grid_target_finder.ui
   src/aruco_grid_target_finder.cpp
   include/widget/aruco_grid_target_finder.h

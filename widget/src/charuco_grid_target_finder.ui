@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CharucoTarget</class>
- <widget class="QWidget" name="CharucoTarget">
+ <class>CharucoGridTargetFinder</class>
+ <widget class="QWidget" name="CharucoGridTargetFinder">
   <property name="geometry">
    <rect>
     <x>0</x>

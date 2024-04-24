@@ -1,7 +1,7 @@
 #include "widget/ic_widget.h"
 #include "widget/transform_guess.h"
 #include "widget/camera_intrinsics.h"
-#include "widget/charuco_target.h"
+#include "widget/charuco_grid_target_finder.h"
 #include "widget/aruco_grid_target_finder.h"
 #include "widget/circle_target.h"
 #include "widget/image_widget.h"
@@ -83,8 +83,8 @@ ICWidget::ICWidget(QWidget *parent) :
     camera_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_camera_guess);
     target_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_target_guess);
     camera_intrinsics_dialog_ = setup<CameraIntrinsicsWidget>(this, ui_->tool_button_camera_intrinsics);
-
-    target_dialogs_["CharucoGridTargetFinder"] = setup<CharucoTarget>(this);
+    
+    target_dialogs_["CharucoGridTargetFinder"] = setup<CharucoGridTargetFinderWidget>(this);
     target_dialogs_["ArucoGridTargetFinder"] = setup<ArucoGridTargetFinderWidget>(this);
     target_dialogs_["ModifiedCircleGridTargetFinder"] = setup<CircleTarget>(this);
 
