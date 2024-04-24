@@ -26,8 +26,7 @@ public:
 
 private:
     void loadConfig();
-
-    void loadData();
+    void loadObservations();
     void calibrate();
 
     void loadTargetFinder();

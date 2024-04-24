@@ -76,7 +76,7 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget *pa
     connect(ui_->push_button_calibrate, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::calibrate);
     connect(ui_->push_button_save, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::saveResults);
 
-    connect(ui_->push_button_load_observations, &QAbstractButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadData);
+    connect(ui_->push_button_load_observations, &QAbstractButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadObservations);
     connect(ui_->table_widget_observations, &QTableWidget::cellPressed, this, &ExtrinsicHandEyeCalibrationWidget::drawImage);
 
     // Set up the plugin loader
@@ -94,7 +94,7 @@ void ExtrinsicHandEyeCalibrationWidget::loadConfig()
     try
     {
         // Get yaml filepath
-        const QString config_file = QFileDialog::getOpenFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
+        const QString config_file = QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(), "YAML files (*.yaml *.yml)");
         if (config_file.isNull())
             return;
 
@@ -119,28 +119,28 @@ void ExtrinsicHandEyeCalibrationWidget::loadTargetFinder()
     target_finder_ = factory_->create(target_finder_config);
 }
 
-void ExtrinsicHandEyeCalibrationWidget::loadData()
+void ExtrinsicHandEyeCalibrationWidget::loadObservations()
 {
-    QString data_file = QFileDialog::getOpenFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
-    if (data_file.isNull())
+    QString observations_file = QFileDialog::getOpenFileName(this, "Load calibration observation file", QString(), "YAML files (*.yaml *.yml)");
+    if (observations_file.isNull())
         return;
 
-    QFileInfo data_file_info(data_file);
+    QFileInfo observations_file_info(observations_file);
 
     try
     {
-        auto data = getMember<YAML::Node>(YAML::LoadFile(data_file.toStdString()), "data");
+        auto observations = getMember<YAML::Node>(YAML::LoadFile(observations_file.toStdString()), "data");
 
         // Reset the table widget
         ui_->table_widget_observations->clearContents();
-        ui_->table_widget_observations->setRowCount(data.size());
+        ui_->table_widget_observations->setRowCount(observations.size());
 
-        for(std::size_t i = 0; i < data.size(); ++i)
+        for(std::size_t i = 0; i < observations.size(); ++i)
         {
-            const YAML::Node& entry = data[i];
+            const YAML::Node& entry = observations[i];
 
-            QString image_file = data_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "image")));
-            QString pose_file = data_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "pose")));
+            QString image_file = observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "image")));
+            QString pose_file = observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "pose")));
 
             // Add a column entry for the number of detected features
             auto features_item = new QTableWidgetItem("-");
@@ -157,7 +157,7 @@ void ExtrinsicHandEyeCalibrationWidget::loadData()
             ui_->table_widget_observations->setItem(i, COL_NOTES, notes_item);
         }
 
-        ui_->line_edit_observations->setText(data_file);
+        ui_->line_edit_observations->setText(observations_file);
         ui_->table_widget_observations->resizeColumnsToContents();
         ui_->table_widget_observations->horizontalHeader()->stretchLastSection();
     }
