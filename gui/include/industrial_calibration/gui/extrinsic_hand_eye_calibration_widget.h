@@ -16,7 +16,7 @@ class ExtrinsicHandEyeCalibration;
 namespace industrial_calibration
 {
 class ExtrinsicHandEyeResult;
-class ConfigurableWidgetDialog;
+class ExtrinsicHandEyeCalibrationConfigurationWidget;
 
 class ExtrinsicHandEyeCalibrationWidget : public QWidget
 {
@@ -26,7 +26,6 @@ public:
 
 private:
     void loadConfig();
-    void saveConfig();
 
     void loadData();
     void calibrate();
@@ -36,10 +35,7 @@ private:
     void saveResults();
 
     Ui::ExtrinsicHandEyeCalibration* ui_;
-    ConfigurableWidgetDialog* camera_transform_guess_dialog_;
-    ConfigurableWidgetDialog* target_transform_guess_dialog_;
-    ConfigurableWidgetDialog* camera_intrinsics_dialog_;
-    std::map<QString, ConfigurableWidgetDialog*> target_dialogs_;
+    ExtrinsicHandEyeCalibrationConfigurationWidget* configuration_widget_;
 
     boost_plugin_loader::PluginLoader loader_;
     TargetFinderFactoryOpenCV::ConstPtr factory_;

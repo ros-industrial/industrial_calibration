@@ -1,11 +1,7 @@
 #include "ui_extrinsic_hand_eye_calibration_widget.h"
 
 #include <industrial_calibration/gui/extrinsic_hand_eye_calibration_widget.h>
-#include <industrial_calibration/gui/transform_guess.h>
-#include <industrial_calibration/gui/camera_intrinsics.h>
-#include <industrial_calibration/gui/charuco_grid_target_finder.h>
-#include <industrial_calibration/gui/aruco_grid_target_finder.h>
-#include <industrial_calibration/gui/modified_circle_grid_target_finder.h>
+#include <industrial_calibration/gui/extrinsic_hand_eye_calibration_configuration_widget.h>
 #include <industrial_calibration/gui/aspect_ratio_pixmap_label.h>
 #include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
 #include <industrial_calibration/target_finders/opencv/utils.h>
@@ -17,14 +13,11 @@
 #include <industrial_calibration/analysis/homography_analysis.h>
 
 #include <boost_plugin_loader/plugin_loader.hpp>
-#include <fstream>
 #include <opencv2/opencv.hpp>
 #include <QDialog>
 #include <QScrollBar>
 #include <QFileDialog>
 #include <QFile>
-#include <QLabel>
-#include <QImageReader>
 #include <QMessageBox>
 #include <QPixmap>
 #include <QVBoxLayout>
@@ -38,21 +31,6 @@ static const int COL_NOTES = 2;
 
 namespace industrial_calibration
 {
-template<typename WidgetT>
-ConfigurableWidgetDialog* setup(QWidget* const parent, QAbstractButton* const button = nullptr)
-{
-    auto* widget = new WidgetT(parent);
-    auto* dialog = new ConfigurableWidgetDialog(widget, parent);
-
-    // Optionally connect to button clicked signal
-    if (button != nullptr)
-    {
-        QObject::connect(button, &QAbstractButton::clicked, dialog, &QWidget::show);
-    }
-
-    return dialog;
-};
-
 QPixmap toQt(const cv::Mat& image)
 {
     return QPixmap::fromImage(QImage(image.data,
@@ -62,26 +40,31 @@ QPixmap toQt(const cv::Mat& image)
                                      QImage::Format_RGB888).rgbSwapped());
 }
 
-ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget *parent) :
-    QWidget(parent),
-    ui_(new Ui::ExtrinsicHandEyeCalibration())
+ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget *parent)
+    : QWidget(parent)
+    , ui_(new Ui::ExtrinsicHandEyeCalibration())
+    , configuration_widget_(new ExtrinsicHandEyeCalibrationConfigurationWidget(this))
 {
     ui_->setupUi(this);
 
     // Configure the table widget
-    ui_->table_widget_data->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui_->table_widget_data->resizeColumnsToContents();
-    ui_->table_widget_data->horizontalHeader()->stretchLastSection();
-    ui_->table_widget_data->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui_->table_widget_observations->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui_->table_widget_observations->resizeColumnsToContents();
+    ui_->table_widget_observations->horizontalHeader()->stretchLastSection();
+    ui_->table_widget_observations->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    // Set up dialog boxes
-    camera_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_camera_guess);
-    target_transform_guess_dialog_ = setup<TransformGuess>(this, ui_->tool_button_target_guess);
-    camera_intrinsics_dialog_ = setup<CameraIntrinsicsWidget>(this, ui_->tool_button_camera_intrinsics);
-    
-    target_dialogs_["CharucoGridTargetFinder"] = setup<CharucoGridTargetFinderWidget>(this);
-    target_dialogs_["ArucoGridTargetFinder"] = setup<ArucoGridTargetFinderWidget>(this);
-    target_dialogs_["ModifiedCircleGridTargetFinder"] = setup<ModifiedCircleGridTargetFinderWidget>(this);
+    // Set up the configuration widget
+    {
+        auto dialog = new QDialog(this);
+        auto layout = new QVBoxLayout(dialog);
+        layout->addWidget(configuration_widget_);
+
+        connect(ui_->push_button_edit_config, &QAbstractButton::clicked, dialog, &QWidget::show);
+    }
+
+    // Set the stretch factors of the horizontal splitter to make the proportions reasonable
+    ui_->splitter_horizontal->setStretchFactor(0, 1);
+    ui_->splitter_horizontal->setStretchFactor(1, 30);
 
     // Move the text edit scroll bar to the maximum limit whenever it is resized
     connect(ui_->text_edit_results->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {
@@ -90,17 +73,11 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget *pa
 
     // Set up push buttons
     connect(ui_->push_button_load_config, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadConfig);
-    connect(ui_->push_button_save_config, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::saveConfig);
     connect(ui_->push_button_calibrate, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::calibrate);
     connect(ui_->push_button_save, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::saveResults);
 
-    connect(ui_->tool_button_target_finder, &QAbstractButton::clicked, [this](){
-        QString type = ui_->combo_box_target_finder->currentText();
-        target_dialogs_.at(type)->show();
-    });
-
-    connect(ui_->push_button_load_data, &QAbstractButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadData);
-    connect(ui_->table_widget_data, &QTableWidget::cellPressed, this, &ExtrinsicHandEyeCalibrationWidget::drawImage);
+    connect(ui_->push_button_load_observations, &QAbstractButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadData);
+    connect(ui_->table_widget_observations, &QTableWidget::cellPressed, this, &ExtrinsicHandEyeCalibrationWidget::drawImage);
 
     // Set up the plugin loader
     loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
@@ -121,38 +98,9 @@ void ExtrinsicHandEyeCalibrationWidget::loadConfig()
         if (config_file.isNull())
             return;
 
-        // Load all of the configurations before setting GUI items
-        YAML::Node node = YAML::LoadFile(config_file.toStdString());
-        auto intrinsics = getMember<YAML::Node>(node, "intrinsics");
-        auto camera_mount_to_camera = getMember<YAML::Node>(node, "camera_mount_to_camera_guess");
-        auto target_mount_to_target = getMember<YAML::Node>(node, "target_mount_to_target_guess");
-        auto homography_threshold = getMember<double>(node, "homography_threshold");
-        auto static_camera = getMember<bool>(node, "static_camera");
-        auto target_finder_config = getMember<YAML::Node>(node, "target_finder");
-
-        // Load parameters
-        // Intrinsics
-        camera_intrinsics_dialog_->widget->configure(intrinsics);
-
-        // Guess transforms
-        camera_transform_guess_dialog_->widget->configure(camera_mount_to_camera);
-        target_transform_guess_dialog_->widget->configure(target_mount_to_target);
-
-        // Homography
-        ui_->double_spin_box_homography->setValue(homography_threshold);
-
-        // Target
-        QString target_type = QString::fromStdString(getMember<std::string>(target_finder_config, "type"));
-        int idx = ui_->combo_box_target_finder->findText(target_type);
-        if (idx < 0)
-            throw std::runtime_error("Unknown target type '" + target_type.toStdString() + "'");
-        target_dialogs_.at(target_type)->widget->configure(target_finder_config);
-        ui_->combo_box_target_finder->setCurrentIndex(idx);
-
-        // Sensor configuration (historically industrical calibration yaml files don't include this)
-        ui_->check_box_static_camera->setChecked(static_camera);
-
+        configuration_widget_->load(config_file);
         ui_->line_edit_config->setText(config_file);
+
         QMessageBox::information(this, "Success", "Successfully loaded calibration configuration");
     }
     catch(const std::exception& ex)
@@ -161,42 +109,13 @@ void ExtrinsicHandEyeCalibrationWidget::loadConfig()
     }
 }
 
-void ExtrinsicHandEyeCalibrationWidget::saveConfig()
-{
-    // Get filepath
-    const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
-
-    if (file.isNull())
-        return;
-
-    YAML::Node node;
-    // Camera intrinsics
-    node["intrinsics"] = camera_intrinsics_dialog_->widget->save();
-
-    // Transform guesses
-    node["camera_mount_to_camera_guess"] = camera_transform_guess_dialog_->widget->save();
-    node["target_mount_to_target_guess"] = target_transform_guess_dialog_->widget->save();
-
-    // Homography
-    node["homography_threshold"] = ui_->double_spin_box_homography->value();
-
-    // Target
-    QString target_type = ui_->combo_box_target_finder->currentText();
-    node["target_finder"] = target_dialogs_.at(target_type)->widget->save();
-
-    node["static_camera"] = ui_->check_box_static_camera->isChecked();
-
-    std::ofstream fout(file.toStdString());
-    fout << node;
-}
-
 void ExtrinsicHandEyeCalibrationWidget::loadTargetFinder()
 {
     // Get target type and currentconfig
-    QString target_type = ui_->combo_box_target_finder->currentText();
-    YAML::Node target_finder_config = target_dialogs_.at(target_type)->widget->save();
+    YAML::Node target_finder_config = configuration_widget_->getTargetFinderConfig();
+    auto target_type = getMember<std::string>(target_finder_config, "type");
 
-    factory_ = loader_.createInstance<TargetFinderFactoryOpenCV>(target_type.toStdString());
+    factory_ = loader_.createInstance<TargetFinderFactoryOpenCV>(target_type);
     target_finder_ = factory_->create(target_finder_config);
 }
 
@@ -213,8 +132,8 @@ void ExtrinsicHandEyeCalibrationWidget::loadData()
         auto data = getMember<YAML::Node>(YAML::LoadFile(data_file.toStdString()), "data");
 
         // Reset the table widget
-        ui_->table_widget_data->clearContents();
-        ui_->table_widget_data->setRowCount(data.size());
+        ui_->table_widget_observations->clearContents();
+        ui_->table_widget_observations->setRowCount(data.size());
 
         for(std::size_t i = 0; i < data.size(); ++i)
         {
@@ -227,33 +146,33 @@ void ExtrinsicHandEyeCalibrationWidget::loadData()
             auto features_item = new QTableWidgetItem("-");
             features_item->setData(IMAGE_FILE_NAME_ROLE, image_file);
             features_item->setData(POSE_FILE_NAME_ROLE, pose_file);
-            ui_->table_widget_data->setItem(i, COL_FEATURES, features_item);
+            ui_->table_widget_observations->setItem(i, COL_FEATURES, features_item);
 
             // Add a column entry for the homography error
             auto homography_item = new QTableWidgetItem("-");
-            ui_->table_widget_data->setItem(i, COL_HOMOGRAPHY, homography_item);
+            ui_->table_widget_observations->setItem(i, COL_HOMOGRAPHY, homography_item);
 
             // Add a column entry for notes
             auto notes_item = new QTableWidgetItem("");
-            ui_->table_widget_data->setItem(i, COL_NOTES, notes_item);
+            ui_->table_widget_observations->setItem(i, COL_NOTES, notes_item);
         }
 
-        ui_->line_edit_data->setText(data_file);
-        ui_->table_widget_data->resizeColumnsToContents();
-        ui_->table_widget_data->horizontalHeader()->stretchLastSection();
+        ui_->line_edit_observations->setText(data_file);
+        ui_->table_widget_observations->resizeColumnsToContents();
+        ui_->table_widget_observations->horizontalHeader()->stretchLastSection();
     }
     catch(const std::exception& ex)
     {
-        ui_->table_widget_data->clearContents();
+        ui_->table_widget_observations->clearContents();
         QMessageBox::warning(this, "Error", ex.what());
     }
 }
 
 void ExtrinsicHandEyeCalibrationWidget::drawImage(int row, int col)
 {
-    QTableWidgetItem* features_item = ui_->table_widget_data->item(row, COL_FEATURES);
-    QTableWidgetItem* homography_item = ui_->table_widget_data->item(row, COL_HOMOGRAPHY);
-    QTableWidgetItem* notes_item = ui_->table_widget_data->item(row, COL_NOTES);
+    QTableWidgetItem* features_item = ui_->table_widget_observations->item(row, COL_FEATURES);
+    QTableWidgetItem* homography_item = ui_->table_widget_observations->item(row, COL_HOMOGRAPHY);
+    QTableWidgetItem* notes_item = ui_->table_widget_observations->item(row, COL_NOTES);
 
     if (features_item == nullptr)
         return;
@@ -295,7 +214,7 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(int row, int col)
         homography_item->setData(Qt::EditRole, QString::number(homography_error_mean));
 
         // Check homography threshold and update notes/row color
-        if(homography_error_mean > ui_->double_spin_box_homography->value())
+        if(homography_error_mean > configuration_widget_->getHomographyThreshold())
             notes_item->setData(Qt::EditRole, "Homography threshold violated");
         else
             notes_item->setData(Qt::EditRole, "");
@@ -323,16 +242,16 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
 
         // Create the calibration problem
         ExtrinsicHandEyeProblem2D3D problem;
-        problem.camera_mount_to_camera_guess = camera_transform_guess_dialog_->widget->save().as<Eigen::Isometry3d>();
-        problem.target_mount_to_target_guess = target_transform_guess_dialog_->widget->save().as<Eigen::Isometry3d>();
-        problem.intr = camera_intrinsics_dialog_->widget->save().as<CameraIntrinsics>();
+        problem.camera_mount_to_camera_guess = configuration_widget_->getCameraMountToCameraGuess();
+        problem.target_mount_to_target_guess = configuration_widget_->getTargetMountToTargetGuess();
+        problem.intr = configuration_widget_->getCameraIntrinsics();
 
-        for(int i = 0; i < ui_->table_widget_data->rowCount(); ++i)
+        for(int i = 0; i < ui_->table_widget_observations->rowCount(); ++i)
         {
             // Extract the table items
-            QTableWidgetItem* features_item = ui_->table_widget_data->item(i, COL_FEATURES);
-            QTableWidgetItem* homography_item = ui_->table_widget_data->item(i, COL_HOMOGRAPHY);
-            QTableWidgetItem* notes_item = ui_->table_widget_data->item(i, COL_NOTES);
+            QTableWidgetItem* features_item = ui_->table_widget_observations->item(i, COL_FEATURES);
+            QTableWidgetItem* homography_item = ui_->table_widget_observations->item(i, COL_HOMOGRAPHY);
+            QTableWidgetItem* notes_item = ui_->table_widget_observations->item(i, COL_NOTES);
 
             QString image_file = features_item->data(IMAGE_FILE_NAME_ROLE).value<QString>();
             if(!QFile(image_file).exists())
@@ -356,7 +275,7 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
 
                 // Populate an observation
                 Observation2D3D obs;
-                if(ui_->check_box_static_camera->isChecked())
+                if(configuration_widget_->getStaticCamera())
                 {
                     obs.to_camera_mount = Eigen::Isometry3d::Identity();
                     obs.to_target_mount = pose;
@@ -376,7 +295,7 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
                 double homography_error_mean = homography_error.array().mean();
 
                 // Conditionally add the observation to the problem if the mean homography error is less than the threshold
-                if (homography_error_mean < ui_->double_spin_box_homography->value())
+                if (homography_error_mean < configuration_widget_->getHomographyThreshold())
                 {
                     problem.observations.push_back(obs);
                     notes_item->setData(Qt::EditRole, "");
@@ -403,7 +322,7 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
 
         // Report results
         std::stringstream ss;
-        ss << std::endl << *result_ << std::endl;
+        ss << *result_ << std::endl;
         ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
 
         // Compute the projected 3D error for comparison
