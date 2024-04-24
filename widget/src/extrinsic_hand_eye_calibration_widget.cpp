@@ -4,7 +4,7 @@
 #include "widget/charuco_grid_target_finder.h"
 #include "widget/aruco_grid_target_finder.h"
 #include "widget/modified_circle_grid_target_finder.h"
-#include "widget/image_widget.h"
+#include "widget/aspect_ratio_pixmap_label.h"
 #include "ui_extrinsic_hand_eye_calibration_widget.h"
 #include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
 #include <industrial_calibration/target_finders/opencv/utils.h>

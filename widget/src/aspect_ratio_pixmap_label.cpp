@@ -1,4 +1,4 @@
-#include "widget/image_widget.h"
+#include "widget/aspect_ratio_pixmap_label.h"
 #include <QPainter>
 
 namespace industrial_calibration

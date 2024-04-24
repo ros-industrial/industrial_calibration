@@ -26,8 +26,8 @@ add_library(
   src/modified_circle_grid_target_finder.ui
   src/modified_circle_grid_target_finder.cpp
   include/widget/modified_circle_grid_target_finder.h
-  src/image_widget.cpp
-  include/widget/image_widget.h
+  src/aspect_ratio_pixmap_label.cpp
+  include/widget/aspect_ratio_pixmap_label.h
   src/extrinsic_hand_eye_calibration_widget.ui
   src/extrinsic_hand_eye_calibration_widget.cpp
   include/widget/extrinsic_hand_eye_calibration_widget.h
