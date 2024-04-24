@@ -246,12 +246,16 @@ void ICWidget::loadData()
 
                 // Populate an observation
                 Observation2D3D obs;
-
                 if(ui_->check_box_static_camera->isChecked())
+                {
+                    obs.to_camera_mount = Eigen::Isometry3d::Identity();
                     obs.to_target_mount = pose;
+                }
                 else
+                {
                     obs.to_camera_mount = pose;
-
+                    obs.to_target_mount = Eigen::Isometry3d::Identity();
+                }
                 obs.correspondence_set = target_finder_->findCorrespondences(image);
 
                 // Calculate homography error
