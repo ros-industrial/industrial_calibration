@@ -3,7 +3,6 @@
 #include <industrial_calibration/core/types.h>
 
 #include <Eigen/Core>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <vector>
@@ -96,7 +95,6 @@ public:
   {
     TargetFeatures<SENSOR_DIM> features = findTargetFeatures(measurement);
     if (features.empty()) throw std::runtime_error("Failed to find any target features");
-    std::cout << "Found " << features.size() << " target features" << std::endl;
 
     return target().createCorrespondences(findTargetFeatures(measurement));
   }
