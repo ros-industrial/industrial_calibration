@@ -1,11 +1,11 @@
-#include "widget/ic_widget.h"
+#include "widget/extrinsic_hand_eye_calibration_widget.h"
 #include "widget/transform_guess.h"
 #include "widget/camera_intrinsics.h"
 #include "widget/charuco_grid_target_finder.h"
 #include "widget/aruco_grid_target_finder.h"
 #include "widget/modified_circle_grid_target_finder.h"
 #include "widget/image_widget.h"
-#include "ui_ic_widget.h"
+#include "ui_extrinsic_hand_eye_calibration_widget.h"
 #include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
 #include <industrial_calibration/target_finders/opencv/utils.h>
 #include <industrial_calibration/core/serialization.h>
@@ -74,9 +74,9 @@ QPixmap toQt(const cv::Mat& image)
                                      QImage::Format_RGB888).rgbSwapped());
 }
 
-ICWidget::ICWidget(QWidget *parent) :
+ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget *parent) :
     QWidget(parent),
-    ui_(new Ui::ICWidget)
+    ui_(new Ui::ExtrinsicHandEyeCalibration())
 {
     ui_->setupUi(this);
 
@@ -100,30 +100,30 @@ ICWidget::ICWidget(QWidget *parent) :
     });
 
     // Set up push buttons
-    connect(ui_->push_button_load_config, &QPushButton::clicked, this, &ICWidget::loadConfig);
-    connect(ui_->push_button_save_config, &QPushButton::clicked, this, &ICWidget::saveConfig);
-    connect(ui_->push_button_calibrate, &QPushButton::clicked, this, &ICWidget::calibrate);
-    connect(ui_->push_button_save, &QPushButton::clicked, this, &ICWidget::saveResults);
+    connect(ui_->push_button_load_config, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadConfig);
+    connect(ui_->push_button_save_config, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::saveConfig);
+    connect(ui_->push_button_calibrate, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::calibrate);
+    connect(ui_->push_button_save, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::saveResults);
 
     connect(ui_->tool_button_target_finder, &QAbstractButton::clicked, [this](){
         QString type = ui_->combo_box_target_finder->currentText();
         target_dialogs_.at(type)->show();
     });
 
-    connect(ui_->push_button_load_data, &QAbstractButton::clicked, this, &ICWidget::loadData);
-    connect(ui_->table_widget_data, &QTableWidget::cellPressed, this, &ICWidget::drawImage);
+    connect(ui_->push_button_load_data, &QAbstractButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadData);
+    connect(ui_->table_widget_data, &QTableWidget::cellPressed, this, &ExtrinsicHandEyeCalibrationWidget::drawImage);
 
     // Set up the plugin loader
     loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
     loader_.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
 }
 
-ICWidget::~ICWidget()
+ExtrinsicHandEyeCalibrationWidget::~ExtrinsicHandEyeCalibrationWidget()
 {
     delete ui_;
 }
 
-void ICWidget::loadConfig()
+void ExtrinsicHandEyeCalibrationWidget::loadConfig()
 {
     try
     {
@@ -172,7 +172,7 @@ void ICWidget::loadConfig()
     }
 }
 
-void ICWidget::saveConfig()
+void ExtrinsicHandEyeCalibrationWidget::saveConfig()
 {
     // Get filepath
     const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
@@ -201,7 +201,7 @@ void ICWidget::saveConfig()
     fout << node;
 }
 
-void ICWidget::loadTargetFinder()
+void ExtrinsicHandEyeCalibrationWidget::loadTargetFinder()
 {
     // Get target type and currentconfig
     QString target_type = ui_->combo_box_target_finder->currentText();
@@ -211,7 +211,7 @@ void ICWidget::loadTargetFinder()
     target_finder_ = factory_->create(target_finder_config);
 }
 
-void ICWidget::loadData()
+void ExtrinsicHandEyeCalibrationWidget::loadData()
 {
     QString data_file = QFileDialog::getOpenFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
     if (data_file.isNull())
@@ -260,7 +260,7 @@ void ICWidget::loadData()
     }
 }
 
-void ICWidget::drawImage(int row, int col)
+void ExtrinsicHandEyeCalibrationWidget::drawImage(int row, int col)
 {
     QTableWidgetItem* features_item = ui_->table_widget_data->item(row, COL_FEATURES);
     QTableWidgetItem* homography_item = ui_->table_widget_data->item(row, COL_HOMOGRAPHY);
@@ -320,7 +320,7 @@ void ICWidget::drawImage(int row, int col)
     }
 }
 
-void ICWidget::calibrate()
+void ExtrinsicHandEyeCalibrationWidget::calibrate()
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
@@ -433,7 +433,7 @@ void ICWidget::calibrate()
     }
 }
 
-void ICWidget::saveResults()
+void ExtrinsicHandEyeCalibrationWidget::saveResults()
 {
     if(result_ == nullptr)
     {

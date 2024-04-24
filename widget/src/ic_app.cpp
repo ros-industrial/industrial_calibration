@@ -1,4 +1,4 @@
-#include "widget/ic_widget.h"
+#include "widget/extrinsic_hand_eye_calibration_widget.h"
 #include <QApplication>
 #include <QMainWindow>
 #include <signal.h>
@@ -16,7 +16,7 @@ int main(int argc, char** argv)
   QMainWindow w;
 
   // Create the IC widget
-  auto* widget = new industrial_calibration::ICWidget(&w);
+  auto* widget = new industrial_calibration::ExtrinsicHandEyeCalibrationWidget(&w);
   w.setWindowTitle("");
 
   // Set the IC widget as the central widget and show

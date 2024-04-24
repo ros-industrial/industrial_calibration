@@ -8,7 +8,7 @@
 class QAbstractButton;
 
 namespace Ui {
-class ICWidget;
+class ExtrinsicHandEyeCalibration;
 }
 
 namespace industrial_calibration
@@ -16,11 +16,11 @@ namespace industrial_calibration
 class ExtrinsicHandEyeResult;
 class ConfigurableWidgetDialog;
 
-class ICWidget : public QWidget
+class ExtrinsicHandEyeCalibrationWidget : public QWidget
 {
 public:
-    explicit ICWidget(QWidget *parent = nullptr);
-    ~ICWidget();
+    explicit ExtrinsicHandEyeCalibrationWidget(QWidget *parent = nullptr);
+    ~ExtrinsicHandEyeCalibrationWidget();
 
 private:
     void loadConfig();
@@ -33,7 +33,7 @@ private:
     void drawImage(int row, int col);
     void saveResults();
 
-    Ui::ICWidget *ui_;
+    Ui::ExtrinsicHandEyeCalibration* ui_;
     ConfigurableWidgetDialog* camera_transform_guess_dialog_;
     ConfigurableWidgetDialog* target_transform_guess_dialog_;
     ConfigurableWidgetDialog* camera_intrinsics_dialog_;

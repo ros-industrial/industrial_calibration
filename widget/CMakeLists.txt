@@ -11,9 +11,6 @@ add_library(
   ${PROJECT_NAME}_widget SHARED
   include/widget/configurable_widget.h
   src/configurable_widget.cpp
-  src/ic_widget.ui
-  src/ic_widget.cpp
-  include/widget/ic_widget.h
   src/camera_intrinsics.ui
   src/camera_intrinsics.cpp
   include/widget/camera_intrinsics.h
@@ -30,7 +27,11 @@ add_library(
   src/modified_circle_grid_target_finder.cpp
   include/widget/modified_circle_grid_target_finder.h
   src/image_widget.cpp
-  include/widget/image_widget.h)
+  include/widget/image_widget.h
+  src/extrinsic_hand_eye_calibration_widget.ui
+  src/extrinsic_hand_eye_calibration_widget.cpp
+  include/widget/extrinsic_hand_eye_calibration_widget.h
+)
 target_include_directories(${PROJECT_NAME}_widget PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>")
