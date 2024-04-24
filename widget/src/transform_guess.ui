@@ -28,12 +28,15 @@
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QDoubleSpinBox" name="xDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_x">
      <property name="minimum">
       <double>-1000000000.000000000000000</double>
      </property>
      <property name="maximum">
       <double>1000000000.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
      </property>
     </widget>
    </item>
@@ -45,12 +48,15 @@
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QDoubleSpinBox" name="yDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_y">
      <property name="minimum">
       <double>-1000000000.000000000000000</double>
      </property>
      <property name="maximum">
       <double>1000000000.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
      </property>
     </widget>
    </item>
@@ -62,63 +68,98 @@
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QDoubleSpinBox" name="zDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_z">
      <property name="minimum">
       <double>-1000000000.000000000000000</double>
      </property>
      <property name="maximum">
       <double>1000000000.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
      </property>
     </widget>
    </item>
    <item row="3" column="0">
     <widget class="QLabel" name="label_3">
      <property name="text">
-      <string>Roll (rad)</string>
+      <string>qx</string>
      </property>
     </widget>
    </item>
    <item row="3" column="1">
-    <widget class="QDoubleSpinBox" name="rollDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_qx">
      <property name="minimum">
-      <double>-1000000000.000000000000000</double>
+      <double>-1.000000000000000</double>
      </property>
      <property name="maximum">
-      <double>1000000000.000000000000000</double>
+      <double>1.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
      </property>
     </widget>
    </item>
    <item row="4" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>Pitch (rad)</string>
+      <string>qy</string>
      </property>
     </widget>
    </item>
    <item row="4" column="1">
-    <widget class="QDoubleSpinBox" name="pitchDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_qy">
      <property name="minimum">
-      <double>-1000000000.000000000000000</double>
+      <double>-1.000000000000000</double>
      </property>
      <property name="maximum">
-      <double>1000000000.000000000000000</double>
+      <double>1.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
      </property>
     </widget>
    </item>
    <item row="5" column="0">
     <widget class="QLabel" name="label_5">
      <property name="text">
-      <string>Yaw (rad)</string>
+      <string>qz</string>
      </property>
     </widget>
    </item>
    <item row="5" column="1">
-    <widget class="QDoubleSpinBox" name="yawDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_qz">
      <property name="minimum">
-      <double>-1000000000.000000000000000</double>
+      <double>-1.000000000000000</double>
      </property>
      <property name="maximum">
-      <double>1000000000.000000000000000</double>
+      <double>1.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>qw</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="QDoubleSpinBox" name="double_spin_box_qw">
+     <property name="minimum">
+      <double>-1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
      </property>
     </widget>
    </item>

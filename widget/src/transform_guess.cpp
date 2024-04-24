@@ -16,45 +16,28 @@ TransformGuess::~TransformGuess()
 }
 
 void TransformGuess::configure(const YAML::Node& node)
-{ 
-  ui_->xDoubleSpinBox->setValue(node["x"].as<double>());
-  ui_->yDoubleSpinBox->setValue(node["y"].as<double>());
-  ui_->zDoubleSpinBox->setValue(node["z"].as<double>());
+{
+  ui_->double_spin_box_x->setValue(node["x"].as<double>());
+  ui_->double_spin_box_y->setValue(node["y"].as<double>());
+  ui_->double_spin_box_z->setValue(node["z"].as<double>());
 
   // Convert from quaternion to rpy
-  double qx = node["qx"].as<double>();
-  double qy = node["qy"].as<double>();
-  double qz = node["qz"].as<double>();
-  double qw = node["qw"].as<double>();
-  Eigen::Quaterniond quaternion(qw, qx, qy, qz);
-
-  // Convert quaternion to roll, pitch, and yaw
-  Eigen::Vector3d euler = quaternion.toRotationMatrix().eulerAngles(0, 1, 2); // XYZ order
-
-  ui_->rollDoubleSpinBox->setValue(euler[0]);
-  ui_->pitchDoubleSpinBox->setValue(euler[1]);
-  ui_->yawDoubleSpinBox->setValue(euler[2]);
+  ui_->double_spin_box_qx->setValue(node["qx"].as<double>());
+  ui_->double_spin_box_qy->setValue(node["qy"].as<double>());
+  ui_->double_spin_box_qz->setValue(node["qz"].as<double>());
+  ui_->double_spin_box_qw->setValue(node["qw"].as<double>());
 }
 
 YAML::Node TransformGuess::save() const
 {
   YAML::Node node;
-  node["x"] = ui_->xDoubleSpinBox->value();
-  node["y"] = ui_->yDoubleSpinBox->value();
-  node["z"] = ui_->zDoubleSpinBox->value();
-  double roll = ui_->rollDoubleSpinBox->value();
-  double pitch = ui_->pitchDoubleSpinBox->value();
-  double yaw = ui_->yawDoubleSpinBox->value();
-
-  // Convert rpy to quaternion
-  Eigen::Quaterniond quaternion = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()) *
-                                  Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
-                                  Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-
-  node["qx"] = quaternion.x();
-  node["qy"] = quaternion.y();
-  node["qz"] = quaternion.z();
-  node["qw"] = quaternion.w();
+  node["x"] = ui_->double_spin_box_x->value();
+  node["y"] = ui_->double_spin_box_y->value();
+  node["z"] = ui_->double_spin_box_z->value();
+  node["qx"] = ui_->double_spin_box_qx->value();
+  node["qy"] = ui_->double_spin_box_qy->value();
+  node["qz"] = ui_->double_spin_box_qz->value();
+  node["qw"] = ui_->double_spin_box_qw->value();
 
   return node;
 }
