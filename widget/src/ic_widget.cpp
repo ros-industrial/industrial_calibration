@@ -198,7 +198,6 @@ void ICWidget::loadData()
     QString data_file = QFileDialog::getOpenFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
     if (data_file.isNull())
         return;
-    ui_->line_edit_data->setText(data_file);
 
     QFileInfo data_file_info(data_file);
 
@@ -287,6 +286,7 @@ void ICWidget::loadData()
             }
         }
 
+        ui_->line_edit_data->setText(data_file);
         ui_->table_widget_data->resizeColumnsToContents();
     }
     catch(const std::exception& ex)
