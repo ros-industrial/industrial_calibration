@@ -26,6 +26,8 @@ add_library(
   src/modified_circle_grid_target_finder.ui
   src/modified_circle_grid_target_finder.cpp
   # Extrinsic hand-eye calibration widget
+  src/extrinsic_hand_eye_calibration_configuration_widget.ui
+  src/extrinsic_hand_eye_calibration_configuration_widget.cpp
   src/extrinsic_hand_eye_calibration_widget.ui
   src/extrinsic_hand_eye_calibration_widget.cpp
 )
