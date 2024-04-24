@@ -10,8 +10,6 @@ namespace industrial_calibration
 {
 class TransformGuess : public ConfigurableWidget
 {
-    Q_OBJECT
-
 public:
     explicit TransformGuess(QWidget *parent = nullptr);
     ~TransformGuess();

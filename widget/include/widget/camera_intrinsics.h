@@ -8,8 +8,6 @@ namespace industrial_calibration
 {
 class CameraIntrinsicsWidget : public ConfigurableWidget
 {
-    Q_OBJECT
-
 public:
     explicit CameraIntrinsicsWidget(QWidget *parent = nullptr);
     ~CameraIntrinsicsWidget();

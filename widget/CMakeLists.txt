@@ -9,27 +9,31 @@ find_package(boost_plugin_loader REQUIRED)
 # Add widget plugin
 add_library(
   ${PROJECT_NAME}_widget SHARED
+  # Utilities
   include/widget/configurable_widget.h
-  src/configurable_widget.cpp
-  src/camera_intrinsics.ui
-  src/camera_intrinsics.cpp
-  include/widget/camera_intrinsics.h
-  src/transform_guess.ui
-  src/transform_guess.cpp
-  include/widget/transform_guess.h
-  src/charuco_grid_target_finder.ui
-  src/charuco_grid_target_finder.cpp
-  include/widget/charuco_grid_target_finder.h
-  src/aruco_grid_target_finder.ui
-  src/aruco_grid_target_finder.cpp
-  include/widget/aruco_grid_target_finder.h
-  src/modified_circle_grid_target_finder.ui
-  src/modified_circle_grid_target_finder.cpp
-  include/widget/modified_circle_grid_target_finder.h
-  src/aspect_ratio_pixmap_label.cpp
+  src/widgets/configurable_widget.cpp
+  src/widgets/camera_intrinsics.ui
+  src/widgets/aspect_ratio_pixmap_label.cpp
   include/widget/aspect_ratio_pixmap_label.h
-  src/extrinsic_hand_eye_calibration_widget.ui
-  src/extrinsic_hand_eye_calibration_widget.cpp
+  # Calibration widgets
+  src/widgets/camera_intrinsics.cpp
+  include/widget/camera_intrinsics.h
+  src/widgets/transform_guess.ui
+  src/widgets/transform_guess.cpp
+  include/widget/transform_guess.h
+  # Target finders
+  src/widgets/charuco_grid_target_finder.ui
+  src/widgets/charuco_grid_target_finder.cpp
+  include/widget/charuco_grid_target_finder.h
+  src/widgets/aruco_grid_target_finder.ui
+  src/widgets/aruco_grid_target_finder.cpp
+  include/widget/aruco_grid_target_finder.h
+  src/widgets/modified_circle_grid_target_finder.ui
+  src/widgets/modified_circle_grid_target_finder.cpp
+  include/widget/modified_circle_grid_target_finder.h
+  # Extrinsic hand-eye calibration widget
+  src/widgets/extrinsic_hand_eye_calibration_widget.ui
+  src/widgets/extrinsic_hand_eye_calibration_widget.cpp
   include/widget/extrinsic_hand_eye_calibration_widget.h
 )
 target_include_directories(${PROJECT_NAME}_widget PUBLIC

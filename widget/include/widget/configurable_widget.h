@@ -7,8 +7,6 @@ namespace industrial_calibration
 {
 class ConfigurableWidget : public QWidget
 {
-    Q_OBJECT
-
 public:
     ConfigurableWidget(QWidget *parent = nullptr);
 
