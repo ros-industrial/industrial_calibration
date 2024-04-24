@@ -1,7 +1,5 @@
-#include "widget/transform_guess.h"
+#include <industrial_calibration/gui/transform_guess.h>
 #include "ui_transform_guess.h"
-#include <Eigen/Core>
-#include <Eigen/Geometry>
 
 namespace industrial_calibration
 {

@@ -1,4 +1,4 @@
-#include "widget/extrinsic_hand_eye_calibration_widget.h"
+#include <industrial_calibration/gui/extrinsic_hand_eye_calibration_widget.h>
 #include <QApplication>
 #include <QMainWindow>
 #include <signal.h>

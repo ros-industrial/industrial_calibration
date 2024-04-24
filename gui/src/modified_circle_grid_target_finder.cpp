@@ -1,4 +1,4 @@
-#include "widget/modified_circle_grid_target_finder.h"
+#include <industrial_calibration/gui/modified_circle_grid_target_finder.h>
 #include "ui_modified_circle_grid_target_finder.h"
 
 namespace industrial_calibration

@@ -1,11 +1,12 @@
-#include "widget/extrinsic_hand_eye_calibration_widget.h"
-#include "widget/transform_guess.h"
-#include "widget/camera_intrinsics.h"
-#include "widget/charuco_grid_target_finder.h"
-#include "widget/aruco_grid_target_finder.h"
-#include "widget/modified_circle_grid_target_finder.h"
-#include "widget/aspect_ratio_pixmap_label.h"
 #include "ui_extrinsic_hand_eye_calibration_widget.h"
+
+#include <industrial_calibration/gui/extrinsic_hand_eye_calibration_widget.h>
+#include <industrial_calibration/gui/transform_guess.h>
+#include <industrial_calibration/gui/camera_intrinsics.h>
+#include <industrial_calibration/gui/charuco_grid_target_finder.h>
+#include <industrial_calibration/gui/aruco_grid_target_finder.h>
+#include <industrial_calibration/gui/modified_circle_grid_target_finder.h>
+#include <industrial_calibration/gui/aspect_ratio_pixmap_label.h>
 #include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
 #include <industrial_calibration/target_finders/opencv/utils.h>
 #include <industrial_calibration/core/serialization.h>

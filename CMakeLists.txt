@@ -23,7 +23,7 @@ endif()
 add_subdirectory(examples)
 
 # Industrial Calibration Widget
-add_subdirectory(widget)
+add_subdirectory(gui)
 list(APPEND SUPPORTED_COMPONENTS gui)
 
 # Package configuration

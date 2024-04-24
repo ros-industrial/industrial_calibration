@@ -1,4 +1,4 @@
-#include "widget/configurable_widget.h"
+#include <industrial_calibration/gui/configurable_widget.h>
 #include <QVBoxLayout>
 
 namespace industrial_calibration

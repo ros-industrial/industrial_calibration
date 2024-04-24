@@ -364,7 +364,7 @@
   <customwidget>
    <class>industrial_calibration::AspectRatioPixmapLabel</class>
    <extends>QLabel</extends>
-   <header>widget/image_widget.h</header>
+   <header location="global">industrial_calibration/gui/aspect_ratio_pixmap_label.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

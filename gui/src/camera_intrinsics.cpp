@@ -1,4 +1,4 @@
-#include "widget/camera_intrinsics.h"
+#include <industrial_calibration/gui/camera_intrinsics.h>
 #include "ui_camera_intrinsics.h"
 
 namespace industrial_calibration

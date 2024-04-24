@@ -1,36 +1,34 @@
-#include "widget/charuco_grid_target_finder.h"
-#include "ui_charuco_grid_target_finder.h"
+#include <industrial_calibration/gui/aruco_grid_target_finder.h>
+#include "ui_aruco_grid_target_finder.h"
 
 namespace industrial_calibration
 {
-CharucoGridTargetFinderWidget::CharucoGridTargetFinderWidget(QWidget *parent) :
+ArucoGridTargetFinderWidget::ArucoGridTargetFinderWidget(QWidget *parent) :
     ConfigurableWidget(parent),
-    ui_(new Ui::CharucoGridTargetFinder)
+    ui_(new Ui::ArucoGridTargetFinder)
 {
     ui_->setupUi(this);
 }
 
-CharucoGridTargetFinderWidget::~CharucoGridTargetFinderWidget()
+ArucoGridTargetFinderWidget::~ArucoGridTargetFinderWidget()
 {
     delete ui_;
 }
 
-void CharucoGridTargetFinderWidget::configure(const YAML::Node& node)
+void ArucoGridTargetFinderWidget::configure(const YAML::Node& node)
 {
     ui_->rowSpinBox->setValue(node["rows"].as<int>());
     ui_->colSpinBox->setValue(node["cols"].as<int>());
-    ui_->checkerSizeDoubleSpinBox->setValue(node["chessboard_dim"].as<double>());
     ui_->markerSizeDoubleSpinBox->setValue(node["aruco_marker_dim"].as<double>());
     ui_->dictComboBox->setCurrentIndex(node["dictionary"].as<int>());
 }
 
-YAML::Node CharucoGridTargetFinderWidget::save() const
+YAML::Node ArucoGridTargetFinderWidget::save() const
 {
     YAML::Node node;
-    node["type"] = "CharucoGridTargetFinder";
+    node["type"] = "ArucoGridTargetFinder";
     node["rows"] = ui_->rowSpinBox->value();
     node["cols"] = ui_->colSpinBox->value();
-    node["chessboard_dim"] = ui_->checkerSizeDoubleSpinBox->value();
     node["aruco_marker_dim"] = ui_->markerSizeDoubleSpinBox->value();
     node["dictionary"] = ui_->dictComboBox->currentIndex();
 
@@ -38,3 +36,4 @@ YAML::Node CharucoGridTargetFinderWidget::save() const
 }
 
 } // namespace industrial_calibration
+
