@@ -2,7 +2,7 @@
 #include "widget/transform_guess.h"
 #include "widget/camera_intrinsics.h"
 #include "widget/charuco_target.h"
-#include "widget/aruco_target.h"
+#include "widget/aruco_grid_target_finder.h"
 #include "widget/circle_target.h"
 #include "widget/image_widget.h"
 #include "ui_ic_widget.h"
@@ -85,7 +85,7 @@ ICWidget::ICWidget(QWidget *parent) :
     camera_intrinsics_dialog_ = setup<CameraIntrinsicsWidget>(this, ui_->tool_button_camera_intrinsics);
 
     target_dialogs_["CharucoGridTargetFinder"] = setup<CharucoTarget>(this);
-    target_dialogs_["ArucoGridTargetFinder"] = setup<ArucoTarget>(this);
+    target_dialogs_["ArucoGridTargetFinder"] = setup<ArucoGridTargetFinderWidget>(this);
     target_dialogs_["ModifiedCircleGridTargetFinder"] = setup<CircleTarget>(this);
 
     // Move the text edit scroll bar to the maximum limit whenever it is resized

@@ -1,21 +1,21 @@
-#include "widget/aruco_target.h"
-#include "ui_aruco_target.h"
+#include "widget/aruco_grid_target_finder.h"
+#include "ui_aruco_grid_target_finder.h"
 
 namespace industrial_calibration
 {
-ArucoTarget::ArucoTarget(QWidget *parent) :
+ArucoGridTargetFinderWidget::ArucoGridTargetFinderWidget(QWidget *parent) :
     ConfigurableWidget(parent),
-    ui_(new Ui::ArucoTarget)
+    ui_(new Ui::ArucoGridTargetFinder)
 {
     ui_->setupUi(this);
 }
 
-ArucoTarget::~ArucoTarget()
+ArucoGridTargetFinderWidget::~ArucoGridTargetFinderWidget()
 {
     delete ui_;
 }
 
-void ArucoTarget::configure(const YAML::Node& node)
+void ArucoGridTargetFinderWidget::configure(const YAML::Node& node)
 {
     ui_->rowSpinBox->setValue(node["rows"].as<int>());
     ui_->colSpinBox->setValue(node["cols"].as<int>());
@@ -23,7 +23,7 @@ void ArucoTarget::configure(const YAML::Node& node)
     ui_->dictComboBox->setCurrentIndex(node["dictionary"].as<int>());
 }
 
-YAML::Node ArucoTarget::save() const
+YAML::Node ArucoGridTargetFinderWidget::save() const
 {
     YAML::Node node;
     node["type"] = "ArucoGridTargetFinder";

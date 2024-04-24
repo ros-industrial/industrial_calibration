@@ -23,9 +23,9 @@ add_library(
   src/charuco_target.ui
   src/charuco_target.cpp
   include/widget/charuco_target.h
-  src/aruco_target.ui
-  src/aruco_target.cpp
-  include/widget/aruco_target.h
+  src/aruco_grid_target_finder.ui
+  src/aruco_grid_target_finder.cpp
+  include/widget/aruco_grid_target_finder.h
   src/circle_target.ui
   src/circle_target.cpp
   include/widget/circle_target.h

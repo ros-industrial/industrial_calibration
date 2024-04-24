@@ -3,22 +3,22 @@
 #include "configurable_widget.h"
 
 namespace Ui {
-class ArucoTarget;
+class ArucoGridTargetFinder;
 }
 
 namespace industrial_calibration
 {
-class ArucoTarget : public ConfigurableWidget
+class ArucoGridTargetFinderWidget : public ConfigurableWidget
 {
 public:
-    explicit ArucoTarget(QWidget *parent = nullptr);
-    ~ArucoTarget();
+    explicit ArucoGridTargetFinderWidget(QWidget *parent = nullptr);
+    ~ArucoGridTargetFinderWidget();
 
     void configure(const YAML::Node& node) override;
     YAML::Node save() const override;
 
 private:
-    Ui::ArucoTarget *ui_;
+    Ui::ArucoGridTargetFinder* ui_;
 };
 
 } // namespace industrial_calibration
