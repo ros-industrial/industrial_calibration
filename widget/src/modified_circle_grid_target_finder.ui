@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CircleTarget</class>
- <widget class="QWidget" name="CircleTarget">
+ <class>ModifiedCircleGridTargetFinder</class>
+ <widget class="QWidget" name="ModifiedCircleGridTargetFinder">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -26,7 +26,7 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-316</y>
+        <y>0</y>
         <width>394</width>
         <height>973</height>
        </rect>

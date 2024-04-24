@@ -3,7 +3,7 @@
 #include "widget/camera_intrinsics.h"
 #include "widget/charuco_grid_target_finder.h"
 #include "widget/aruco_grid_target_finder.h"
-#include "widget/circle_target.h"
+#include "widget/modified_circle_grid_target_finder.h"
 #include "widget/image_widget.h"
 #include "ui_ic_widget.h"
 #include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
@@ -86,7 +86,7 @@ ICWidget::ICWidget(QWidget *parent) :
     
     target_dialogs_["CharucoGridTargetFinder"] = setup<CharucoGridTargetFinderWidget>(this);
     target_dialogs_["ArucoGridTargetFinder"] = setup<ArucoGridTargetFinderWidget>(this);
-    target_dialogs_["ModifiedCircleGridTargetFinder"] = setup<CircleTarget>(this);
+    target_dialogs_["ModifiedCircleGridTargetFinder"] = setup<ModifiedCircleGridTargetFinderWidget>(this);
 
     // Move the text edit scroll bar to the maximum limit whenever it is resized
     connect(ui_->text_edit_log->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {

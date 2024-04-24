@@ -1,11 +1,11 @@
-#include "widget/circle_target.h"
-#include "ui_circle_target.h"
+#include "widget/modified_circle_grid_target_finder.h"
+#include "ui_modified_circle_grid_target_finder.h"
 
 namespace industrial_calibration
 {
-CircleTarget::CircleTarget(QWidget *parent) :
+ModifiedCircleGridTargetFinderWidget::ModifiedCircleGridTargetFinderWidget(QWidget *parent) :
     ConfigurableWidget(parent),
-    ui_(new Ui::CircleTarget)
+    ui_(new Ui::ModifiedCircleGridTargetFinder)
 {
     ui_->setupUi(this);
 
@@ -22,12 +22,12 @@ CircleTarget::CircleTarget(QWidget *parent) :
     connect(ui_->filterByInertiaCheckBox, &QCheckBox::clicked, ui_->frame_filter_inertia, &QGroupBox::setEnabled);
 }
 
-CircleTarget::~CircleTarget()
+ModifiedCircleGridTargetFinderWidget::~ModifiedCircleGridTargetFinderWidget()
 {
     delete ui_;
 }
 
-void CircleTarget::configure(const YAML::Node& node)
+void ModifiedCircleGridTargetFinderWidget::configure(const YAML::Node& node)
 {
     ui_->rowSpinBox->setValue(node["rows"].as<int>());
     ui_->colSpinBox->setValue(node["cols"].as<int>());
@@ -65,7 +65,7 @@ void CircleTarget::configure(const YAML::Node& node)
     ui_->maxConvexityDoubleSpinBox->setValue(subnode["maxConvexity"].as<double>());
 }
 
-YAML::Node CircleTarget::save() const
+YAML::Node ModifiedCircleGridTargetFinderWidget::save() const
 {
     YAML::Node node;
     node["type"] = "ModifiedCircleGridTargetFinder";

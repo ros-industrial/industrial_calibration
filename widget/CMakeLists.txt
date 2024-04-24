@@ -26,9 +26,9 @@ add_library(
   src/aruco_grid_target_finder.ui
   src/aruco_grid_target_finder.cpp
   include/widget/aruco_grid_target_finder.h
-  src/circle_target.ui
-  src/circle_target.cpp
-  include/widget/circle_target.h
+  src/modified_circle_grid_target_finder.ui
+  src/modified_circle_grid_target_finder.cpp
+  include/widget/modified_circle_grid_target_finder.h
   src/image_widget.cpp
   include/widget/image_widget.h)
 target_include_directories(${PROJECT_NAME}_widget PUBLIC
