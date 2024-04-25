@@ -25,9 +25,8 @@
 static const unsigned RANDOM_SEED = 1;
 static const int IMAGE_FILE_NAME_ROLE = Qt::UserRole + 1;
 static const int POSE_FILE_NAME_ROLE = Qt::UserRole + 2;
-static const int COL_FEATURES = 0;
-static const int COL_HOMOGRAPHY = 1;
-static const int COL_NOTES = 2;
+static const int IDX_FEATURES = 0;
+static const int IDX_HOMOGRAPHY = 1;
 
 namespace industrial_calibration
 {
@@ -47,11 +46,8 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget *pa
 {
     ui_->setupUi(this);
 
-    // Configure the table widget
-    ui_->table_widget_observations->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui_->table_widget_observations->resizeColumnsToContents();
-    ui_->table_widget_observations->horizontalHeader()->stretchLastSection();
-    ui_->table_widget_observations->setSelectionBehavior(QAbstractItemView::SelectRows);
+    // Configure the tree widget
+    ui_->tree_widget_observations->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Set up the configuration widget
     {
@@ -77,7 +73,7 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget *pa
     connect(ui_->push_button_save, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::saveResults);
 
     connect(ui_->push_button_load_observations, &QAbstractButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadObservations);
-    connect(ui_->table_widget_observations, &QTableWidget::cellPressed, this, &ExtrinsicHandEyeCalibrationWidget::drawImage);
+    connect(ui_->tree_widget_observations, &QTreeWidget::itemClicked, this, &ExtrinsicHandEyeCalibrationWidget::drawImage);
 
     // Set up the plugin loader
     loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
@@ -131,9 +127,8 @@ void ExtrinsicHandEyeCalibrationWidget::loadObservations()
     {
         auto observations = getMember<YAML::Node>(YAML::LoadFile(observations_file.toStdString()), "data");
 
-        // Reset the table widget
-        ui_->table_widget_observations->clearContents();
-        ui_->table_widget_observations->setRowCount(observations.size());
+        // Reset the tree widget
+        ui_->tree_widget_observations->clear();
 
         for(std::size_t i = 0; i < observations.size(); ++i)
         {
@@ -142,49 +137,54 @@ void ExtrinsicHandEyeCalibrationWidget::loadObservations()
             QString image_file = observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "image")));
             QString pose_file = observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "pose")));
 
+            auto item = new QTreeWidgetItem();
+            item->setData(0, Qt::EditRole, "Observation " + QString::number(i));
+            item->setData(0, IMAGE_FILE_NAME_ROLE, image_file);
+            item->setData(0, POSE_FILE_NAME_ROLE, pose_file);
+
             // Add a column entry for the number of detected features
-            auto features_item = new QTableWidgetItem("-");
-            features_item->setData(IMAGE_FILE_NAME_ROLE, image_file);
-            features_item->setData(POSE_FILE_NAME_ROLE, pose_file);
-            ui_->table_widget_observations->setItem(i, COL_FEATURES, features_item);
+            auto features_item = new QTreeWidgetItem(item);
+            features_item->setData(0, Qt::EditRole, "Feature count");
+            features_item->setData(1, Qt::EditRole, "-");
 
             // Add a column entry for the homography error
-            auto homography_item = new QTableWidgetItem("-");
-            ui_->table_widget_observations->setItem(i, COL_HOMOGRAPHY, homography_item);
+            auto homography_item = new QTreeWidgetItem(item);
+            homography_item->setData(0, Qt::EditRole, "Homography error (px)");
+            homography_item->setData(1, Qt::EditRole, "-");
 
-            // Add a column entry for notes
-            auto notes_item = new QTableWidgetItem("");
-            ui_->table_widget_observations->setItem(i, COL_NOTES, notes_item);
+            ui_->tree_widget_observations->addTopLevelItem(item);
         }
 
         ui_->line_edit_observations->setText(observations_file);
-        ui_->table_widget_observations->resizeColumnsToContents();
-        ui_->table_widget_observations->horizontalHeader()->stretchLastSection();
+        ui_->tree_widget_observations->resizeColumnToContents(0);
     }
     catch(const std::exception& ex)
     {
-        ui_->table_widget_observations->clearContents();
+        ui_->tree_widget_observations->clear();
         QMessageBox::warning(this, "Error", ex.what());
     }
 }
 
-void ExtrinsicHandEyeCalibrationWidget::drawImage(int row, int col)
+void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col)
 {
-    QTableWidgetItem* features_item = ui_->table_widget_observations->item(row, COL_FEATURES);
-    QTableWidgetItem* homography_item = ui_->table_widget_observations->item(row, COL_HOMOGRAPHY);
-    QTableWidgetItem* notes_item = ui_->table_widget_observations->item(row, COL_NOTES);
+    // Extract the top level item
+    while(item->parent() != nullptr)
+        item = item->parent();
+
+    QTreeWidgetItem* features_item = item->child(IDX_FEATURES);
+    QTreeWidgetItem* homography_item = item->child(IDX_HOMOGRAPHY);
 
     if (features_item == nullptr)
         return;
 
-    QVariant data = features_item->data(IMAGE_FILE_NAME_ROLE);
+    QVariant data = item->data(0, IMAGE_FILE_NAME_ROLE);
     if(data.isNull() || !data.canConvert<QString>())
         return;
 
-    QString image_file = features_item->data(IMAGE_FILE_NAME_ROLE).value<QString>();
+    QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
     if(!QFile(image_file).exists())
     {
-        notes_item->setData(Qt::EditRole, "Image file does not exist");
+        item->setData(1, Qt::EditRole, "Image file does not exist");
         return;
     }
 
@@ -197,8 +197,8 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(int row, int col)
         TargetFeatures2D features = target_finder_->findTargetFeatures(image);
         cv::Mat detected_image = target_finder_->drawTargetFeatures(image, features);
 
-        // Save the number of detected features to the table
-        features_item->setData(Qt::EditRole, QString::number(features.size()));
+        // Save the number of detected features to the tree
+        features_item->setData(1, Qt::EditRole, QString::number(features.size()));
 
         // Set the image
         ui_->image_label->setPixmap(toQt(detected_image));
@@ -210,14 +210,14 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(int row, int col)
         Eigen::VectorXd homography_error = calculateHomographyError(corrs, random_sampler);
         double homography_error_mean = homography_error.array().mean();
 
-        // Save the homography error to the table
-        homography_item->setData(Qt::EditRole, QString::number(homography_error_mean));
+        // Save the homography error to the tree
+        homography_item->setData(1, Qt::EditRole, QString::number(homography_error_mean));
 
         // Check homography threshold and update notes/row color
         if(homography_error_mean > configuration_widget_->getHomographyThreshold())
-            notes_item->setData(Qt::EditRole, "Homography threshold violated");
+            item->setData(1, Qt::EditRole, "Homography threshold violated");
         else
-            notes_item->setData(Qt::EditRole, "");
+            item->setData(1, Qt::EditRole, "");
     }
     catch(const std::exception& ex)
     {
@@ -225,18 +225,22 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(int row, int col)
         ui_->image_label->setPixmap(toQt(image));
         update();
 
-        features_item->setData(Qt::EditRole, "-");
-        homography_item->setData(Qt::EditRole, "-");
-        notes_item->setData(Qt::EditRole, ex.what());
+        item->setData(1, Qt::EditRole, ex.what());
+        features_item->setData(1, Qt::EditRole, "-");
+        homography_item->setData(1, Qt::EditRole, "-");
     }
 }
 
 void ExtrinsicHandEyeCalibrationWidget::calibrate()
 {
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-
     try
     {
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+
+        // Check if there are any observations before continuing
+        if(ui_->tree_widget_observations->topLevelItemCount() == 0)
+            throw std::runtime_error("Please load the calibration observations before performing the calibration");
+
         // Load the target finder
         loadTargetFinder();
 
@@ -246,24 +250,24 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
         problem.target_mount_to_target_guess = configuration_widget_->getTargetMountToTargetGuess();
         problem.intr = configuration_widget_->getCameraIntrinsics();
 
-        for(int i = 0; i < ui_->table_widget_observations->rowCount(); ++i)
+        for(int i = 0; i < ui_->tree_widget_observations->topLevelItemCount(); ++i)
         {
-            // Extract the table items
-            QTableWidgetItem* features_item = ui_->table_widget_observations->item(i, COL_FEATURES);
-            QTableWidgetItem* homography_item = ui_->table_widget_observations->item(i, COL_HOMOGRAPHY);
-            QTableWidgetItem* notes_item = ui_->table_widget_observations->item(i, COL_NOTES);
+            // Extract the tree items
+            QTreeWidgetItem* item = ui_->tree_widget_observations->topLevelItem(i);
+            QTreeWidgetItem* features_item = item->child(IDX_FEATURES);
+            QTreeWidgetItem* homography_item = item->child(IDX_HOMOGRAPHY);
 
-            QString image_file = features_item->data(IMAGE_FILE_NAME_ROLE).value<QString>();
+            QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
             if(!QFile(image_file).exists())
             {
-                notes_item->setData(Qt::EditRole, "Image file does not exist");
+                item->setData(1, Qt::EditRole, "Image file does not exist");
                 continue;
             }
 
-            QString pose_file = features_item->data(POSE_FILE_NAME_ROLE).value<QString>();
+            QString pose_file = item->data(0, POSE_FILE_NAME_ROLE).value<QString>();
             if(!QFile(image_file).exists())
             {
-                notes_item->setData(Qt::EditRole, "Pose file does not exist");
+                item->setData(1, Qt::EditRole, "Pose file does not exist");
                 continue;
             }
 
@@ -298,21 +302,21 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
                 if (homography_error_mean < configuration_widget_->getHomographyThreshold())
                 {
                     problem.observations.push_back(obs);
-                    notes_item->setData(Qt::EditRole, "");
+                    item->setData(1, Qt::EditRole, "");
                 }
                 else
                 {
                     // Update the notes
-                    notes_item->setData(Qt::EditRole, "Observation excluded from calibration due to homography threshold violation");
+                    item->setData(1, Qt::EditRole, "Observation excluded from calibration due to homography threshold violation");
                 }
 
-                // Update the table widget
-                features_item->setData(Qt::EditRole, QString::number(obs.correspondence_set.size()));
-                homography_item->setData(Qt::EditRole, QString::number(homography_error_mean));
+                // Update the tree widget
+                features_item->setData(1, Qt::EditRole, QString::number(obs.correspondence_set.size()));
+                homography_item->setData(1, Qt::EditRole, QString::number(homography_error_mean));
             }
             catch (const std::exception& ex)
             {
-                notes_item->setData(Qt::EditRole, ex.what());
+                item->setData(1, Qt::EditRole, ex.what());
             }
         }
 
@@ -346,6 +350,7 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
     }
     catch(const std::exception& ex)
     {
+        result_ = nullptr;
         QApplication::restoreOverrideCursor();
         QMessageBox::warning(this, "Error", ex.what());
     }

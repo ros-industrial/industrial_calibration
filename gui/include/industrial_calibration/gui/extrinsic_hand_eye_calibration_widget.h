@@ -7,7 +7,7 @@
 #include <QWidget>
 #include <QDialog>
 
-class QAbstractButton;
+class QTreeWidgetItem;
 
 namespace Ui {
 class ExtrinsicHandEyeCalibration;
@@ -30,7 +30,7 @@ private:
     void calibrate();
 
     void loadTargetFinder();
-    void drawImage(int row, int col);
+    void drawImage(QTreeWidgetItem* item, int col);
     void saveResults();
 
     Ui::ExtrinsicHandEyeCalibration* ui_;

@@ -92,39 +92,28 @@
             </layout>
            </item>
            <item>
-            <widget class="QTableWidget" name="table_widget_observations">
-             <property name="horizontalScrollBarPolicy">
-              <enum>Qt::ScrollBarAsNeeded</enum>
-             </property>
-             <property name="sizeAdjustPolicy">
-              <enum>QAbstractScrollArea::AdjustToContents</enum>
-             </property>
+            <widget class="QTreeWidget" name="tree_widget_observations">
              <property name="alternatingRowColors">
               <bool>true</bool>
              </property>
-             <property name="wordWrap">
+             <property name="textElideMode">
+              <enum>Qt::ElideRight</enum>
+             </property>
+             <property name="uniformRowHeights">
               <bool>false</bool>
              </property>
-             <property name="cornerButtonEnabled">
+             <property name="allColumnsShowFocus">
               <bool>true</bool>
              </property>
-             <property name="rowCount">
-              <number>0</number>
+             <property name="wordWrap">
+              <bool>true</bool>
              </property>
-             <property name="columnCount">
-              <number>3</number>
-             </property>
-             <attribute name="horizontalHeaderStretchLastSection">
+             <attribute name="headerVisible">
               <bool>true</bool>
              </attribute>
              <column>
               <property name="text">
-               <string>Feature Count</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Mean Homography Error</string>
+               <string>Observation</string>
               </property>
              </column>
              <column>
@@ -185,7 +174,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; text-decoration: underline;&quot;&gt;Extrinsic Hand-Eye Calibration&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Configure the calibration, either from a YAML file (&lt;span style=&quot; font-style:italic;&quot;&gt;Load&lt;/span&gt; button) or manually (&lt;span style=&quot; font-style:italic;&quot;&gt;Edit&lt;/span&gt; button)&lt;/p&gt;&lt;p&gt;Load the calibration observations from a YAML file using the &lt;span style=&quot; font-style:italic;&quot;&gt;Load&lt;/span&gt; button&lt;/p&gt;&lt;p&gt;Click on an observation in the table to view the image and detected target&lt;/p&gt;&lt;p&gt;Click the &lt;span style=&quot; font-style:italic;&quot;&gt;Calibrate&lt;/span&gt; button to perform the calibration&lt;/p&gt;&lt;p&gt;Click the &lt;span style=&quot; font-style:italic;&quot;&gt;Save&lt;/span&gt; button to save the calibration results to file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; text-decoration: underline;&quot;&gt;Extrinsic Hand-Eye Calibration&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Configure the calibration, either from a YAML file (&lt;span style=&quot; font-style:italic;&quot;&gt;Load&lt;/span&gt; button) or manually (&lt;span style=&quot; font-style:italic;&quot;&gt;Edit&lt;/span&gt; button)&lt;/p&gt;&lt;p&gt;Load the calibration observations from a YAML file using the &lt;span style=&quot; font-style:italic;&quot;&gt;Load&lt;/span&gt; button&lt;/p&gt;&lt;p&gt;Click on an observation in the list to view the image and detected target&lt;/p&gt;&lt;p&gt;Click the &lt;span style=&quot; font-style:italic;&quot;&gt;Calibrate&lt;/span&gt; button to perform the calibration&lt;/p&gt;&lt;p&gt;Click the &lt;span style=&quot; font-style:italic;&quot;&gt;Save&lt;/span&gt; button to save the calibration results to file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
