@@ -46,7 +46,9 @@ target_link_libraries(${PROJECT_NAME}_extrinsic_hand_eye_calibration_app PRIVATE
 # Install headers
 install(DIRECTORY include/ DESTINATION include)
 
-# Install executables
+list(APPEND SUPPORTED_COMPONENTS gui)
+set(SUPPORTED_COMPONENTS "${SUPPORTED_COMPONENTS}" PARENT_SCOPE)
+
 configure_component(
   COMPONENT
   gui

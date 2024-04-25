@@ -11,6 +11,7 @@ add_subdirectory(core)
 add_subdirectory(optimizations)
 add_subdirectory(analysis)
 add_subdirectory(target_finders)
+add_subdirectory(gui)
 
 # Unit tests
 if(${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
@@ -21,10 +22,6 @@ endif()
 
 # Examples
 add_subdirectory(examples)
-
-# Industrial Calibration Widget
-add_subdirectory(gui)
-list(APPEND SUPPORTED_COMPONENTS gui)
 
 # Package configuration
 configure_package(SUPPORTED_COMPONENTS ${SUPPORTED_COMPONENTS})
