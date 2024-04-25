@@ -3,17 +3,14 @@
 
 namespace industrial_calibration
 {
-ConfigurableWidget::ConfigurableWidget(QWidget* parent)
-    : QWidget(parent)
+ConfigurableWidget::ConfigurableWidget(QWidget* parent) : QWidget(parent) {}
+
+ConfigurableWidgetDialog::ConfigurableWidgetDialog(ConfigurableWidget* widget_, QWidget* parent)
+  : QDialog(parent), widget(widget_)
 {
+  auto* vl = new QVBoxLayout(this);
+  vl->addWidget(widget);
+  setWindowTitle("");
 }
 
-ConfigurableWidgetDialog::ConfigurableWidgetDialog(ConfigurableWidget* widget_, QWidget* parent) : QDialog(parent), widget(widget_)
-{
-    auto* vl = new QVBoxLayout(this);
-    vl->addWidget(widget);
-    setWindowTitle("");
-}
-
-} // namespace industrial_calibration
-
+}  // namespace industrial_calibration

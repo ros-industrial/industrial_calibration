@@ -2,7 +2,8 @@
 
 #include <industrial_calibration/gui/configurable_widget.h>
 
-namespace Ui {
+namespace Ui
+{
 class ModifiedCircleGridTargetFinder;
 }
 
@@ -11,14 +12,14 @@ namespace industrial_calibration
 class ModifiedCircleGridTargetFinderWidget : public ConfigurableWidget
 {
 public:
-    explicit ModifiedCircleGridTargetFinderWidget(QWidget *parent = nullptr);
-    ~ModifiedCircleGridTargetFinderWidget();
+  explicit ModifiedCircleGridTargetFinderWidget(QWidget* parent = nullptr);
+  ~ModifiedCircleGridTargetFinderWidget();
 
-    void configure(const YAML::Node& node) override;
-    YAML::Node save() const override;
+  void configure(const YAML::Node& node) override;
+  YAML::Node save() const override;
 
 private:
-    Ui::ModifiedCircleGridTargetFinder *ui_;
+  Ui::ModifiedCircleGridTargetFinder* ui_;
 };
 
-} // namespace industrial_calibration
+}  // namespace industrial_calibration

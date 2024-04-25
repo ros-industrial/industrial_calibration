@@ -2,7 +2,8 @@
 
 #include <industrial_calibration/gui/configurable_widget.h>
 
-namespace Ui {
+namespace Ui
+{
 class CameraIntrinsics;
 }
 
@@ -11,14 +12,14 @@ namespace industrial_calibration
 class CameraIntrinsicsWidget : public ConfigurableWidget
 {
 public:
-    explicit CameraIntrinsicsWidget(QWidget *parent = nullptr);
-    ~CameraIntrinsicsWidget();
+  explicit CameraIntrinsicsWidget(QWidget* parent = nullptr);
+  ~CameraIntrinsicsWidget();
 
-    void configure(const YAML::Node& node) override;
-    YAML::Node save() const override;
+  void configure(const YAML::Node& node) override;
+  YAML::Node save() const override;
 
 private:
-    Ui::CameraIntrinsics *ui_;
+  Ui::CameraIntrinsics* ui_;
 };
 
-} // namespace industrial_calibration
+}  // namespace industrial_calibration

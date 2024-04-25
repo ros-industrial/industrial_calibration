@@ -2,7 +2,8 @@
 
 #include <industrial_calibration/gui/configurable_widget.h>
 
-namespace Ui {
+namespace Ui
+{
 class CharucoGridTargetFinder;
 }
 
@@ -11,14 +12,14 @@ namespace industrial_calibration
 class CharucoGridTargetFinderWidget : public ConfigurableWidget
 {
 public:
-    explicit CharucoGridTargetFinderWidget(QWidget *parent = nullptr);
-    ~CharucoGridTargetFinderWidget();
+  explicit CharucoGridTargetFinderWidget(QWidget* parent = nullptr);
+  ~CharucoGridTargetFinderWidget();
 
-    void configure(const YAML::Node& node) override;
-    YAML::Node save() const override;
+  void configure(const YAML::Node& node) override;
+  YAML::Node save() const override;
 
 private:
-    Ui::CharucoGridTargetFinder *ui_;
+  Ui::CharucoGridTargetFinder* ui_;
 };
 
-} // namespace industrial_calibration
+}  // namespace industrial_calibration

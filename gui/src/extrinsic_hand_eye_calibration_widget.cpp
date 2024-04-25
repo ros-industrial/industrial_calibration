@@ -32,341 +32,338 @@ namespace industrial_calibration
 {
 QPixmap toQt(const cv::Mat& image)
 {
-    return QPixmap::fromImage(QImage(image.data,
-                                     image.cols,
-                                     image.rows,
-                                     image.step,
-                                     QImage::Format_RGB888).rgbSwapped());
+  return QPixmap::fromImage(QImage(image.data, image.cols, image.rows, image.step, QImage::Format_RGB888).rgbSwapped());
 }
 
-ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget *parent)
-    : QWidget(parent)
-    , ui_(new Ui::ExtrinsicHandEyeCalibration())
-    , configuration_widget_(new ExtrinsicHandEyeCalibrationConfigurationWidget(this))
+ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* parent)
+  : QWidget(parent)
+  , ui_(new Ui::ExtrinsicHandEyeCalibration())
+  , configuration_widget_(new ExtrinsicHandEyeCalibrationConfigurationWidget(this))
 {
-    ui_->setupUi(this);
+  ui_->setupUi(this);
 
-    // Configure the tree widget
-    ui_->tree_widget_observations->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  // Configure the tree widget
+  ui_->tree_widget_observations->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    // Set up the configuration widget
-    {
-        auto dialog = new QDialog(this);
-        auto layout = new QVBoxLayout(dialog);
-        layout->addWidget(configuration_widget_);
+  // Set up the configuration widget
+  {
+    auto dialog = new QDialog(this);
+    auto layout = new QVBoxLayout(dialog);
+    layout->addWidget(configuration_widget_);
 
-        connect(ui_->push_button_edit_config, &QAbstractButton::clicked, dialog, &QWidget::show);
-    }
+    connect(ui_->push_button_edit_config, &QAbstractButton::clicked, dialog, &QWidget::show);
+  }
 
-    // Set the stretch factors of the horizontal splitter to make the proportions reasonable
-    ui_->splitter_horizontal->setStretchFactor(0, 1);
-    ui_->splitter_horizontal->setStretchFactor(1, 30);
+  // Set the stretch factors of the horizontal splitter to make the proportions reasonable
+  ui_->splitter_horizontal->setStretchFactor(0, 1);
+  ui_->splitter_horizontal->setStretchFactor(1, 30);
 
-    // Move the text edit scroll bar to the maximum limit whenever it is resized
-    connect(ui_->text_edit_results->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {
-        ui_->text_edit_results->verticalScrollBar()->setSliderPosition(ui_->text_edit_results->verticalScrollBar()->maximum());
-    });
+  // Move the text edit scroll bar to the maximum limit whenever it is resized
+  connect(ui_->text_edit_results->verticalScrollBar(), &QScrollBar::rangeChanged, [this]() {
+    ui_->text_edit_results->verticalScrollBar()->setSliderPosition(
+        ui_->text_edit_results->verticalScrollBar()->maximum());
+  });
 
-    // Set up push buttons
-    connect(ui_->push_button_load_config, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadConfig);
-    connect(ui_->push_button_calibrate, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::calibrate);
-    connect(ui_->push_button_save, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::saveResults);
+  // Set up push buttons
+  connect(ui_->push_button_load_config, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadConfig);
+  connect(ui_->push_button_calibrate, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::calibrate);
+  connect(ui_->push_button_save, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::saveResults);
 
-    connect(ui_->push_button_load_observations, &QAbstractButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadObservations);
-    connect(ui_->tree_widget_observations, &QTreeWidget::itemClicked, this, &ExtrinsicHandEyeCalibrationWidget::drawImage);
+  connect(ui_->push_button_load_observations, &QAbstractButton::clicked, this,
+          &ExtrinsicHandEyeCalibrationWidget::loadObservations);
+  connect(ui_->tree_widget_observations, &QTreeWidget::itemClicked, this,
+          &ExtrinsicHandEyeCalibrationWidget::drawImage);
 
-    // Set up the plugin loader
-    loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
-    loader_.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
+  // Set up the plugin loader
+  loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
+  loader_.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
 }
 
-ExtrinsicHandEyeCalibrationWidget::~ExtrinsicHandEyeCalibrationWidget()
-{
-    delete ui_;
-}
+ExtrinsicHandEyeCalibrationWidget::~ExtrinsicHandEyeCalibrationWidget() { delete ui_; }
 
 void ExtrinsicHandEyeCalibrationWidget::loadConfig()
 {
-    try
-    {
-        // Get yaml filepath
-        const QString config_file = QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(), "YAML files (*.yaml *.yml)");
-        if (config_file.isNull())
-            return;
+  try
+  {
+    // Get yaml filepath
+    const QString config_file = QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(),
+                                                             "YAML files (*.yaml *.yml)");
+    if (config_file.isNull()) return;
 
-        configuration_widget_->load(config_file);
-        ui_->line_edit_config->setText(config_file);
+    configuration_widget_->load(config_file);
+    ui_->line_edit_config->setText(config_file);
 
-        QMessageBox::information(this, "Success", "Successfully loaded calibration configuration");
-    }
-    catch(const std::exception& ex)
-    {
-        QMessageBox::warning(this, "Error", ex.what());
-    }
+    QMessageBox::information(this, "Success", "Successfully loaded calibration configuration");
+  }
+  catch (const std::exception& ex)
+  {
+    QMessageBox::warning(this, "Error", ex.what());
+  }
 }
 
 void ExtrinsicHandEyeCalibrationWidget::loadTargetFinder()
 {
-    // Get target type and currentconfig
-    YAML::Node target_finder_config = configuration_widget_->getTargetFinderConfig();
-    auto target_type = getMember<std::string>(target_finder_config, "type");
+  // Get target type and currentconfig
+  YAML::Node target_finder_config = configuration_widget_->getTargetFinderConfig();
+  auto target_type = getMember<std::string>(target_finder_config, "type");
 
-    factory_ = loader_.createInstance<TargetFinderFactoryOpenCV>(target_type);
-    target_finder_ = factory_->create(target_finder_config);
+  factory_ = loader_.createInstance<TargetFinderFactoryOpenCV>(target_type);
+  target_finder_ = factory_->create(target_finder_config);
 }
 
 void ExtrinsicHandEyeCalibrationWidget::loadObservations()
 {
-    QString observations_file = QFileDialog::getOpenFileName(this, "Load calibration observation file", QString(), "YAML files (*.yaml *.yml)");
-    if (observations_file.isNull())
-        return;
+  QString observations_file =
+      QFileDialog::getOpenFileName(this, "Load calibration observation file", QString(), "YAML files (*.yaml *.yml)");
+  if (observations_file.isNull()) return;
 
-    QFileInfo observations_file_info(observations_file);
+  QFileInfo observations_file_info(observations_file);
 
-    try
+  try
+  {
+    auto observations = getMember<YAML::Node>(YAML::LoadFile(observations_file.toStdString()), "data");
+
+    // Reset the tree widget
+    ui_->tree_widget_observations->clear();
+
+    for (std::size_t i = 0; i < observations.size(); ++i)
     {
-        auto observations = getMember<YAML::Node>(YAML::LoadFile(observations_file.toStdString()), "data");
+      const YAML::Node& entry = observations[i];
 
-        // Reset the tree widget
-        ui_->tree_widget_observations->clear();
+      QString image_file =
+          observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "image")));
+      QString pose_file =
+          observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "pose")));
 
-        for(std::size_t i = 0; i < observations.size(); ++i)
-        {
-            const YAML::Node& entry = observations[i];
+      auto item = new QTreeWidgetItem();
+      item->setData(0, Qt::EditRole, "Observation " + QString::number(i));
+      item->setData(0, IMAGE_FILE_NAME_ROLE, image_file);
+      item->setData(0, POSE_FILE_NAME_ROLE, pose_file);
 
-            QString image_file = observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "image")));
-            QString pose_file = observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "pose")));
+      // Add a column entry for the number of detected features
+      auto features_item = new QTreeWidgetItem(item);
+      features_item->setData(0, Qt::EditRole, "Feature count");
+      features_item->setData(1, Qt::EditRole, "-");
 
-            auto item = new QTreeWidgetItem();
-            item->setData(0, Qt::EditRole, "Observation " + QString::number(i));
-            item->setData(0, IMAGE_FILE_NAME_ROLE, image_file);
-            item->setData(0, POSE_FILE_NAME_ROLE, pose_file);
+      // Add a column entry for the homography error
+      auto homography_item = new QTreeWidgetItem(item);
+      homography_item->setData(0, Qt::EditRole, "Homography error (px)");
+      homography_item->setData(1, Qt::EditRole, "-");
 
-            // Add a column entry for the number of detected features
-            auto features_item = new QTreeWidgetItem(item);
-            features_item->setData(0, Qt::EditRole, "Feature count");
-            features_item->setData(1, Qt::EditRole, "-");
-
-            // Add a column entry for the homography error
-            auto homography_item = new QTreeWidgetItem(item);
-            homography_item->setData(0, Qt::EditRole, "Homography error (px)");
-            homography_item->setData(1, Qt::EditRole, "-");
-
-            ui_->tree_widget_observations->addTopLevelItem(item);
-        }
-
-        ui_->line_edit_observations->setText(observations_file);
-        ui_->tree_widget_observations->resizeColumnToContents(0);
+      ui_->tree_widget_observations->addTopLevelItem(item);
     }
-    catch(const std::exception& ex)
-    {
-        ui_->tree_widget_observations->clear();
-        QMessageBox::warning(this, "Error", ex.what());
-    }
+
+    ui_->line_edit_observations->setText(observations_file);
+    ui_->tree_widget_observations->resizeColumnToContents(0);
+  }
+  catch (const std::exception& ex)
+  {
+    ui_->tree_widget_observations->clear();
+    QMessageBox::warning(this, "Error", ex.what());
+  }
 }
 
 void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col)
 {
-    // Extract the top level item
-    while(item->parent() != nullptr)
-        item = item->parent();
+  // Extract the top level item
+  while (item->parent() != nullptr)
+    item = item->parent();
 
-    QTreeWidgetItem* features_item = item->child(IDX_FEATURES);
-    QTreeWidgetItem* homography_item = item->child(IDX_HOMOGRAPHY);
+  QTreeWidgetItem* features_item = item->child(IDX_FEATURES);
+  QTreeWidgetItem* homography_item = item->child(IDX_HOMOGRAPHY);
 
-    if (features_item == nullptr)
-        return;
+  if (features_item == nullptr) return;
 
-    QVariant data = item->data(0, IMAGE_FILE_NAME_ROLE);
-    if(data.isNull() || !data.canConvert<QString>())
-        return;
+  QVariant data = item->data(0, IMAGE_FILE_NAME_ROLE);
+  if (data.isNull() || !data.canConvert<QString>()) return;
 
-    QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
-    if(!QFile(image_file).exists())
-    {
-        item->setData(1, Qt::EditRole, "Image file does not exist");
-        return;
-    }
+  QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
+  if (!QFile(image_file).exists())
+  {
+    item->setData(1, Qt::EditRole, "Image file does not exist");
+    return;
+  }
 
-    try
-    {
-        loadTargetFinder();
-        cv::Mat image = cv::imread(image_file.toStdString());
+  try
+  {
+    loadTargetFinder();
+    cv::Mat image = cv::imread(image_file.toStdString());
 
-        // Attempt to detect the target in the image
-        TargetFeatures2D features = target_finder_->findTargetFeatures(image);
-        cv::Mat detected_image = target_finder_->drawTargetFeatures(image, features);
+    // Attempt to detect the target in the image
+    TargetFeatures2D features = target_finder_->findTargetFeatures(image);
+    cv::Mat detected_image = target_finder_->drawTargetFeatures(image, features);
 
-        // Save the number of detected features to the tree
-        features_item->setData(1, Qt::EditRole, QString::number(features.size()));
+    // Save the number of detected features to the tree
+    features_item->setData(1, Qt::EditRole, QString::number(features.size()));
 
-        // Set the image
-        ui_->image_label->setPixmap(toQt(detected_image));
-        update();
+    // Set the image
+    ui_->image_label->setPixmap(toQt(detected_image));
+    update();
 
-        // Attempt to compute the homography error
-        Correspondence2D3D::Set corrs = target_finder_->target().createCorrespondences(features);
-        RandomCorrespondenceSampler random_sampler(corrs.size(), corrs.size() / 3, RANDOM_SEED);
-        Eigen::VectorXd homography_error = calculateHomographyError(corrs, random_sampler);
-        double homography_error_mean = homography_error.array().mean();
+    // Attempt to compute the homography error
+    Correspondence2D3D::Set corrs = target_finder_->target().createCorrespondences(features);
+    RandomCorrespondenceSampler random_sampler(corrs.size(), corrs.size() / 3, RANDOM_SEED);
+    Eigen::VectorXd homography_error = calculateHomographyError(corrs, random_sampler);
+    double homography_error_mean = homography_error.array().mean();
 
-        // Save the homography error to the tree
-        homography_item->setData(1, Qt::EditRole, QString::number(homography_error_mean));
+    // Save the homography error to the tree
+    homography_item->setData(1, Qt::EditRole, QString::number(homography_error_mean));
 
-        // Check homography threshold and update notes/row color
-        if(homography_error_mean > configuration_widget_->getHomographyThreshold())
-            item->setData(1, Qt::EditRole, "Homography threshold violated");
-        else
-            item->setData(1, Qt::EditRole, "");
-    }
-    catch(const std::exception& ex)
-    {
-        cv::Mat image = cv::imread(image_file.toStdString());
-        ui_->image_label->setPixmap(toQt(image));
-        update();
+    // Check homography threshold and update notes/row color
+    if (homography_error_mean > configuration_widget_->getHomographyThreshold())
+      item->setData(1, Qt::EditRole, "Homography threshold violated");
+    else
+      item->setData(1, Qt::EditRole, "");
+  }
+  catch (const std::exception& ex)
+  {
+    cv::Mat image = cv::imread(image_file.toStdString());
+    ui_->image_label->setPixmap(toQt(image));
+    update();
 
-        item->setData(1, Qt::EditRole, ex.what());
-        features_item->setData(1, Qt::EditRole, "-");
-        homography_item->setData(1, Qt::EditRole, "-");
-    }
+    item->setData(1, Qt::EditRole, ex.what());
+    features_item->setData(1, Qt::EditRole, "-");
+    homography_item->setData(1, Qt::EditRole, "-");
+  }
 }
 
 void ExtrinsicHandEyeCalibrationWidget::calibrate()
 {
-    try
+  try
+  {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    // Check if there are any observations before continuing
+    if (ui_->tree_widget_observations->topLevelItemCount() == 0)
+      throw std::runtime_error("Please load the calibration observations before performing the calibration");
+
+    // Load the target finder
+    loadTargetFinder();
+
+    // Create the calibration problem
+    ExtrinsicHandEyeProblem2D3D problem;
+    problem.camera_mount_to_camera_guess = configuration_widget_->getCameraMountToCameraGuess();
+    problem.target_mount_to_target_guess = configuration_widget_->getTargetMountToTargetGuess();
+    problem.intr = configuration_widget_->getCameraIntrinsics();
+
+    for (int i = 0; i < ui_->tree_widget_observations->topLevelItemCount(); ++i)
     {
-        QApplication::setOverrideCursor(Qt::WaitCursor);
+      // Extract the tree items
+      QTreeWidgetItem* item = ui_->tree_widget_observations->topLevelItem(i);
+      QTreeWidgetItem* features_item = item->child(IDX_FEATURES);
+      QTreeWidgetItem* homography_item = item->child(IDX_HOMOGRAPHY);
 
-        // Check if there are any observations before continuing
-        if(ui_->tree_widget_observations->topLevelItemCount() == 0)
-            throw std::runtime_error("Please load the calibration observations before performing the calibration");
+      QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
+      if (!QFile(image_file).exists())
+      {
+        item->setData(1, Qt::EditRole, "Image file does not exist");
+        continue;
+      }
 
-        // Load the target finder
-        loadTargetFinder();
+      QString pose_file = item->data(0, POSE_FILE_NAME_ROLE).value<QString>();
+      if (!QFile(image_file).exists())
+      {
+        item->setData(1, Qt::EditRole, "Pose file does not exist");
+        continue;
+      }
 
-        // Create the calibration problem
-        ExtrinsicHandEyeProblem2D3D problem;
-        problem.camera_mount_to_camera_guess = configuration_widget_->getCameraMountToCameraGuess();
-        problem.target_mount_to_target_guess = configuration_widget_->getTargetMountToTargetGuess();
-        problem.intr = configuration_widget_->getCameraIntrinsics();
+      try
+      {
+        // Load the image and pose
+        cv::Mat image = cv::imread(image_file.toStdString());
+        auto pose = YAML::LoadFile(pose_file.toStdString()).as<Eigen::Isometry3d>();
 
-        for(int i = 0; i < ui_->tree_widget_observations->topLevelItemCount(); ++i)
+        // Populate an observation
+        Observation2D3D obs;
+        if (configuration_widget_->getStaticCamera())
         {
-            // Extract the tree items
-            QTreeWidgetItem* item = ui_->tree_widget_observations->topLevelItem(i);
-            QTreeWidgetItem* features_item = item->child(IDX_FEATURES);
-            QTreeWidgetItem* homography_item = item->child(IDX_HOMOGRAPHY);
+          obs.to_camera_mount = Eigen::Isometry3d::Identity();
+          obs.to_target_mount = pose;
+        }
+        else
+        {
+          obs.to_camera_mount = pose;
+          obs.to_target_mount = Eigen::Isometry3d::Identity();
+        }
+        obs.correspondence_set = target_finder_->findCorrespondences(image);
 
-            QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
-            if(!QFile(image_file).exists())
-            {
-                item->setData(1, Qt::EditRole, "Image file does not exist");
-                continue;
-            }
+        // Calculate homography error
+        RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(), obs.correspondence_set.size() / 3,
+                                                   RANDOM_SEED);
+        Eigen::VectorXd homography_error = calculateHomographyError(obs.correspondence_set, random_sampler);
+        double homography_error_mean = homography_error.array().mean();
 
-            QString pose_file = item->data(0, POSE_FILE_NAME_ROLE).value<QString>();
-            if(!QFile(image_file).exists())
-            {
-                item->setData(1, Qt::EditRole, "Pose file does not exist");
-                continue;
-            }
-
-            try
-            {
-                // Load the image and pose
-                cv::Mat image = cv::imread(image_file.toStdString());
-                auto pose = YAML::LoadFile(pose_file.toStdString()).as<Eigen::Isometry3d>();
-
-                // Populate an observation
-                Observation2D3D obs;
-                if(configuration_widget_->getStaticCamera())
-                {
-                    obs.to_camera_mount = Eigen::Isometry3d::Identity();
-                    obs.to_target_mount = pose;
-                }
-                else
-                {
-                    obs.to_camera_mount = pose;
-                    obs.to_target_mount = Eigen::Isometry3d::Identity();
-                }
-                obs.correspondence_set = target_finder_->findCorrespondences(image);
-
-                // Calculate homography error
-                RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(),
-                                                                                   obs.correspondence_set.size() / 3,
-                                                                                   RANDOM_SEED);
-                Eigen::VectorXd homography_error = calculateHomographyError(obs.correspondence_set, random_sampler);
-                double homography_error_mean = homography_error.array().mean();
-
-                // Conditionally add the observation to the problem if the mean homography error is less than the threshold
-                if (homography_error_mean < configuration_widget_->getHomographyThreshold())
-                {
-                    problem.observations.push_back(obs);
-                    item->setData(1, Qt::EditRole, "");
-                }
-                else
-                {
-                    // Update the notes
-                    item->setData(1, Qt::EditRole, "Observation excluded from calibration due to homography threshold violation");
-                }
-
-                // Update the tree widget
-                features_item->setData(1, Qt::EditRole, QString::number(obs.correspondence_set.size()));
-                homography_item->setData(1, Qt::EditRole, QString::number(homography_error_mean));
-            }
-            catch (const std::exception& ex)
-            {
-                item->setData(1, Qt::EditRole, ex.what());
-            }
+        // Conditionally add the observation to the problem if the mean homography error is less than the threshold
+        if (homography_error_mean < configuration_widget_->getHomographyThreshold())
+        {
+          problem.observations.push_back(obs);
+          item->setData(1, Qt::EditRole, "");
+        }
+        else
+        {
+          // Update the notes
+          item->setData(1, Qt::EditRole, "Observation excluded from calibration due to homography threshold violation");
         }
 
-        // Solve the calibration problem
-        result_ = std::make_shared<ExtrinsicHandEyeResult>();
-        *result_ = optimize(problem);
-
-        // Report results
-        std::stringstream ss;
-        ss << *result_ << std::endl;
-        ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
-
-        // Compute the projected 3D error for comparison
-        ss << analyze3dProjectionError(problem, *result_) << std::endl << std::endl;
-
-        // Now let's compare the results of our extrinsic calibration with a PnP optimization for every observation.
-        // The PnP optimization will give us an estimate of the camera to target transform using our input camera intrinsic
-        // parameters We will then see how much this transform differs from the same transform calculated using the results
-        // of the extrinsic calibration
-        ExtrinsicHandEyeAnalysisStats stats = analyzeResults(problem, *result_);
-        ss << stats << std::endl << std::endl;
-
-        ui_->text_edit_results->clear();
-        ui_->text_edit_results->append(QString::fromStdString(ss.str()));
-
-        QApplication::restoreOverrideCursor();
-        if (result_->converged)
-            QMessageBox::information(this, "Success", "Successfully completed calibration");
-        else
-            QMessageBox::warning(this, "Error", "Calibration failed to converge");
+        // Update the tree widget
+        features_item->setData(1, Qt::EditRole, QString::number(obs.correspondence_set.size()));
+        homography_item->setData(1, Qt::EditRole, QString::number(homography_error_mean));
+      }
+      catch (const std::exception& ex)
+      {
+        item->setData(1, Qt::EditRole, ex.what());
+      }
     }
-    catch(const std::exception& ex)
-    {
-        result_ = nullptr;
-        QApplication::restoreOverrideCursor();
-        QMessageBox::warning(this, "Error", ex.what());
-    }
+
+    // Solve the calibration problem
+    result_ = std::make_shared<ExtrinsicHandEyeResult>();
+    *result_ = optimize(problem);
+
+    // Report results
+    std::stringstream ss;
+    ss << *result_ << std::endl;
+    ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
+
+    // Compute the projected 3D error for comparison
+    ss << analyze3dProjectionError(problem, *result_) << std::endl << std::endl;
+
+    // Now let's compare the results of our extrinsic calibration with a PnP optimization for every observation.
+    // The PnP optimization will give us an estimate of the camera to target transform using our input camera intrinsic
+    // parameters We will then see how much this transform differs from the same transform calculated using the results
+    // of the extrinsic calibration
+    ExtrinsicHandEyeAnalysisStats stats = analyzeResults(problem, *result_);
+    ss << stats << std::endl << std::endl;
+
+    ui_->text_edit_results->clear();
+    ui_->text_edit_results->append(QString::fromStdString(ss.str()));
+
+    QApplication::restoreOverrideCursor();
+    if (result_->converged)
+      QMessageBox::information(this, "Success", "Successfully completed calibration");
+    else
+      QMessageBox::warning(this, "Error", "Calibration failed to converge");
+  }
+  catch (const std::exception& ex)
+  {
+    result_ = nullptr;
+    QApplication::restoreOverrideCursor();
+    QMessageBox::warning(this, "Error", ex.what());
+  }
 }
 
 void ExtrinsicHandEyeCalibrationWidget::saveResults()
 {
-    if(result_ == nullptr)
-    {
-        QMessageBox::warning(this, "Error", "Calibration problem has not yet been solved. Please load the calibration data and run the calibration");
-        return;
-    }
+  if (result_ == nullptr)
+  {
+    QMessageBox::warning(this, "Error",
+                         "Calibration problem has not yet been solved. Please load the calibration data and run the "
+                         "calibration");
+    return;
+  }
 
-    const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
-    std::ofstream f(file.toStdString());
-    f << YAML::Node(*result_);
+  const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
+  std::ofstream f(file.toStdString());
+  f << YAML::Node(*result_);
 }
 
-} // namespace industrial_calibration
+}  // namespace industrial_calibration

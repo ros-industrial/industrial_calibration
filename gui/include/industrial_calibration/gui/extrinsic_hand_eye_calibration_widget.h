@@ -9,7 +9,8 @@
 
 class QTreeWidgetItem;
 
-namespace Ui {
+namespace Ui
+{
 class ExtrinsicHandEyeCalibration;
 }
 
@@ -21,26 +22,26 @@ class ExtrinsicHandEyeCalibrationConfigurationWidget;
 class ExtrinsicHandEyeCalibrationWidget : public QWidget
 {
 public:
-    explicit ExtrinsicHandEyeCalibrationWidget(QWidget *parent = nullptr);
-    ~ExtrinsicHandEyeCalibrationWidget();
+  explicit ExtrinsicHandEyeCalibrationWidget(QWidget* parent = nullptr);
+  ~ExtrinsicHandEyeCalibrationWidget();
 
 private:
-    void loadConfig();
-    void loadObservations();
-    void calibrate();
+  void loadConfig();
+  void loadObservations();
+  void calibrate();
 
-    void loadTargetFinder();
-    void drawImage(QTreeWidgetItem* item, int col);
-    void saveResults();
+  void loadTargetFinder();
+  void drawImage(QTreeWidgetItem* item, int col);
+  void saveResults();
 
-    Ui::ExtrinsicHandEyeCalibration* ui_;
-    ExtrinsicHandEyeCalibrationConfigurationWidget* configuration_widget_;
+  Ui::ExtrinsicHandEyeCalibration* ui_;
+  ExtrinsicHandEyeCalibrationConfigurationWidget* configuration_widget_;
 
-    boost_plugin_loader::PluginLoader loader_;
-    TargetFinderFactoryOpenCV::ConstPtr factory_;
+  boost_plugin_loader::PluginLoader loader_;
+  TargetFinderFactoryOpenCV::ConstPtr factory_;
 
-    std::shared_ptr<ExtrinsicHandEyeResult> result_;
-    TargetFinderOpenCV::ConstPtr target_finder_;
+  std::shared_ptr<ExtrinsicHandEyeResult> result_;
+  TargetFinderOpenCV::ConstPtr target_finder_;
 };
 
-} // namespace industrial_calibration
+}  // namespace industrial_calibration

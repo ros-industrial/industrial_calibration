@@ -2,7 +2,8 @@
 
 #include <industrial_calibration/gui/configurable_widget.h>
 
-namespace Ui {
+namespace Ui
+{
 class TransformGuess;
 }
 
@@ -11,14 +12,14 @@ namespace industrial_calibration
 class TransformGuess : public ConfigurableWidget
 {
 public:
-    explicit TransformGuess(QWidget *parent = nullptr);
-    ~TransformGuess();
+  explicit TransformGuess(QWidget* parent = nullptr);
+  ~TransformGuess();
 
-    void configure(const YAML::Node& node) override;
-    YAML::Node save() const override;
+  void configure(const YAML::Node& node) override;
+  YAML::Node save() const override;
 
 private:
-    Ui::TransformGuess *ui_;
+  Ui::TransformGuess* ui_;
 };
 
-} // namespace industrial_calibration
+}  // namespace industrial_calibration
