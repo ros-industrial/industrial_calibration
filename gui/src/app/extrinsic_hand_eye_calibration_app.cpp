@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 
   // Create the IC widget
   auto* widget = new industrial_calibration::ExtrinsicHandEyeCalibrationWidget(&w);
-  w.setWindowTitle("");
+  w.setWindowTitle("Extrinsic Hand Eye Calibration");
 
   // Set the IC widget as the central widget and show
   w.setCentralWidget(widget);

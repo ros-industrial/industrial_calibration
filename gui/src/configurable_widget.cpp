@@ -10,7 +10,7 @@ ConfigurableWidgetDialog::ConfigurableWidgetDialog(ConfigurableWidget* widget_, 
 {
   auto* vl = new QVBoxLayout(this);
   vl->addWidget(widget);
-  setWindowTitle("");
+  setWindowTitle(" ");
 }
 
 }  // namespace industrial_calibration

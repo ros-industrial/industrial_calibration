@@ -64,6 +64,7 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* pa
     auto dialog = new QDialog(this);
     auto layout = new QVBoxLayout(dialog);
     layout->addWidget(configuration_widget_);
+    dialog->setWindowTitle("Configuration Settings");
 
     connect(ui_->push_button_edit_config, &QAbstractButton::clicked, dialog, &QWidget::show);
   }
