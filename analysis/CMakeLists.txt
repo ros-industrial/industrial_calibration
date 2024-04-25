@@ -26,6 +26,9 @@ target_code_coverage(
 # Install headers
 install(DIRECTORY include/ DESTINATION include)
 
+list(APPEND SUPPORTED_COMPONENTS analysis)
+set(SUPPORTED_COMPONENTS "${SUPPORTED_COMPONENTS}" PARENT_SCOPE)
+
 configure_component(
   COMPONENT
   analysis
