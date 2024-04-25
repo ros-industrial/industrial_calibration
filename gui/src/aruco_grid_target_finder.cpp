@@ -18,20 +18,22 @@ ArucoGridTargetFinderWidget::~ArucoGridTargetFinderWidget()
 
 void ArucoGridTargetFinderWidget::configure(const YAML::Node& node)
 {
-    ui_->rowSpinBox->setValue(getMember<int>(node, "rows"));
-    ui_->colSpinBox->setValue(getMember<int>(node, "cols"));
-    ui_->markerSizeDoubleSpinBox->setValue(getMember<double>(node, "aruco_marker_dim"));
-    ui_->dictComboBox->setCurrentIndex(getMember<int>(node, "dictionary"));
+    ui_->spin_box_rows->setValue(getMember<int>(node, "rows"));
+    ui_->spin_box_cols->setValue(getMember<int>(node, "cols"));
+    ui_->double_spin_box_marker_size->setValue(getMember<double>(node, "aruco_marker_dim"));
+    ui_->double_spin_box_marker_gap->setValue(getMember<double>(node, "marker_gap"));
+    ui_->combo_box_dict->setCurrentIndex(getMember<int>(node, "dictionary"));
 }
 
 YAML::Node ArucoGridTargetFinderWidget::save() const
 {
     YAML::Node node;
     node["type"] = "ArucoGridTargetFinder";
-    node["rows"] = ui_->rowSpinBox->value();
-    node["cols"] = ui_->colSpinBox->value();
-    node["aruco_marker_dim"] = ui_->markerSizeDoubleSpinBox->value();
-    node["dictionary"] = ui_->dictComboBox->currentIndex();
+    node["rows"] = ui_->spin_box_rows->value();
+    node["cols"] = ui_->spin_box_cols->value();
+    node["aruco_marker_dim"] = ui_->double_spin_box_marker_size->value();
+    node["marker_gap"] = ui_->double_spin_box_marker_gap->value();
+    node["dictionary"] = ui_->combo_box_dict->currentIndex();
 
     return node;
 }

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>324</width>
-    <height>145</height>
+    <height>171</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QSpinBox" name="rowSpinBox">
+    <widget class="QSpinBox" name="spin_box_rows">
      <property name="minimum">
       <number>1</number>
      </property>
@@ -36,7 +36,7 @@
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QSpinBox" name="colSpinBox">
+    <widget class="QSpinBox" name="spin_box_cols">
      <property name="minimum">
       <number>1</number>
      </property>
@@ -50,24 +50,27 @@
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QDoubleSpinBox" name="markerSizeDoubleSpinBox">
+    <widget class="QDoubleSpinBox" name="double_spin_box_marker_size">
      <property name="decimals">
       <number>6</number>
      </property>
      <property name="singleStep">
       <double>0.010000000000000</double>
      </property>
+     <property name="value">
+      <double>0.010000000000000</double>
+     </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
       <string>Dictionary</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QComboBox" name="dictComboBox">
+   <item row="4" column="1">
+    <widget class="QComboBox" name="combo_box_dict">
      <item>
       <property name="text">
        <string>DICT_4X4_50</string>
@@ -170,8 +173,35 @@
      </item>
     </widget>
    </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Marker Gap (m)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QDoubleSpinBox" name="double_spin_box_marker_gap">
+     <property name="decimals">
+      <number>6</number>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.005000000000000</double>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>spin_box_rows</tabstop>
+  <tabstop>spin_box_cols</tabstop>
+  <tabstop>double_spin_box_marker_size</tabstop>
+  <tabstop>double_spin_box_marker_gap</tabstop>
+  <tabstop>combo_box_dict</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
