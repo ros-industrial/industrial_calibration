@@ -35,6 +35,20 @@ QPixmap toQt(const cv::Mat& image)
   return QPixmap::fromImage(QImage(image.data, image.cols, image.rows, image.step, QImage::Format_RGB888).rgbSwapped());
 }
 
+/** @brief helper function for showing an info message with a tree item */
+void info(QTreeWidgetItem* item, const QString& message)
+{
+  item->setText(1, message);
+  item->setTextColor(1, QApplication::palette().text().color());
+}
+
+/** @brief helper function for showing an error message with a tree item */
+void error(QTreeWidgetItem* item, const QString& message)
+{
+  item->setText(1, message);
+  item->setTextColor(1, QColor("red"));
+}
+
 ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* parent)
   : QWidget(parent)
   , ui_(new Ui::ExtrinsicHandEyeCalibration())
@@ -143,12 +157,12 @@ void ExtrinsicHandEyeCalibrationWidget::loadObservations()
       // Add a column entry for the number of detected features
       auto features_item = new QTreeWidgetItem(item);
       features_item->setData(0, Qt::EditRole, "Feature count");
-      features_item->setData(1, Qt::EditRole, "-");
+      info(features_item, "-");
 
       // Add a column entry for the homography error
       auto homography_item = new QTreeWidgetItem(item);
       homography_item->setData(0, Qt::EditRole, "Homography error (px)");
-      homography_item->setData(1, Qt::EditRole, "-");
+      info(homography_item, "-");
 
       ui_->tree_widget_observations->addTopLevelItem(item);
     }
@@ -180,7 +194,7 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col
   QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
   if (!QFile(image_file).exists())
   {
-    item->setData(1, Qt::EditRole, "Image file does not exist");
+    error(item, "Image file does not exist");
     return;
   }
 
@@ -194,7 +208,7 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col
     cv::Mat detected_image = target_finder_->drawTargetFeatures(image, features);
 
     // Save the number of detected features to the tree
-    features_item->setData(1, Qt::EditRole, QString::number(features.size()));
+    info(features_item, QString::number(features.size()));
 
     // Set the image
     ui_->image_label->setPixmap(toQt(detected_image));
@@ -207,13 +221,13 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col
     double homography_error_mean = homography_error.array().mean();
 
     // Save the homography error to the tree
-    homography_item->setData(1, Qt::EditRole, QString::number(homography_error_mean));
+    info(homography_item, QString::number(homography_error_mean));
 
     // Check homography threshold and update notes/row color
-    if (homography_error_mean > configuration_widget_->getHomographyThreshold())
-      item->setData(1, Qt::EditRole, "Homography threshold violated");
+    if (homography_error_mean < configuration_widget_->getHomographyThreshold())
+      info(item, "Successfully identified target");
     else
-      item->setData(1, Qt::EditRole, "");
+      error(item, "Homography threshold violated");
   }
   catch (const std::exception& ex)
   {
@@ -221,9 +235,9 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col
     ui_->image_label->setPixmap(toQt(image));
     update();
 
-    item->setData(1, Qt::EditRole, ex.what());
-    features_item->setData(1, Qt::EditRole, "-");
-    homography_item->setData(1, Qt::EditRole, "-");
+    error(item, QString(ex.what()));
+    info(features_item, "-");
+    info(homography_item, "-");
   }
 }
 
@@ -256,14 +270,14 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
       QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
       if (!QFile(image_file).exists())
       {
-        item->setData(1, Qt::EditRole, "Image file does not exist");
+        error(item, "Image file does not exist");
         continue;
       }
 
       QString pose_file = item->data(0, POSE_FILE_NAME_ROLE).value<QString>();
       if (!QFile(image_file).exists())
       {
-        item->setData(1, Qt::EditRole, "Pose file does not exist");
+        error(item, "Pose file does not exist");
         continue;
       }
 
@@ -297,21 +311,21 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
         if (homography_error_mean < configuration_widget_->getHomographyThreshold())
         {
           problem.observations.push_back(obs);
-          item->setData(1, Qt::EditRole, "");
+          info(item, "Included in calibration");
         }
         else
         {
           // Update the notes
-          item->setData(1, Qt::EditRole, "Observation excluded from calibration due to homography threshold violation");
+          error(item, "Excluded from calibration (homography threshold violation)");
         }
 
         // Update the tree widget
-        features_item->setData(1, Qt::EditRole, QString::number(obs.correspondence_set.size()));
-        homography_item->setData(1, Qt::EditRole, QString::number(homography_error_mean));
+        info(features_item, QString::number(obs.correspondence_set.size()));
+        info(homography_item, QString::number(homography_error_mean));
       }
       catch (const std::exception& ex)
       {
-        item->setData(1, Qt::EditRole, ex.what());
+        error(item, QString(ex.what()));
       }
     }
 
