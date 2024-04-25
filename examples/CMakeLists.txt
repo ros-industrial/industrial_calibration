@@ -78,6 +78,9 @@ endif()
 # Install the data directory
 install(DIRECTORY data DESTINATION share/${PROJECT_NAME})
 
+list(APPEND SUPPORTED_COMPONENTS examples)
+set(SUPPORTED_COMPONENTS "${SUPPORTED_COMPONENTS}" PARENT_SCOPE)
+
 configure_component(
   COMPONENT
   examples
