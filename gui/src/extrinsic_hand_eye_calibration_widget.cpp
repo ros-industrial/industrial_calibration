@@ -13,6 +13,7 @@
 #include <industrial_calibration/analysis/homography_analysis.h>
 
 #include <boost_plugin_loader/plugin_loader.hpp>
+#include <fstream>
 #include <opencv2/opencv.hpp>
 #include <QDialog>
 #include <QScrollBar>
@@ -39,14 +40,14 @@ QPixmap toQt(const cv::Mat& image)
 void info(QTreeWidgetItem* item, const QString& message)
 {
   item->setText(1, message);
-  item->setTextColor(1, QApplication::palette().text().color());
+  item->setForeground(1, QApplication::palette().text());
 }
 
 /** @brief helper function for showing an error message with a tree item */
 void error(QTreeWidgetItem* item, const QString& message)
 {
   item->setText(1, message);
-  item->setTextColor(1, QColor("red"));
+  item->setForeground(1, QBrush(QColor("red")));
 }
 
 ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* parent)
