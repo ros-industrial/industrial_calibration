@@ -26,7 +26,7 @@ bool isPointVisible(const Pose6d& camera_to_camera_mount, const Pose6d& target_m
 
 std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEyeResult& result)
 {
-  stream << "Optimization " << (result.converged ? "converged" : "did not converge") << "\n";
+  stream << "Optimization " << (result.converged ? "converged" : "did not converge") << "\n\n";
   stream << "Initial cost per observation: " << std::sqrt(result.initial_cost_per_obs) << "\n";
   stream << "Final cost per observation: " << std::sqrt(result.final_cost_per_obs);
 
@@ -37,7 +37,7 @@ std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEyeResult& res
     writeTransform(ss, result.camera_mount_to_camera);
     ss << "\nTarget mount to target transform\n";
     writeTransform(ss, result.target_mount_to_target);
-    stream << "\n" << ss.str();
+    stream << "\n\n" << ss.str();
   }
 
   return stream;
