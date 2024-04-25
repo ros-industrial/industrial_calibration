@@ -10,6 +10,7 @@ find_package(boost_plugin_loader REQUIRED)
 add_library(
   ${PROJECT_NAME}_gui SHARED
   # Utilities
+  resources/resources.qrc
   src/configurable_widget.cpp
   src/aspect_ratio_pixmap_label.cpp
   include/industrial_calibration/gui/aspect_ratio_pixmap_label.h
