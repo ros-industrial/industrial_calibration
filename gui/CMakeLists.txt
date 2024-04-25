@@ -56,5 +56,6 @@ configure_component(
   ${PROJECT_NAME}_gui
   ${PROJECT_NAME}_extrinsic_hand_eye_calibration_app
   DEPENDENCIES
+  "industrial_calibration COMPONENTS analysis target_finders_opencv"
   "Qt5 REQUIRED COMPONENTS Widgets"
   boost_plugin_loader)
