@@ -29,16 +29,15 @@ add_library(
   src/extrinsic_hand_eye_calibration_configuration_widget.ui
   src/extrinsic_hand_eye_calibration_configuration_widget.cpp
   src/extrinsic_hand_eye_calibration_widget.ui
-  src/extrinsic_hand_eye_calibration_widget.cpp
-)
-target_include_directories(${PROJECT_NAME}_gui PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>")
-target_link_libraries(${PROJECT_NAME}_gui PUBLIC
-  Qt5::Widgets
-  boost_plugin_loader::boost_plugin_loader
-  ${PROJECT_NAME}_analysis
-  ${PROJECT_NAME}_target_finders_opencv)
+  src/extrinsic_hand_eye_calibration_widget.cpp)
+target_include_directories(${PROJECT_NAME}_gui PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+                                                      "$<INSTALL_INTERFACE:include>")
+target_link_libraries(
+  ${PROJECT_NAME}_gui
+  PUBLIC Qt5::Widgets
+         boost_plugin_loader::boost_plugin_loader
+         ${PROJECT_NAME}_analysis
+         ${PROJECT_NAME}_target_finders_opencv)
 
 # add executable for widget
 add_executable(${PROJECT_NAME}_extrinsic_hand_eye_calibration_app src/app/extrinsic_hand_eye_calibration_app.cpp)
@@ -49,7 +48,13 @@ install(DIRECTORY include/ DESTINATION include)
 
 # Install executables
 configure_component(
-  COMPONENT gui 
-  NAMESPACE industrial_calibration 
-  TARGETS ${PROJECT_NAME}_gui ${PROJECT_NAME}_extrinsic_hand_eye_calibration_app
-  DEPENDENCIES "Qt5 REQUIRED COMPONENTS Widgets" boost_plugin_loader)
+  COMPONENT
+  gui
+  NAMESPACE
+  industrial_calibration
+  TARGETS
+  ${PROJECT_NAME}_gui
+  ${PROJECT_NAME}_extrinsic_hand_eye_calibration_app
+  DEPENDENCIES
+  "Qt5 REQUIRED COMPONENTS Widgets"
+  boost_plugin_loader)
