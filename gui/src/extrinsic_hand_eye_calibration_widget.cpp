@@ -181,17 +181,14 @@ void ExtrinsicHandEyeCalibrationWidget::loadObservations()
 
 void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col)
 {
+  if (item == nullptr) return;
+
   // Extract the top level item
   while (item->parent() != nullptr)
     item = item->parent();
 
   QTreeWidgetItem* features_item = item->child(IDX_FEATURES);
   QTreeWidgetItem* homography_item = item->child(IDX_HOMOGRAPHY);
-
-  if (features_item == nullptr) return;
-
-  QVariant data = item->data(0, IMAGE_FILE_NAME_ROLE);
-  if (data.isNull() || !data.canConvert<QString>()) return;
 
   QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
   if (!QFile(image_file).exists())
@@ -205,9 +202,10 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col
     loadTargetFinder();
     cv::Mat image = cv::imread(image_file.toStdString());
 
-    // Attempt to detect the target in the image
+    // Detect the target in the image
     TargetFeatures2D features = target_finder_->findTargetFeatures(image);
     cv::Mat detected_image = target_finder_->drawTargetFeatures(image, features);
+    info(item, "Successfully identified target");
 
     // Save the number of detected features to the tree
     info(features_item, QString::number(features.size()));
@@ -216,7 +214,7 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col
     ui_->image_label->setPixmap(toQt(detected_image));
     update();
 
-    // Attempt to compute the homography error
+    // Compute the homography error
     Correspondence2D3D::Set corrs = target_finder_->target().createCorrespondences(features);
     RandomCorrespondenceSampler random_sampler(corrs.size(), corrs.size() / 3, RANDOM_SEED);
     Eigen::VectorXd homography_error = calculateHomographyError(corrs, random_sampler);
@@ -226,9 +224,7 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col
     info(homography_item, QString::number(homography_error_mean));
 
     // Check homography threshold and update notes/row color
-    if (homography_error_mean < configuration_widget_->getHomographyThreshold())
-      info(item, "Successfully identified target");
-    else
+    if (homography_error_mean > configuration_widget_->getHomographyThreshold())
       error(item, "Homography threshold violated");
   }
   catch (const std::exception& ex)
