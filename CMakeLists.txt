@@ -12,6 +12,13 @@ add_subdirectory(optimizations)
 add_subdirectory(analysis)
 add_subdirectory(target_finders)
 
+# GUI
+option(INDUSTRIAL_CALIBRATION_BUILD_GUI "Build GUI" ON)
+if(INDUSTRIAL_CALIBRATION_BUILD_GUI)
+  message("Building GUI")
+  add_subdirectory(gui)
+endif()
+
 # Unit tests
 if(${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
   enable_testing()
@@ -20,7 +27,11 @@ if(${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
 endif()
 
 # Examples
-add_subdirectory(examples)
+option(INDUSTRIAL_CALIBRATION_BUILD_EXAMPLES "Build examples" ON)
+if(INDUSTRIAL_CALIBRATION_BUILD_EXAMPLES)
+  message("Building examples")
+  add_subdirectory(examples)
+endif()
 
 # Package configuration
 configure_package(SUPPORTED_COMPONENTS ${SUPPORTED_COMPONENTS})

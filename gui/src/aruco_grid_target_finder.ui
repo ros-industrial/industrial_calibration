@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ArucoGridTargetFinder</class>
+ <widget class="QWidget" name="ArucoGridTargetFinder">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>324</width>
+    <height>171</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Rows</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QSpinBox" name="spin_box_rows">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Columns</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QSpinBox" name="spin_box_cols">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Marker Size (m)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QDoubleSpinBox" name="double_spin_box_marker_size">
+     <property name="decimals">
+      <number>6</number>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.010000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Dictionary</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QComboBox" name="combo_box_dict">
+     <item>
+      <property name="text">
+       <string>DICT_4X4_50</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_4X4_100</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_4X4_250</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_4X4_1000</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_5X5_50</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_5X5_100</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_5X5_250</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_5X5_1000</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_6X6_50</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_6X6_100</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_6X6_250</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_6X6_1000</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_7X7_50</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_7X7_250</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_7X7_1000</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_ARUCO_ORIGINAL</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_APRILTAG_16h5</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_APRILTAG_25h9</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_APRILTAG_36h10</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DICT_APRILTAG_36h11</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Marker Gap (m)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QDoubleSpinBox" name="double_spin_box_marker_gap">
+     <property name="decimals">
+      <number>6</number>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.005000000000000</double>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>spin_box_rows</tabstop>
+  <tabstop>spin_box_cols</tabstop>
+  <tabstop>double_spin_box_marker_size</tabstop>
+  <tabstop>double_spin_box_marker_gap</tabstop>
+  <tabstop>combo_box_dict</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

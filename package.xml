@@ -17,6 +17,8 @@
   <depend>libopencv-dev</depend>
   <depend>eigen</depend>
   <depend>yaml-cpp</depend>
+  <depend>qtbase5-dev</depend>
+  <depend>libqt5-widgets</depend>
 
   <export>
     <build_type>cmake</build_type>
