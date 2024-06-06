@@ -4,7 +4,7 @@
 
 #include <boost_plugin_loader/plugin_loader.h>
 #include <memory>
-#include <QWidget>
+#include <QMainWindow>
 #include <QDialog>
 
 class QTreeWidgetItem;
@@ -19,7 +19,7 @@ namespace industrial_calibration
 class ExtrinsicHandEyeResult;
 class ExtrinsicHandEyeCalibrationConfigurationWidget;
 
-class ExtrinsicHandEyeCalibrationWidget : public QWidget
+class ExtrinsicHandEyeCalibrationWidget : public QMainWindow
 {
 public:
   explicit ExtrinsicHandEyeCalibrationWidget(QWidget* parent = nullptr);
