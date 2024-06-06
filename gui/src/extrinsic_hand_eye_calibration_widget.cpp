@@ -51,7 +51,7 @@ void error(QTreeWidgetItem* item, const QString& message)
 }
 
 ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* parent)
-  : QWidget(parent)
+  : QMainWindow(parent)
   , ui_(new Ui::ExtrinsicHandEyeCalibration())
   , configuration_widget_(new ExtrinsicHandEyeCalibrationConfigurationWidget(this))
 {
@@ -67,7 +67,7 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* pa
     layout->addWidget(configuration_widget_);
     dialog->setWindowTitle("Configuration Settings");
 
-    connect(ui_->push_button_edit_config, &QAbstractButton::clicked, dialog, &QWidget::show);
+    connect(ui_->action_edit_configuration, &QAction::triggered, dialog, &QWidget::show);
   }
 
   // Set the stretch factors of the horizontal splitter to make the proportions reasonable
@@ -81,12 +81,11 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* pa
   });
 
   // Set up push buttons
-  connect(ui_->push_button_load_config, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::loadConfig);
-  connect(ui_->push_button_calibrate, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::calibrate);
-  connect(ui_->push_button_save, &QPushButton::clicked, this, &ExtrinsicHandEyeCalibrationWidget::saveResults);
+  connect(ui_->action_load_configuration, &QAction::triggered, this, &ExtrinsicHandEyeCalibrationWidget::loadConfig);
+  connect(ui_->action_calibrate, &QAction::triggered, this, &ExtrinsicHandEyeCalibrationWidget::calibrate);
+  connect(ui_->action_save, &QAction::triggered, this, &ExtrinsicHandEyeCalibrationWidget::saveResults);
 
-  connect(ui_->push_button_load_observations, &QAbstractButton::clicked, this,
-          &ExtrinsicHandEyeCalibrationWidget::loadObservations);
+  connect(ui_->action_load_data, &QAction::triggered, this, &ExtrinsicHandEyeCalibrationWidget::loadObservations);
   connect(ui_->tree_widget_observations, &QTreeWidget::itemClicked, this,
           &ExtrinsicHandEyeCalibrationWidget::drawImage);
 
@@ -107,7 +106,6 @@ void ExtrinsicHandEyeCalibrationWidget::loadConfig()
     if (config_file.isNull()) return;
 
     configuration_widget_->load(config_file);
-    ui_->line_edit_config->setText(config_file);
 
     QMessageBox::information(this, "Success", "Successfully loaded calibration configuration");
   }
@@ -169,7 +167,6 @@ void ExtrinsicHandEyeCalibrationWidget::loadObservations()
       ui_->tree_widget_observations->addTopLevelItem(item);
     }
 
-    ui_->line_edit_observations->setText(observations_file);
     ui_->tree_widget_observations->resizeColumnToContents(0);
   }
   catch (const std::exception& ex)
