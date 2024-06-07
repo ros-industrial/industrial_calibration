@@ -40,7 +40,7 @@ std::ostream& operator<<(std::ostream& stream, const CameraIntrinsicResult& resu
   if (result.converged)
   {
     stream << "\n"
-           << "Calibrated intrinsics values: " << result.intrinsics << "\n"
+           << result.intrinsics << "\n"
            << "Calibrated distortion values: k1 = " << result.distortions[0] << "\tk2 = " << result.distortions[1]
            << "\tp1 = " << result.distortions[2] << "\tp2 = " << result.distortions[3]
            << "\tk3 = " << result.distortions[4];
