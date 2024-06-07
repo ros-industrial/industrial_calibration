@@ -73,9 +73,20 @@ PnPResult optimize(const PnPProblem& params)
   param_labels[cam_to_tgt_translation.data()] = labels_camera_to_target_guess_translation;
   param_labels[cam_to_tgt_angle_axis.data()] = labels_camera_to_target_guess_quaternion;
 
-  result.covariance = computeCovariance(
-      problem, std::vector<const double*>({ cam_to_tgt_translation.data(), cam_to_tgt_angle_axis.data() }),
-      param_labels);
+  // Optionally compute covariance
+  try
+  {
+    std::map<const double*, std::vector<int>> param_masks;
+    ceres::Covariance::Options cov_options = DefaultCovarianceOptions();
+    cov_options.null_space_rank = -1;  // automatically drop terms below min_reciprocal_condition_number
+
+    result.covariance = computeCovariance(
+        problem, std::vector<const double*>({ cam_to_tgt_translation.data(), cam_to_tgt_angle_axis.data() }),
+        param_labels, param_masks, cov_options);
+  }
+  catch (const ICalException& ex)
+  {
+  }
 
   return result;
 }

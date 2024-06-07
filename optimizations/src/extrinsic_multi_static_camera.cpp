@@ -3,9 +3,9 @@
 #include <industrial_calibration/optimizations/ceres_math_utilities.h>
 #include <industrial_calibration/optimizations/covariance_analysis.h>
 #include <industrial_calibration/core/types.h>
+#include <industrial_calibration/core/exceptions.h>
 
 #include <ceres/ceres.h>
-#include <iostream>
 
 namespace industrial_calibration
 {
@@ -91,7 +91,17 @@ ExtrinsicMultiStaticCameraMovingTargetResult optimize(const ExtrinsicMultiStatic
   }
   param_labels[internal_wrist_to_target.values.data()] = labels_wrist_to_target;
 
-  result.covariance = computeCovariance(problem, param_blocks, param_labels);
+  // Optionally compute covariance
+  try
+  {
+    std::map<const double*, std::vector<int>> param_masks;
+    ceres::Covariance::Options cov_options = DefaultCovarianceOptions();
+    cov_options.null_space_rank = -1;  // automatically drop terms below min_reciprocal_condition_number
+    result.covariance = computeCovariance(problem, param_blocks, param_labels, param_masks, cov_options);
+  }
+  catch (const ICalException& ex)
+  {
+  }
 
   return result;
 }
