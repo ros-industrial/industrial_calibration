@@ -92,6 +92,12 @@ CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
     }
   }
 
+  // Add constraints on the lower bounds of the focal lengths and camera center
+  problem.SetParameterLowerBound(internal_intrinsics_data.data(), 0, 0.0);
+  problem.SetParameterLowerBound(internal_intrinsics_data.data(), 1, 0.0);
+  problem.SetParameterLowerBound(internal_intrinsics_data.data(), 2, 0.0);
+  problem.SetParameterLowerBound(internal_intrinsics_data.data(), 3, 0.0);
+
   std::vector<const double*> param_blocks;
   std::map<const double*, std::vector<std::string>> param_labels;
 
