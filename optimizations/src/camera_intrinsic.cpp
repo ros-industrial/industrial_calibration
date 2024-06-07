@@ -4,6 +4,7 @@
 #include <industrial_calibration/optimizations/covariance_analysis.h>
 #include <industrial_calibration/optimizations/pnp.h>
 #include <industrial_calibration/core/exceptions.h>
+#include <industrial_calibration/core/serialization.h>
 
 #include <ceres/ceres.h>
 
@@ -149,3 +150,55 @@ CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
 }
 
 }  // namespace industrial_calibration
+
+namespace YAML
+{
+Node convert<CameraIntrinsicProblem>::encode(const CameraIntrinsicProblem& rhs)
+{
+  Node node;
+
+  node["intrisics_guess"] = rhs.intrinsics_guess;
+  node["image_observations"] = rhs.image_observations;
+  node["extrinsic_guesses"] = rhs.extrinsic_guesses;
+  node["use_extrinsic_guesses"] = rhs.use_extrinsic_guesses;
+
+  return node;
+}
+
+bool convert<CameraIntrinsicProblem>::decode(const Node& node, CameraIntrinsicProblem& rhs)
+{
+  rhs.intrinsics_guess = getMember<decltype(rhs.intrinsics_guess)>(node, "intrinsics_guess");
+  rhs.image_observations = getMember<decltype(rhs.image_observations)>(node, "image_observations");
+  rhs.extrinsic_guesses = getMember<decltype(rhs.extrinsic_guesses)>(node, "extrinsic_guesses");
+  rhs.use_extrinsic_guesses = getMember<decltype(rhs.use_extrinsic_guesses)>(node, "use_extrinsic_guesses");
+
+  return true;
+}
+
+Node convert<CameraIntrinsicResult>::encode(const CameraIntrinsicResult& rhs)
+{
+  Node node;
+
+  node["converged"] = rhs.converged;
+  node["initial_cost_per_obs"] = rhs.initial_cost_per_obs;
+  node["final_cost_per_obs"] = rhs.final_cost_per_obs;
+  node["intrinsics"] = rhs.intrinsics;
+  node["distortions"] = rhs.distortions;
+  node["target_transforms"] = rhs.target_transforms;
+
+  return node;
+}
+
+bool convert<CameraIntrinsicResult>::decode(const YAML::Node& node, CameraIntrinsicResult& rhs)
+{
+  rhs.converged = getMember<decltype(rhs.converged)>(node, "converged");
+  rhs.initial_cost_per_obs = getMember<decltype(rhs.initial_cost_per_obs)>(node, "initial_cost_per_obs");
+  rhs.final_cost_per_obs = getMember<decltype(rhs.final_cost_per_obs)>(node, "final_cost_per_obs");
+  rhs.intrinsics = getMember<decltype(rhs.intrinsics)>(node, "intrinsics");
+  rhs.distortions = getMember<decltype(rhs.distortions)>(node, "distortions");
+  rhs.target_transforms = getMember<decltype(rhs.target_transforms)>(node, "target_transforms");
+
+  return true;
+}
+
+}  // namespace YAML

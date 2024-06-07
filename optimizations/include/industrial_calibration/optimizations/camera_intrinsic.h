@@ -44,3 +44,26 @@ std::ostream& operator<<(std::ostream& stream, const CameraIntrinsicResult& resu
 CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params);
 
 }  // namespace industrial_calibration
+
+namespace YAML
+{
+class Node;
+
+template <typename T>
+struct convert;
+
+template <>
+struct convert<industrial_calibration::CameraIntrinsicProblem>
+{
+  static Node encode(const industrial_calibration::CameraIntrinsicProblem& rhs);
+  static bool decode(const Node& node, industrial_calibration::CameraIntrinsicProblem& rhs);
+};
+
+template <>
+struct convert<industrial_calibration::CameraIntrinsicResult>
+{
+  static Node encode(const industrial_calibration::CameraIntrinsicResult& rhs);
+  static bool decode(const YAML::Node& node, industrial_calibration::CameraIntrinsicResult& rhs);
+};
+
+}  // namespace YAML
