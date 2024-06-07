@@ -21,7 +21,7 @@ static Pose6d solvePnP(const CameraIntrinsics& intr, const Correspondence2D3D::S
 
   PnPResult result = optimize(problem);
 
-  if (!result.converged) throw ICalException("unable to solve PnP sub-problem");
+  if (!result.converged) throw ICalException("Unable to solve PnP sub-problem");
 
   return poseEigenToCal(result.camera_to_target);
 }
@@ -37,7 +37,7 @@ std::ostream& operator<<(std::ostream& stream, const CameraIntrinsicResult& resu
 {
   stream << "Optimization " << (result.converged ? "converged" : "did not converge") << "\n"
          << "Initial cost per observation (pixels): " << std::sqrt(result.initial_cost_per_obs) << "\n"
-         << "Final cost per observatoin (pixels): " << std::sqrt(result.final_cost_per_obs);
+         << "Final cost per observation (pixels): " << std::sqrt(result.final_cost_per_obs);
   if (result.converged)
   {
     stream << "\n"
