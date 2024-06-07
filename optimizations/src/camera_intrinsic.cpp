@@ -68,7 +68,10 @@ CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
   // All of the target poses are seeded to be "in front of" and "looking at" the camera
   for (std::size_t i = 0; i < params.image_observations.size(); ++i)
   {
-    internal_poses[i] = solvePnP(params.intrinsics_guess, params.image_observations[i], guessInitialPose());
+    if (params.use_extrinsic_guesses)
+      internal_poses[i] = poseEigenToCal(params.extrinsic_guesses.at(i));
+    else
+      internal_poses[i] = solvePnP(params.intrinsics_guess, params.image_observations[i], guessInitialPose());
   }
 
   ceres::Problem problem;
