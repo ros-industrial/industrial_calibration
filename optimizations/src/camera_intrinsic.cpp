@@ -141,6 +141,10 @@ CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
   result.distortions[3] = internal_intrinsics_data[7];
   result.distortions[4] = internal_intrinsics_data[8];
 
+  result.target_transforms.reserve(internal_poses.size());
+  for (const Pose6d& pose : internal_poses)
+    result.target_transforms.push_back(poseCalToEigen(pose));
+
   result.initial_cost_per_obs = summary.initial_cost / summary.num_residuals;
   result.final_cost_per_obs = summary.final_cost / summary.num_residuals;
 
