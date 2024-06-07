@@ -4,6 +4,7 @@
 #include <industrial_calibration/optimizations/covariance_analysis.h>
 #include <industrial_calibration/optimizations/pnp.h>
 #include <industrial_calibration/core/exceptions.h>
+#include <industrial_calibration/core/serialization.h>
 
 #include <ceres/ceres.h>
 
@@ -20,7 +21,7 @@ static Pose6d solvePnP(const CameraIntrinsics& intr, const Correspondence2D3D::S
 
   PnPResult result = optimize(problem);
 
-  if (!result.converged) throw ICalException("unable to solve PnP sub-problem");
+  if (!result.converged) throw ICalException("Unable to solve PnP sub-problem");
 
   return poseEigenToCal(result.camera_to_target);
 }
@@ -36,14 +37,14 @@ std::ostream& operator<<(std::ostream& stream, const CameraIntrinsicResult& resu
 {
   stream << "Optimization " << (result.converged ? "converged" : "did not converge") << "\n"
          << "Initial cost per observation (pixels): " << std::sqrt(result.initial_cost_per_obs) << "\n"
-         << "Final cost per observatoin (pixels): " << std::sqrt(result.final_cost_per_obs);
+         << "Final cost per observation (pixels): " << std::sqrt(result.final_cost_per_obs);
   if (result.converged)
   {
     stream << "\n"
            << result.intrinsics << "\n"
-           << "Calibrated distortion values: k1 = " << result.distortions[0] << "\tk2 = " << result.distortions[1]
-           << "\tp1 = " << result.distortions[2] << "\tp2 = " << result.distortions[3]
-           << "\tk3 = " << result.distortions[4];
+           << "Distortion:\n\tk1 = " << result.distortions[0] << "\n\tk2 = " << result.distortions[1]
+           << "\n\tp1 = " << result.distortions[2] << "\n\tp2 = " << result.distortions[3]
+           << "\n\tk3 = " << result.distortions[4];
   }
   return stream;
 }
@@ -67,7 +68,10 @@ CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
   // All of the target poses are seeded to be "in front of" and "looking at" the camera
   for (std::size_t i = 0; i < params.image_observations.size(); ++i)
   {
-    internal_poses[i] = solvePnP(params.intrinsics_guess, params.image_observations[i], guessInitialPose());
+    if (params.use_extrinsic_guesses)
+      internal_poses[i] = poseEigenToCal(params.extrinsic_guesses.at(i));
+    else
+      internal_poses[i] = solvePnP(params.intrinsics_guess, params.image_observations[i], guessInitialPose());
   }
 
   ceres::Problem problem;
@@ -90,6 +94,12 @@ CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
       problem.AddResidualBlock(cost_block, NULL, internal_poses[i].values.data(), internal_intrinsics_data.data());
     }
   }
+
+  // Add constraints on the lower bounds of the focal lengths and camera center
+  problem.SetParameterLowerBound(internal_intrinsics_data.data(), 0, 0.0);
+  problem.SetParameterLowerBound(internal_intrinsics_data.data(), 1, 0.0);
+  problem.SetParameterLowerBound(internal_intrinsics_data.data(), 2, 0.0);
+  problem.SetParameterLowerBound(internal_intrinsics_data.data(), 3, 0.0);
 
   std::vector<const double*> param_blocks;
   std::map<const double*, std::vector<std::string>> param_labels;
@@ -131,6 +141,10 @@ CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
   result.distortions[3] = internal_intrinsics_data[7];
   result.distortions[4] = internal_intrinsics_data[8];
 
+  result.target_transforms.reserve(internal_poses.size());
+  for (const Pose6d& pose : internal_poses)
+    result.target_transforms.push_back(poseCalToEigen(pose));
+
   result.initial_cost_per_obs = summary.initial_cost / summary.num_residuals;
   result.final_cost_per_obs = summary.final_cost / summary.num_residuals;
 
@@ -149,3 +163,55 @@ CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
 }
 
 }  // namespace industrial_calibration
+
+namespace YAML
+{
+Node convert<CameraIntrinsicProblem>::encode(const CameraIntrinsicProblem& rhs)
+{
+  Node node;
+
+  node["intrisics_guess"] = rhs.intrinsics_guess;
+  node["image_observations"] = rhs.image_observations;
+  node["extrinsic_guesses"] = rhs.extrinsic_guesses;
+  node["use_extrinsic_guesses"] = rhs.use_extrinsic_guesses;
+
+  return node;
+}
+
+bool convert<CameraIntrinsicProblem>::decode(const Node& node, CameraIntrinsicProblem& rhs)
+{
+  rhs.intrinsics_guess = getMember<decltype(rhs.intrinsics_guess)>(node, "intrinsics_guess");
+  rhs.image_observations = getMember<decltype(rhs.image_observations)>(node, "image_observations");
+  rhs.extrinsic_guesses = getMember<decltype(rhs.extrinsic_guesses)>(node, "extrinsic_guesses");
+  rhs.use_extrinsic_guesses = getMember<decltype(rhs.use_extrinsic_guesses)>(node, "use_extrinsic_guesses");
+
+  return true;
+}
+
+Node convert<CameraIntrinsicResult>::encode(const CameraIntrinsicResult& rhs)
+{
+  Node node;
+
+  node["converged"] = rhs.converged;
+  node["initial_cost_per_obs"] = rhs.initial_cost_per_obs;
+  node["final_cost_per_obs"] = rhs.final_cost_per_obs;
+  node["intrinsics"] = rhs.intrinsics;
+  node["distortions"] = rhs.distortions;
+  node["target_transforms"] = rhs.target_transforms;
+
+  return node;
+}
+
+bool convert<CameraIntrinsicResult>::decode(const YAML::Node& node, CameraIntrinsicResult& rhs)
+{
+  rhs.converged = getMember<decltype(rhs.converged)>(node, "converged");
+  rhs.initial_cost_per_obs = getMember<decltype(rhs.initial_cost_per_obs)>(node, "initial_cost_per_obs");
+  rhs.final_cost_per_obs = getMember<decltype(rhs.final_cost_per_obs)>(node, "final_cost_per_obs");
+  rhs.intrinsics = getMember<decltype(rhs.intrinsics)>(node, "intrinsics");
+  rhs.distortions = getMember<decltype(rhs.distortions)>(node, "distortions");
+  rhs.target_transforms = getMember<decltype(rhs.target_transforms)>(node, "target_transforms");
+
+  return true;
+}
+
+}  // namespace YAML
