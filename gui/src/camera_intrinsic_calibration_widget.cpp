@@ -50,6 +50,77 @@ static void error(QTreeWidgetItem* item, const QString& message)
 
 namespace industrial_calibration
 {
+static CameraIntrinsicResult optimizeOpenCV(const CameraIntrinsicProblem& params, const cv::Size& image_size)
+{
+  std::vector<std::vector<cv::Vec3f>> object_points;
+  std::vector<std::vector<cv::Vec2f>> image_points;
+
+  for (const auto& o : params.image_observations)
+  {
+    std::vector<cv::Vec3f> op;
+    std::vector<cv::Vec2f> ip;
+
+    for (const auto& pair : o)
+    {
+      op.push_back(cv::Vec3f(pair.in_target(0), pair.in_target(1), pair.in_target(2)));
+      ip.push_back(cv::Vec2f(pair.in_image(0), pair.in_image(1)));
+    }
+
+    object_points.push_back(op);
+    image_points.push_back(ip);
+  }
+
+  // Convert intrinsics to OpenCV
+  cv::Mat camera_matrix(3, 3, cv::DataType<double>::type);
+  cv::setIdentity(camera_matrix);
+  camera_matrix.at<double>(0, 0) = params.intrinsics_guess.fx();
+  camera_matrix.at<double>(1, 1) = params.intrinsics_guess.fy();
+  camera_matrix.at<double>(0, 2) = params.intrinsics_guess.cx();
+  camera_matrix.at<double>(1, 2) = params.intrinsics_guess.cy();
+
+  cv::Mat dist_coeffs;
+  std::vector<cv::Mat> rvecs;
+  std::vector<cv::Mat> tvecs;
+  double rms_error =
+      cv::calibrateCamera(object_points, image_points, image_size, camera_matrix, dist_coeffs, rvecs, tvecs);
+
+  // Populate the result
+  CameraIntrinsicResult result;
+  result.converged = true;
+  result.initial_cost_per_obs = std::numeric_limits<double>::infinity();
+  result.final_cost_per_obs = rms_error;
+
+  // Intrinsics
+  result.intrinsics.fx() = camera_matrix.at<double>(0, 0);
+  result.intrinsics.fy() = camera_matrix.at<double>(1, 1);
+  result.intrinsics.cx() = camera_matrix.at<double>(0, 2);
+  result.intrinsics.cy() = camera_matrix.at<double>(1, 2);
+
+  // Distortion
+  result.distortions[0] = dist_coeffs.at<double>(0);
+  result.distortions[1] = dist_coeffs.at<double>(1);
+  result.distortions[2] = dist_coeffs.at<double>(2);
+  result.distortions[3] = dist_coeffs.at<double>(3);
+  result.distortions[4] = dist_coeffs.at<double>(4);
+
+  // Target positions
+  result.target_transforms.reserve(params.image_observations.size());
+  for (std::size_t i = 0; i < params.image_observations.size(); ++i)
+  {
+    // Convert to rotation matrix
+    cv::Mat rotation(3, 3, CV_64F);
+    cv::Rodrigues(rvecs[i], rotation);
+
+    Eigen::Isometry3d pose;
+    pose.linear() = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>::Map(reinterpret_cast<double*>(rotation.data));
+    pose.translation() = Eigen::Vector3d::Map(reinterpret_cast<double*>(tvecs[i].data));
+
+    result.target_transforms.push_back(pose);
+  }
+
+  return result;
+}
+
 CameraIntrinsicCalibrationWidget::CameraIntrinsicCalibrationWidget(QWidget* parent)
   : QMainWindow(parent)
   , ui_(new Ui::CameraIntrinsicCalibration())
@@ -359,15 +430,18 @@ void CameraIntrinsicCalibrationWidget::calibrate()
 
     // Solve the calibration problem
     result_ = std::make_shared<CameraIntrinsicResult>();
-    *result_ = optimize(problem);
+    if (ui_->action_use_opencv->isChecked())
+      *result_ = optimizeOpenCV(problem, image_size);
+    else
+      *result_ = optimize(problem);
 
     // Report results
     std::stringstream ss;
     ss << *result_ << std::endl;
 
-    if (result_->covariance.covariances.empty())
+    if (result_->covariance.covariances.empty() && !ui_->action_use_opencv->isChecked())
       ss << "Failed to compute covariance" << std::endl;
-    else
+    else if (!ui_->action_use_opencv->isChecked())
       ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
 
     ui_->text_edit_results->clear();

@@ -184,13 +184,15 @@
    <addaction name="action_edit_target_finder"/>
    <addaction name="action_camera_intrinsics"/>
    <addaction name="action_use_extrinsic_guesses"/>
+   <addaction name="action_use_opencv"/>
    <addaction name="separator"/>
    <addaction name="action_calibrate"/>
    <addaction name="action_save"/>
   </widget>
   <action name="action_load_configuration">
    <property name="icon">
-    <iconset theme="document-open"/>
+    <iconset theme="document-open">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Load configuration</string>
@@ -201,7 +203,8 @@
   </action>
   <action name="action_edit_target_finder">
    <property name="icon">
-    <iconset theme="edit-find"/>
+    <iconset theme="edit-find">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Target finder</string>
@@ -212,7 +215,8 @@
   </action>
   <action name="action_load_data">
    <property name="icon">
-    <iconset theme="document-new"/>
+    <iconset theme="document-new">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Load observations</string>
@@ -223,7 +227,8 @@
   </action>
   <action name="action_calibrate">
    <property name="icon">
-    <iconset theme="media-playback-start"/>
+    <iconset theme="media-playback-start">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Calibrate</string>
@@ -234,7 +239,8 @@
   </action>
   <action name="action_save">
    <property name="icon">
-    <iconset theme="document-save"/>
+    <iconset theme="document-save">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Save calibration</string>
@@ -248,7 +254,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset theme="user-available"/>
+    <iconset theme="user-available">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Use target pose guesses</string>
@@ -259,13 +266,32 @@
   </action>
   <action name="action_camera_intrinsics">
    <property name="icon">
-    <iconset theme="camera-photo"/>
+    <iconset theme="camera-photo">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Camera intrinsics</string>
    </property>
    <property name="toolTip">
     <string>Edit camera intrinsics</string>
+   </property>
+  </action>
+  <action name="action_use_opencv">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/opencv.svg</normaloff>:/icons/opencv.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Use OpenCV calibration</string>
+   </property>
+   <property name="toolTip">
+    <string>Use OpenCV calibration algorithm</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
  </widget>
@@ -281,6 +307,8 @@
   <tabstop>double_spin_box_homography_threshold</tabstop>
   <tabstop>text_edit_results</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
