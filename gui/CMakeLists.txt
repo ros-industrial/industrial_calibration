@@ -29,8 +29,6 @@ add_library(
   src/target_finder.ui
   src/target_finder.cpp
   # Extrinsic hand-eye calibration widget
-  src/extrinsic_hand_eye_calibration_configuration_widget.ui
-  src/extrinsic_hand_eye_calibration_configuration_widget.cpp
   src/extrinsic_hand_eye_calibration_widget.ui
   src/extrinsic_hand_eye_calibration_widget.cpp
   # Camera intrinsic calibration widget
