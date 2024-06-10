@@ -27,6 +27,9 @@ public:
   explicit ExtrinsicHandEyeCalibrationWidget(QWidget* parent = nullptr);
   ~ExtrinsicHandEyeCalibrationWidget();
 
+  void loadConfig(const std::string& config_file);
+  void loadObservations(const std::string& observations_file);
+
 private:
   void loadConfig();
   void loadObservations();

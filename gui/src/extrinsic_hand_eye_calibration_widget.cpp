@@ -134,15 +134,20 @@ ExtrinsicHandEyeCalibrationWidget::~ExtrinsicHandEyeCalibrationWidget() { delete
 
 void ExtrinsicHandEyeCalibrationWidget::loadConfig()
 {
+  // Get yaml filepath
+  const QString config_file =
+      QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(), "YAML files (*.yaml *.yml)");
+  if (config_file.isNull()) return;
+
+  loadConfig(config_file.toStdString());
+}
+
+void ExtrinsicHandEyeCalibrationWidget::loadConfig(const std::string& config_file)
+{
   try
   {
-    // Get yaml filepath
-    const QString config_file = QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(),
-                                                             "YAML files (*.yaml *.yml)");
-    if (config_file.isNull()) return;
-
     // Load all of the configurations before setting GUI items
-    YAML::Node node = YAML::LoadFile(config_file.toStdString());
+    YAML::Node node = YAML::LoadFile(config_file);
     auto target_finder_config = getMember<YAML::Node>(node, "target_finder");
     auto intrinsics = getMember<YAML::Node>(node, "intrinsics");
     auto camera_mount_to_camera = getMember<YAML::Node>(node, "camera_mount_to_camera_guess");
@@ -181,11 +186,16 @@ void ExtrinsicHandEyeCalibrationWidget::loadObservations()
       QFileDialog::getOpenFileName(this, "Load calibration observation file", QString(), "YAML files (*.yaml *.yml)");
   if (observations_file.isNull()) return;
 
-  QFileInfo observations_file_info(observations_file);
+  return loadObservations(observations_file.toStdString());
+}
+
+void ExtrinsicHandEyeCalibrationWidget::loadObservations(const std::string& observations_file)
+{
+  QFileInfo observations_file_info(QString::fromStdString(observations_file));
 
   try
   {
-    auto observations = getMember<YAML::Node>(YAML::LoadFile(observations_file.toStdString()), "data");
+    auto observations = getMember<YAML::Node>(YAML::LoadFile(observations_file), "data");
 
     // Reset the tree widget
     ui_->tree_widget_observations->clear();

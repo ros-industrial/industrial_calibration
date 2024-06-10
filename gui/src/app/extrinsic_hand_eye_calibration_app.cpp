@@ -17,5 +17,9 @@ int main(int argc, char** argv)
   w.setWindowIcon(QIcon(":/icons/icon.jpg"));
   w.showMaximized();
 
+  // Attempt to load configuration and observations files, if available
+  if (argc > 1) w.loadConfig(argv[1]);
+  if (argc > 2) w.loadObservations(argv[2]);
+
   return app.exec();
 }
