@@ -17,13 +17,18 @@ class ExtrinsicHandEyeCalibration;
 namespace industrial_calibration
 {
 class ExtrinsicHandEyeResult;
-class ExtrinsicHandEyeCalibrationConfigurationWidget;
+class TargetFinderWidget;
+class CameraIntrinsicsWidget;
+class TransformGuess;
 
 class ExtrinsicHandEyeCalibrationWidget : public QMainWindow
 {
 public:
   explicit ExtrinsicHandEyeCalibrationWidget(QWidget* parent = nullptr);
   ~ExtrinsicHandEyeCalibrationWidget();
+
+  void loadConfig(const std::string& config_file);
+  void loadObservations(const std::string& observations_file);
 
 private:
   void loadConfig();
@@ -35,7 +40,10 @@ private:
   void saveResults();
 
   Ui::ExtrinsicHandEyeCalibration* ui_;
-  ExtrinsicHandEyeCalibrationConfigurationWidget* configuration_widget_;
+  TargetFinderWidget* target_finder_widget_;
+  CameraIntrinsicsWidget* camera_intrinsics_widget_;
+  TransformGuess* camera_transform_guess_widget_;
+  TransformGuess* target_transform_guess_widget_;
 
   boost_plugin_loader::PluginLoader loader_;
   TargetFinderFactoryOpenCV::ConstPtr factory_;

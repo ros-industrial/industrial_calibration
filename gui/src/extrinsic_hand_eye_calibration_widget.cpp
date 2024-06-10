@@ -1,7 +1,9 @@
 #include "ui_extrinsic_hand_eye_calibration_widget.h"
 
 #include <industrial_calibration/gui/extrinsic_hand_eye_calibration_widget.h>
-#include <industrial_calibration/gui/extrinsic_hand_eye_calibration_configuration_widget.h>
+#include <industrial_calibration/gui/target_finder.h>
+#include <industrial_calibration/gui/camera_intrinsics.h>
+#include <industrial_calibration/gui/transform_guess.h>
 #include <industrial_calibration/gui/aspect_ratio_pixmap_label.h>
 #include <industrial_calibration/optimizations/extrinsic_hand_eye.h>
 #include <industrial_calibration/target_finders/opencv/utils.h>
@@ -29,45 +31,78 @@ static const int POSE_FILE_NAME_ROLE = Qt::UserRole + 2;
 static const int IDX_FEATURES = 0;
 static const int IDX_HOMOGRAPHY = 1;
 
-namespace industrial_calibration
-{
-QPixmap toQt(const cv::Mat& image)
+static QPixmap toQt(const cv::Mat& image)
 {
   return QPixmap::fromImage(QImage(image.data, image.cols, image.rows, image.step, QImage::Format_RGB888).rgbSwapped());
 }
 
 /** @brief helper function for showing an info message with a tree item */
-void info(QTreeWidgetItem* item, const QString& message)
+static void info(QTreeWidgetItem* item, const QString& message)
 {
   item->setText(1, message);
   item->setForeground(1, QApplication::palette().text());
 }
 
 /** @brief helper function for showing an error message with a tree item */
-void error(QTreeWidgetItem* item, const QString& message)
+static void error(QTreeWidgetItem* item, const QString& message)
 {
   item->setText(1, message);
   item->setForeground(1, QBrush(QColor("red")));
 }
 
+namespace industrial_calibration
+{
 ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* parent)
   : QMainWindow(parent)
   , ui_(new Ui::ExtrinsicHandEyeCalibration())
-  , configuration_widget_(new ExtrinsicHandEyeCalibrationConfigurationWidget(this))
+  , target_finder_widget_(new TargetFinderWidget(this))
+  , camera_intrinsics_widget_(new CameraIntrinsicsWidget(this))
+  , camera_transform_guess_widget_(new TransformGuess(this))
+  , target_transform_guess_widget_(new TransformGuess(this))
 {
   ui_->setupUi(this);
 
   // Configure the tree widget
   ui_->tree_widget_observations->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-  // Set up the configuration widget
+  // Set up the target finder widget
   {
     auto dialog = new QDialog(this);
     auto layout = new QVBoxLayout(dialog);
-    layout->addWidget(configuration_widget_);
-    dialog->setWindowTitle("Configuration Settings");
+    layout->addWidget(target_finder_widget_);
+    dialog->setWindowTitle("Edit target finder");
 
-    connect(ui_->action_edit_configuration, &QAction::triggered, dialog, &QWidget::show);
+    connect(ui_->action_target_finder, &QAction::triggered, dialog, &QWidget::show);
+  }
+
+  // Set up the camera intrinsics widget
+  {
+    auto dialog = new QDialog(this);
+    auto layout = new QVBoxLayout(dialog);
+    layout->addWidget(camera_intrinsics_widget_);
+    dialog->setWindowTitle("Edit camera intrinsics");
+
+    connect(ui_->action_camera_intrinsics, &QAction::triggered, dialog, &QWidget::show);
+  }
+
+  // Set up the camera mount to camera transform guess widget
+  {
+    auto dialog = new QDialog(this);
+    auto layout = new QVBoxLayout(dialog);
+    layout->addWidget(camera_transform_guess_widget_);
+    dialog->setWindowTitle("Edit camera mount to camera transform guess");
+
+    connect(ui_->action_camera_mount_to_camera, &QAction::triggered, dialog, &QWidget::show);
+  }
+
+  // Set up the target mount to target transform guess widget
+  {
+    auto dialog = new QDialog(this);
+    auto layout = new QVBoxLayout(dialog);
+    layout->addWidget(target_transform_guess_widget_);
+    dialog->setWindowTitle("Edit target mount to target transform guess");
+
+    connect(ui_->action_target_mount_to_target, &QAction::triggered, dialog, &QWidget::show);
   }
 
   // Set the stretch factors of the horizontal splitter to make the proportions reasonable
@@ -81,11 +116,12 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* pa
   });
 
   // Set up push buttons
-  connect(ui_->action_load_configuration, &QAction::triggered, this, &ExtrinsicHandEyeCalibrationWidget::loadConfig);
+  connect(ui_->action_load_configuration, &QAction::triggered, this,
+          QOverload<>::of(&ExtrinsicHandEyeCalibrationWidget::loadConfig));
   connect(ui_->action_calibrate, &QAction::triggered, this, &ExtrinsicHandEyeCalibrationWidget::calibrate);
   connect(ui_->action_save, &QAction::triggered, this, &ExtrinsicHandEyeCalibrationWidget::saveResults);
-
-  connect(ui_->action_load_data, &QAction::triggered, this, &ExtrinsicHandEyeCalibrationWidget::loadObservations);
+  connect(ui_->action_load_data, &QAction::triggered, this,
+          QOverload<>::of(&ExtrinsicHandEyeCalibrationWidget::loadObservations));
   connect(ui_->tree_widget_observations, &QTreeWidget::itemClicked, this,
           &ExtrinsicHandEyeCalibrationWidget::drawImage);
 
@@ -98,14 +134,33 @@ ExtrinsicHandEyeCalibrationWidget::~ExtrinsicHandEyeCalibrationWidget() { delete
 
 void ExtrinsicHandEyeCalibrationWidget::loadConfig()
 {
+  // Get yaml filepath
+  const QString config_file =
+      QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(), "YAML files (*.yaml *.yml)");
+  if (config_file.isNull()) return;
+
+  loadConfig(config_file.toStdString());
+}
+
+void ExtrinsicHandEyeCalibrationWidget::loadConfig(const std::string& config_file)
+{
   try
   {
-    // Get yaml filepath
-    const QString config_file = QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(),
-                                                             "YAML files (*.yaml *.yml)");
-    if (config_file.isNull()) return;
+    // Load all of the configurations before setting GUI items
+    YAML::Node node = YAML::LoadFile(config_file);
+    auto target_finder_config = getMember<YAML::Node>(node, "target_finder");
+    auto intrinsics = getMember<YAML::Node>(node, "intrinsics");
+    auto camera_mount_to_camera = getMember<YAML::Node>(node, "camera_mount_to_camera_guess");
+    auto target_mount_to_target = getMember<YAML::Node>(node, "target_mount_to_target_guess");
+    auto homography_threshold = getMember<double>(node, "homography_threshold");
+    auto static_camera = getMember<bool>(node, "static_camera");
 
-    configuration_widget_->load(config_file);
+    target_finder_widget_->configure(target_finder_config);
+    camera_intrinsics_widget_->configure(intrinsics);
+    camera_transform_guess_widget_->configure(camera_mount_to_camera);
+    target_transform_guess_widget_->configure(target_mount_to_target);
+    ui_->double_spin_box_homography_threshold->setValue(homography_threshold);
+    ui_->action_static_camera->setChecked(static_camera);
 
     QMessageBox::information(this, "Success", "Successfully loaded calibration configuration");
   }
@@ -118,7 +173,7 @@ void ExtrinsicHandEyeCalibrationWidget::loadConfig()
 void ExtrinsicHandEyeCalibrationWidget::loadTargetFinder()
 {
   // Get target type and currentconfig
-  YAML::Node target_finder_config = configuration_widget_->getTargetFinderConfig();
+  YAML::Node target_finder_config = target_finder_widget_->save();
   auto target_type = getMember<std::string>(target_finder_config, "type");
 
   factory_ = loader_.createInstance<TargetFinderFactoryOpenCV>(target_type);
@@ -131,11 +186,16 @@ void ExtrinsicHandEyeCalibrationWidget::loadObservations()
       QFileDialog::getOpenFileName(this, "Load calibration observation file", QString(), "YAML files (*.yaml *.yml)");
   if (observations_file.isNull()) return;
 
-  QFileInfo observations_file_info(observations_file);
+  return loadObservations(observations_file.toStdString());
+}
+
+void ExtrinsicHandEyeCalibrationWidget::loadObservations(const std::string& observations_file)
+{
+  QFileInfo observations_file_info(QString::fromStdString(observations_file));
 
   try
   {
-    auto observations = getMember<YAML::Node>(YAML::LoadFile(observations_file.toStdString()), "data");
+    auto observations = getMember<YAML::Node>(YAML::LoadFile(observations_file), "data");
 
     // Reset the tree widget
     ui_->tree_widget_observations->clear();
@@ -221,7 +281,7 @@ void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col
     info(homography_item, QString::number(homography_error_mean));
 
     // Check homography threshold and update notes/row color
-    if (homography_error_mean > configuration_widget_->getHomographyThreshold())
+    if (homography_error_mean > ui_->double_spin_box_homography_threshold->value())
       error(item, "Homography threshold violated");
   }
   catch (const std::exception& ex)
@@ -251,9 +311,9 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
 
     // Create the calibration problem
     ExtrinsicHandEyeProblem2D3D problem;
-    problem.camera_mount_to_camera_guess = configuration_widget_->getCameraMountToCameraGuess();
-    problem.target_mount_to_target_guess = configuration_widget_->getTargetMountToTargetGuess();
-    problem.intr = configuration_widget_->getCameraIntrinsics();
+    problem.camera_mount_to_camera_guess = camera_transform_guess_widget_->save().as<Eigen::Isometry3d>();
+    problem.target_mount_to_target_guess = target_transform_guess_widget_->save().as<Eigen::Isometry3d>();
+    problem.intr = camera_intrinsics_widget_->save().as<CameraIntrinsics>();
 
     for (int i = 0; i < ui_->tree_widget_observations->topLevelItemCount(); ++i)
     {
@@ -284,7 +344,7 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
 
         // Populate an observation
         Observation2D3D obs;
-        if (configuration_widget_->getStaticCamera())
+        if (ui_->action_static_camera->isChecked())
         {
           obs.to_camera_mount = Eigen::Isometry3d::Identity();
           obs.to_target_mount = pose;
@@ -303,7 +363,7 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
         double homography_error_mean = homography_error.array().mean();
 
         // Conditionally add the observation to the problem if the mean homography error is less than the threshold
-        if (homography_error_mean < configuration_widget_->getHomographyThreshold())
+        if (homography_error_mean < ui_->double_spin_box_homography_threshold->value())
         {
           problem.observations.push_back(obs);
           info(item, "Included in calibration");
