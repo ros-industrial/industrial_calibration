@@ -186,7 +186,7 @@ void CameraIntrinsicCalibrationWidget::onLoadConfig()
 
     loadConfig(config_file.toStdString());
 
-    QMessageBox::information(this, "Success", "Successfully loaded calibration configuration");
+    QMessageBox::information(this, "Configuration", "Successfully loaded calibration configuration");
   }
   catch (const std::exception& ex)
   {
@@ -204,7 +204,7 @@ void CameraIntrinsicCalibrationWidget::loadConfig(const std::string& config_file
     target_finder_widget_->configure(target_finder_config);
   }
 
-  // Intrinsices
+  // Intrinsics
   {
     auto intrinsics_config = getMember<YAML::Node>(node, "intrinsics_guess");
     camera_intrinsics_widget_->configure(intrinsics_config);
@@ -352,7 +352,7 @@ void CameraIntrinsicCalibrationWidget::onCalibrate()
     QApplication::restoreOverrideCursor();
 
     if (result_->converged)
-      QMessageBox::information(this, "Success", "Successfully completed calibration");
+      QMessageBox::information(this, "Calibration", "Successfully completed calibration");
     else
       QMessageBox::warning(this, "Error", "Calibration failed to converge");
   }

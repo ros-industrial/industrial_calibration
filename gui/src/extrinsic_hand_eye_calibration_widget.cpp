@@ -141,7 +141,7 @@ void ExtrinsicHandEyeCalibrationWidget::onLoadConfig()
 
     loadConfig(config_file.toStdString());
 
-    QMessageBox::information(this, "Success", "Successfully loaded calibration configuration");
+    QMessageBox::information(this, "Configuration", "Successfully loaded calibration configuration");
   }
   catch (const std::exception& ex)
   {
@@ -303,7 +303,7 @@ void ExtrinsicHandEyeCalibrationWidget::onCalibrate()
     QApplication::restoreOverrideCursor();
 
     if (result_->converged)
-      QMessageBox::information(this, "Success", "Successfully completed calibration");
+      QMessageBox::information(this, "Calibration", "Successfully completed calibration");
     else
       QMessageBox::warning(this, "Error", "Calibration failed to converge");
   }
