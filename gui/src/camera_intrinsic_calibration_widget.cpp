@@ -163,13 +163,10 @@ CameraIntrinsicCalibrationWidget::CameraIntrinsicCalibrationWidget(QWidget* pare
   });
 
   // Set up push buttons
-  connect(ui_->action_load_configuration, &QAction::triggered, this,
-          QOverload<>::of(&CameraIntrinsicCalibrationWidget::loadConfig));
-  connect(ui_->action_calibrate, &QAction::triggered, this, &CameraIntrinsicCalibrationWidget::calibrate);
-  connect(ui_->action_save, &QAction::triggered, this, &CameraIntrinsicCalibrationWidget::saveResults);
-
-  connect(ui_->action_load_data, &QAction::triggered, this,
-          QOverload<>::of(&CameraIntrinsicCalibrationWidget::loadObservations));
+  connect(ui_->action_load_configuration, &QAction::triggered, this, &CameraIntrinsicCalibrationWidget::onLoadConfig);
+  connect(ui_->action_load_data, &QAction::triggered, this, &CameraIntrinsicCalibrationWidget::onLoadObservations);
+  connect(ui_->action_calibrate, &QAction::triggered, this, &CameraIntrinsicCalibrationWidget::onCalibrate);
+  connect(ui_->action_save, &QAction::triggered, this, &CameraIntrinsicCalibrationWidget::onSaveResults);
   connect(ui_->tree_widget_observations, &QTreeWidget::itemClicked, this, &CameraIntrinsicCalibrationWidget::drawImage);
 
   // Set up the plugin loader
@@ -179,38 +176,15 @@ CameraIntrinsicCalibrationWidget::CameraIntrinsicCalibrationWidget(QWidget* pare
 
 CameraIntrinsicCalibrationWidget::~CameraIntrinsicCalibrationWidget() { delete ui_; }
 
-void CameraIntrinsicCalibrationWidget::loadConfig()
-{
-  const QString config_file =
-      QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(), "YAML files (*.yaml *.yml)");
-  if (config_file.isNull()) return;
-
-  return loadConfig(config_file.toStdString());
-}
-
-void CameraIntrinsicCalibrationWidget::loadConfig(const std::string& config_file)
+void CameraIntrinsicCalibrationWidget::onLoadConfig()
 {
   try
   {
-    YAML::Node node = YAML::LoadFile(config_file);
+    const QString config_file = QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(),
+                                                             "YAML files (*.yaml *.yml)");
+    if (config_file.isNull() || config_file.isEmpty()) return;
 
-    // Target finder
-    {
-      auto target_finder_config = getMember<YAML::Node>(node, "target_finder");
-      target_finder_widget_->configure(target_finder_config);
-    }
-
-    // Intrinsices
-    {
-      auto intrinsics_config = getMember<YAML::Node>(node, "intrinsics_guess");
-      camera_intrinsics_widget_->configure(intrinsics_config);
-    }
-
-    // Homography threshold
-    ui_->double_spin_box_homography_threshold->setValue(getMember<double>(node, "homography_threshold"));
-
-    // Use extrinsic guesses
-    ui_->action_use_extrinsic_guesses->setChecked(getMember<bool>(node, "use_extrinsic_guesses"));
+    loadConfig(config_file.toStdString());
 
     QMessageBox::information(this, "Success", "Successfully loaded calibration configuration");
   }
@@ -218,6 +192,29 @@ void CameraIntrinsicCalibrationWidget::loadConfig(const std::string& config_file
   {
     QMessageBox::warning(this, "Error", ex.what());
   }
+}
+
+void CameraIntrinsicCalibrationWidget::loadConfig(const std::string& config_file)
+{
+  YAML::Node node = YAML::LoadFile(config_file);
+
+  // Target finder
+  {
+    auto target_finder_config = getMember<YAML::Node>(node, "target_finder");
+    target_finder_widget_->configure(target_finder_config);
+  }
+
+  // Intrinsices
+  {
+    auto intrinsics_config = getMember<YAML::Node>(node, "intrinsics_guess");
+    camera_intrinsics_widget_->configure(intrinsics_config);
+  }
+
+  // Homography threshold
+  ui_->double_spin_box_homography_threshold->setValue(getMember<double>(node, "homography_threshold"));
+
+  // Use extrinsic guesses
+  ui_->action_use_extrinsic_guesses->setChecked(getMember<bool>(node, "use_extrinsic_guesses"));
 }
 
 void CameraIntrinsicCalibrationWidget::loadTargetFinder()
@@ -230,60 +227,60 @@ void CameraIntrinsicCalibrationWidget::loadTargetFinder()
   target_finder_ = factory_->create(target_finder_config);
 }
 
-void CameraIntrinsicCalibrationWidget::loadObservations()
+void CameraIntrinsicCalibrationWidget::onLoadObservations()
 {
-  QString observations_file =
-      QFileDialog::getOpenFileName(this, "Load calibration observation file", QString(), "YAML files (*.yaml *.yml)");
-  if (observations_file.isNull()) return;
-
-  loadObservations(observations_file.toStdString());
-}
-
-void CameraIntrinsicCalibrationWidget::loadObservations(const std::string& observations_file)
-{
-  QFileInfo observations_file_info(QString::fromStdString(observations_file));
-
   try
   {
-    auto observations = getMember<YAML::Node>(YAML::LoadFile(observations_file), "data");
+    QString observations_file =
+        QFileDialog::getOpenFileName(this, "Load calibration observation file", QString(), "YAML files (*.yaml *.yml)");
+    if (observations_file.isNull() || observations_file.isEmpty()) return;
 
-    // Reset the tree widget
-    ui_->tree_widget_observations->clear();
-
-    for (std::size_t i = 0; i < observations.size(); ++i)
-    {
-      const YAML::Node& entry = observations[i];
-
-      QString image_file =
-          observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "image")));
-      QString pose_file =
-          observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "pose")));
-
-      auto item = new QTreeWidgetItem();
-      item->setData(0, Qt::EditRole, "Observation " + QString::number(i));
-      item->setData(0, IMAGE_FILE_NAME_ROLE, image_file);
-      item->setData(0, POSE_FILE_NAME_ROLE, pose_file);
-
-      // Add a column entry for the number of detected features
-      auto features_item = new QTreeWidgetItem(item);
-      features_item->setData(0, Qt::EditRole, "Feature count");
-      info(features_item, "-");
-
-      // Add a column entry for the homography error
-      auto homography_item = new QTreeWidgetItem(item);
-      homography_item->setData(0, Qt::EditRole, "Homography error (px)");
-      info(homography_item, "-");
-
-      ui_->tree_widget_observations->addTopLevelItem(item);
-    }
-
-    ui_->tree_widget_observations->resizeColumnToContents(0);
+    loadObservations(observations_file.toStdString());
   }
   catch (const std::exception& ex)
   {
     ui_->tree_widget_observations->clear();
     QMessageBox::warning(this, "Error", ex.what());
   }
+}
+
+void CameraIntrinsicCalibrationWidget::loadObservations(const std::string& observations_file)
+{
+  QFileInfo observations_file_info(QString::fromStdString(observations_file));
+
+  auto observations = getMember<YAML::Node>(YAML::LoadFile(observations_file), "data");
+
+  // Reset the tree widget
+  ui_->tree_widget_observations->clear();
+
+  for (std::size_t i = 0; i < observations.size(); ++i)
+  {
+    const YAML::Node& entry = observations[i];
+
+    QString image_file =
+        observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "image")));
+    QString pose_file =
+        observations_file_info.absoluteDir().filePath(QString::fromStdString(getMember<std::string>(entry, "pose")));
+
+    auto item = new QTreeWidgetItem();
+    item->setData(0, Qt::EditRole, "Observation " + QString::number(i));
+    item->setData(0, IMAGE_FILE_NAME_ROLE, image_file);
+    item->setData(0, POSE_FILE_NAME_ROLE, pose_file);
+
+    // Add a column entry for the number of detected features
+    auto features_item = new QTreeWidgetItem(item);
+    features_item->setData(0, Qt::EditRole, "Feature count");
+    info(features_item, "-");
+
+    // Add a column entry for the homography error
+    auto homography_item = new QTreeWidgetItem(item);
+    homography_item->setData(0, Qt::EditRole, "Homography error (px)");
+    info(homography_item, "-");
+
+    ui_->tree_widget_observations->addTopLevelItem(item);
+  }
+
+  ui_->tree_widget_observations->resizeColumnToContents(0);
 }
 
 void CameraIntrinsicCalibrationWidget::drawImage(QTreeWidgetItem* item, int col)
@@ -346,108 +343,14 @@ void CameraIntrinsicCalibrationWidget::drawImage(QTreeWidgetItem* item, int col)
   }
 }
 
-void CameraIntrinsicCalibrationWidget::calibrate()
+void CameraIntrinsicCalibrationWidget::onCalibrate()
 {
   try
   {
     QApplication::setOverrideCursor(Qt::WaitCursor);
-
-    // Check if there are any observations before continuing
-    if (ui_->tree_widget_observations->topLevelItemCount() == 0)
-      throw std::runtime_error("Please load the calibration observations before performing the calibration");
-
-    // Load the target finder
-    loadTargetFinder();
-
-    // Create the calibration problem
-    CameraIntrinsicProblem problem;
-    problem.intrinsics_guess = camera_intrinsics_widget_->save().as<CameraIntrinsics>();
-    problem.use_extrinsic_guesses = ui_->action_use_extrinsic_guesses->isChecked();
-
-    // Extract the image size for the OpenCV solver
-    cv::Size image_size;
-
-    for (int i = 0; i < ui_->tree_widget_observations->topLevelItemCount(); ++i)
-    {
-      // Extract the tree items
-      QTreeWidgetItem* item = ui_->tree_widget_observations->topLevelItem(i);
-      QTreeWidgetItem* features_item = item->child(IDX_FEATURES);
-      QTreeWidgetItem* homography_item = item->child(IDX_HOMOGRAPHY);
-
-      QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
-      if (!QFile(image_file).exists())
-      {
-        error(item, "Image file does not exist");
-        continue;
-      }
-
-      QString pose_file = item->data(0, POSE_FILE_NAME_ROLE).value<QString>();
-      if (!QFile(pose_file).exists() && problem.use_extrinsic_guesses)
-      {
-        error(item, "Pose file does not exist");
-        continue;
-      }
-
-      try
-      {
-        // Load the image and pose
-        cv::Mat image = cv::imread(image_file.toStdString());
-        auto pose = YAML::LoadFile(pose_file.toStdString()).as<Eigen::Isometry3d>();
-
-        if (i == 0) image_size = image.size();
-
-        Correspondence2D3D::Set correspondence_set = target_finder_->findCorrespondences(image);
-
-        // Calculate homography error
-        RandomCorrespondenceSampler random_sampler(correspondence_set.size(), correspondence_set.size() / 3,
-                                                   RANDOM_SEED);
-        Eigen::VectorXd homography_error = calculateHomographyError(correspondence_set, random_sampler);
-        double homography_error_mean = homography_error.array().mean();
-
-        // Conditionally add the observation to the problem if the mean homography error is less than the threshold
-        if (homography_error_mean < ui_->double_spin_box_homography_threshold->value())
-        {
-          problem.image_observations.push_back(correspondence_set);
-          if (problem.use_extrinsic_guesses) problem.extrinsic_guesses.push_back(pose);
-
-          info(item, "Included in calibration");
-        }
-        else
-        {
-          // Update the notes
-          error(item, "Excluded from calibration (homography threshold violation)");
-        }
-
-        // Update the tree widget
-        info(features_item, QString::number(correspondence_set.size()));
-        info(homography_item, QString::number(homography_error_mean));
-      }
-      catch (const std::exception& ex)
-      {
-        error(item, QString(ex.what()));
-      }
-    }
-
-    // Solve the calibration problem
-    result_ = std::make_shared<CameraIntrinsicResult>();
-    if (ui_->action_use_opencv->isChecked())
-      *result_ = optimizeOpenCV(problem, image_size);
-    else
-      *result_ = optimize(problem);
-
-    // Report results
-    std::stringstream ss;
-    ss << *result_ << std::endl;
-
-    if (result_->covariance.covariances.empty() && !ui_->action_use_opencv->isChecked())
-      ss << "Failed to compute covariance" << std::endl;
-    else if (!ui_->action_use_opencv->isChecked())
-      ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
-
-    ui_->text_edit_results->clear();
-    ui_->text_edit_results->append(QString::fromStdString(ss.str()));
-
+    calibrate();
     QApplication::restoreOverrideCursor();
+
     if (result_->converged)
       QMessageBox::information(this, "Success", "Successfully completed calibration");
     else
@@ -461,18 +364,125 @@ void CameraIntrinsicCalibrationWidget::calibrate()
   }
 }
 
-void CameraIntrinsicCalibrationWidget::saveResults()
+void CameraIntrinsicCalibrationWidget::calibrate()
 {
-  if (result_ == nullptr)
+  // Check if there are any observations before continuing
+  if (ui_->tree_widget_observations->topLevelItemCount() == 0)
+    throw std::runtime_error("Please load the calibration observations before performing the calibration");
+
+  // Load the target finder
+  loadTargetFinder();
+
+  // Create the calibration problem
+  CameraIntrinsicProblem problem;
+  problem.intrinsics_guess = camera_intrinsics_widget_->save().as<CameraIntrinsics>();
+  problem.use_extrinsic_guesses = ui_->action_use_extrinsic_guesses->isChecked();
+
+  // Extract the image size for the OpenCV solver
+  cv::Size image_size;
+
+  for (int i = 0; i < ui_->tree_widget_observations->topLevelItemCount(); ++i)
   {
-    QMessageBox::warning(this, "Error",
-                         "Calibration problem has not yet been solved. Please load the calibration data and run the "
-                         "calibration");
-    return;
+    // Extract the tree items
+    QTreeWidgetItem* item = ui_->tree_widget_observations->topLevelItem(i);
+    QTreeWidgetItem* features_item = item->child(IDX_FEATURES);
+    QTreeWidgetItem* homography_item = item->child(IDX_HOMOGRAPHY);
+
+    QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
+    if (!QFile(image_file).exists())
+    {
+      error(item, "Image file does not exist");
+      continue;
+    }
+
+    QString pose_file = item->data(0, POSE_FILE_NAME_ROLE).value<QString>();
+    if (!QFile(pose_file).exists() && problem.use_extrinsic_guesses)
+    {
+      error(item, "Pose file does not exist");
+      continue;
+    }
+
+    try
+    {
+      // Load the image and pose
+      cv::Mat image = cv::imread(image_file.toStdString());
+      auto pose = YAML::LoadFile(pose_file.toStdString()).as<Eigen::Isometry3d>();
+
+      if (i == 0) image_size = image.size();
+
+      Correspondence2D3D::Set correspondence_set = target_finder_->findCorrespondences(image);
+
+      // Calculate homography error
+      RandomCorrespondenceSampler random_sampler(correspondence_set.size(), correspondence_set.size() / 3, RANDOM_SEED);
+      Eigen::VectorXd homography_error = calculateHomographyError(correspondence_set, random_sampler);
+      double homography_error_mean = homography_error.array().mean();
+
+      // Conditionally add the observation to the problem if the mean homography error is less than the threshold
+      if (homography_error_mean < ui_->double_spin_box_homography_threshold->value())
+      {
+        problem.image_observations.push_back(correspondence_set);
+        if (problem.use_extrinsic_guesses) problem.extrinsic_guesses.push_back(pose);
+
+        info(item, "Included in calibration");
+      }
+      else
+      {
+        // Update the notes
+        error(item, "Excluded from calibration (homography threshold violation)");
+      }
+
+      // Update the tree widget
+      info(features_item, QString::number(correspondence_set.size()));
+      info(homography_item, QString::number(homography_error_mean));
+    }
+    catch (const std::exception& ex)
+    {
+      error(item, QString(ex.what()));
+    }
   }
 
-  const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
-  std::ofstream f(file.toStdString());
+  // Solve the calibration problem
+  result_ = std::make_shared<CameraIntrinsicResult>();
+  if (ui_->action_use_opencv->isChecked())
+    *result_ = optimizeOpenCV(problem, image_size);
+  else
+    *result_ = optimize(problem);
+
+  // Report results
+  std::stringstream ss;
+  ss << *result_ << std::endl;
+
+  if (result_->covariance.covariances.empty() && !ui_->action_use_opencv->isChecked())
+    ss << "Failed to compute covariance" << std::endl;
+  else if (!ui_->action_use_opencv->isChecked())
+    ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
+
+  ui_->text_edit_results->clear();
+  ui_->text_edit_results->append(QString::fromStdString(ss.str()));
+}
+
+void CameraIntrinsicCalibrationWidget::onSaveResults()
+{
+  try
+  {
+    const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
+    if (file.isNull() || file.isEmpty()) return;
+
+    saveResults(file.toStdString());
+  }
+  catch (const std::exception& ex)
+  {
+    QMessageBox::warning(this, "Error", ex.what());
+  }
+}
+
+void CameraIntrinsicCalibrationWidget::saveResults(const std::string& file)
+{
+  if (result_ == nullptr)
+    throw ICalException("Calibration problem has not yet been solved. Please load the calibration data and run the "
+                        "calibration");
+
+  std::ofstream f(file);
   f << YAML::Node(*result_);
 }
 

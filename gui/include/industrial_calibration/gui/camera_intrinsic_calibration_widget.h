@@ -26,17 +26,38 @@ public:
   explicit CameraIntrinsicCalibrationWidget(QWidget* parent = nullptr);
   ~CameraIntrinsicCalibrationWidget();
 
+  /**
+   * @brief Loads the calibration configuration from file
+   * @throws Exception on failure
+   */
   void loadConfig(const std::string& config_file);
+
+  /**
+   * @brief Loads the calibration observations from file
+   * @throws Exception on failure
+   */
   void loadObservations(const std::string& obserations_file);
 
-private:
-  void loadConfig();
-  void loadObservations();
+  /**
+   * @brief Performs the calibration
+   * @throws Exception on failure
+   */
   void calibrate();
+
+  /**
+   * @brief Saves the calibration results
+   * @throws Exception on failure
+   */
+  void saveResults(const std::string& file);
+
+private:
+  void onLoadConfig();
+  void onLoadObservations();
+  void onCalibrate();
+  void onSaveResults();
 
   void loadTargetFinder();
   void drawImage(QTreeWidgetItem* item, int col);
-  void saveResults();
 
   Ui::CameraIntrinsicCalibration* ui_;
   TargetFinderWidget* target_finder_widget_;
