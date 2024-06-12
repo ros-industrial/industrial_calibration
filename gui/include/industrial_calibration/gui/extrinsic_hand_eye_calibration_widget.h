@@ -27,17 +27,38 @@ public:
   explicit ExtrinsicHandEyeCalibrationWidget(QWidget* parent = nullptr);
   ~ExtrinsicHandEyeCalibrationWidget();
 
+  /**
+   * @brief Loads the calibration configuration from file
+   * @throws Exception on failure
+   */
   void loadConfig(const std::string& config_file);
+
+  /**
+   * @brief Loads the calibration observations from file
+   * @throws Exception on failure
+   */
   void loadObservations(const std::string& observations_file);
 
-private:
-  void loadConfig();
-  void loadObservations();
+  /**
+   * @brief Performs the calibration
+   * @throws Exception on failure
+   */
   void calibrate();
+
+  /**
+   * @brief Saves results of the calibration
+   * @throws Exception on failure
+   */
+  void saveResults(const std::string& file);
+
+private:
+  void onLoadConfig();
+  void onLoadObservations();
+  void onCalibrate();
+  void onSaveResults();
 
   void loadTargetFinder();
   void drawImage(QTreeWidgetItem* item, int col);
-  void saveResults();
 
   Ui::ExtrinsicHandEyeCalibration* ui_;
   TargetFinderWidget* target_finder_widget_;
