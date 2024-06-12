@@ -215,6 +215,15 @@ void CameraIntrinsicCalibrationWidget::loadConfig(const std::string& config_file
 
   // Use extrinsic guesses
   ui_->action_use_extrinsic_guesses->setChecked(getMember<bool>(node, "use_extrinsic_guesses"));
+
+  // Optionally check for use of OpenCV algorithm
+  try
+  {
+    ui_->action_use_opencv->setChecked(getMember<bool>(node, "use_opencv"));
+  }
+  catch (const std::exception&)
+  {
+  }
 }
 
 void CameraIntrinsicCalibrationWidget::loadTargetFinder()
