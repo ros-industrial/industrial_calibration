@@ -18,8 +18,12 @@ int main(int argc, char** argv)
   w.setWindowTitle("Camera Intrinsic Calibration");
   w.setWindowIcon(QIcon(":/icons/icon.jpg"));
 
-  // Attempt to run headless if the configuration file (argv[1]), observation file (argv[2]), and results file (argv[3])
-  // are specified
+  /* Attempt to run headless if all files are specified:
+   *   argv[1]: configuration file
+   *   argv[2]: observation file
+   *   argv[3]: results file (industrial_calibration)
+   *   argv[4]: results file (ROS) - optional
+   */
   if (argc > 3)
   {
     try
@@ -28,6 +32,8 @@ int main(int argc, char** argv)
       w.loadObservations(argv[2]);
       w.calibrate();
       w.saveResults(argv[3]);
+      if (argc > 4) w.saveROSFormat(argv[4]);
+
       QMessageBox::StandardButton ret = QMessageBox::question(nullptr, "Calibration",
                                                               "Successfully completed calibration and saved results. "
                                                               "View results in the GUI?");
