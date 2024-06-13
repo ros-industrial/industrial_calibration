@@ -48,13 +48,21 @@ public:
    * @brief Saves the calibration results
    * @throws Exception on failure
    */
-  void saveResults(const std::string& file);
+  void saveResults(const std::string& file) const;
+
+  /**
+   * @brief Saves the calibration results to a YAML file in a format compatible with ROS
+   * @details Format definition https://wiki.ros.org/camera_calibration_parsers#File_formats
+   * @throws Exception on failure
+   */
+  void saveROSFormat(const std::string& file) const;
 
 private:
   void onLoadConfig();
   void onLoadObservations();
   void onCalibrate();
   void onSaveResults();
+  void onSaveROSFormat();
 
   void loadTargetFinder();
   void drawImage(QTreeWidgetItem* item, int col);
