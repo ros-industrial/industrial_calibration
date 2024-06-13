@@ -21,6 +21,10 @@ See the [calibration primer](docs/primer.md) for more information on the tools i
 - Examples
     - Contains examples with real data for various types of calibrations, including analysis of the results
 
+## GUI Applications
+- [Extrinsic hand-eye calibration](docs/extrinsic_hand_eye_calibration.md)
+- [Camera intrinsic calibration](docs/camera_intrinsic_calibration.md)
+
 ## Build
 
 ```commandLine
