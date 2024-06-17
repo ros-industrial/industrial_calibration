@@ -2,8 +2,8 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2024-06-17)
+------------------
 * Added exit dialog questions to calibration widgets
 * Add configuration of OpenCV algorithm flag to camera intrinsic calibration
 * Updated GUI applications to run semi-headless when all input file names are specified
