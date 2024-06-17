@@ -17,12 +17,13 @@
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include <fstream>
 #include <opencv2/opencv.hpp>
+#include <QCloseEvent>
 #include <QDialog>
-#include <QScrollBar>
 #include <QFileDialog>
 #include <QFile>
 #include <QMessageBox>
 #include <QPixmap>
+#include <QScrollBar>
 #include <QVBoxLayout>
 
 static const unsigned RANDOM_SEED = 1;
@@ -129,6 +130,19 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* pa
 }
 
 ExtrinsicHandEyeCalibrationWidget::~ExtrinsicHandEyeCalibrationWidget() { delete ui_; }
+
+void ExtrinsicHandEyeCalibrationWidget::closeEvent(QCloseEvent* event)
+{
+  QMessageBox::StandardButton ret = QMessageBox::question(this, "Exit", "Are you sure you want to exit?");
+  switch (ret)
+  {
+    case QMessageBox::StandardButton::No:
+      event->ignore();
+      break;
+    default:
+      event->accept();
+  }
+}
 
 void ExtrinsicHandEyeCalibrationWidget::onLoadConfig()
 {
