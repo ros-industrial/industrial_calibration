@@ -57,7 +57,9 @@ public:
    */
   void saveROSFormat(const std::string& file) const;
 
-private:
+protected:
+  void closeEvent(QCloseEvent*) override;
+
   void onLoadConfig();
   void onLoadObservations();
   void onCalibrate();
