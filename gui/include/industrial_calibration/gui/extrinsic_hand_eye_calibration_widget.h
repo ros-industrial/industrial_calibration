@@ -51,7 +51,9 @@ public:
    */
   void saveResults(const std::string& file);
 
-private:
+protected:
+  void closeEvent(QCloseEvent* event) override;
+
   void onLoadConfig();
   void onLoadObservations();
   void onCalibrate();
