@@ -30,7 +30,7 @@ jobs:
         with:
           path: target_ws/src
       - name: Build
-        uses: tesseract-robotics/colcon-action@v6
+        uses: marip8/colcon-action@ac353d272e58a11d73c806fe993058b737afde32
         with:
           ccache-enabled: false
           rosdep-enabled: true
