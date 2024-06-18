@@ -34,7 +34,7 @@ jobs:
         with:
           ccache-enabled: false
           rosdep-enabled: true
-          ros-enabled: false
+          ros-enabled: true
           vcs-file: dependencies.repos
           target-path: target_ws/src
           target-args: '-DCMAKE_BUILD_TYPE=Debug -DINDUSTRIAL_CALIBRATION_ENABLE_TESTING=ON -DINDUSTRIAL_CALIBRATION_ENABLE_RUN_TESTING=OFF -DINDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY=ON'
