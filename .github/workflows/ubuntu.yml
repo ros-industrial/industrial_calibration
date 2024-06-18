@@ -30,7 +30,7 @@ jobs:
         with:
           path: target_ws/src
       - name: Build
-        uses: marip8/colcon-action@ac353d272e58a11d73c806fe993058b737afde32
+        uses: marip8/colcon-action@e043e5d1d0eee304eab949072a632f5bf96a24ad
         with:
           ccache-enabled: false
           rosdep-enabled: true
