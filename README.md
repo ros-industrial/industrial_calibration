@@ -20,6 +20,11 @@ See the [calibration primer](docs/primer.md) for more information on the tools i
     - Contains Qt-based GUI widgets for performing various types of calibrations
 - Examples
     - Contains examples with real data for various types of calibrations, including analysis of the results
+    
+### ROS Interfaces
+In order to streamline support and building while both ROS 1 and ROS 2 are in use, the ROS interfaces for this library have been moved to separate repositories.
+- [ROS 1 Interfaces](https://github.com/ros-industrial/industrial_calibration_ros)
+- [ROS 2 Interfaces](https://github.com/ros-industrial/industrial_calibration_ros2)
 
 ## GUI Applications
 - [Extrinsic hand-eye calibration](docs/extrinsic_hand_eye_calibration.md)
