@@ -86,4 +86,8 @@ use_extrinsic_guesses: true
 use_opencv: false
 ```
 
-
+## Run 
+```commandLine
+cd ~/my_ws/install/industrial_calibration/
+./bin/industrial_calibration_camera_intrinsic_calibration_app
+```
