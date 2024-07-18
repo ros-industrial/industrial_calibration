@@ -4,7 +4,14 @@
 #include <industrial_calibration/core/exceptions.h>
 
 #include <ceres/problem.h>
+#include <ceres/version.h>
+
+#define CERES_VERSION_LT_2_1 (CERES_VERSION_MAJOR < 2 || (CERES_VERSION_MAJOR == 2 && CERES_VERSION_MINOR < 1))
+#if CERES_VERSION_LT_2_1
 #include <ceres/local_parameterization.h>
+#else
+#include <ceres/manifold.h>
+#endif
 #include <Eigen/Core>
 
 // Ceres Solver - A fast non-linear least squares minimizer
@@ -128,8 +135,13 @@ void addSubsetParameterization(ceres::Problem& problem, const std::map<const dou
         }
         else
         {
+#if CERES_VERSION_LT_2_1
           ceres::LocalParameterization* lp = new ceres::SubsetParameterization(block_size, mask);
           problem.SetParameterization(p, lp);
+#else
+          ceres::Manifold* m = new ceres::SubsetManifold(block_size, mask);
+          problem.SetManifold(p, m);
+#endif
         }
       }
     }
