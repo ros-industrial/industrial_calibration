@@ -2,6 +2,19 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#200 <https://github.com/marip8/industrial_calibration/issues/200>`_ from marip8/update/install-execs-ros
+  Installed executables in directory accessible by ROS
+* Installed executables in directory accessible by ROS
+* Merge pull request `#198 <https://github.com/marip8/industrial_calibration/issues/198>`_ from DavidMerzJr/link-to-ros-interfaces
+  README: Add link to ROS interfaces
+* README: Add link to ROS interfaces
+* Merge pull request `#196 <https://github.com/marip8/industrial_calibration/issues/196>`_ from marip8/update/ci
+  CI Update
+* Run CI on push to main branch
+* Contributors: David Merz, Jr, Michael Ripperger
+
 1.0.0 (2024-06-17)
 ------------------
 * Added exit dialog questions to calibration widgets
