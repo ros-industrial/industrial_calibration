@@ -70,3 +70,7 @@ configure_component(
   "industrial_calibration COMPONENTS analysis target_finders_opencv"
   "Qt5 REQUIRED COMPONENTS Widgets"
   boost_plugin_loader)
+
+# Install the executables for access by ROS
+install(TARGETS ${PROJECT_NAME}_extrinsic_hand_eye_calibration_app ${PROJECT_NAME}_camera_intrinsic_calibration_app
+        DESTINATION lib/${PROJECT_NAME})
