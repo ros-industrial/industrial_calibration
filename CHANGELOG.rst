@@ -2,8 +2,8 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.1 (2024-08-01)
+------------------
 * Merge pull request `#200 <https://github.com/marip8/industrial_calibration/issues/200>`_ from marip8/update/install-execs-ros
   Installed executables in directory accessible by ROS
 * Installed executables in directory accessible by ROS
