@@ -2,8 +2,8 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.2 (2024-08-01)
+------------------
 * Updated checks for applications (`#202 <https://github.com/marip8/industrial_calibration/issues/202>`_)
 * Do not allow short if statements on single line (`#201 <https://github.com/marip8/industrial_calibration/issues/201>`_)
 * Contributors: Michael Ripperger
