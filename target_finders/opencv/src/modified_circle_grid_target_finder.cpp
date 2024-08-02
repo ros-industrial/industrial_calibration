@@ -387,7 +387,8 @@ static std::vector<cv::Point2d> extractModifiedCircleGrid(const cv::Mat& image, 
     }
   }
 
-  if (centers.size() == 0) throw ICalException("Failed to find circle centers");
+  if (centers.size() == 0)
+    throw ICalException("Failed to find circle centers");
 
   return extractKeyPoints(image, centers, detector_ptr, rows, cols, flipped);
 }

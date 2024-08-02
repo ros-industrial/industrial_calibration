@@ -62,7 +62,8 @@ PnPNoiseStat run(const path& calibration_file)
     try
     {
       target_features = target_finder->findTargetFeatures(image);
-      if (target_features.empty()) throw std::runtime_error("Failed to find any target features");
+      if (target_features.empty())
+        throw std::runtime_error("Failed to find any target features");
       std::cout << "Found " << target_features.size() << " target features" << std::endl;
 
 #ifndef INDUSTRIAL_CALIBRATION_ENABLE_TESTING

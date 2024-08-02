@@ -18,7 +18,8 @@ void drawReprojections(const VectorVector2d& reprojections, int size, cv::Scalar
 cv::Mat readImageOpenCV(const std::string& path)
 {
   cv::Mat image = cv::imread(path, cv::IMREAD_COLOR);
-  if (image.data == nullptr) throw BadFileException("Failed to load file at: '" + path + "'");
+  if (image.data == nullptr)
+    throw BadFileException("Failed to load file at: '" + path + "'");
 
   return image;
 }

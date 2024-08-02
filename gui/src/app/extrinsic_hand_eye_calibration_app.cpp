@@ -63,7 +63,8 @@ int main(int argc, char** argv)
         w.loadConfig(argv[1]);
         QMessageBox::information(nullptr, "Configuration", "Successfully loaded calibration configuration");
       }
-      if (argc > 2) w.loadObservations(argv[2]);
+      if (argc > 2)
+        w.loadObservations(argv[2]);
     }
     catch (const std::exception& ex)
     {

@@ -20,7 +20,8 @@ void checkCorrelation(const Eigen::MatrixXd& cov)
     for (Eigen::Index col = 0; col < cov.cols(); ++col)
     {
       // Since the covariance matrix is symmetric, just check the values in the top triangle
-      if (row < col) EXPECT_LT(std::abs(cov(row, col)), CORRELATION_COEFFICIENT_THRESHOLD);
+      if (row < col)
+        EXPECT_LT(std::abs(cov(row, col)), CORRELATION_COEFFICIENT_THRESHOLD);
     }
   }
 }

@@ -21,7 +21,8 @@ static Pose6d solvePnP(const CameraIntrinsics& intr, const Correspondence2D3D::S
 
   PnPResult result = optimize(problem);
 
-  if (!result.converged) throw ICalException("Unable to solve PnP sub-problem");
+  if (!result.converged)
+    throw ICalException("Unable to solve PnP sub-problem");
 
   return poseEigenToCal(result.camera_to_target);
 }

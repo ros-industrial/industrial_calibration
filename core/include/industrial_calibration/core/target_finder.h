@@ -94,7 +94,8 @@ public:
   typename Correspondence<SENSOR_DIM, WORLD_DIM>::Set findCorrespondences(const SensorDataT& measurement) const
   {
     TargetFeatures<SENSOR_DIM> features = findTargetFeatures(measurement);
-    if (features.empty()) throw std::runtime_error("Failed to find any target features");
+    if (features.empty())
+      throw std::runtime_error("Failed to find any target features");
 
     return target().createCorrespondences(findTargetFeatures(measurement));
   }
