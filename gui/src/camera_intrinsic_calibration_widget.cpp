@@ -197,7 +197,8 @@ void CameraIntrinsicCalibrationWidget::onLoadConfig()
   {
     const QString config_file = QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(),
                                                              "YAML files (*.yaml *.yml)");
-    if (config_file.isNull() || config_file.isEmpty()) return;
+    if (config_file.isNull() || config_file.isEmpty())
+      return;
 
     loadConfig(config_file.toStdString());
 
@@ -257,7 +258,8 @@ void CameraIntrinsicCalibrationWidget::onLoadObservations()
   {
     QString observations_file =
         QFileDialog::getOpenFileName(this, "Load calibration observation file", QString(), "YAML files (*.yaml *.yml)");
-    if (observations_file.isNull() || observations_file.isEmpty()) return;
+    if (observations_file.isNull() || observations_file.isEmpty())
+      return;
 
     loadObservations(observations_file.toStdString());
   }
@@ -309,7 +311,8 @@ void CameraIntrinsicCalibrationWidget::loadObservations(const std::string& obser
 
 void CameraIntrinsicCalibrationWidget::drawImage(QTreeWidgetItem* item, int col)
 {
-  if (item == nullptr) return;
+  if (item == nullptr)
+    return;
 
   // Extract the top level item
   while (item->parent() != nullptr)
@@ -432,7 +435,8 @@ void CameraIntrinsicCalibrationWidget::calibrate()
       cv::Mat image = cv::imread(image_file.toStdString());
       auto pose = YAML::LoadFile(pose_file.toStdString()).as<Eigen::Isometry3d>();
 
-      if (i == 0) image_size = image.size();
+      if (i == 0)
+        image_size = image.size();
 
       Correspondence2D3D::Set correspondence_set = target_finder_->findCorrespondences(image);
 
@@ -445,7 +449,8 @@ void CameraIntrinsicCalibrationWidget::calibrate()
       if (homography_error_mean < ui_->double_spin_box_homography_threshold->value())
       {
         problem.image_observations.push_back(correspondence_set);
-        if (problem.use_extrinsic_guesses) problem.extrinsic_guesses.push_back(pose);
+        if (problem.use_extrinsic_guesses)
+          problem.extrinsic_guesses.push_back(pose);
 
         info(item, "Included in calibration");
       }
@@ -490,7 +495,8 @@ void CameraIntrinsicCalibrationWidget::onSaveResults()
   try
   {
     const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
-    if (file.isNull() || file.isEmpty()) return;
+    if (file.isNull() || file.isEmpty())
+      return;
 
     saveResults(file.toStdString());
   }
@@ -515,7 +521,8 @@ void CameraIntrinsicCalibrationWidget::onSaveROSFormat()
   try
   {
     const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
-    if (file.isNull() || file.isEmpty()) return;
+    if (file.isNull() || file.isEmpty())
+      return;
 
     saveROSFormat(file.toStdString());
   }
@@ -527,7 +534,8 @@ void CameraIntrinsicCalibrationWidget::onSaveROSFormat()
 
 void CameraIntrinsicCalibrationWidget::saveROSFormat(const std::string& file) const
 {
-  if (result_ == nullptr) return;
+  if (result_ == nullptr)
+    return;
 
   Eigen::Matrix<double, 3, 4, Eigen::RowMajor> mat;
   mat << result_->intrinsics.fx(), 0.0, result_->intrinsics.cx(), 0.0, 0.0, result_->intrinsics.fy(),
@@ -539,11 +547,13 @@ void CameraIntrinsicCalibrationWidget::saveROSFormat(const std::string& file) co
 
   // Image size
   {
-    if (ui_->tree_widget_observations->topLevelItemCount() == 0) throw ICalException("No observations have been added");
+    if (ui_->tree_widget_observations->topLevelItemCount() == 0)
+      throw ICalException("No observations have been added");
 
     QTreeWidgetItem* item = ui_->tree_widget_observations->topLevelItem(0);
     QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
-    if (!QFile(image_file).exists()) throw ICalException("Image '" + image_file.toStdString() + "' does not exist");
+    if (!QFile(image_file).exists())
+      throw ICalException("Image '" + image_file.toStdString() + "' does not exist");
 
     cv::Mat image = cv::imread(image_file.toStdString());
     node["image_height"] = image.size[0];

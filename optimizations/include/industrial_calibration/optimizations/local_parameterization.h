@@ -89,7 +89,8 @@ struct EigenQuaternionPlus
  */
 void addSubsetParameterization(ceres::Problem& problem, const std::map<const double*, std::vector<int>>& param_masks)
 {
-  if (param_masks.empty()) return;
+  if (param_masks.empty())
+    return;
 
   std::vector<double*> parameter_blocks;
   problem.GetParameterBlocks(&parameter_blocks);

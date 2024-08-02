@@ -59,7 +59,8 @@ void printOptimizationLabels(ceres::Problem& problem, const std::map<const doubl
         sub_label.reserve(label.size());
         for (std::size_t j = 0; j < label.size(); ++j)
         {
-          if (std::find(mask.begin(), mask.end(), j) == mask.end()) sub_label.push_back(label.at(j));
+          if (std::find(mask.begin(), mask.end(), j) == mask.end())
+            sub_label.push_back(label.at(j));
         }
       }
     }
@@ -192,8 +193,10 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& param
   }
 
   // Tell the optimization to keep constant the dummy DH offsets that might have been added to the 0-DoF chains
-  if (params.camera_chain.dof() == 0) problem.SetParameterBlockConstant(camera_chain_dh_offsets.data());
-  if (params.target_chain.dof() == 0) problem.SetParameterBlockConstant(target_chain_dh_offsets.data());
+  if (params.camera_chain.dof() == 0)
+    problem.SetParameterBlockConstant(camera_chain_dh_offsets.data());
+  if (params.target_chain.dof() == 0)
+    problem.SetParameterBlockConstant(target_chain_dh_offsets.data());
 
   // Add subset parameterization to mask variables that shouldn't be optimized
   addSubsetParameterization(problem, param_masks);
@@ -401,8 +404,10 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblemPose6D& par
   }
 
   // Tell the optimization to keep constant the dummy DH offsets that might have been added to the 0-DoF chains
-  if (params.camera_chain.dof() == 0) problem.SetParameterBlockConstant(camera_chain_dh_offsets.data());
-  if (params.target_chain.dof() == 0) problem.SetParameterBlockConstant(target_chain_dh_offsets.data());
+  if (params.camera_chain.dof() == 0)
+    problem.SetParameterBlockConstant(camera_chain_dh_offsets.data());
+  if (params.target_chain.dof() == 0)
+    problem.SetParameterBlockConstant(target_chain_dh_offsets.data());
 
   // Add subset parameterization to mask variables that shouldn't be optimized
   addSubsetParameterization(problem, param_masks);

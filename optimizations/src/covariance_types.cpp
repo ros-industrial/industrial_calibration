@@ -19,7 +19,8 @@ std::vector<NamedParam> CovarianceResult::getCorrelationCoeffOutsideThreshold(co
   std::vector<NamedParam> out;
   for (auto corr : correlation_coeffs)
   {
-    if (std::abs(corr.value) > threshold) out.push_back(corr);
+    if (std::abs(corr.value) > threshold)
+      out.push_back(corr);
   }
   std::sort(out.begin(), out.end(), [](NamedParam a, NamedParam b) { return std::abs(a.value) > std::abs(b.value); });
   return out;

@@ -26,8 +26,10 @@ Eigen::MatrixXd computeCorrelationsFromCovariance(const Eigen::MatrixXd& covaria
         out(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) = sigma_i;
       else
       {
-        if (sigma_i < std::numeric_limits<double>::epsilon()) sigma_i = 1;
-        if (sigma_j < std::numeric_limits<double>::epsilon()) sigma_j = 1;
+        if (sigma_i < std::numeric_limits<double>::epsilon())
+          sigma_i = 1;
+        if (sigma_j < std::numeric_limits<double>::epsilon())
+          sigma_j = 1;
 
         out(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) = covariance_matrix(i, j) / (sigma_i * sigma_j);
       }
@@ -163,7 +165,8 @@ CovarianceResult computeCovariance(ceres::Problem& problem, const std::vector<co
     // Extract tangent space
     std::vector<int> masks;
     auto it = param_masks.find(b);
-    if (it != param_masks.end()) masks = it->second;
+    if (it != param_masks.end())
+      masks = it->second;
 
     const std::vector<std::string>& label = param_names.at(b);
     for (std::size_t i = 0; i < static_cast<std::size_t>(block_size); ++i)

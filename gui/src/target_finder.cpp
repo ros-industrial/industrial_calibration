@@ -31,7 +31,8 @@ void TargetFinderWidget::configure(const YAML::Node& node)
   // Target
   QString target_type = QString::fromStdString(getMember<std::string>(node, "type"));
   int idx = ui_->combo_box_target_finder->findText(target_type);
-  if (idx < 0) throw std::runtime_error("Unknown target type '" + target_type.toStdString() + "'");
+  if (idx < 0)
+    throw std::runtime_error("Unknown target type '" + target_type.toStdString() + "'");
 
   dynamic_cast<ConfigurableWidget*>(ui_->stacked_widget->widget(idx))->configure(node);
   ui_->combo_box_target_finder->setCurrentIndex(idx);

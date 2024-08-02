@@ -108,7 +108,8 @@ DetectionResult findCircles(const cv::Mat& image, const double threshold, const 
     if (params.filterByArea)
     {
       double area = moms.m00;
-      if (area < params.minArea || area >= params.maxArea) continue;
+      if (area < params.minArea || area >= params.maxArea)
+        continue;
     }
 
     // Circularity filter
@@ -117,7 +118,8 @@ DetectionResult findCircles(const cv::Mat& image, const double threshold, const 
       double area = moms.m00;
       double perimeter = cv::arcLength(cv::Mat(contour), true);
       double ratio = 4 * CV_PI * area / (perimeter * perimeter);
-      if (ratio < params.minCircularity || ratio >= params.maxCircularity) continue;
+      if (ratio < params.minCircularity || ratio >= params.maxCircularity)
+        continue;
     }
 
     // Inertia filter
@@ -142,7 +144,8 @@ DetectionResult findCircles(const cv::Mat& image, const double threshold, const 
         ratio = 1;
       }
 
-      if (ratio < params.minInertiaRatio || ratio >= params.maxInertiaRatio) continue;
+      if (ratio < params.minInertiaRatio || ratio >= params.maxInertiaRatio)
+        continue;
     }
 
     // Convexity filter
@@ -153,7 +156,8 @@ DetectionResult findCircles(const cv::Mat& image, const double threshold, const 
       double area = cv::contourArea(cv::Mat(contour));
       double hullArea = cv::contourArea(cv::Mat(hull));
       double ratio = area / hullArea;
-      if (ratio < params.minConvexity || ratio >= params.maxConvexity) continue;
+      if (ratio < params.minConvexity || ratio >= params.maxConvexity)
+        continue;
     }
 
     // Fit an ellipse to the contour
@@ -162,7 +166,8 @@ DetectionResult findCircles(const cv::Mat& image, const double threshold, const 
     // Check that the color of the center pixel matches the expectation
     if (params.filterByColor)
     {
-      if (binarized_image.at<uchar>(cvRound(box.center.y), cvRound(box.center.x)) != params.circleColor) continue;
+      if (binarized_image.at<uchar>(cvRound(box.center.y), cvRound(box.center.x)) != params.circleColor)
+        continue;
     }
 
     // Check that the contour matches a model of an ellipse within tolerance

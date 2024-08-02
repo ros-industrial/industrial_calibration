@@ -32,7 +32,8 @@ int main(int argc, char** argv)
       w.loadObservations(argv[2]);
       w.calibrate();
       w.saveResults(argv[3]);
-      if (argc > 4) w.saveROSFormat(argv[4]);
+      if (argc > 4)
+        w.saveROSFormat(argv[4]);
 
       QMessageBox::StandardButton ret = QMessageBox::question(nullptr, "Calibration",
                                                               "Successfully completed calibration and saved results. "
@@ -69,7 +70,8 @@ int main(int argc, char** argv)
         w.loadConfig(argv[1]);
         QMessageBox::information(nullptr, "Configuration", "Successfully loaded calibration configuration");
       }
-      if (argc > 2) w.loadObservations(argv[2]);
+      if (argc > 2)
+        w.loadObservations(argv[2]);
     }
     catch (const std::exception& ex)
     {

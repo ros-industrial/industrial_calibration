@@ -151,7 +151,8 @@ void ExtrinsicHandEyeCalibrationWidget::onLoadConfig()
     // Get yaml filepath
     const QString config_file = QFileDialog::getOpenFileName(this, "Load calibration configuration file", QString(),
                                                              "YAML files (*.yaml *.yml)");
-    if (config_file.isNull() || config_file.isEmpty()) return;
+    if (config_file.isNull() || config_file.isEmpty())
+      return;
 
     loadConfig(config_file.toStdString());
 
@@ -198,7 +199,8 @@ void ExtrinsicHandEyeCalibrationWidget::onLoadObservations()
   {
     QString observations_file =
         QFileDialog::getOpenFileName(this, "Load calibration observation file", QString(), "YAML files (*.yaml *.yml)");
-    if (observations_file.isNull() || observations_file.isEmpty()) return;
+    if (observations_file.isNull() || observations_file.isEmpty())
+      return;
 
     loadObservations(observations_file.toStdString());
   }
@@ -250,7 +252,8 @@ void ExtrinsicHandEyeCalibrationWidget::loadObservations(const std::string& obse
 
 void ExtrinsicHandEyeCalibrationWidget::drawImage(QTreeWidgetItem* item, int col)
 {
-  if (item == nullptr) return;
+  if (item == nullptr)
+    return;
 
   // Extract the top level item
   while (item->parent() != nullptr)
@@ -441,7 +444,8 @@ void ExtrinsicHandEyeCalibrationWidget::onSaveResults()
   try
   {
     const QString file = QFileDialog::getSaveFileName(this, QString(), QString(), "YAML files (*.yaml *.yml)");
-    if (file.isNull() || file.isEmpty()) return;
+    if (file.isNull() || file.isEmpty())
+      return;
 
     saveResults(file.toStdString());
   }
