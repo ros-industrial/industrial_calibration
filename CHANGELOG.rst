@@ -2,6 +2,12 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated checks for applications (`#202 <https://github.com/marip8/industrial_calibration/issues/202>`_)
+* Do not allow short if statements on single line (`#201 <https://github.com/marip8/industrial_calibration/issues/201>`_)
+* Contributors: Michael Ripperger
+
 1.0.1 (2024-08-01)
 ------------------
 * Merge pull request `#200 <https://github.com/marip8/industrial_calibration/issues/200>`_ from marip8/update/install-execs-ros
