@@ -1,4 +1,5 @@
 #include <industrial_calibration/gui/extrinsic_hand_eye_calibration_widget.h>
+#include <filesystem>
 #include <QApplication>
 #include <QMessageBox>
 #include <QTextStream>
@@ -58,12 +59,12 @@ int main(int argc, char** argv)
     // Attempt to load configuration and observations files if available
     try
     {
-      if (argc > 1)
+      if (argc > 1 && std::filesystem::is_regular_file(argv[1]))
       {
         w.loadConfig(argv[1]);
         QMessageBox::information(nullptr, "Configuration", "Successfully loaded calibration configuration");
       }
-      if (argc > 2)
+      if (argc > 2 && std::filesystem::is_regular_file(argv[2]))
         w.loadObservations(argv[2]);
     }
     catch (const std::exception& ex)
