@@ -3,7 +3,7 @@
 #include <industrial_calibration/optimizations/dh_chain_kinematic_calibration.h>
 #include <industrial_calibration/core/serialization.h>
 
-#if __GNUC__ >= 8
+#if __has_include(<filesystem>)
 #include <filesystem>
 using path = std::filesystem::path;
 #else
