@@ -362,7 +362,7 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
     }
 
     QString pose_file = item->data(0, POSE_FILE_NAME_ROLE).value<QString>();
-    if (!QFile(image_file).exists())
+    if (!QFile(pose_file).exists())
     {
       error(item, "Pose file does not exist");
       continue;
