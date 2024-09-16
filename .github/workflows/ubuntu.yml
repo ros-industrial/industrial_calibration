@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro: [focal, jammy]
+        distro: [focal, jammy, noble]
     container:
       image: ubuntu:${{ matrix.distro }}
       env:
@@ -30,11 +30,11 @@ jobs:
         with:
           path: target_ws/src
       - name: Build
-        uses: tesseract-robotics/colcon-action@v6
+        uses: tesseract-robotics/colcon-action@v9
         with:
           ccache-enabled: false
           rosdep-enabled: true
-          ros-enabled: false
+          add-ros-ppa: true
           vcs-file: dependencies.repos
           target-path: target_ws/src
           target-args: '-DCMAKE_BUILD_TYPE=Debug -DINDUSTRIAL_CALIBRATION_ENABLE_TESTING=ON -DINDUSTRIAL_CALIBRATION_ENABLE_RUN_TESTING=OFF -DINDUSTRIAL_CALIBRATION_ENABLE_CLANG_TIDY=ON'
