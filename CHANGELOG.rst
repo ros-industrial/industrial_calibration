@@ -2,6 +2,12 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix check of pose file existence (`#204 <https://github.com/marip8/industrial_calibration/issues/204>`_)
+* ensure works with clang compiler (`#203 <https://github.com/marip8/industrial_calibration/issues/203>`_)
+* Contributors: Kenji Brameld (TRACLabs), Michael Ripperger
+
 1.0.2 (2024-08-01)
 ------------------
 * Updated checks for applications (`#202 <https://github.com/marip8/industrial_calibration/issues/202>`_)
