@@ -5,6 +5,8 @@
 #include <industrial_calibration/optimizations/ceres_math_utilities.h>
 
 #include <ceres/jet.h>
+#include <ceres/version.h>
+#define CERES_VERSION_LT_2_1 (CERES_VERSION_MAJOR < 2 || (CERES_VERSION_MAJOR == 2 && CERES_VERSION_MINOR < 1))
 #include <map>
 
 namespace industrial_calibration
@@ -280,7 +282,11 @@ public:
     T rot_diff = Eigen::Quaternion<T>(camera_to_target_measured_.cast<T>().linear())
                      .angularDistance(Eigen::Quaternion<T>(camera_to_target.linear()));
 
+#if CERES_VERSION_LT_2_1
     residual[3] = ceres::IsNaN(rot_diff) ? T(0.0) : T(orientation_weight_) * rot_diff;
+#else
+    residual[3] = ceres::isnan(rot_diff) ? T(0.0) : T(orientation_weight_) * rot_diff;
+#endif
 
     return true;
   }
