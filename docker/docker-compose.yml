@@ -5,7 +5,6 @@ services:
       dockerfile: docker/Dockerfile
       args:
         TAG: jammy
-        ROS_DISTRO: humble
     environment:
       DISPLAY: $DISPLAY
       XAUTHORITY: $XAUTHORITY
@@ -24,8 +23,8 @@ services:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
     
-    # entrypoint: /extrinsic_calibration_gui.sh
-    entrypoint: /intrinsic_calibration_gui.sh
+    # entrypoint: ./extrinsic_calibration_gui.sh
+    # entrypoint: ./intrinsic_calibration_gui.sh
 
     deploy:
       resources:

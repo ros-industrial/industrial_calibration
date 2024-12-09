@@ -1,8 +1,6 @@
 ARG TAG=jammy
 FROM ubuntu:${TAG}
 
-ARG ROS_DISTRO
-
 SHELL ["/bin/bash", "-c"]
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -45,4 +43,4 @@ COPY docker/extrinsic_calibration_gui.sh /extrinsic_calibration_gui.sh
 COPY docker/intrinsic_calibration_gui.sh /intrinsic_calibration_gui.sh
 
 
-ENTRYPOINT ["/extrinsic_calibration_gui"]
+ENTRYPOINT ["./extrinsic_calibration_gui.sh"]
