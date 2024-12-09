@@ -8,7 +8,7 @@ services:
     environment:
       DISPLAY: $DISPLAY
       XAUTHORITY: $XAUTHORITY
-      NVIDIA_DRIVER_CAPABILITIES: all
+      # NVIDIA_DRIVER_CAPABILITIES: all
       ROS_LOG_DIR: /tmp
     container_name: industrial_calibration
     image: ghcr.io/ros-industrial/industrial_calibration:jammy
@@ -26,10 +26,10 @@ services:
     # entrypoint: ./extrinsic_calibration_gui.sh
     # entrypoint: ./intrinsic_calibration_gui.sh
 
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
