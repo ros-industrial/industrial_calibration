@@ -8,41 +8,35 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 
 # Install
-RUN apt update \
-  && apt upgrade -y \
-  && apt install -y cmake curl git python3
+RUN apt update -y -qq \
+  && apt install -y -qq cmake curl git python3
 
 # Add ROS2 sources to install ROS infrastructure tools
-RUN export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}') \
-  && curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb" \
-  && apt install /tmp/ros2-apt-source.deb \
-  && apt update -y -qq
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
 # Install and configure ROS infrastructure tools
-RUN apt update \
-  && apt install -y python3-vcstool python3-colcon-common-extensions python3-rosdep \
+RUN apt update -y -qq \
+  && apt install -y -qq python3-vcstool python3-colcon-common-extensions python3-rosdep \
   && rosdep init \
   && rosdep update
 
+# Build the repository
+# tmpfs mount a directory for the workspace so as not to unnecessarily copy source code into the docker image for the repository dependencies
 # Bind mount the source directory so as not to unnecessarily copy source code into the docker image
-ARG WORKSPACE_DIR=/opt/industrial_calibration
-RUN --mount=type=bind,target=${WORKSPACE_DIR}/src/industrial_calibration \
-  apt update -y -qq \
-  && vcs import ${WORKSPACE_DIR}/src < ${WORKSPACE_DIR}/src/industrial_calibration/dependencies.repos --shallow \
+ARG WORKSPACE_DIR=/tmpfs/industrial_calibration
+ARG INSTALL_DIR=/opt/industrial_calibration
+RUN --mount=type=tmpfs,target=${WORKSPACE_DIR} --mount=type=bind,target=${WORKSPACE_DIR}/src/industrial_calibration \
+  vcs import ${WORKSPACE_DIR}/src < ${WORKSPACE_DIR}/src/industrial_calibration/dependencies.repos --shallow \
   && rosdep install \
     --from-paths ${WORKSPACE_DIR}/src \
-    -iry
-
-# Build the repository
-# Bind mount the source directory so as not to unnecessarily copy source code into the docker image
-RUN --mount=type=bind,target=${WORKSPACE_DIR}/src/industrial_calibration \
-  cd ${WORKSPACE_DIR} \
+    -iry \
+  && cd ${WORKSPACE_DIR} \
   && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  && rm -rf build log
+  && cp -r ${WORKSPACE_DIR}/install/ ${INSTALL_DIR}
 
 # Set the entrypoint to source the workspace
 COPY docker/extrinsic_calibration_gui.sh /extrinsic_calibration_gui.sh
 COPY docker/intrinsic_calibration_gui.sh /intrinsic_calibration_gui.sh
-
 
 ENTRYPOINT ["./extrinsic_calibration_gui.sh"]

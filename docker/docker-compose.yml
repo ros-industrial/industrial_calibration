@@ -22,7 +22,7 @@ services:
       - /etc/hosts:/etc/hosts
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
-    
+
     # entrypoint: ./extrinsic_calibration_gui.sh
     # entrypoint: ./intrinsic_calibration_gui.sh
 
