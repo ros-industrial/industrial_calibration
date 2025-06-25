@@ -3,7 +3,7 @@ name: Docker
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     paths:
       - 'docker/Dockerfile'
@@ -24,7 +24,7 @@ jobs:
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}
-      PUSH_DOCKER_IMAGE: ${{ github.ref == 'refs/heads/master' || github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
+      PUSH_DOCKER_IMAGE: ${{ github.ref == 'refs/heads/main' || github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: read
       packages: write
