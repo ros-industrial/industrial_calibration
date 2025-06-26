@@ -2,8 +2,8 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.4 (2025-06-26)
+------------------
 * Added Dockerfile and docker compose files (`#206 <https://github.com/marip8/industrial_calibration/issues/206>`_)
 * Resolved linker issue with kinematic_calibration.cpp (`#205 <https://github.com/marip8/industrial_calibration/issues/205>`_)
 * Contributors: David Spielman, Michael Ripperger
