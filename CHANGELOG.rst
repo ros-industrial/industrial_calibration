@@ -2,8 +2,8 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.5 (2025-06-27)
+------------------
 * Added support for Ubuntu 24.04 (`#197 <https://github.com/marip8/industrial_calibration/issues/197>`_)
 * Contributors: Michael Ripperger
 
