@@ -7,6 +7,7 @@
 #include <industrial_calibration_tests/observation_creator.h>
 
 #include <gtest/gtest.h>
+#include <thread>
 
 using namespace industrial_calibration;
 
@@ -26,7 +27,7 @@ public:
   {
     // Set a few specific Ceres solver parameters
     options.max_num_iterations = 500;
-    options.num_threads = 4;
+    options.num_threads = std::thread::hardware_concurrency();
     options.minimizer_progress_to_stdout = true;
     options.use_nonmonotonic_steps = true;
   }
