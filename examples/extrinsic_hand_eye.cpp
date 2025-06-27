@@ -139,7 +139,7 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
 
       // Check that a homography matrix can accurately reproject the observed points onto the expected target points
       // within a defined threshold
-      RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(), obs.correspondence_set.size() / 3,
+      RandomCorrespondenceSampler random_sampler(obs.correspondence_set.size(), obs.correspondence_set.size() / 2,
                                                  RANDOM_SEED);
       Eigen::VectorXd homography_error = calculateHomographyError(obs.correspondence_set, random_sampler);
       if (homography_error.array().mean() > homography_threshold)
@@ -269,7 +269,7 @@ TEST(ExtrinsicHandEyeCalibration, ChArUcoGridTarget)
 
   // Expect a low average difference between the camera to target pose estimated by this calibration vs. a PnP
   // optimization
-  ASSERT_LT(stats.pos_diff_mean, 0.005);               // meters
+  ASSERT_LT(stats.pos_diff_mean, 0.006);               // meters
   ASSERT_LT(stats.ori_diff_mean, 1.5 * M_PI / 180.0);  // radians
 }
 

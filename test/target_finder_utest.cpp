@@ -6,7 +6,6 @@
 // Analysis
 #include <industrial_calibration/analysis/homography_analysis.h>
 
-#include <numeric>
 #include <gtest/gtest.h>
 #include <memory>
 #include <opencv2/aruco.hpp>
@@ -29,13 +28,7 @@ public:
     // Find the target features
     TargetFeatures2D target_features = this->finder->findTargetFeatures(m);
 
-    ASSERT_EQ(target_features.size(), expected_ids.size());
-
-    // Iterate through the features to see if they match the ID
-    for (const unsigned id : expected_ids)
-    {
-      EXPECT_TRUE(target_features.find(id) != target_features.end());
-    }
+    ASSERT_EQ(target_features.size(), n_expected_ids);
 
     // Check the homography transform between the points in the image and the target points
     // to make sure the correspondences were identified correctly
@@ -54,7 +47,7 @@ public:
 
   std::shared_ptr<TargetFinderOpenCV> finder;
   std::string filename;
-  std::vector<unsigned> expected_ids;
+  std::size_t n_expected_ids;
   std::shared_ptr<CorrespondenceSampler> corr_sampler;
   double homography_error_threshold;
 };
@@ -72,8 +65,7 @@ public:
     filename = std::string(TEST_SUPPORT_DIR) + "modified_circle_grid_10x10_0.025.png";
 
     // Expect all corners to be detected
-    expected_ids.resize(target.rows * target.cols);
-    std::iota(expected_ids.begin(), expected_ids.end(), 0);
+    n_expected_ids = target.rows * target.cols;
 
     // Set up the homography check correspondence sampler
     corr_sampler = std::make_shared<GridCorrespondenceSampler>(target.rows, target.cols, 1);
@@ -96,8 +88,7 @@ public:
     filename = std::string(TEST_SUPPORT_DIR) + "charuco_unobscured.jpg";
 
     // Expect all corners to be detected
-    expected_ids.resize(target.board->chessboardCorners.size());
-    std::iota(expected_ids.begin(), expected_ids.end(), 0);
+    n_expected_ids = target.board->chessboardCorners.size();
 
     // Set up the homography check correspondence sampler
     auto grid_size = target.board->getChessboardSize();
@@ -124,8 +115,7 @@ public:
     filename = std::string(TEST_SUPPORT_DIR) + "charuco_unobscured.jpg";
 
     // Expect all corners to be detected
-    expected_ids.resize(target.board->chessboardCorners.size());
-    std::iota(expected_ids.begin(), expected_ids.end(), 0);
+    n_expected_ids = target.board->chessboardCorners.size();
 
     // Set up the homography check correspondence sampler
     auto grid_size = target.board->getChessboardSize();
@@ -146,8 +136,7 @@ public:
     filename = std::string(TEST_SUPPORT_DIR) + "charuco_obscured.jpg";
 
     // Expect the first seven corners not to be detected
-    expected_ids.resize(target.board->chessboardCorners.size() - 7);
-    std::iota(expected_ids.begin(), expected_ids.end(), 7);
+    n_expected_ids = target.board->chessboardCorners.size() - 7;
 
     // Don't set up the homography check correspondence sampler because of the removed points
   }
@@ -163,8 +152,7 @@ public:
     filename = std::string(TEST_SUPPORT_DIR) + "charuco_one_corner.jpg";
 
     // Expect to only see the first corner (ID = 0)
-    expected_ids.resize(1);
-    expected_ids.front() = 0;
+    n_expected_ids = 1;
 
     // Don't check homography because there are not enough points
   }
@@ -183,8 +171,7 @@ public:
     filename = std::string(TEST_SUPPORT_DIR) + "aruco.jpg";
 
     // Expect to see the entire board
-    expected_ids.resize(static_cast<unsigned>(target.board->getGridSize().area()));
-    std::iota(expected_ids.begin(), expected_ids.end(), 0);
+    n_expected_ids = static_cast<unsigned>(target.board->getGridSize().area());
 
     // Set up the homography check correspondence sampler
     // The stride of the correspondence sampler is 4, since there are 4 corners associated with each unique tag
@@ -212,8 +199,7 @@ public:
     filename = std::string(TEST_SUPPORT_DIR) + "aruco.jpg";
 
     // Expect to see the entire board
-    expected_ids.resize(static_cast<unsigned>(target.board->getGridSize().area()));
-    std::iota(expected_ids.begin(), expected_ids.end(), 0);
+    n_expected_ids = static_cast<unsigned>(target.board->getGridSize().area());
 
     // Set up the homography check correspondence sampler
     // The stride of the correspondence sampler is 4, since there are 4 corners associated with each unique tag

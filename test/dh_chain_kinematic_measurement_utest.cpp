@@ -7,6 +7,7 @@
 #include <industrial_calibration_tests/observation_creator.h>
 
 #include <gtest/gtest.h>
+#include <thread>
 
 using namespace industrial_calibration;
 
@@ -19,14 +20,14 @@ public:
    * more representative of a "real-life" use-case
    */
   DHChainMeasurementTest()
-    : camera_chain_truth(test::perturbDHChain(test::createABBIRB2400(), 1.0e-3))
+    : camera_chain_truth(test::createABBIRB2400())
     , target_chain_truth(std::vector<DHTransform>{})
     , problem(camera_chain_truth, target_chain_truth)
     , orientation_weight(100.0)
   {
     // Set a few specific Ceres solver parameters
     options.max_num_iterations = 500;
-    options.num_threads = 4;
+    options.num_threads = std::thread::hardware_concurrency();
     options.minimizer_progress_to_stdout = true;
     options.use_nonmonotonic_steps = true;
   }
@@ -202,7 +203,7 @@ public:
   {
     DHChainMeasurementTest::setInitialGuess();
 
-    problem.camera_chain = test::createABBIRB2400();
+    problem.camera_chain = test::perturbDHChain(test::createABBIRB2400(), 1.0e-3);
   }
 
   virtual void applyMasks() override

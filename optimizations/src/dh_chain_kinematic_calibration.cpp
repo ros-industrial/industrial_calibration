@@ -6,6 +6,7 @@
 #include <industrial_calibration/optimizations/local_parameterization.h>
 
 #include <ceres/ceres.h>
+#include <thread>
 
 namespace industrial_calibration
 {
@@ -239,7 +240,7 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& param
   // Setup the Ceres optimization parameters
   ceres::Solver::Options options;
   options.max_num_iterations = 150;
-  options.num_threads = 4;
+  options.num_threads = std::thread::hardware_concurrency();
   options.minimizer_progress_to_stdout = true;
   ceres::Solver::Summary summary;
 

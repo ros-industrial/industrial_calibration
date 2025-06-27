@@ -12,6 +12,7 @@ using path = std::experimental::filesystem::path;
 #endif
 
 #include <random>
+#include <thread>
 #include <yaml-cpp/yaml.h>
 
 using namespace industrial_calibration;
@@ -261,7 +262,7 @@ std::tuple<KinematicCalibrationResult, Stats, Stats> run()
   // Set up the Ceres optimization parameters
   ceres::Solver::Options options;
   options.max_num_iterations = 500;
-  options.num_threads = 4;
+  options.num_threads = std::thread::hardware_concurrency();
   options.minimizer_progress_to_stdout = true;
   options.use_nonmonotonic_steps = true;
 
