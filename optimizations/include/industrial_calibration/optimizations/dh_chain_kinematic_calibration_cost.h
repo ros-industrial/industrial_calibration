@@ -279,13 +279,21 @@ public:
     residual[1] = tform_error.translation().y();
     residual[2] = tform_error.translation().z();
 
-    T rot_diff = Eigen::Quaternion<T>(camera_to_target_measured_.cast<T>().linear())
-                     .angularDistance(Eigen::Quaternion<T>(camera_to_target.linear()));
+    T ang_error = Eigen::Quaternion<T>(camera_to_target_measured_.cast<T>().linear())
+                      .angularDistance(Eigen::Quaternion<T>(camera_to_target.linear()));
 
+    // When the pose orientation error is close to 0.0, the gradient of this cost function produces NaN values,
+    // resulting in errors from Ceres. Therefore set this residual to the larger value of machine epsilon or the
+    // calculated orientation error
+    ang_error = std::max(ang_error, T(std::numeric_limits<double>::epsilon()));
+
+    // Handle the case of NaN values in `rot_error`
 #if CERES_VERSION_LT_2_1
-    residual[3] = ceres::IsNaN(rot_diff) ? T(0.0) : T(orientation_weight_) * rot_diff;
+    residual[3] =
+        ceres::IsNaN(ang_error) ? T(std::numeric_limits<double>::epsilon()) : T(orientation_weight_) * ang_error;
 #else
-    residual[3] = ceres::isnan(rot_diff) ? T(0.0) : T(orientation_weight_) * rot_diff;
+    residual[3] =
+        ceres::isnan(ang_error) ? T(std::numeric_limits<double>::epsilon()) : T(orientation_weight_) * ang_error;
 #endif
 
     return true;
