@@ -20,7 +20,7 @@ public:
    * more representative of a "real-life" use-case
    */
   DHChainMeasurementTest()
-    : camera_chain_truth(test::perturbDHChain(test::createABBIRB2400(), 1.0e-3))
+    : camera_chain_truth(test::createABBIRB2400())
     , target_chain_truth(std::vector<DHTransform>{})
     , problem(camera_chain_truth, target_chain_truth)
     , orientation_weight(100.0)
@@ -203,7 +203,7 @@ public:
   {
     DHChainMeasurementTest::setInitialGuess();
 
-    problem.camera_chain = test::createABBIRB2400();
+    problem.camera_chain = test::perturbDHChain(test::createABBIRB2400(), 1.0e-3);
   }
 
   virtual void applyMasks() override
