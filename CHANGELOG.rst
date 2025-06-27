@@ -2,6 +2,11 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added support for Ubuntu 24.04 (`#197 <https://github.com/marip8/industrial_calibration/issues/197>`_)
+* Contributors: Michael Ripperger
+
 1.0.4 (2025-06-26)
 ------------------
 * Added Dockerfile and docker compose files (`#206 <https://github.com/marip8/industrial_calibration/issues/206>`_)
