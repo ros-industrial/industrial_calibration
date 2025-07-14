@@ -14,6 +14,7 @@ namespace industrial_calibration
 /**
  * @brief Base class for cost functions that perform kinematic calibration between two DH chains, one that holds the
  * camera and one that holds the target
+ * @ingroup optimizations_kinematic_calibration
  */
 class DualDHChainCost
 {
@@ -148,6 +149,7 @@ protected:
 /**
  * @brief Cost function for performing kinematic calibration between two DH chains, one that holds a 2D camera and one
  * that holds the target
+ * @ingroup optimizations_kinematic_calibration
  */
 class DualDHChain2D3DCost : public DualDHChainCost
 {
@@ -221,6 +223,7 @@ protected:
 /**
  * @brief Cost function for performing kinematic calibration between two DH chains using a measurement of the pose
  * between the camera and target
+ * @ingroup optimizations_kinematic_calibration
  */
 class DualDHChainMeasurementCost : public DualDHChainCost
 {

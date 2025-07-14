@@ -9,6 +9,7 @@ namespace industrial_calibration
 {
 /**
  * @brief Cost function for extrinsic calibration of multiple statically mounted 2D cameras
+ * @ingroup optimizations_extrinsic_multi_static_camera
  */
 class ExtrinsicMultiStaticCameraCost
 {
@@ -61,6 +62,7 @@ private:
 
 /**
  * @brief Cost function for extrinsic calibration of multiple statically mounted 2D cameras
+ * @ingroup optimizations_extrinsic_multi_static_camera
  */
 class ExtrinsicMultiStaticFreeCameraCost
 {
@@ -110,6 +112,7 @@ private:
 
 /**
  * @brief Cost function for extrinsic calibration of multiple statically mounted 2D cameras
+ * @ingroup optimizations_extrinsic_multi_static_camera
  */
 class ExtrinsicMultiStaticFixedCameraCost
 {
@@ -157,6 +160,7 @@ private:
 
 /**
  * @brief Cost function for extrinsic calibration of multiple statically mounted 2D cameras
+ * @ingroup optimizations_extrinsic_multi_static_camera
  */
 class ExtrinsicMultiStaticCameraWristOnlyCost
 {

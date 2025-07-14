@@ -7,6 +7,26 @@ namespace industrial_calibration
 {
 /**
  * @brief Structure containing the necessary data to represent a modified circle grid target
+ * @image html static/mod_circle_target_annotated.png
+ * @details
+ * - The one big dot allows us to disambiguate the orientation of symmetrical targets.
+ * - The big dot is the "origin" or (0,0,0) of the target. The +Z axis comes out of the page, the +X axis runs along the
+ * bottom of the page, left to right (the last row if your big dot is in the bottom left). The +Y runs up the page from
+ * the big dot.
+ * - When using this target finder, the points are ordered left to right, top to bottom as if reading a book.
+ * The big dot, or origin, is in the bottom left. So the top left point is `0`, the top right point is `cols - 1`, the
+ * second row first column is point `cols`, etc. See the image.
+ *
+ * @note You can create targets with custom size and spacing using the handy script, `calibration_target.py` found in
+ * `target_finders/opencv/script`. Thanks to Jeremy Zoss for making this.
+ *
+ * - Pros:
+ *   - Theoretically more accurate since the
+ * - Cons:
+ *   - Entire target must be visible
+ *   - Detection requires tuning of many parameters
+ *   - The grid can frequently be identified in an incorrect order
+ * @ingroup target_finders_opencv
  */
 struct ModifiedCircleGridTarget : Target2D3D
 {
@@ -32,6 +52,7 @@ struct ModifiedCircleGridTarget : Target2D3D
 /**
  * @brief This class finds 2D features (circle centers) from images of a known ModifiedCircleGridTarget.
  * All points must be seen or it will fail. Features are returned in the same order as points are defined in the target.
+ * @ingroup target_finders_opencv
  */
 class ModifiedCircleGridTargetFinder : public TargetFinderOpenCV
 {

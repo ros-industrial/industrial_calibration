@@ -10,6 +10,7 @@ class ExtrinsicHandEyeResult;
 /**
  * @brief Position and orientation difference/standard deviation between the location of the camera as determined by the
  * extrinsic calibration vs the per-observation PnP estimations
+ * @ingroup analysis_extrinsic_hand_eye
  */
 struct ExtrinsicHandEyeAnalysisStats
 {
@@ -23,12 +24,14 @@ std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEyeAnalysisSta
 /**
  * @brief Analyzes the results of the hand eye calibration by measuring the difference between the calibrated camera to
  * target transform and a PnP optimization estimation of the same transform
+ * @ingroup analysis_extrinsic_hand_eye
  */
 ExtrinsicHandEyeAnalysisStats analyzeResults(const ExtrinsicHandEyeProblem2D3D& problem,
                                              const ExtrinsicHandEyeResult& opt_result);
 
 /**
  * @brief 3D reprojection error statistics (m)
+ * @ingroup analysis_extrinsic_hand_eye
  */
 struct ExtrinsicHandEye3dProjectionStats
 {
@@ -39,6 +42,9 @@ struct ExtrinsicHandEye3dProjectionStats
 };
 std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEye3dProjectionStats& stats);
 
+/**
+ * @ingroup analysis_extrinsic_hand_eye
+ */
 ExtrinsicHandEye3dProjectionStats analyze3dProjectionError(const ExtrinsicHandEyeProblem2D3D& problem,
                                                            const ExtrinsicHandEyeResult& opt_result);
 

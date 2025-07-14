@@ -14,26 +14,39 @@ class Node;
 
 namespace industrial_calibration
 {
-/** @brief Typedef for an STL vector of Eigen vector objects. Use a specialized allocator in the case that types
- * divisible by 16 bytes are used, specifically Eigen::Vector2d */
+/**
+ * @brief Typedef for an STL vector of Eigen vector objects. Use a specialized allocator in the case that types
+ * divisible by 16 bytes are used, specifically Eigen::Vector2d
+ * @ingroup core
+ */
 template <Eigen::Index DIM>
 using VectorEigenVector =
     std::vector<Eigen::Matrix<double, DIM, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, DIM, 1>>>;
 
-/** @brief Typedef for a container of target features from a calibration target.
- *  This definition allows for multiple features to be associated with a single unique identifier
- *  (such as the corners of an ArUco tag)
+/**
+ * @brief Typedef for a container of target features from a calibration target.
+ * This definition allows for multiple features to be associated with a single unique identifier (such as the corners of
+ * an ArUco tag)
+ * @ingroup core
  */
 template <Eigen::Index DIM>
 using TargetFeatures = std::map<unsigned, VectorEigenVector<DIM>>;
 
-/** @brief Typedef for target features that exist in 2 dimensions (e.g., pixels from a 2D image) */
+/**
+ * @brief Typedef for target features that exist in 2 dimensions (e.g., pixels from a 2D image)
+ * @ingroup core
+ */
 using TargetFeatures2D = TargetFeatures<2>;
-/** @brief Typedef for target features that exist in 3 dimensions (e.g., points from a point cloud) */
+
+/**
+ * @brief Typedef for target features that exist in 3 dimensions (e.g., points from a point cloud)
+ * @ingroup core
+ */
 using TargetFeatures3D = TargetFeatures<3>;
 
 /**
  * @brief Base class for calibration target definitions
+ * @ingroup core
  */
 template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
 struct Target
@@ -51,13 +64,21 @@ struct Target
   createCorrespondences(const TargetFeatures<SENSOR_DIM>& target_features) const = 0;
 };
 
-/** @brief Target mapping 2-dimensional sensor measurements (e.g., from a 2D camera) to a 3-dimensional world space */
+/**
+ * @brief Target mapping 2-dimensional sensor measurements (e.g., from a 2D camera) to a 3-dimensional world space
+ * @ingroup core
+ */
 using Target2D3D = Target<2, 3>;
-/** @brief Target mapping 3-dimensional sensor measurements (e.g., from a 3D sensor) to a 3-dimensional world space */
+
+/**
+ * @brief Target mapping 3-dimensional sensor measurements (e.g., from a 3D sensor) to a 3-dimensional world space
+ * @ingroup core
+ */
 using Target3D3D = Target<3, 3>;
 
 /**
  * @brief Base class for target finders
+ * @ingroup core
  */
 template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM, typename SensorDataT>
 class TargetFinder

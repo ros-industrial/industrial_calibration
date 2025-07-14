@@ -35,6 +35,9 @@ inline std::vector<int> createDHMask(const Eigen::Array<bool, Eigen::Dynamic, 4>
   return out;
 }
 
+/**
+ * @ingroup optimizations_kinematic_calibration
+ */
 struct KinematicCalibrationProblem2D3D
 {
   KinematicCalibrationProblem2D3D(DHChain camera_chain_, DHChain target_chain_)
@@ -78,6 +81,9 @@ struct KinematicCalibrationProblem2D3D
   std::string label_camera_base_to_target = "camera_base_to_target";
 };
 
+/**
+ * @ingroup optimizations_kinematic_calibration
+ */
 struct KinematicCalibrationProblemPose6D
 {
   KinematicCalibrationProblemPose6D(DHChain camera_chain_, DHChain target_chain_)
@@ -118,6 +124,9 @@ struct KinematicCalibrationProblemPose6D
   std::string label_camera_base_to_target = "camera_base_to_target";
 };
 
+/**
+ * optimizations_kinematic_calibration
+ */
 struct KinematicCalibrationResult
 {
   bool converged;
@@ -137,6 +146,7 @@ struct KinematicCalibrationResult
  * @brief Performs the kinematic calibration optimization with 2D-3D correspondences
  * @param problem
  * @return
+ * @ingroup optimizations_kinematic_calibration
  */
 KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& problem);
 
@@ -147,6 +157,7 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& probl
  * residual
  * @param options - Ceres solver options
  * @return
+ * @ingroup optimizations_kinematic_calibration
  */
 KinematicCalibrationResult optimize(const KinematicCalibrationProblemPose6D& problem,
                                     const double orientation_weight = 100.0,

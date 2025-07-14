@@ -15,6 +15,7 @@ namespace industrial_calibration
  * @param line Unit vector defining the line
  * @param line_pt Point on the line
  * @param epsilon
+ * @ingroup analysis_projection
  */
 Eigen::Vector3d computeLinePlaneIntersection(const Eigen::Vector3d& plane_normal, const Eigen::Vector3d& plane_pt,
                                              const Eigen::Vector3d& line, const Eigen::Vector3d& line_pt,
@@ -28,6 +29,7 @@ Eigen::Vector3d computeLinePlaneIntersection(const Eigen::Vector3d& plane_normal
  * transform)
  * @param k 3x3 camera projection matrix
  * @return
+ * @ingroup analysis_projection
  */
 Eigen::MatrixX3d project3D(const Eigen::MatrixX2d& source, const Eigen::Isometry3d& source_to_plane,
                            const Eigen::Matrix3d& k);
@@ -35,6 +37,7 @@ Eigen::MatrixX3d project3D(const Eigen::MatrixX2d& source, const Eigen::Isometry
 /**
  * @brief Projects the 2D target features from an observation onto the 3D plane of the calibrated target and computes
  * the difference between the projections and the known target features
+ * @ingroup analysis_projection
  */
 Eigen::ArrayXd compute3DProjectionError(const Observation2D3D& obs, const CameraIntrinsics& intr,
                                         const Eigen::Isometry3d& camera_mount_to_camera,
@@ -43,6 +46,7 @@ Eigen::ArrayXd compute3DProjectionError(const Observation2D3D& obs, const Camera
 /**
  * @brief Projects the 2D target features from a set of observations onto the 3D plane of the calibrated target and
  * computes the difference between the projections and the known target features
+ * @ingroup analysis_projection
  */
 Eigen::ArrayXd compute3DProjectionError(const Observation2D3D::Set& obs, const CameraIntrinsics& intr,
                                         const Eigen::Isometry3d& camera_mount_to_camera,

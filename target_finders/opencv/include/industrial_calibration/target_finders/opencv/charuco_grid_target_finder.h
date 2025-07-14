@@ -14,6 +14,16 @@ namespace industrial_calibration
 {
 /**
  * @brief Structure containing relevant data for a ChArUco grid target
+ * @details Detects the intersections of a chessboard as the features to use for calibration, using the embedded ArUco
+ * tags to uniquely identify each intersection
+ * @image html static/charuco_grid.png
+ * - Pros:
+ *   - Straightforward to detect with minimal tuning
+ *   - Target can be partially occluded
+ * - Cons:
+ *   - Theoretically less accurate than the modified circle grid target, but in practice the difference is negligible
+ *
+ * @ingroup target_finders_opencv
  */
 struct CharucoGridTarget : public Target2D3D
 {
@@ -52,6 +62,7 @@ struct CharucoGridTarget : public Target2D3D
 /**
  * @brief This class finds 2D features from images of a specified ChArUco gridboard target.
  * The main advantage of this kind of target is that partial views still provide usable correspondences.
+ * @ingroup target_finders_opencv
  */
 class CharucoGridBoardTargetFinder : public TargetFinderOpenCV
 {

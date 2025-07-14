@@ -17,19 +17,6 @@ std::tuple<double, double> computeStats(const std::vector<double>& v)
 
 Eigen::Quaterniond computeQuaternionMean(const std::vector<Eigen::Quaterniond>& quaterns)
 {
-  /* Mean quaternion is found using method described by Markley et al: Quaternion Averaging
-   * https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20070017872.pdf
-   *
-   * M = sum(w_i * q_i * q_i^T)    Eq. 12
-   * q_bar = argmax(q^T * M * q)   Eq. 13
-   *
-   * "The solution of this maximization problem is well known. The average quaternion is
-   * the eigenvector of M corresponding to the maximum eigenvalue."
-   *
-   * In the above equations, w_i is the weight of the ith quaternion.
-   * In this case, all quaternions are equally weighted (i.e. w_i = 1)
-   */
-
   Eigen::Matrix4d M = Eigen::Matrix4d::Zero();
 
   for (const Eigen::Quaterniond& q : quaterns)

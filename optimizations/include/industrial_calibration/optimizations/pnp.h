@@ -8,6 +8,7 @@ namespace industrial_calibration
 {
 /**
  * @brief Structure containing relevant data for a PnP optimization using 2D data
+ * @ingroup optimizations_pnp
  */
 struct PnPProblem
 {
@@ -23,6 +24,7 @@ struct PnPProblem
 
 /**
  * @brief Structure containing relevant data for a PnP optimization using 3D data
+ * @ingroup optimizations_pnp
  */
 struct PnPProblem3D
 {
@@ -37,6 +39,7 @@ struct PnPProblem3D
 
 /**
  * @brief PnP optimization results structure
+ * @ingroup optimizations_pnp
  */
 struct PnPResult
 {
@@ -50,10 +53,16 @@ struct PnPResult
 };
 std::ostream& operator<<(std::ostream& stream, const PnPResult& result);
 
-/** @brief Performs the PnP optimization */
+/**
+ * @brief Performs the PnP optimization
+ * @ingroup optimizations_pnp
+ */
 PnPResult optimize(const PnPProblem& params);
 
-/** @brief Performs the PnP 3D optimization */
+/**
+ * @brief Performs the PnP 3D optimization
+ * @ingroup optimizations_pnp
+ */
 PnPResult optimize(const PnPProblem3D& params);
 
 }  // namespace industrial_calibration

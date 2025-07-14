@@ -7,6 +7,7 @@ namespace industrial_calibration
 {
 /**
  * @brief A simple structure for choosing which correspondence indices to use for generating the homography matrix
+ * @ingroup analysis_homography
  */
 struct CorrespondenceSampler
 {
@@ -16,6 +17,7 @@ struct CorrespondenceSampler
 
 /**
  * @brief A correspondence sampler specifically for grid targets
+ * @ingroup analysis_homography
  */
 struct GridCorrespondenceSampler : CorrespondenceSampler
 {
@@ -38,6 +40,7 @@ struct GridCorrespondenceSampler : CorrespondenceSampler
 /**
  * @brief A correspondence sampler that randomly chooses a specifiable number of correspondence indices with a uniform
  * probablility to use in generating a homography transform
+ * @ingroup analysis_homography
  */
 struct RandomCorrespondenceSampler : CorrespondenceSampler
 {
@@ -71,6 +74,7 @@ struct RandomCorrespondenceSampler : CorrespondenceSampler
  * @param correspondence_sampler - a struct for choosing correspondence indices to generate the homography matrix
  * @return A vector of homography errors for each correspondence
  * @throws Exception when number of correspondences does not exceed 2x the number of samples
+ * @ingroup analysis_homography
  */
 Eigen::VectorXd calculateHomographyError(const Correspondence2D3D::Set& correspondences,
                                          const CorrespondenceSampler& correspondence_sampler);
@@ -80,6 +84,7 @@ Eigen::VectorXd calculateHomographyError(const Correspondence2D3D::Set& correspo
  * @param correspondences - A set of corresponding points
  * @param correspondence_sampler - a struct for choosing correspondence indices to generate the homography matrix
  * @return A vector of homography errors for each correspondence
+ * @ingroup analysis_homography
  */
 Eigen::VectorXd calculateHomographyError(const Correspondence3D3D::Set& correspondences,
                                          const CorrespondenceSampler& correspondence_sampler);
