@@ -50,10 +50,5 @@
       Calibration target and target finders based on OpenCV
     @}
   @}
-
-  @defgroup gui GUI
-  @{
-    Contains Qt-based GUI widgets for performing various types of calibrations
-  @}
 */
 

@@ -1,0 +1,33 @@
+/**
+@page page_getting_started Getting Started
+
+@tableofcontents
+
+@section s_build Build
+
+Nominally, this project is ROS-independent, but it is convenient to use the ROS dependency management and build tools to
+build the repository.
+
+Clone the repository into a workspace, download the dependencies, and build the workspace.
+
+```
+cd <workspace>
+vcs import src < src/industrial_calibration/dependencies.repos
+rosdep install --from-paths src -iry
+colcon build
+```
+
+@section s_ros ROS Interfaces
+
+In order to streamline support and building while both ROS 1 and ROS 2 are in use, the ROS interfaces for this library have been moved to separate repositories.
+- [ROS 1 Interfaces](https://github.com/ros-industrial/industrial_calibration_ros)
+- [ROS 2 Interfaces](https://github.com/ros-industrial/industrial_calibration_ros2)
+
+@section s_gui_applications GUI Applications
+
+This repository provides the following GUI applications for performing various types of calibrations.
+
+- @subpage page_camera_intrinsic_calibration "Camera Intrinsic Calibration"
+- @subpage page_extrinsic_hand_eye_calibration "Extrinsic Hand Eye Calibration"
+
+*/
