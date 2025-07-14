@@ -8,6 +8,7 @@ namespace industrial_calibration
 /**
  * @brief Structure containing the error measurements between 2 virtual correspondence sets within one real
  * correspondence set
+ * @ingroup analysis_camera_intrinsic
  */
 struct VirtualCorrespondenceResult
 {
@@ -38,6 +39,7 @@ struct VirtualCorrespondenceResult
  * @param pnp_sq_error_threshold - Max squared error allowed for a PnP optimization.
  * This value should be driven by the accuracy of the sensor providing the observations (default: 1.0 pixel^2)
  * @return
+ * @ingroup analysis_camera_intrinsic
  */
 VirtualCorrespondenceResult
 measureVirtualTargetDiff(const Correspondence2D3D::Set& correspondences, const CameraIntrinsics& intr,
@@ -46,6 +48,7 @@ measureVirtualTargetDiff(const Correspondence2D3D::Set& correspondences, const C
 
 /**
  * @brief Structure containing measurements of the intrinsic calibration accuracy
+ * @ingroup analysis_camera_intrinsic
  */
 struct IntrinsicCalibrationAccuracyResult
 {
@@ -74,6 +77,7 @@ struct IntrinsicCalibrationAccuracyResult
  * @param pnp_sq_error_threshold - Max squared error allowed for a PnP optimization.
  * This value should be driven by the accuracy of the sensor providing the observations (default: 1.0 pixel^2)
  * @return
+ * @ingroup analysis_camera_intrinsic
  */
 IntrinsicCalibrationAccuracyResult measureIntrinsicCalibrationAccuracy(
     const Observation2D3D::Set& observations, const CameraIntrinsics& intr,

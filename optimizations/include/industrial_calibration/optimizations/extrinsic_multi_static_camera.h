@@ -22,6 +22,9 @@
 
 namespace industrial_calibration
 {
+/**
+ * @ingroup optimizations_extrinsic_multi_static_camera
+ */
 struct ExtrinsicMultiStaticCameraMovingTargetProblem
 {
   /** @brief The basic camera intrinsic propeties: fx, fy, cx, cy used to reproject points;
@@ -54,6 +57,9 @@ struct ExtrinsicMultiStaticCameraMovingTargetProblem
   std::vector<std::string> labels_image_observations;
 };
 
+/**
+ * @ingroup optimizations_extrinsic_multi_static_camera
+ */
 struct ExtrinsicMultiStaticCameraMovingTargetResult
 {
   /**
@@ -90,8 +96,14 @@ struct ExtrinsicMultiStaticCameraMovingTargetResult
   CovarianceResult covariance;
 };
 
+/**
+ * @ingroup optimizations_extrinsic_multi_static_camera
+ */
 ExtrinsicMultiStaticCameraMovingTargetResult optimize(const ExtrinsicMultiStaticCameraMovingTargetProblem& params);
 
+/**
+ * @ingroup optimizations_extrinsic_multi_static_camera
+ */
 struct ExtrinsicMultiStaticCameraOnlyProblem
 {
   /** @brief This is usefull in camera to camera calibration like stereo calibration and
@@ -126,6 +138,9 @@ struct ExtrinsicMultiStaticCameraOnlyProblem
   std::vector<std::string> labels_image_observations;
 };
 
+/**
+ * @ingroup optimizations_extrinsic_multi_static_camera
+ */
 struct ExtrinsicMultiStaticCameraOnlyResult
 {
   /**
@@ -158,8 +173,14 @@ struct ExtrinsicMultiStaticCameraOnlyResult
   CovarianceResult covariance;
 };
 
+/**
+ * @ingroup optimizations_extrinsic_multi_static_camera
+ */
 ExtrinsicMultiStaticCameraOnlyResult optimize(const ExtrinsicMultiStaticCameraOnlyProblem& params);
 
+/**
+ * @ingroup optimizations_extrinsic_multi_static_camera
+ */
 struct ExtrinsicMultiStaticCameraMovingTargetWristOnlyProblem
 {
   /** @brief The basic camera intrinsic propeties: fx, fy, cx, cy used to reproject points;
@@ -195,6 +216,9 @@ struct ExtrinsicMultiStaticCameraMovingTargetWristOnlyProblem
   std::vector<std::string> labels_image_observations;
 };
 
+/**
+ * @ingroup optimizations_extrinsic_multi_static_camera
+ */
 struct ExtrinsicMultiStaticCameraMovingTargetWristOnlyResult
 {
   /**
@@ -231,6 +255,9 @@ struct ExtrinsicMultiStaticCameraMovingTargetWristOnlyResult
   CovarianceResult covariance;
 };
 
+/**
+ * @ingroup optimizations_extrinsic_multi_static_camera
+ */
 ExtrinsicMultiStaticCameraMovingTargetWristOnlyResult
 optimize(const ExtrinsicMultiStaticCameraMovingTargetWristOnlyProblem& params);
 

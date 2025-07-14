@@ -16,6 +16,9 @@
 
 namespace industrial_calibration
 {
+/**
+ * @ingroup optimizations_multi_camera_pnp
+ */
 struct MultiCameraPnPProblem
 {
   /** @brief The basic camera intrinsic propeties: fx, fy, cx, cy used to reproject points;
@@ -36,6 +39,9 @@ struct MultiCameraPnPProblem
   Eigen::Isometry3d base_to_target_guess;
 };
 
+/**
+ * @ingroup optimizations_multi_camera_pnp
+ */
 struct MultiCameraPnPResult
 {
   /**
@@ -63,6 +69,9 @@ struct MultiCameraPnPResult
   Eigen::Isometry3d base_to_target;
 };
 
+/**
+ * @ingroup optimizations_multi_camera_pnp
+ */
 MultiCameraPnPResult optimize(const MultiCameraPnPProblem& params);
 
 }  // namespace industrial_calibration

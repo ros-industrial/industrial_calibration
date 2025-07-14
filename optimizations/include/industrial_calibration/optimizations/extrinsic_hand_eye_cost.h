@@ -9,6 +9,7 @@ namespace industrial_calibration
 {
 /**
  * @brief Base class for hand-eye calibration cost functions
+ * @ingroup optimizations_extrinsic_hand_eye
  */
 template <Eigen::Index OBS_DIMENSION>
 class ExtrinsicHandEyeCost
@@ -68,6 +69,7 @@ protected:
 
 /**
  * @brief Cost function for a hand-eye calibration using 2D observations of 3D features
+ * @ingroup optimizations_extrinsic_hand_eye
  */
 class ExtrinsicHandEye2D3DCost : public ExtrinsicHandEyeCost<2>
 {
@@ -103,6 +105,7 @@ private:
 
 /**
  * @brief Cost function for a hand-eye calibration using 3D observations of 3D features
+ * @ingroup optimizations_extrinsic_hand_eye
  */
 class ExtrinsicHandEye3D3DCost : public ExtrinsicHandEyeCost<3>
 {

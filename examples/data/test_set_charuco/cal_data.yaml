@@ -62,6 +62,7 @@ homography_threshold: 2.0
 static_camera: true
 
 # ChArUco grid target finder
+# //! [Charuco Grid Target Finder Config]
 target_finder:
   type: CharucoGridTargetFinder
   rows: 7
@@ -69,3 +70,4 @@ target_finder:
   chessboard_dim: 0.036195
   aruco_marker_dim: 0.018256
   dictionary: 10  # DICT_6X6_250
+# //! [Charuco Grid Target Finder Config]

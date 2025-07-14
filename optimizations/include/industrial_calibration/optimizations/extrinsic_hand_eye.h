@@ -25,6 +25,9 @@
 
 namespace industrial_calibration
 {
+/**
+ * @ingroup optimizations_extrinsic_hand_eye
+ */
 struct ExtrinsicHandEyeProblem2D3D
 {
   typename Observation2D3D::Set observations;
@@ -44,6 +47,9 @@ struct ExtrinsicHandEyeProblem2D3D
   }
 };
 
+/**
+ * @ingroup optimizations_extrinsic_hand_eye
+ */
 struct ExtrinsicHandEyeProblem3D3D
 {
   typename Observation3D3D::Set observations;
@@ -62,6 +68,9 @@ struct ExtrinsicHandEyeProblem3D3D
   }
 };
 
+/**
+ * @ingroup optimizations_extrinsic_hand_eye
+ */
 struct ExtrinsicHandEyeResult
 {
   bool converged;
@@ -75,7 +84,14 @@ struct ExtrinsicHandEyeResult
 };
 std::ostream& operator<<(std::ostream& stream, const ExtrinsicHandEyeResult& result);
 
+/**
+ * @ingroup optimizations_extrinsic_hand_eye
+ */
 ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem2D3D& params);
+
+/**
+ * @ingroup optimizations_extrinsic_hand_eye
+ */
 ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem3D3D& params);
 
 }  // namespace industrial_calibration

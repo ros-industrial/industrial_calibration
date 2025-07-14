@@ -7,6 +7,7 @@ namespace industrial_calibration
 {
 /**
  * @brief Cost function for performing 2D camera intrinsic calibration
+ * @ingroup optimizations_camera_intrinsic
  */
 class CameraIntrinsicCost
 {

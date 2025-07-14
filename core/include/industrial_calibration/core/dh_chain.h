@@ -136,6 +136,7 @@ protected:
 
 /**
  * @brief Robot representation using DH parameters
+ * @ingroup core
  */
 class DHChain
 {

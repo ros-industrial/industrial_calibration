@@ -13,6 +13,7 @@ namespace industrial_calibration
  * deviations.
  * @param Sets of PnP 2D problem parameters
  * @return Noise Statistics: a vector of means & std devs
+ * @ingroup analysis_noise_qualification
  */
 PnPNoiseStat qualifyNoise2D(const std::vector<PnPProblem>& params);
 
@@ -23,6 +24,7 @@ PnPNoiseStat qualifyNoise2D(const std::vector<PnPProblem>& params);
  * deviations.
  * @param params 3D image parameters
  * @return Noise Statiscics: a vector of standard deviations and the mean pos
+ * @ingroup analysis_noise_qualification
  */
 PnPNoiseStat qualifyNoise3D(const std::vector<PnPProblem3D>& params);
 

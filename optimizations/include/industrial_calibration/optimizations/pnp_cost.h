@@ -9,6 +9,7 @@ namespace industrial_calibration
 {
 /**
  * @brief Cost function for single camera perspective-n-point estimation
+ * @ingroup optimizations_pnp
  */
 struct PnPCost
 {
@@ -45,6 +46,7 @@ struct PnPCost
 
 /**
  * @brief Cost function for single-camera perspective-n-point estimation using 3D features
+ * @ingroup optimizations_pnp
  */
 struct PnP3DCost
 {

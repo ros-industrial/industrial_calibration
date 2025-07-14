@@ -7,6 +7,7 @@ namespace industrial_calibration
 {
 /**
  * @brief Structure representing camera intrinsic parameters for a pin-hole model camera
+ * @ingroup core
  */
 struct CameraIntrinsics
 {
@@ -26,6 +27,9 @@ struct CameraIntrinsics
 };
 std::ostream& operator<<(std::ostream& stream, const CameraIntrinsics& intr);
 
+/**
+ * @ingroup core
+ */
 template <typename T>
 struct CalibCameraIntrinsics
 {
@@ -47,6 +51,9 @@ struct CalibCameraIntrinsics
   constexpr static std::size_t size() { return 9; }
 };
 
+/**
+ * @ingroup core
+ */
 template <typename T>
 struct MutableCalibCameraIntrinsics
 {

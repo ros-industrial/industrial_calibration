@@ -1,0 +1,54 @@
+/**
+@mainpage
+
+<a href="https://github.com/ros-industrial/industrial_calibration">Industrial Calibration</a> is a set of tools for performing calibration between cameras and robots and analyzing the accuracy of the calibration.
+
+@image html static/extrinsic_hand_eye_calibration.png
+
+<ul>
+  <li> @subpage page_primer </li>
+  <li> @subpage page_getting_started </li>
+</ul>
+
+*/
+
+// Define groups
+/**
+  @defgroup core Core
+  @{
+    Contains definitions for common data types (e.g., features, correspondences, observations, camera intrinsics, etc.) and interface classes.
+  @}
+
+  @defgroup optimizations Optimizations
+  @{
+    Contains type definitions, cost functions, and optimization algorithms for various calibration optimizations
+
+    @defgroup optimizations_camera_intrinsic Camera Intrinsic
+    @defgroup optimizations_kinematic_calibration Kinematic Calibration
+    @defgroup optimizations_extrinsic_hand_eye Extrinsic Hand Eye
+    @defgroup optimizations_extrinsic_multi_static_camera Extrinsic Static Multi-camera
+    @defgroup optimizations_pnp PnP
+    @defgroup optimizations_multi_camera_pnp Multi-camera PnP
+  @}
+
+  @defgroup analysis Analysis
+  @{
+    Contains functions for analyzing the accuracy of sensors and various types of calibrations
+
+    @defgroup analysis_camera_intrinsic Camera Intrinsic Calibration Analysis
+    @defgroup analysis_extrinsic_hand_eye Extrinsic Hand-eye Calibration Analysis
+    @defgroup analysis_homography Homography Analysis
+    @defgroup analysis_noise_qualification Noise Analysis
+    @defgroup analysis_projection Projection Analysis
+  @}
+
+  @defgroup target_finders Target Finders
+  @{
+    Contains implementations of the interface for finding calibration targets from sensor measurements (e.g., 2D images)
+    @defgroup target_finders_opencv OpenCV Target Finders
+    @{
+      Calibration target and target finders based on OpenCV
+    @}
+  @}
+*/
+

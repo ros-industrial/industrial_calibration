@@ -9,6 +9,7 @@ namespace industrial_calibration
 {
 /**
  * @brief A pair of corresponding features in a N-dimensional sensor "image" and 3D target
+ * @ingroup core
  */
 template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
 struct Correspondence
@@ -38,9 +39,16 @@ struct Correspondence
   /** @brief N-dimensional location of the feature relative to the target origin */
   Eigen::Matrix<double, WORLD_DIM, 1> in_target;
 };
-/** @brief Typedef for correspondence between 2D feature in image coordinates and 3D feature in target coordinates */
+/**
+ * @brief Typedef for correspondence between 2D feature in image coordinates and 3D feature in target coordinates
+ * @ingroup core
+ */
 using Correspondence2D3D = Correspondence<2, 3>;
-/** @brief Typedef for correspondence between 3D feature in sensor coordinates and 3D feature in target coordinates */
+
+/**
+ * @brief Typedef for correspondence between 3D feature in sensor coordinates and 3D feature in target coordinates
+ * @ingroup core
+ */
 using Correspondence3D3D = Correspondence<3, 3>;
 
 // Deprecated typedefs
@@ -59,6 +67,8 @@ using Correspondence3DSet [[deprecated]] = Correspondence3D3D::Set;
  *
  * Keep in mind that the optimization itself determines the final calibrated transforms from these "mount" frames to the
  * camera and target.
+ *
+ * @ingroup core
  */
 template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
 struct Observation
@@ -86,13 +96,21 @@ struct Observation
   /** @brief The transform to the frame to which the target is mounted. */
   Eigen::Isometry3d to_target_mount;
 };
-/** @brief Typedef for observations of 2D image to 3D target correspondences */
+/**
+ * @brief Typedef for observations of 2D image to 3D target correspondences
+ * @ingroup core
+ */
 using Observation2D3D = Observation<2, 3>;
-/** @brief Typedef for observations of 3D sensor to 3D target correspondences */
+
+/**
+ * @brief Typedef for observations of 3D sensor to 3D target correspondences
+ * @ingroup core
+ */
 using Observation3D3D = Observation<3, 3>;
 
 /**
  * @brief A set of data representing a single observation of a calibration target
+ * @ingroup core
  */
 template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
 struct KinematicObservation
@@ -112,9 +130,16 @@ struct KinematicObservation
   /** @brief The joint values of the target kinematic chain for the observation */
   Eigen::VectorXd target_chain_joints;
 };
-/** @brief Typedef for kinematic observations of 2D image to 3D target correspondences */
+/**
+ * @brief Typedef for kinematic observations of 2D image to 3D target correspondences
+ * @ingroup core
+ */
 using KinObservation2D3D = KinematicObservation<2, 3>;
-/** @brief Typedef for kinematic observations of 3D sensor to 3D target correspondences */
+
+/**
+ * @brief Typedef for kinematic observations of 3D sensor to 3D target correspondences
+ * @ingroup core
+ */
 using KinObservation3D3D = KinematicObservation<3, 3>;
 
 /**
@@ -127,6 +152,8 @@ using KinObservation3D3D = KinematicObservation<3, 3>;
  * features with a 2D/3D camera
  *
  * Note: if the camera or target is fixed, the size of the joint state vector can be zero
+ *
+ * @ingroup core
  */
 struct KinematicMeasurement
 {

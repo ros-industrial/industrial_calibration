@@ -8,6 +8,7 @@ namespace industrial_calibration
 {
 /**
  * @brief Structure containing the relevant data for a camera intrinsic calibration
+ * @ingroup optimizations_camera_intrinsic
  */
 struct CameraIntrinsicProblem
 {
@@ -24,6 +25,7 @@ struct CameraIntrinsicProblem
 
 /**
  * @brief Results of the camera intrinsic calibration
+ * @ingroup optimizations_camera_intrinsic
  */
 struct CameraIntrinsicResult
 {
@@ -40,7 +42,10 @@ struct CameraIntrinsicResult
 };
 std::ostream& operator<<(std::ostream& stream, const CameraIntrinsicResult& result);
 
-/** @brief Performs the camera intrinsic calibration */
+/**
+ * @brief Performs the camera intrinsic calibration
+ * @ingroup optimizations_camera_intrinsic
+ */
 CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params);
 
 }  // namespace industrial_calibration

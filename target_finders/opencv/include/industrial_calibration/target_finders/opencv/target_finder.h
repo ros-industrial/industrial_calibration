@@ -6,7 +6,10 @@
 
 namespace industrial_calibration
 {
-/** @brief Typedef for a target finder based on OpenCV that finds 2D targets in an RGB image */
+/**
+ * @brief Typedef for a target finder based on OpenCV that finds 2D targets in an RGB image
+ * @ingroup target_finders_opencv
+ */
 using TargetFinderOpenCV = TargetFinder<2, 3, cv::Mat>;
 
 /** @brief Plugin interface for generating OpenCV-based target finders */

@@ -9,6 +9,7 @@ namespace industrial_calibration
 {
 /**
  * @brief Cost function for multi-camera perspective-n-point estimation
+ * @ingroup optimizations_multi_camera_pnp
  */
 class MultiCameraPnPCost
 {

@@ -56,6 +56,7 @@ target_mount_to_target_guess:
   qw: 0.707107
 
 # 10x10 modified circle grid target finder
+# //! [Modified Circle Grid Target Finder Config]
 target_finder:
   type: ModifiedCircleGridTargetFinder
   rows: 10
@@ -90,6 +91,7 @@ target_finder:
     filterByConvexity: true
     minConvexity: 0.95
     maxConvexity: 99999999.0
+# //! [Modified Circle Grid Target Finder Config]
 
 # Other parameters
 homography_threshold: 1.0

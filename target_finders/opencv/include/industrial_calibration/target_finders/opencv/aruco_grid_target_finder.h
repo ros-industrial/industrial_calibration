@@ -9,6 +9,15 @@ namespace industrial_calibration
 {
 /**
  * @brief Structure containing relevant data for a ArUco grid target
+ * @details Detects the corners of each ArUco marker in a grid as the features to use for calibration
+ * @image html static/aruco_grid.png
+ * - Pros:
+ *   - Straightforward to detect with minimal tuning
+ *   - Target can be partially occluded
+ * - Cons:
+ *   - Less accurate than the ChArUco grid target finder since it lacks the chessboard features
+ *   - Theoretically less accurate than the modified circle grid target, but in practice the difference is negligible
+ * @ingroup target_finders_opencv
  */
 struct ArucoGridTarget : Target2D3D
 {
@@ -50,6 +59,7 @@ struct ArucoGridTarget : Target2D3D
  * The main advantage of this kind of target is that partial views still provide usable correspondences.
  * Target features are returned as a map where the marker ID is the key and the image coordinates of the
  * marker corners are the mapped value.
+ * @ingroup target_finders_opencv
  */
 class ArucoGridBoardTargetFinder : public TargetFinderOpenCV
 {

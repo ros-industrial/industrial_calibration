@@ -6,6 +6,7 @@ namespace industrial_calibration
 {
 /**
  * @brief Representation of an isometry homogeneous transform for better integration with Ceres
+ * @ingroup core
  */
 struct Pose6d
 {
