@@ -28,11 +28,13 @@ add_library(
   src/modified_circle_grid_target_finder.cpp
   src/target_finder.ui
   src/target_finder.cpp
+  # Camera calibration data manager widget
+  include/industrial_calibration/gui/camera_calibration_data_manager_widget.h
+  src/camera_calibration_data_manager_widget.ui
+  src/camera_calibration_data_manager_widget.cpp
   # Extrinsic hand-eye calibration widget
-  src/extrinsic_hand_eye_calibration_widget.ui
   src/extrinsic_hand_eye_calibration_widget.cpp
   # Camera intrinsic calibration widget
-  src/camera_intrinsic_calibration_widget.ui
   src/camera_intrinsic_calibration_widget.cpp)
 target_include_directories(${PROJECT_NAME}_gui PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                       "$<INSTALL_INTERFACE:include>")

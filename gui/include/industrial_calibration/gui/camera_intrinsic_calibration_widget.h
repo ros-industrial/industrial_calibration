@@ -1,46 +1,25 @@
 #pragma once
 
-#include <industrial_calibration/target_finders/opencv/target_finder.h>
-
-#include <boost_plugin_loader/plugin_loader.h>
-#include <memory>
-#include <QMainWindow>
-#include <QDialog>
-
-class QTreeWidgetItem;
-
-namespace Ui
-{
-class CameraIntrinsicCalibration;
-}
+#include <industrial_calibration/gui/camera_calibration_data_manager_widget.h>
 
 namespace industrial_calibration
 {
 class CameraIntrinsicResult;
-class TargetFinderWidget;
-class CameraIntrinsicsWidget;
 
 /**
  * @brief Widget for performing camera intrinsic calibration from a data set of 2D image observations.
  * @sa @ref page_camera_intrinsic_calibration
  */
-class CameraIntrinsicCalibrationWidget : public QMainWindow
+class CameraIntrinsicCalibrationWidget : public CameraCalibrationDataManagerWidget
 {
 public:
   explicit CameraIntrinsicCalibrationWidget(QWidget* parent = nullptr);
-  ~CameraIntrinsicCalibrationWidget();
 
   /**
-   * @brief Loads the calibration configuration from file
+   * @brief Loads the calibration configuration from file (defined in @ref s_camera_intrinsic_conf_def)
    * @throws Exception on failure
    */
   void loadConfig(const std::string& config_file);
-
-  /**
-   * @brief Loads the calibration observations from file
-   * @throws Exception on failure
-   */
-  void loadObservations(const std::string& obserations_file);
 
   /**
    * @brief Performs the calibration
@@ -61,27 +40,20 @@ public:
    */
   void saveROSFormat(const std::string& file) const;
 
-protected:
-  void closeEvent(QCloseEvent*) override;
+  QAction* action_load_configuration;
+  QAction* action_use_extrinsic_guesses;
+  QAction* action_use_opencv;
+  QAction* action_calibrate;
+  QAction* action_save;
+  QAction* action_save_ros_format;
 
+protected:
   void onLoadConfig();
-  void onLoadObservations();
   void onCalibrate();
   void onSaveResults();
   void onSaveROSFormat();
 
-  void loadTargetFinder();
-  void drawImage(QTreeWidgetItem* item, int col);
-
-  Ui::CameraIntrinsicCalibration* ui_;
-  TargetFinderWidget* target_finder_widget_;
-  CameraIntrinsicsWidget* camera_intrinsics_widget_;
-
-  boost_plugin_loader::PluginLoader loader_;
-  TargetFinderFactoryOpenCV::ConstPtr factory_;
-
   std::shared_ptr<CameraIntrinsicResult> result_;
-  TargetFinderOpenCV::ConstPtr target_finder_;
 };
 
 }  // namespace industrial_calibration
