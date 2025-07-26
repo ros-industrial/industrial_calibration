@@ -537,75 +537,20 @@ void CameraIntrinsicCalibrationWidget::saveROSFormat(const std::string& file) co
   if (result_ == nullptr)
     return;
 
-  Eigen::Matrix<double, 3, 4, Eigen::RowMajor> mat;
-  mat << result_->intrinsics.fx(), 0.0, result_->intrinsics.cx(), 0.0, 0.0, result_->intrinsics.fy(),
-      result_->intrinsics.cy(), 0.0, 0.0, 0.0, 1.0, 0.0;
-
-  YAML::Node node;
-
-  node["camera_name"] = "";
-
   // Image size
-  {
-    if (ui_->tree_widget_observations->topLevelItemCount() == 0)
-      throw ICalException("No observations have been added");
+  if (ui_->tree_widget_observations->topLevelItemCount() == 0)
+    throw ICalException("No observations have been added");
 
-    QTreeWidgetItem* item = ui_->tree_widget_observations->topLevelItem(0);
-    QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
-    if (!QFile(image_file).exists())
-      throw ICalException("Image '" + image_file.toStdString() + "' does not exist");
+  QTreeWidgetItem* item = ui_->tree_widget_observations->topLevelItem(0);
+  QString image_file = item->data(0, IMAGE_FILE_NAME_ROLE).value<QString>();
+  if (!QFile(image_file).exists())
+    throw ICalException("Image '" + image_file.toStdString() + "' does not exist");
 
-    cv::Mat image = cv::imread(image_file.toStdString());
-    node["image_height"] = image.size[0];
-    node["image_width"] = image.size[1];
-  }
+  cv::Mat image = readImageOpenCV(image_file.toStdString());
+  const int image_height = image.size[0];
+  const int image_width = image.size[1];
 
-  // Camera matrix
-  {
-    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> intr = mat.block<3, 3>(0, 0);
-
-    YAML::Node camera_matrix;
-    camera_matrix["rows"] = 3;
-    camera_matrix["cols"] = 3;
-    camera_matrix["data"] = std::vector<double>(intr.data(), intr.data() + 9);
-
-    node["camera_matrix"] = camera_matrix;
-  }
-
-  // Distortion
-  {
-    YAML::Node distortion;
-    distortion["rows"] = 1;
-    distortion["cols"] = 5;
-    distortion["data"] = result_->distortions;
-
-    node["distortion_model"] = "plumb_bob";
-    node["distortion_coefficients"] = distortion;
-  }
-
-  // Rectification matrix
-  {
-    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> identity;
-    identity.setIdentity();
-
-    YAML::Node rect_matrix;
-    rect_matrix["rows"] = 3;
-    rect_matrix["cols"] = 3;
-    rect_matrix["data"] = std::vector<double>(identity.data(), identity.data() + 9);
-
-    node["rectification_matrix"] = rect_matrix;
-  }
-
-  // Projection matrix
-  {
-    YAML::Node proj_matrix;
-    proj_matrix["rows"] = 3;
-    proj_matrix["cols"] = 4;
-    proj_matrix["data"] = std::vector<double>(mat.data(), mat.data() + 12);
-
-    node["projection_matrix"] = proj_matrix;
-  }
-
+  YAML::Node node = toROSFormat(*result_, image_width, image_height);
   std::ofstream f(file);
   f << node;
 }

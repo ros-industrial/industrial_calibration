@@ -34,6 +34,69 @@ static Pose6d guessInitialPose()
   return poseEigenToCal(guess);
 }
 
+YAML::Node toROSFormat(const CameraIntrinsicResult& result, const int image_width, const int image_height)
+{
+  Eigen::Matrix<double, 3, 4, Eigen::RowMajor> mat;
+  mat << result.intrinsics.fx(), 0.0, result.intrinsics.cx(), 0.0, 0.0, result.intrinsics.fy(), result.intrinsics.cy(),
+      0.0, 0.0, 0.0, 1.0, 0.0;
+
+  YAML::Node node;
+
+  node["camera_name"] = "";
+
+  // Image size
+  node["image_height"] = image_height;
+  node["image_width"] = image_width;
+
+  // Camera matrix
+  {
+    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> intr = mat.block<3, 3>(0, 0);
+
+    YAML::Node camera_matrix;
+    camera_matrix["rows"] = 3;
+    camera_matrix["cols"] = 3;
+    camera_matrix["data"] = std::vector<double>(intr.data(), intr.data() + 9);
+
+    node["camera_matrix"] = camera_matrix;
+  }
+
+  // Distortion
+  {
+    YAML::Node distortion;
+    distortion["rows"] = 1;
+    distortion["cols"] = 5;
+    distortion["data"] = result.distortions;
+
+    node["distortion_model"] = "plumb_bob";
+    node["distortion_coefficients"] = distortion;
+  }
+
+  // Rectification matrix
+  {
+    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> identity;
+    identity.setIdentity();
+
+    YAML::Node rect_matrix;
+    rect_matrix["rows"] = 3;
+    rect_matrix["cols"] = 3;
+    rect_matrix["data"] = std::vector<double>(identity.data(), identity.data() + 9);
+
+    node["rectification_matrix"] = rect_matrix;
+  }
+
+  // Projection matrix
+  {
+    YAML::Node proj_matrix;
+    proj_matrix["rows"] = 3;
+    proj_matrix["cols"] = 4;
+    proj_matrix["data"] = std::vector<double>(mat.data(), mat.data() + 12);
+
+    node["projection_matrix"] = proj_matrix;
+  }
+
+  return node;
+}
+
 std::ostream& operator<<(std::ostream& stream, const CameraIntrinsicResult& result)
 {
   stream << "Optimization " << (result.converged ? "converged" : "did not converge") << "\n"

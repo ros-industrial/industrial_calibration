@@ -43,6 +43,13 @@ struct CameraIntrinsicResult
 std::ostream& operator<<(std::ostream& stream, const CameraIntrinsicResult& result);
 
 /**
+ * @brief Saves the calibration results to a YAML file in a format compatible with ROS
+ * @details Format definition https://wiki.ros.org/camera_calibration_parsers#File_formats
+ * @throws Exception on failure
+ */
+YAML::Node toROSFormat(const CameraIntrinsicResult& result, const int image_width, const int image_height);
+
+/**
  * @brief Performs the camera intrinsic calibration
  * @ingroup optimizations_camera_intrinsic
  */
