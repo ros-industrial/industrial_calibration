@@ -30,31 +30,6 @@ data:
   - pose: poses/9.yaml
     image: images/9.png
 
-# Nominal Kinect sensor camera intrinsic parameters
-intrinsics:
-  fx: 550.0 # pixels
-  fy: 550.0 # pixels
-  cx: 320.0
-  cy: 240.0
-
-# Pose guesses
-camera_mount_to_camera_guess:
-  x: 0.0  # Note: Until I fix this YOU NEED to make this a DOUBLE! Don't write just '0'.
-  y: 0.0
-  z: 0.0
-  qx: 0.0
-  qy: 0.0
-  qz: -0.707107
-  qw: 0.707107
-target_mount_to_target_guess:
-  x: 1.0
-  y: 0.0
-  z: 0.0
-  qx: 0.0
-  qy: 0.0
-  qz: -0.707107
-  qw: 0.707107
-
 # 10x10 modified circle grid target finder
 # //! [Modified Circle Grid Target Finder Config]
 target_finder:
@@ -93,6 +68,34 @@ target_finder:
     maxConvexity: 99999999.0
 # //! [Modified Circle Grid Target Finder Config]
 
-# Other parameters
 homography_threshold: 1.0
+
+# Nominal Kinect sensor camera intrinsic parameters
+intrinsics:
+  fx: 550.0 # pixels
+  fy: 550.0 # pixels
+  cx: 320.0
+  cy: 240.0
+
+# Extrinsic hand eye calibration specific parameters
+camera_mount_to_camera_guess:
+  x: 0.0  # Note: Until I fix this YOU NEED to make this a DOUBLE! Don't write just '0'.
+  y: 0.0
+  z: 0.0
+  qx: 0.0
+  qy: 0.0
+  qz: -0.707107
+  qw: 0.707107
+target_mount_to_target_guess:
+  x: 1.0
+  y: 0.0
+  z: 0.0
+  qx: 0.0
+  qy: 0.0
+  qz: -0.707107
+  qw: 0.707107
 static_camera: false
+
+# Camera intrinsic calibration specific paramters
+use_extrinsic_guesses: false
+use_opencv: false

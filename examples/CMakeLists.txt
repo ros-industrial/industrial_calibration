@@ -1,5 +1,17 @@
 find_package(boost_plugin_loader REQUIRED)
 
+# Camera intrinsic calibration example
+add_executable(${PROJECT_NAME}_camera_intrinsic camera_intrinsic.cpp)
+target_link_libraries(
+  ${PROJECT_NAME}_camera_intrinsic
+  PRIVATE ${PROJECT_NAME}_analysis
+          ${PROJECT_NAME}_target_finders_opencv
+          opencv_highgui
+          stdc++fs
+          boost_plugin_loader::boost_plugin_loader)
+target_compile_definitions(${PROJECT_NAME}_camera_intrinsic PRIVATE EXAMPLE_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+target_cxx_version(${PROJECT_NAME}_camera_intrinsic PUBLIC VERSION 17)
+
 # Hand-eye calibration example
 add_executable(${PROJECT_NAME}_extrinsic_hand_eye extrinsic_hand_eye.cpp)
 target_link_libraries(
@@ -50,6 +62,12 @@ target_cxx_version(${PROJECT_NAME}_pnp PUBLIC VERSION 17)
 if(${INDUSTRIAL_CALIBRATION_ENABLE_TESTING})
   find_gtest()
 
+  # Camera intrinsic calibration
+  add_gtest_discover_tests(${PROJECT_NAME}_camera_intrinsic)
+  add_dependencies(run_tests ${PROJECT_NAME}_camera_intrinsic)
+  target_link_libraries(${PROJECT_NAME}_camera_intrinsic PRIVATE GTest::GTest GTest::Main)
+  target_compile_definitions(${PROJECT_NAME}_camera_intrinsic PUBLIC INDUSTRIAL_CALIBRATION_ENABLE_TESTING)
+
   # Hand-eye calibration
   add_gtest_discover_tests(${PROJECT_NAME}_extrinsic_hand_eye)
   add_dependencies(run_tests ${PROJECT_NAME}_extrinsic_hand_eye)
@@ -87,6 +105,7 @@ configure_component(
   NAMESPACE
   industrial_calibration
   TARGETS
+  ${PROJECT_NAME}_camera_intrinsic
   ${PROJECT_NAME}_extrinsic_hand_eye
   ${PROJECT_NAME}_kinematic_calibration
   ${PROJECT_NAME}_noise_qualification_2d
@@ -96,7 +115,8 @@ configure_component(
 
 # Install the executables for access by ROS
 install(
-  TARGETS ${PROJECT_NAME}_extrinsic_hand_eye
+  TARGETS ${PROJECT_NAME}_camera_intrinsic
+          ${PROJECT_NAME}_extrinsic_hand_eye
           ${PROJECT_NAME}_kinematic_calibration
           ${PROJECT_NAME}_noise_qualification_2d
           ${PROJECT_NAME}_pnp
