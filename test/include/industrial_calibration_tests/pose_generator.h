@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Eigen/Geometry>
-#include <vector>
-#include <random>
+#include <industrial_calibration/core/types.h>
 #include <memory>
+#include <random>
 
 namespace industrial_calibration
 {
@@ -24,7 +24,7 @@ struct PoseGenerator
    * @param target_origin The position of the target
    * @return A vector of camera positions & orientations
    */
-  virtual std::vector<Eigen::Isometry3d> generate(const Eigen::Isometry3d& target_origin) = 0;
+  virtual VectorEigenIsometry generate(const Eigen::Isometry3d& target_origin) = 0;
 };
 
 /**
@@ -45,7 +45,7 @@ struct HemispherePoseGenerator : PoseGenerator
 
   inline HemispherePoseGenerator() : HemispherePoseGenerator(2.0, 10, 10, 0.0, Eigen::Isometry3d::Identity()) {}
 
-  virtual std::vector<Eigen::Isometry3d> generate(const Eigen::Isometry3d& target_origin) override final;
+  virtual VectorEigenIsometry generate(const Eigen::Isometry3d& target_origin) override final;
 
   double r;                        /** @brief Radius of the hemisphere */
   unsigned theta_cnt;              /** @brief The number of points in the theta-wise direction*/
@@ -72,7 +72,7 @@ struct ConicalPoseGenerator : PoseGenerator
 
   inline ConicalPoseGenerator() : ConicalPoseGenerator(1.0, 2.0, 20, 0.0, Eigen::Isometry3d::Identity()) {}
 
-  virtual std::vector<Eigen::Isometry3d> generate(const Eigen::Isometry3d& target_origin) override final;
+  virtual VectorEigenIsometry generate(const Eigen::Isometry3d& target_origin) override final;
 
   double r;                        /** @brief Radius of the cone*/
   double h;                        /** @brief Height of the cone (distance to target) */
@@ -99,7 +99,7 @@ struct GridPoseGenerator : PoseGenerator
 
   inline GridPoseGenerator() : GridPoseGenerator(0.2, 2.0, 10, 0.0, Eigen::Isometry3d::Identity()) {}
 
-  virtual std::vector<Eigen::Isometry3d> generate(const Eigen::Isometry3d& target_origin) override final;
+  virtual VectorEigenIsometry generate(const Eigen::Isometry3d& target_origin) override final;
 
   double spacing;                  /** @brief Distance between points */
   double h;                        /** @brief Grid distance to target */
@@ -125,7 +125,7 @@ struct RandomZRotPoseGenerator : PoseGenerator
   {
   }
 
-  virtual std::vector<Eigen::Isometry3d> generate(const Eigen::Isometry3d& target_origin) override final;
+  virtual VectorEigenIsometry generate(const Eigen::Isometry3d& target_origin) override final;
 
   std::shared_ptr<PoseGenerator> pg;
 

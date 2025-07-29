@@ -27,7 +27,7 @@ struct MultiCameraPnPProblem
 
   /** @brief The "base frame" to "camera frame" transform; one for each camera. Should have same
       length as @e intr. */
-  std::vector<Eigen::Isometry3d> base_to_camera;
+  VectorEigenIsometry base_to_camera;
 
   /** @brief A sequence of observation sets corresponding to the image locations.
    * Each observation set consists of a set of correspodences: a 3D position (e.g. a dot) in "target

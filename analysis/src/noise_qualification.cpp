@@ -9,7 +9,7 @@ PnPNoiseStat qualifyNoise2D(const std::vector<PnPProblem>& params)
   PnPNoiseStat output;
   std::size_t count = params.size();
 
-  std::vector<Eigen::Isometry3d> solution_transforms;
+  VectorEigenIsometry solution_transforms;
   solution_transforms.reserve(count);
 
   std::vector<Eigen::Vector3d> translations;
@@ -56,7 +56,7 @@ PnPNoiseStat qualifyNoise3D(const std::vector<PnPProblem3D>& params)
   PnPNoiseStat output;
   std::size_t count = params.size();
 
-  std::vector<Eigen::Isometry3d> solution_transforms;
+  VectorEigenIsometry solution_transforms;
   solution_transforms.reserve(count);
 
   std::vector<Eigen::Vector3d> translations;

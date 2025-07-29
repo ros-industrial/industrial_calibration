@@ -75,7 +75,7 @@ Observation2D3D::Set createObservations(const Camera& camera, const Target& targ
                                         const Eigen::Isometry3d& camera_base_to_target_base)
 {
   // Generate camera poses relative to the target origin
-  std::vector<Eigen::Isometry3d> camera_poses;
+  VectorEigenIsometry camera_poses;
   for (auto it = pose_generators.begin(); it != pose_generators.end(); ++it)
   {
     auto new_poses = it->get()->generate(true_target_mount_to_target);
@@ -115,7 +115,7 @@ Observation3D3D::Set createObservations(const Target& target,
                                         const Eigen::Isometry3d& camera_base_to_target_base)
 {
   // Generate camera poses relative to the target origin
-  std::vector<Eigen::Isometry3d> camera_poses;
+  VectorEigenIsometry camera_poses;
   for (auto it = pose_generators.begin(); it != pose_generators.end(); ++it)
   {
     auto new_poses = it->get()->generate(true_target_mount_to_target);
