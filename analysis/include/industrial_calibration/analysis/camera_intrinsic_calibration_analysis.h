@@ -55,10 +55,13 @@ struct IntrinsicCalibrationAccuracyResult
   std::pair<double, double> pos_error; /** @brief mean/stdev pair for positional error */
   std::pair<double, double> ang_error; /** @brief mean/stdev pair for angular error */
 };
+std::ostream& operator<<(std::ostream& stream, const IntrinsicCalibrationAccuracyResult& stats);
 
 /**
  * @brief Calculates the mean and variance of the transform between two virtual correspondence sets (extracted from a
- * single correspondence set) for a set of calibration observations Method:
+ * single correspondence set) for a set of calibration observations.
+ *
+ * Method:
  *     1. Check that the correspondences in all observations are the same size
  *       - Assumptions:
  *         - Correspondences are ordered in the same way for each observation

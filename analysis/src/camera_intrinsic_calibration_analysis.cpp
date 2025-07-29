@@ -57,6 +57,21 @@ VirtualCorrespondenceResult measureVirtualTargetDiff(const Correspondence2D3D::S
   return res;
 }
 
+std::ostream& operator<<(std::ostream& stream, const IntrinsicCalibrationAccuracyResult& result)
+{
+  stream << "Virtual correspondence accuracy statistics."
+         << "\n\tMean +/- Std. Dev. (m): " << result.pos_error.first << " +/- " << result.pos_error.second
+         << "\n\tMean +/- Std. Dev. (rad): " << result.ang_error.first << " +/- " << result.ang_error.second
+         << "\n\nFor each image, this metric compares the difference between two PnP optimizations. "
+         << "Both PnP optimizations use the same camera intrinsics, but one uses half of the target features and the "
+            "second uses the other half of the features. "
+         << "The difference between the resulting PnP transforms are measured and averaged over the entire calibration "
+            "data set. "
+         << "For a perfectly calibrated system with perfect measurements, the difference should be zero.";
+
+  return stream;
+}
+
 IntrinsicCalibrationAccuracyResult measureIntrinsicCalibrationAccuracy(
     const Observation2D3D::Set& observations, const CameraIntrinsics& intr,
     const Eigen::Isometry3d& camera_mount_to_camera, const Eigen::Isometry3d& target_mount_to_target,
