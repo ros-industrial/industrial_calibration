@@ -32,6 +32,19 @@ data:
   - image: images/15.png
     pose: poses/15.yaml
 
+# ChArUco grid target finder
+# //! [Charuco Grid Target Finder Config]
+target_finder:
+  type: CharucoGridTargetFinder
+  rows: 7
+  cols: 5
+  chessboard_dim: 0.036195
+  aruco_marker_dim: 0.018256
+  dictionary: 10  # DICT_6X6_250
+# //! [Charuco Grid Target Finder Config]
+
+homography_threshold: 2.0
+
 # AVT Mako Gig-E camera intrinsics (calibrated)
 intrinsics:
   fx: 1352.02747
@@ -39,7 +52,7 @@ intrinsics:
   cx: 789.67065
   cy: 627.2995
 
-# Pose guesses
+# Extrinsic hand eye calibration specific parameters
 camera_mount_to_camera_guess:
   x: -0.019646
   y: 1.27843
@@ -56,18 +69,8 @@ target_mount_to_target_guess:
   qy: 0.262427
   qz: 0.664998
   qw: 0.295794
-
-# Other parameters
-homography_threshold: 2.0
 static_camera: true
 
-# ChArUco grid target finder
-# //! [Charuco Grid Target Finder Config]
-target_finder:
-  type: CharucoGridTargetFinder
-  rows: 7
-  cols: 5
-  chessboard_dim: 0.036195
-  aruco_marker_dim: 0.018256
-  dictionary: 10  # DICT_6X6_250
-# //! [Charuco Grid Target Finder Config]
+# Camera intrinsic calibration specific parameters
+use_extrinsic_guesses: false
+use_opencv: true
