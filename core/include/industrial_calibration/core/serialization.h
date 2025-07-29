@@ -139,4 +139,30 @@ struct convert<Eigen::Transform<FloatT, 3, Eigen::Isometry>>
   }
 };
 
+// Serialization for std::vectors with Eigen-specific allocators
+template <typename T>
+struct convert<std::vector<T, Eigen::aligned_allocator<T>>>
+{
+  static Node encode(const std::vector<T, Eigen::aligned_allocator<T>>& v)
+  {
+    Node node;
+    for (const auto& elem : v)
+      node.push_back(elem);
+
+    return node;
+  }
+
+  static bool decode(const Node& node, std::vector<T, Eigen::aligned_allocator<T>>& v)
+  {
+    if (!node.IsSequence())
+      return false;
+
+    v.clear();
+    for (const auto& elem : node)
+      v.push_back(elem.as<T>());
+
+    return true;
+  }
+};
+
 }  // namespace YAML
