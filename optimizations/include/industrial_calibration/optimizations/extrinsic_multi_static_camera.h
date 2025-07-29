@@ -35,7 +35,7 @@ struct ExtrinsicMultiStaticCameraMovingTargetProblem
    * vector is for each camera, the inner vector is the poses valid for that camera. This inner
    * vector should match the inner vector of @e image_observations in size.
    */
-  std::vector<std::vector<Eigen::Isometry3d>> wrist_poses;
+  std::vector<VectorEigenIsometry> wrist_poses;
 
   /** @brief A sequence of observation sets corresponding to the image locations in @e wrist_poses.
    * Each observation set consists of a set of correspodences: a 3D position (e.g. a dot) in "target
@@ -48,7 +48,7 @@ struct ExtrinsicMultiStaticCameraMovingTargetProblem
   Eigen::Isometry3d wrist_to_target_guess;
 
   /** @brief Your best guess at the "base frame" to "camera frame" transform; one for each camera */
-  std::vector<Eigen::Isometry3d> base_to_camera_guess;
+  VectorEigenIsometry base_to_camera_guess;
 
   const std::array<std::string, 6> labels_isometry3d = { { "x", "y", "z", "rx", "ry", "rz" } };
   std::string label_wrist_to_target = "wrist_to_target";
@@ -91,7 +91,7 @@ struct ExtrinsicMultiStaticCameraMovingTargetResult
   /**
    * @brief The final calibrated result of "base frame" to "camera optical frame".
    */
-  std::vector<Eigen::Isometry3d> base_to_camera;
+  VectorEigenIsometry base_to_camera;
 
   CovarianceResult covariance;
 };
@@ -119,7 +119,7 @@ struct ExtrinsicMultiStaticCameraOnlyProblem
    * The vector is the poses valid for each camera. This vector should match the inner
    * vector of @e image_observations in size.
    */
-  std::vector<Eigen::Isometry3d> base_to_target_guess;
+  VectorEigenIsometry base_to_target_guess;
 
   /** @brief A sequence of observation sets corresponding to the image locations in @e base_to_target_guess.
    * Each observation set consists of a set of correspodences: a 3D position (e.g. a dot) in "target
@@ -129,7 +129,7 @@ struct ExtrinsicMultiStaticCameraOnlyProblem
   std::vector<std::vector<Correspondence2D3D::Set>> image_observations;
 
   /** @brief Your best guess at the "base frame" to "camera frame" transform; one for each camera */
-  std::vector<Eigen::Isometry3d> base_to_camera_guess;
+  VectorEigenIsometry base_to_camera_guess;
 
   std::array<std::string, 6> labels_isometry3d = { { "x", "y", "z", "rx", "ry", "rz" } };
   std::string label_base_to_target = "base_to_target";
@@ -165,10 +165,10 @@ struct ExtrinsicMultiStaticCameraOnlyResult
   double final_cost_per_obs;
 
   /** @brief The final calibrated result of "base frame" to "target frame". */
-  std::vector<Eigen::Isometry3d> base_to_target;
+  VectorEigenIsometry base_to_target;
 
   /** @brief The final calibrated result of "base frame" to "camera optical frame". */
-  std::vector<Eigen::Isometry3d> base_to_camera;
+  VectorEigenIsometry base_to_camera;
 
   CovarianceResult covariance;
 };
@@ -191,7 +191,7 @@ struct ExtrinsicMultiStaticCameraMovingTargetWristOnlyProblem
    * The vector is the poses valid for each camera. This vector should match the inner
    * vector of @e image_observations in size.
    */
-  std::vector<Eigen::Isometry3d> wrist_poses;
+  VectorEigenIsometry wrist_poses;
 
   /** @brief A sequence of observation sets corresponding to the image locations in @e wrist_poses.
    * Each observation set consists of a set of correspodences: a 3D position (e.g. a dot) in "target
@@ -207,7 +207,7 @@ struct ExtrinsicMultiStaticCameraMovingTargetWristOnlyProblem
    * Also it assumses the relationship between the cameras is correct and fixed, so it will
    * calibrating the set of cameras using a single transformation.
    */
-  std::vector<Eigen::Isometry3d> base_to_camera_guess;
+  VectorEigenIsometry base_to_camera_guess;
 
   const std::array<std::string, 6> labels_isometry3d = { { "x", "y", "z", "rx", "ry", "rz" } };
   std::string label_wrist_to_target = "wrist_to_target";
@@ -250,7 +250,7 @@ struct ExtrinsicMultiStaticCameraMovingTargetWristOnlyResult
   /**
    * @brief The final calibrated result of "base frame" to "camera optical frame".
    */
-  std::vector<Eigen::Isometry3d> base_to_camera;
+  VectorEigenIsometry base_to_camera;
 
   CovarianceResult covariance;
 };

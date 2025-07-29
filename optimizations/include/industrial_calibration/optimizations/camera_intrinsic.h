@@ -15,7 +15,7 @@ struct CameraIntrinsicProblem
   std::vector<Correspondence2D3D::Set> image_observations;
   CameraIntrinsics intrinsics_guess;
   bool use_extrinsic_guesses;
-  std::vector<Eigen::Isometry3d> extrinsic_guesses;
+  VectorEigenIsometry extrinsic_guesses;
 
   std::string label_extr = "pose";
   const std::array<std::string, 9> labels_intrinsic_params = { { "fx", "fy", "cx", "cy", "k1", "k2", "p1", "p2",
@@ -36,11 +36,18 @@ struct CameraIntrinsicResult
   CameraIntrinsics intrinsics;
   std::array<double, 5> distortions;
 
-  std::vector<Eigen::Isometry3d> target_transforms;
+  VectorEigenIsometry target_transforms;
 
   CovarianceResult covariance;
 };
 std::ostream& operator<<(std::ostream& stream, const CameraIntrinsicResult& result);
+
+/**
+ * @brief Saves the calibration results to a YAML file in a format compatible with ROS
+ * @details Format definition https://wiki.ros.org/camera_calibration_parsers#File_formats
+ * @throws Exception on failure
+ */
+YAML::Node toROSFormat(const CameraIntrinsicResult& result, const int image_width, const int image_height);
 
 /**
  * @brief Performs the camera intrinsic calibration

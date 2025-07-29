@@ -39,7 +39,7 @@ void printResults(const ExtrinsicMultiStaticCameraMovingTargetResult& opt_result
 
 struct Observations
 {
-  std::vector<Eigen::Isometry3d> wrist_poses;
+  VectorEigenIsometry wrist_poses;
   std::vector<Correspondence2D3D::Set> correspondences;
 };
 
@@ -86,7 +86,7 @@ TEST(ExtrinsicMultiStaticCamera, single_camera)
   test::Target target(5, 5, 0.015);
 
   // Create the base to camera transform
-  std::vector<Eigen::Isometry3d> base_to_camera;
+  VectorEigenIsometry base_to_camera;
   base_to_camera.push_back(Eigen::Isometry3d(Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX())));
   base_to_camera[0].translation() = Eigen::Vector3d(0, 0, 2.0);
 
@@ -173,7 +173,7 @@ TEST(ExtrinsicMultiStaticCamera, two_cameras)
   wrist_to_target.translation() = Eigen::Vector3d(0, 0, 0.25);
 
   // Create the base to camera transforms
-  std::vector<Eigen::Isometry3d> base_to_camera;
+  VectorEigenIsometry base_to_camera;
   base_to_camera.resize(2);
   base_to_camera[0] = Eigen::Isometry3d(Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX()));
   base_to_camera[0].translation() = Eigen::Vector3d(-0.1, 0, 2.0);

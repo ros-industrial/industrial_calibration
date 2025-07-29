@@ -20,12 +20,12 @@ Eigen::Isometry3d lookAt(const Eigen::Vector3d& origin, const Eigen::Vector3d& e
 }
 
 // hemisphere
-std::vector<Eigen::Isometry3d> HemispherePoseGenerator::generate(const Eigen::Isometry3d& target_origin)
+VectorEigenIsometry HemispherePoseGenerator::generate(const Eigen::Isometry3d& target_origin)
 {
   std::size_t position_cnt = theta_cnt * phi_cnt;
 
   // all in the target coordinate system, with z forward
-  std::vector<Eigen::Isometry3d> camera_positions;
+  VectorEigenIsometry camera_positions;
   camera_positions.reserve(position_cnt);
 
   Eigen::VectorXd theta_range = Eigen::VectorXd::LinSpaced(theta_cnt, 0.0, M_PI);
@@ -62,9 +62,9 @@ std::vector<Eigen::Isometry3d> HemispherePoseGenerator::generate(const Eigen::Is
 }
 
 // cone
-std::vector<Eigen::Isometry3d> ConicalPoseGenerator::generate(const Eigen::Isometry3d& target_origin)
+VectorEigenIsometry ConicalPoseGenerator::generate(const Eigen::Isometry3d& target_origin)
 {
-  std::vector<Eigen::Isometry3d> camera_positions;
+  VectorEigenIsometry camera_positions;
   camera_positions.reserve(n_poses);
 
   // Generates positions in target frame; need to convert to world frame
@@ -89,10 +89,10 @@ std::vector<Eigen::Isometry3d> ConicalPoseGenerator::generate(const Eigen::Isome
 }
 
 // grid
-std::vector<Eigen::Isometry3d> GridPoseGenerator::generate(const Eigen::Isometry3d& target_origin)
+VectorEigenIsometry GridPoseGenerator::generate(const Eigen::Isometry3d& target_origin)
 {
   // Generates positions in target frame; need to convert to world frame
-  std::vector<Eigen::Isometry3d> camera_positions;
+  VectorEigenIsometry camera_positions;
   camera_positions.reserve(grid_side * grid_side);
 
   double end_point = (static_cast<double>(grid_side - 1) / 2.0) * spacing;
@@ -118,7 +118,7 @@ std::vector<Eigen::Isometry3d> GridPoseGenerator::generate(const Eigen::Isometry
 }
 
 // random Z+
-std::vector<Eigen::Isometry3d> RandomZRotPoseGenerator::generate(const Eigen::Isometry3d& target_origin)
+VectorEigenIsometry RandomZRotPoseGenerator::generate(const Eigen::Isometry3d& target_origin)
 {
   auto poses = pg->generate(target_origin);
   for (auto pose : poses)
