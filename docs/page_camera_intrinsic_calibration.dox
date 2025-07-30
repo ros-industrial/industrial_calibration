@@ -30,7 +30,7 @@ source <workspace>/install/setup.bash
 ros2 run industrial_calibration industrial_calibration_camera_intrinsic_calibration_app
 ```
 
-@section s_camera_intrnisic_obs_def Observation Definition
+@section s_camera_intrinisic_obs_def Observation Definition
 The observation data for this application consists of:
   - Pose measurements from the camera frame to the target frame, saved to a YAML file
   - 2D image files in OpenCV-compatible formats (e.g., .png, .jpg, etc.)

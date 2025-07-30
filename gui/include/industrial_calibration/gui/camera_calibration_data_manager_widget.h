@@ -25,21 +25,19 @@ class CameraIntrinsicsWidget;
  * @details This widget loads a 2D image calibration data set from a YAML file.
  * The calibration data set is stored internally in the widget in a `QTreeWidget`.
  * Each observation in the data set is stored as a `QTreeWidgetItem`, where the image file name is stored as data under
- * the @ref CameraCalibrationDataManagerWidget::IMAGE_FILE_NAME_ROLE role and the pose file name is stored as data under
- * the @ref CameraCalibrationDataManagerWidget::POSE_FILE_NAME_ROLE role. The observation `QTreeWidgetItem` has two
+ * the @ref IMAGE_FILE_NAME_ROLE role and the pose file name is stored as data under
+ * the @ref POSE_FILE_NAME_ROLE role. The observation `QTreeWidgetItem` has two
  * child items:
- *   - The number of features detected in the target (child item at index @ref
- * CameraCalibrationDataManagerWidget::IDX_FEATURES)
- *   - The homography error of the detected target (child item at index @ref
- * CameraCalibrationDataManagerWidget::IDX_HOMOGRAPHY)
+ *   - The number of features detected in the target (child item at index @ref IDX_FEATURES)
+ *   - The homography error of the detected target (child item at index @ref IDX_HOMOGRAPHY)
  *
  * The TargetFinder used for calibration and CameraIntrinsics must be also be configured in the widget in order to
  * detect the calibration target in the images.
  *
  * When an image is selected, this widget attempts to detect the Target in the image using the configured
- * TargetDetector. If the target is found. the widget emits the @ref CameraCalibrationDataManagerWidget::imageSelected
+ * TargetDetector. If the target is found. the widget emits the @ref imageSelected
  * signal with an image where the target features are drawn on the image. Otherwise, the widget emits the @ref
- * CameraCalibrationDataManagerWidget::imageSelected signal with the original observation image.
+ * imageSelected signal with the original observation image.
  */
 class CameraCalibrationDataManagerWidget : public QWidget
 {
@@ -50,8 +48,9 @@ public:
   virtual ~CameraCalibrationDataManagerWidget();
 
   /**
-   * @brief Loads the calibration observations from file (defined in @ref s_extrinsic_hand_eye_obs_def for extrinsic
-   * hand eye calibration and @ref s_camera_intrnisic_obs_def for camera intrinsic calibration)
+   * @brief Loads the calibration observations from file
+   * @details See the file formats for @ref s_extrinsic_hand_eye_obs_def "extrinsic hand eye calibration"
+   * and @ref s_camera_intrinisic_obs_def "camera intrinsic calibration"
    * @throws Exception on failure
    */
   void loadObservations(const std::string& observations_file);
@@ -64,8 +63,8 @@ public:
 signals:
   /**
    * @brief Signal emitted when an observation is selected in the tree widget.
-   * If the target can be identified in the image associated with the observation, the signal provides that image with
-   * the detected target drawn on it. Otherwise, the signal provides the original observation image.
+   * @details If the target can be identified in the image associated with the observation, the signal provides that
+   * image with the detected target drawn on it. Otherwise, the signal provides the original observation image.
    */
   void imageSelected(const QPixmap& image);
 
