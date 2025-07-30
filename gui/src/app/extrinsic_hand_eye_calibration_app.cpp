@@ -23,42 +23,17 @@ int main(int argc, char** argv)
   signal(SIGINT, handleSignal);
   signal(SIGTERM, handleSignal);
 
-  // Create the calibration main widget
+  // Create the main window
   auto window = new QMainWindow();
   window->setWindowTitle("Extrinsic Hand Eye Calibration");
   window->setWindowIcon(QIcon(":/icons/icon.jpg"));
-
-  auto image = new industrial_calibration::AspectRatioPixmapLabel(window);
-  const std::string instructions = R"(
-<html>
-<head/>
-<body>
-<h3>Extrinsic Hand Eye Calibration</h3>
-<p>
-  Configure the calibration, either from a YAML file (<b><i>Load Configuration</i></b> button) or manually using the icons
-</p>
-<p>
-  Load the calibration observations from a YAML file using the <b><i>Load Observations</i></b> button
-</p>
-<p>
-  Click on an observation in the list to view the image and detected target
-</p>
-<p>
-  Click the <b><i>Calibrate</i></b> button to perform the calibration
-</p>
-<p>
-  Click the <b><i>Save</i></b> button to save the calibration results to file
-</p>
-</body>
-</html>
-)";
-  image->setText(QString::fromStdString(instructions));
-  image->setAlignment(Qt::AlignCenter);
-  window->setCentralWidget(image);
   window->setStyleSheet(QString("QMainWindow::separator { background-color: %1; width: 3px; height: 3px; }")
                             .arg(app.palette().color(QPalette::Midlight).name()));
 
+  // Create the calibration widget
   auto cal = new industrial_calibration::ExtrinsicHandEyeCalibrationWidget(window);
+
+  // Add the calibration widget as a docked widget on the left side of the main window
   auto dock = new QDockWidget("Calibration", window);
   dock->setStyleSheet(
       QString("QDockWidget::title { background-color: %1; }").arg(app.palette().color(QPalette::Midlight).name()));
@@ -67,34 +42,20 @@ int main(int argc, char** argv)
   dock->setWidget(cal);
   window->addDockWidget(Qt::LeftDockWidgetArea, dock);
 
+  // Create a label widget to display images
+  auto image = new industrial_calibration::AspectRatioPixmapLabel(window);
+  image->setText(QString::fromStdString(cal->getInstructions()));
+  image->setAlignment(Qt::AlignCenter);
+
+  // Set the label widget as the central widget in the main window
+  window->setCentralWidget(image);
+
+  // Connect the calibration image selected signal to the image pixmap slot
   QApplication::connect(cal, &industrial_calibration::ExtrinsicHandEyeCalibrationWidget::imageSelected, image,
                         &industrial_calibration::AspectRatioPixmapLabel::setPixmap);
 
-  // Add an instructions action to the tool bar
-  auto action_instructions = new QAction("Instructions", window);
-  action_instructions->setToolTip("Click for instructions on running the calibration");
-  action_instructions->setIcon(QIcon::fromTheme("dialog-information"));
-  QApplication::connect(action_instructions, &QAction::triggered, [instructions]() {
-    QMessageBox::information(nullptr, "Instructions", QString::fromStdString(instructions));
-  });
-
   // Set up the tool bar
-  {
-    QToolBar* tool_bar = window->addToolBar("Tools");
-    tool_bar->addAction(action_instructions);
-    tool_bar->addSeparator();
-    tool_bar->addAction(cal->action_load_observations);
-    tool_bar->addAction(cal->action_load_configuration);
-    tool_bar->addSeparator();
-    tool_bar->addAction(cal->action_edit_target_finder);
-    tool_bar->addAction(cal->action_edit_camera_intrinsics);
-    tool_bar->addAction(cal->action_camera_mount_to_camera);
-    tool_bar->addAction(cal->action_target_mount_to_target);
-    tool_bar->addAction(cal->action_static_camera);
-    tool_bar->addSeparator();
-    tool_bar->addAction(cal->action_calibrate);
-    tool_bar->addAction(cal->action_save);
-  }
+  window->addToolBar(cal->tool_bar);
 
   // Set up the menu bar
   {
@@ -117,7 +78,7 @@ int main(int argc, char** argv)
   }
   {
     QMenu* menu_help = window->menuBar()->addMenu("Help");
-    menu_help->addAction(action_instructions);
+    menu_help->addAction(cal->action_instructions);
   }
 
   // Attempt to run headless if the configuration file (argv[1]), observation file (argv[2]), and results file (argv[3])

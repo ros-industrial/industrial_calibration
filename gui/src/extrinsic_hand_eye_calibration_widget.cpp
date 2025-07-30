@@ -16,19 +16,53 @@
 #include <QAction>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QToolBar>
 
 namespace industrial_calibration
 {
+std::string ExtrinsicHandEyeCalibrationWidget::getInstructions()
+{
+  return R"(
+<html>
+<head/>
+<body>
+<h3>Extrinsic Hand Eye Calibration</h3>
+<p>
+  <ol>
+    <li>
+      Configure the calibration, either from a YAML file (<b><i>Load Configuration</i></b> button) or manually using the icons
+    </li>
+    <li>
+      Load the calibration observations from a YAML file using the <b><i>Load Observations</i></b> button
+    </li>
+    <li>
+      Click on an observation in the list to view the image and detected target
+    </li>
+    <li>
+      Click the <b><i>Calibrate</i></b> button to perform the calibration
+    </li>
+    <li>
+      Click the <b><i>Save</i></b> button to save the calibration results to file
+    </li>
+  </ol>
+</p>
+</body>
+</html>
+)";
+}
+
 ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* parent)
   : CameraCalibrationDataManagerWidget(parent)
   , camera_transform_guess_widget_(new TransformGuess(this))
   , target_transform_guess_widget_(new TransformGuess(this))
+  , action_instructions(new QAction("Instructions", this))
   , action_load_configuration(new QAction("Load configuration file...", this))
   , action_camera_mount_to_camera(new QAction("Camera mount to camera transform", this))
   , action_target_mount_to_target(new QAction("Target mount to target transform", this))
   , action_static_camera(new QAction("Static camera", this))
   , action_calibrate(new QAction("Calibrate", this))
   , action_save(new QAction("Save calibration...", this))
+  , tool_bar(new QToolBar(this))
 {
   // Load configuration
   action_load_configuration->setToolTip("Load extrinsic calibration configuration file...");
@@ -73,6 +107,28 @@ ExtrinsicHandEyeCalibrationWidget::ExtrinsicHandEyeCalibrationWidget(QWidget* pa
   action_save->setToolTip("Save calibration results to file...");
   action_save->setIcon(QIcon::fromTheme("document-save"));
   connect(action_save, &QAction::triggered, this, &ExtrinsicHandEyeCalibrationWidget::onSaveResults);
+
+  // Instructions action
+  action_instructions->setToolTip("Click for instructions on running the calibration");
+  action_instructions->setIcon(QIcon::fromTheme("dialog-information"));
+  QApplication::connect(action_instructions, &QAction::triggered, []() {
+    QMessageBox::information(nullptr, "Instructions", QString::fromStdString(getInstructions()));
+  });
+
+  // Set up the tool bar
+  tool_bar->addAction(action_instructions);
+  tool_bar->addSeparator();
+  tool_bar->addAction(action_load_observations);
+  tool_bar->addAction(action_load_configuration);
+  tool_bar->addSeparator();
+  tool_bar->addAction(action_edit_target_finder);
+  tool_bar->addAction(action_edit_camera_intrinsics);
+  tool_bar->addAction(action_camera_mount_to_camera);
+  tool_bar->addAction(action_target_mount_to_target);
+  tool_bar->addAction(action_static_camera);
+  tool_bar->addSeparator();
+  tool_bar->addAction(action_calibrate);
+  tool_bar->addAction(action_save);
 }
 
 void ExtrinsicHandEyeCalibrationWidget::onLoadConfig()
@@ -122,6 +178,9 @@ void ExtrinsicHandEyeCalibrationWidget::onCalibrate()
     calibrate();
     QApplication::restoreOverrideCursor();
 
+    // Change the tab widget to the results page
+    ui_->tab_widget->setCurrentWidget(ui_->tab_results);
+
     if (result_->converged)
     {
       emit calibrationComplete(*result_);
@@ -129,9 +188,6 @@ void ExtrinsicHandEyeCalibrationWidget::onCalibrate()
     }
     else
       QMessageBox::warning(this, "Error", "Calibration failed to converge");
-
-    // Change the tab widget to the results page
-    ui_->tab_widget->setCurrentWidget(ui_->tab_results);
   }
   catch (const std::exception& ex)
   {
