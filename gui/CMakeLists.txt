@@ -33,8 +33,10 @@ add_library(
   src/camera_calibration_data_manager_widget.ui
   src/camera_calibration_data_manager_widget.cpp
   # Extrinsic hand-eye calibration widget
+  include/industrial_calibration/gui/extrinsic_hand_eye_calibration_widget.h
   src/extrinsic_hand_eye_calibration_widget.cpp
   # Camera intrinsic calibration widget
+  include/industrial_calibration/gui/camera_intrinsic_calibration_widget.h
   src/camera_intrinsic_calibration_widget.cpp)
 target_include_directories(${PROJECT_NAME}_gui PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                       "$<INSTALL_INTERFACE:include>")

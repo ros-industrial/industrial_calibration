@@ -13,6 +13,8 @@ class TransformGuess;
  */
 class ExtrinsicHandEyeCalibrationWidget : public CameraCalibrationDataManagerWidget
 {
+  Q_OBJECT
+
 public:
   explicit ExtrinsicHandEyeCalibrationWidget(QWidget* parent = nullptr);
 
@@ -42,6 +44,10 @@ public:
   QAction* action_static_camera;
   QAction* action_save;
   QAction* action_calibrate;
+
+signals:
+  /** @brief Signal emitted when calibration has successfully completed */
+  void calibrationComplete(const ExtrinsicHandEyeResult&);
 
 protected:
   void onLoadConfig();

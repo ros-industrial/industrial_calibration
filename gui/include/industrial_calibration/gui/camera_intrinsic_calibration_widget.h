@@ -12,6 +12,8 @@ class CameraIntrinsicResult;
  */
 class CameraIntrinsicCalibrationWidget : public CameraCalibrationDataManagerWidget
 {
+  Q_OBJECT
+
 public:
   explicit CameraIntrinsicCalibrationWidget(QWidget* parent = nullptr);
 
@@ -46,6 +48,10 @@ public:
   QAction* action_calibrate;
   QAction* action_save;
   QAction* action_save_ros_format;
+
+signals:
+  /** @brief Signal emitted when calibration has successfully completed */
+  void calibrationComplete(const CameraIntrinsicResult&);
 
 protected:
   void onLoadConfig();

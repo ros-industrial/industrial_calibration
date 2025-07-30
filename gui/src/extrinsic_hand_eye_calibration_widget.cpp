@@ -123,7 +123,10 @@ void ExtrinsicHandEyeCalibrationWidget::onCalibrate()
     QApplication::restoreOverrideCursor();
 
     if (result_->converged)
+    {
+      emit calibrationComplete(*result_);
       QMessageBox::information(this, "Calibration", "Successfully completed calibration");
+    }
     else
       QMessageBox::warning(this, "Error", "Calibration failed to converge");
 
