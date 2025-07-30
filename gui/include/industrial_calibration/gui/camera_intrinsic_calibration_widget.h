@@ -2,6 +2,8 @@
 
 #include <industrial_calibration/gui/camera_calibration_data_manager_widget.h>
 
+class QToolBar;
+
 namespace industrial_calibration
 {
 class CameraIntrinsicResult;
@@ -15,6 +17,11 @@ class CameraIntrinsicCalibrationWidget : public CameraCalibrationDataManagerWidg
   Q_OBJECT
 
 public:
+  /**
+   * @brief Returns an HTML-formatted string with instructions on running the calibration
+   */
+  static std::string getInstructions();
+
   explicit CameraIntrinsicCalibrationWidget(QWidget* parent = nullptr);
 
   /**
@@ -42,12 +49,19 @@ public:
    */
   void saveROSFormat(const std::string& file) const;
 
+  QAction* action_instructions;
   QAction* action_load_configuration;
   QAction* action_use_extrinsic_guesses;
   QAction* action_use_opencv;
   QAction* action_calibrate;
   QAction* action_save;
   QAction* action_save_ros_format;
+
+  /**
+   * @brief Configured tool bar with actions for the calibration
+   * @details This tool bar is not added to the layout of the widget by default
+   */
+  QToolBar* tool_bar;
 
 signals:
   /** @brief Signal emitted when calibration has successfully completed */

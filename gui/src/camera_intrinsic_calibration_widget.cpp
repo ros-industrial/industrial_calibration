@@ -17,6 +17,7 @@
 #include <QAction>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QToolBar>
 
 namespace industrial_calibration
 {
@@ -91,15 +92,55 @@ static CameraIntrinsicResult optimizeOpenCV(const CameraIntrinsicProblem& params
   return result;
 }
 
+std::string CameraIntrinsicCalibrationWidget::getInstructions()
+{
+  return R"(
+<html>
+<head/>
+<body>
+<h3>Camera Intrinsic Calibration</h3>
+<p>
+  <ol>
+    <li>
+      Configure the calibration, either from a YAML file (<b><i>Load Configuration</i></b> button) or manually using the icons
+    </li>
+    <li>
+      Load the calibration observations from a YAML file using the <b><i>Load Observations</i></b> button
+    </li>
+    <li>
+      Click on an observation in the list to view the image and detected target
+    </li>
+    <li>
+      Click the <b><i>Calibrate</i></b> button to perform the calibration
+    </li>
+    <li>
+      Click the <b><i>Save</i></b> button to save the calibration results to file
+    </li>
+  </ol>
+</p>
+</body>
+</html>
+)";
+}
+
 CameraIntrinsicCalibrationWidget::CameraIntrinsicCalibrationWidget(QWidget* parent)
   : CameraCalibrationDataManagerWidget(parent)
+  , action_instructions(new QAction("Instructions", this))
   , action_load_configuration(new QAction("Load configuration file...", this))
   , action_use_extrinsic_guesses(new QAction("Use target pose guesses", this))
   , action_use_opencv(new QAction("Use OpenCV calibration", this))
   , action_calibrate(new QAction("Calibrate", this))
   , action_save(new QAction("Save calibration...", this))
   , action_save_ros_format(new QAction("Save calibration (ROS)...", this))
+  , tool_bar(new QToolBar(this))
 {
+  // Add an instructions action to the tool bar
+  action_instructions->setToolTip("Click for instructions on running the calibration");
+  action_instructions->setIcon(QIcon::fromTheme("dialog-information"));
+  QApplication::connect(action_instructions, &QAction::triggered, []() {
+    QMessageBox::information(nullptr, "Instructions", QString::fromStdString(getInstructions()));
+  });
+
   // Load configuration file
   action_load_configuration->setToolTip("Load intrinsic calibration configuration file...");
   action_load_configuration->setIcon(QIcon::fromTheme("document-properties"));
@@ -133,6 +174,21 @@ CameraIntrinsicCalibrationWidget::CameraIntrinsicCalibrationWidget(QWidget* pare
   action_save_ros_format->setToolTip(QString::fromStdString(tool_tip));
   action_save_ros_format->setIcon(QIcon::fromTheme("document-save-as"));
   connect(action_save_ros_format, &QAction::triggered, this, &CameraIntrinsicCalibrationWidget::onSaveROSFormat);
+
+  // Set up the tool bar
+  tool_bar->addAction(action_instructions);
+  tool_bar->addSeparator();
+  tool_bar->addAction(action_load_observations);
+  tool_bar->addAction(action_load_configuration);
+  tool_bar->addSeparator();
+  tool_bar->addAction(action_edit_target_finder);
+  tool_bar->addAction(action_edit_camera_intrinsics);
+  tool_bar->addAction(action_use_extrinsic_guesses);
+  tool_bar->addAction(action_use_opencv);
+  tool_bar->addSeparator();
+  tool_bar->addAction(action_calibrate);
+  tool_bar->addAction(action_save);
+  tool_bar->addAction(action_save_ros_format);
 }
 
 void CameraIntrinsicCalibrationWidget::onLoadConfig()
@@ -196,6 +252,9 @@ void CameraIntrinsicCalibrationWidget::onCalibrate()
     calibrate();
     QApplication::restoreOverrideCursor();
 
+    // Change the tab widget to the results page
+    ui_->tab_widget->setCurrentWidget(ui_->tab_results);
+
     if (result_->converged)
     {
       emit calibrationComplete(*result_);
@@ -203,9 +262,6 @@ void CameraIntrinsicCalibrationWidget::onCalibrate()
     }
     else
       QMessageBox::warning(this, "Error", "Calibration failed to converge");
-
-    // Change the tab widget to the results page
-    ui_->tab_widget->setCurrentWidget(ui_->tab_results);
   }
   catch (const std::exception& ex)
   {
