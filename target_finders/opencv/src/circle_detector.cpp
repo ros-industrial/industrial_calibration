@@ -166,8 +166,11 @@ DetectionResult findCircles(const cv::Mat& image, const double threshold, const 
     // Check that the color of the center pixel matches the expectation
     if (params.filterByColor)
     {
-      if (binarized_image.at<uchar>(cvRound(box.center.y), cvRound(box.center.x)) != params.circleColor)
-        continue;
+      int row = cvRound(box.center.y);
+      int col = cvRound(box.center.x);
+      if (row < binarized_image.rows && col < binarized_image.cols)
+        if (binarized_image.at<uchar>(row, col) != params.circleColor)
+          continue;
     }
 
     // Check that the contour matches a model of an ellipse within tolerance
