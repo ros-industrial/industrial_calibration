@@ -41,9 +41,9 @@ struct CovarianceResult
   Eigen::MatrixXd correlation_matrix;
 
   /**
-   * @brief Returns named correlation coefficients that exceed @ref threshold.
-   * @param Magnitude of a correlation coefficient that will result in it being returned.
-   * @return Vector of NamedParams for correlation coefficients above @ref threshold.
+   * @brief Returns named correlation coefficients that exceed @p threshold
+   * @param threshold Magnitude of a correlation coefficient that will result in it being returned.
+   * @return Vector of NamedParams for correlation coefficients above @p threshold.
    */
   std::vector<NamedParam> getCorrelationCoeffOutsideThreshold(const std::double_t& threshold) const;
 
@@ -54,7 +54,7 @@ struct CovarianceResult
   std::string toString() const;
 
   /**
-   * @brief Compose a string with a list of NamedParams for correlation coefficients above @ref threshold.
+   * @brief Compose a string with a list of NamedParams for correlation coefficients above @p threshold.
    * @param threshold
    * @return
    */

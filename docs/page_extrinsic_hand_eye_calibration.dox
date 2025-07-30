@@ -9,6 +9,8 @@ The outputs of this calibration are:
   - optimized estimate of the transform from the camera mount frame to the camera frame
   - optimized estimate of the transform from the target mount frame to the target frame
 
+@sa @ref industrial_calibration::ExtrinsicHandEyeCalibrationWidget "ExtrinsicHandEyeCalibrationWidget"
+
 @section s_extrinsic_hand_eye_run_app Running the Application
 
 Run the application by executing the compiled executable from the install directory of the `colcon` workspace in which it was built:
@@ -85,11 +87,11 @@ Plugin configuration for target finder used to detect the calibration target in 
 
 Here is an example configuration for a @ref industrial_calibration::ModifiedCircleGridTargetFinder "ModifiedCircleGridTargetFinder":
 
-@snippet ../examples/data/test_set_10x10/cal_data.yaml Modified Circle Grid Target Finder Config
+@snippet examples/data/test_set_10x10/cal_data.yaml Modified Circle Grid Target Finder Config
 
 Here is an example configuration for a @ref industrial_calibration::CharucoGridBoardTargetFinder "CharucoGridBoardTargetFinder":
 
-@snippet ../examples/data/test_set_charuco/cal_data.yaml Charuco Grid Target Finder Config
+@snippet examples/data/test_set_charuco/cal_data.yaml Charuco Grid Target Finder Config
 
 @subsection ss_extrinsic_hand_eye_homography_threshold homography_threshold
 

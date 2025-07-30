@@ -31,9 +31,9 @@ CovarianceResult computeCovarianceResults(const Eigen::MatrixXd& cov_matrix,
 
 /**
  * @brief Given a covariance matrix, calculate the matrix of standard deviations and correlation coefficients.
- * @param Covariance matrix
+ * @param covariance_matrix The covariance matrix
  * @return Matrix of standard deviations (diagonal elements) and correlation coefficents (off-diagonal elements).
- * @throw CovarianceException if @ref covariance_matrix is not square.
+ * @throw CovarianceException if @p covariance_matrix is not square.
  */
 Eigen::MatrixXd computeCorrelationsFromCovariance(const Eigen::MatrixXd& covariance_matrix);
 
@@ -68,7 +68,7 @@ CovarianceResult computeCovariance(
 /**
  * @brief Compute all covariance results for a Ceres optimization problem and label them with the provided names.
  * @param problem The Ceres problem (after optimization).
- * @param parameter_names Labels for all optimization parameters in the problem.
+ * @param param_names Labels for all optimization parameters in the problem.
  * @param param_masks Map of the parameter block pointer and the indices of the parameters within that block to be
  * excluded from the covariance calculation
  * @param options ceres::Covariance::Options to use when calculating covariance.
@@ -84,7 +84,7 @@ CovarianceResult computeCovariance(
  * the provided names.
  * @param problem The Ceres problem (after optimization).
  * @param parameter_blocks Specific parameter blocks for which covariance will be calculated.
- * @param parameter_names Labels for optimization parameters in the specified blocks.
+ * @param param_names Labels for optimization parameters in the specified blocks.
  * @param param_masks Map of the parameter block pointer and the indices of the parameters within that block to be
  * excluded from the covariance calculation
  * @param options ceres::Covariance::Options to use when calculating covariance.

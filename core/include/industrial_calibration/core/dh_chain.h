@@ -48,8 +48,9 @@ using Vector2 = Eigen::Matrix<T, 2, 1>;
 
 /**
  * @brief Struct representing the DH parameters of a single transformation between adjacent links.
- * This struct follows the classical DH parameter convention: Trans[Zi-1](d) * Rot[Zi-1](theta) * Trans[Xi](r) *
- * Rot[Xi](alpha) See @link https://en.wikipedia.org/wiki/Denavit%E2%80%93Hartenberg_parameters for reference
+ * @details This struct follows the classical DH parameter convention: Trans[Zi-1](d) * Rot[Zi-1](theta) * Trans[Xi](r)
+ * * Rot[Xi](alpha)
+ * @sa https://en.wikipedia.org/wiki/Denavit%E2%80%93Hartenberg_parameters for reference
  */
 struct DHTransform
 {
@@ -147,10 +148,10 @@ public:
 
   /**
    * @brief Calculates forward kinematics for the chain with the joints provided.
-   * Note: the transform to the n-th link is calculated, where n is the size of @ref joint_values
+   * Note: the transform to the n-th link is calculated, where n is the size of @p joint_values
    * @param joint_values - The joint values with which to calculate forward kinematics (size: [<= @ref dof()])
    * @return
-   * @throws Exception if the size of joint values is larger than the number of DH transforms in the chain
+   * @throws Exception if the size of @p joint_values is larger than the number of DH transforms in the chain
    */
   template <typename T>
   Isometry3<T> getFK(const Eigen::Matrix<T, Eigen::Dynamic, 1>& joint_values) const
@@ -161,12 +162,12 @@ public:
 
   /**
    * @brief Calculates the forward kinematics for the chain given a set of joint values and DH parameter offsets
-   * Note: the transform to the n-th link is calculated, where n is the size of @ref joint_values
+   * Note: the transform to the n-th link is calculated, where n is the size of @p joint_values
    * @param joint_values - The joint values with which to calculate the forward kinematics (size: [<= @ref dof()])
    * @param offsets - The DH parameter offsets to apply when calculating the forward kinematics (size: [@ref dof() x 4])
    * @return
-   * @throws Exception if the size of @ref joint_values is larger than the number of DH transforms in the chain
-   * or if the size of @ref joint_values is larger than the rows of DH offsets
+   * @throws Exception if the size of @p joint_values is larger than the number of DH transforms in the chain
+   * or if the size of @p joint_values is larger than the rows of DH offsets
    */
   template <typename T>
   Isometry3<T> getFK(const Eigen::Matrix<T, Eigen::Dynamic, 1>& joint_values,

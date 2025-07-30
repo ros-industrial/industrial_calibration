@@ -11,7 +11,6 @@ namespace industrial_calibration
  * comparing PnP results from images taken at same pose.
  * Sensor noise can be understood by inspecting the returned standard
  * deviations.
- * @param Sets of PnP 2D problem parameters
  * @return Noise Statistics: a vector of means & std devs
  * @ingroup analysis_noise_qualification
  */
@@ -22,7 +21,6 @@ PnPNoiseStat qualifyNoise2D(const std::vector<PnPProblem>& params);
  * comparing PnP results from scans taken at the same pose.
  * Sensor noise can be understood by inspecting the returned standard
  * deviations.
- * @param params 3D image parameters
  * @return Noise Statiscics: a vector of standard deviations and the mean pos
  * @ingroup analysis_noise_qualification
  */

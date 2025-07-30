@@ -21,6 +21,10 @@ class TargetFinderWidget;
 class CameraIntrinsicsWidget;
 class TransformGuess;
 
+/**
+ * @brief Widget for performing extrinsic hand-eye calibration from a data set of 2D image observations.
+ * @sa @ref page_extrinsic_hand_eye_calibration
+ */
 class ExtrinsicHandEyeCalibrationWidget : public QMainWindow
 {
 public:

@@ -120,6 +120,7 @@ Eigen::Isometry3d DHChain::getRelativeTransform(int joint_index, double value) c
 
 using namespace industrial_calibration;
 
+// @cond
 namespace YAML
 {
 bool convert<DHTransform>::decode(const Node& n, DHTransform& val)
@@ -171,3 +172,4 @@ bool convert<DHChain>::decode(const Node& n, DHChain& val)
 }
 
 }  // namespace YAML
+// @endcond

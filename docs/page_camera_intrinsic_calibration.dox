@@ -12,6 +12,8 @@ The outputs of this calibration are:
   - the distortion parameters for a pinhole camera model
   - the optimized estimates of each camera to target transform
 
+@sa @ref industrial_calibration::CameraIntrinsicCalibrationWidget "CameraIntrinsicCalibrationWidget"
+
 @section s_camera_intrinsic_run_app Running the Application
 
 Run the application by executing the compiled executable from the install directory of the `colcon` workspace in which it was built:
@@ -77,11 +79,11 @@ Plugin configuration for target finder used to detect the calibration target in 
 
 Here is an example configuration for a @ref industrial_calibration::ModifiedCircleGridTargetFinder "ModifiedCircleGridTargetFinder":
 
-@snippet ../examples/data/test_set_10x10/cal_data.yaml Modified Circle Grid Target Finder Config
+@snippet examples/data/test_set_10x10/cal_data.yaml Modified Circle Grid Target Finder Config
 
 Here is an example configuration for a @ref industrial_calibration::CharucoGridBoardTargetFinder "CharucoGridBoardTargetFinder":
 
-@snippet ../examples/data/test_set_charuco/cal_data.yaml Charuco Grid Target Finder Config
+@snippet examples/data/test_set_charuco/cal_data.yaml Charuco Grid Target Finder Config
 
 @subsection ss_camera_intrinsic_homography_threshold homography_threshold
 

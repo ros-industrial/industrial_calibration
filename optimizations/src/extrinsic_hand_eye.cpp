@@ -193,6 +193,7 @@ ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem3D3D& params)
 
 using namespace industrial_calibration;
 
+// @cond
 namespace YAML
 {
 Node convert<ExtrinsicHandEyeProblem2D3D>::encode(const ExtrinsicHandEyeProblem2D3D& rhs)
@@ -276,3 +277,4 @@ bool convert<ExtrinsicHandEyeResult>::decode(const YAML::Node& node, ExtrinsicHa
 }
 
 }  // namespace YAML
+// @endcond

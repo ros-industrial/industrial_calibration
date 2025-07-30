@@ -80,9 +80,7 @@ Eigen::VectorXd calculateHomographyError(const Correspondence2D3D::Set& correspo
                                          const CorrespondenceSampler& correspondence_sampler);
 
 /**
- * @brief Calculates the homography error for correspondences of 3D planar points using @ref calculateHomographyError
- * @param correspondences - A set of corresponding points
- * @param correspondence_sampler - a struct for choosing correspondence indices to generate the homography matrix
+ * @brief Calculates the homography error for correspondences of 3D planar points using calculateHomographyError
  * @return A vector of homography errors for each correspondence
  * @ingroup analysis_homography
  */

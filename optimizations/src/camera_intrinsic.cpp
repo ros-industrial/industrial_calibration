@@ -228,6 +228,7 @@ CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
 
 }  // namespace industrial_calibration
 
+// @cond
 namespace YAML
 {
 Node convert<CameraIntrinsicProblem>::encode(const CameraIntrinsicProblem& rhs)
@@ -279,3 +280,4 @@ bool convert<CameraIntrinsicResult>::decode(const YAML::Node& node, CameraIntrin
 }
 
 }  // namespace YAML
+// @endcond

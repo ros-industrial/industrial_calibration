@@ -3,6 +3,7 @@
 
 using namespace industrial_calibration;
 
+// @cond
 namespace YAML
 {
 Node convert<CameraIntrinsics>::encode(const CameraIntrinsics& rhs)
@@ -26,6 +27,7 @@ bool convert<CameraIntrinsics>::decode(const YAML::Node& node, CameraIntrinsics&
 }
 
 }  // namespace YAML
+// @endcond
 
 namespace industrial_calibration
 {
