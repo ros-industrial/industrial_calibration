@@ -61,9 +61,9 @@ using Correspondence3DSet [[deprecated]] = Correspondence3D3D::Set;
  * target. For a moving camera or target, the "mount" pose would likely be the transform from the robot base to the
  * robot tool flange. For a stationary camera or target, this "mount" pose would simply be identity.
  *
- * Note that @ref to_camera_mount and @ref to_target_mount do not necessarily need to be relative the the same
+ * Note that @p to_camera_mount and @p to_target_mount do not necessarily need to be relative the the same
  * coordinate system because certain calibration problems might optimize a 6D transform in between the root frame of
- * @ref to_camera mount and the root frame of @ref to_target_mount
+ * @p to_camera mount and the root frame of @p to_target_mount
  *
  * Keep in mind that the optimization itself determines the final calibrated transforms from these "mount" frames to the
  * camera and target.

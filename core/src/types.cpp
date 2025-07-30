@@ -3,6 +3,7 @@
 
 using namespace industrial_calibration;
 
+// @cond
 namespace YAML
 {
 template <Eigen::Index SENSOR_DIM, Eigen::Index WORLD_DIM>
@@ -52,3 +53,4 @@ template struct convert<Observation<2, 3>>;
 template struct convert<Observation<3, 3>>;
 
 }  // namespace YAML
+// @endcond

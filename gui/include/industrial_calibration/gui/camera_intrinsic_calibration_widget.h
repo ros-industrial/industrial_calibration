@@ -20,6 +20,10 @@ class CameraIntrinsicResult;
 class TargetFinderWidget;
 class CameraIntrinsicsWidget;
 
+/**
+ * @brief Widget for performing camera intrinsic calibration from a data set of 2D image observations.
+ * @sa @ref page_camera_intrinsic_calibration
+ */
 class CameraIntrinsicCalibrationWidget : public QMainWindow
 {
 public:
