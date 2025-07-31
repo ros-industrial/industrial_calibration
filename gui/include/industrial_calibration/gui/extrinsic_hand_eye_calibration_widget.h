@@ -1,47 +1,35 @@
 #pragma once
 
-#include <industrial_calibration/target_finders/opencv/target_finder.h>
+#include <industrial_calibration/gui/camera_calibration_data_manager_widget.h>
 
-#include <boost_plugin_loader/plugin_loader.h>
-#include <memory>
-#include <QMainWindow>
-#include <QDialog>
-
-class QTreeWidgetItem;
-
-namespace Ui
-{
-class ExtrinsicHandEyeCalibration;
-}
+class QToolBar;
 
 namespace industrial_calibration
 {
 class ExtrinsicHandEyeResult;
-class TargetFinderWidget;
-class CameraIntrinsicsWidget;
 class TransformGuess;
 
 /**
  * @brief Widget for performing extrinsic hand-eye calibration from a data set of 2D image observations.
  * @sa @ref page_extrinsic_hand_eye_calibration
  */
-class ExtrinsicHandEyeCalibrationWidget : public QMainWindow
+class ExtrinsicHandEyeCalibrationWidget : public CameraCalibrationDataManagerWidget
 {
+  Q_OBJECT
+
 public:
+  /**
+   * @brief Returns an HTML-formatted string with instructions on running the calibration
+   */
+  static std::string getInstructions();
+
   explicit ExtrinsicHandEyeCalibrationWidget(QWidget* parent = nullptr);
-  ~ExtrinsicHandEyeCalibrationWidget();
 
   /**
-   * @brief Loads the calibration configuration from file
+   * @brief Loads the calibration configuration from file (defined in @ref s_extrinsic_hand_eye_conf_def)
    * @throws Exception on failure
    */
   void loadConfig(const std::string& config_file);
-
-  /**
-   * @brief Loads the calibration observations from file
-   * @throws Exception on failure
-   */
-  void loadObservations(const std::string& observations_file);
 
   /**
    * @brief Performs the calibration
@@ -55,28 +43,32 @@ public:
    */
   void saveResults(const std::string& file);
 
-protected:
-  void closeEvent(QCloseEvent* event) override;
+  TransformGuess* camera_transform_guess_widget_;
+  TransformGuess* target_transform_guess_widget_;
+  QAction* action_instructions;
+  QAction* action_load_configuration;
+  QAction* action_camera_mount_to_camera;
+  QAction* action_target_mount_to_target;
+  QAction* action_static_camera;
+  QAction* action_save;
+  QAction* action_calibrate;
 
+  /**
+   * @brief Configured tool bar with actions for the calibration
+   * @details This tool bar is not added to the layout of the widget by default
+   */
+  QToolBar* tool_bar;
+
+signals:
+  /** @brief Signal emitted when calibration has successfully completed */
+  void calibrationComplete(const ExtrinsicHandEyeResult&);
+
+protected:
   void onLoadConfig();
-  void onLoadObservations();
   void onCalibrate();
   void onSaveResults();
 
-  void loadTargetFinder();
-  void drawImage(QTreeWidgetItem* item, int col);
-
-  Ui::ExtrinsicHandEyeCalibration* ui_;
-  TargetFinderWidget* target_finder_widget_;
-  CameraIntrinsicsWidget* camera_intrinsics_widget_;
-  TransformGuess* camera_transform_guess_widget_;
-  TransformGuess* target_transform_guess_widget_;
-
-  boost_plugin_loader::PluginLoader loader_;
-  TargetFinderFactoryOpenCV::ConstPtr factory_;
-
   std::shared_ptr<ExtrinsicHandEyeResult> result_;
-  TargetFinderOpenCV::ConstPtr target_finder_;
 };
 
 }  // namespace industrial_calibration
