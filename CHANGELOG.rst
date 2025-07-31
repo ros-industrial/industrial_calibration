@@ -2,6 +2,13 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Revised camera calibration widgets/applications (`#219 <https://github.com/marip8/industrial_calibration/issues/219>`_)
+* Added camera intrinsic calibration example (`#218 <https://github.com/marip8/industrial_calibration/issues/218>`_)
+* Create documentation website with Doxygen (`#211 <https://github.com/marip8/industrial_calibration/issues/211>`_)
+* Contributors: Michael Ripperger
+
 1.0.5 (2025-06-27)
 ------------------
 * Added support for Ubuntu 24.04 (`#197 <https://github.com/marip8/industrial_calibration/issues/197>`_)
