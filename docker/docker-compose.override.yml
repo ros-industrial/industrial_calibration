@@ -1,0 +1,13 @@
+# services:
+#   industrial_calibration:
+#     environment:
+#       NVIDIA_DRIVER_CAPABILITIES: all
+#     entrypoint: ./extrinsic_calibration_gui.sh
+#     entrypoint: ./intrinsic_calibration_gui.sh
+#     deploy:
+#       resources:
+#         reservations:
+#           devices:
+#             - driver: nvidia
+#               count: 1
+#               capabilities: [gpu]
