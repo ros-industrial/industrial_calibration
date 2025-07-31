@@ -2,8 +2,8 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.0 (2025-07-31)
+------------------
 * Revised camera calibration widgets/applications (`#219 <https://github.com/marip8/industrial_calibration/issues/219>`_)
 * Added camera intrinsic calibration example (`#218 <https://github.com/marip8/industrial_calibration/issues/218>`_)
 * Create documentation website with Doxygen (`#211 <https://github.com/marip8/industrial_calibration/issues/211>`_)
