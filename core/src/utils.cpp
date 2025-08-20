@@ -1,4 +1,4 @@
-#include <industrial_calibration/optimizations/ceres_math_utilities.h>
+#include <industrial_calibration/core/utils.h>
 
 namespace industrial_calibration
 {

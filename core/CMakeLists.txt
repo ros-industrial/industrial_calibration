@@ -9,7 +9,12 @@ if(NOT TARGET Eigen3::Eigen)
   set_property(TARGET Eigen3::Eigen PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS})
 endif()
 
-add_library(${PROJECT_NAME}_core SHARED src/camera_intrinsics.cpp src/dh_chain.cpp src/types.cpp)
+add_library(
+  ${PROJECT_NAME}_core SHARED
+  src/camera_intrinsics.cpp
+  src/dh_chain.cpp
+  src/types.cpp
+  src/utils.cpp)
 target_include_directories(${PROJECT_NAME}_core PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                        "$<INSTALL_INTERFACE:include>")
 target_link_libraries(${PROJECT_NAME}_core PUBLIC Eigen3::Eigen yaml-cpp)

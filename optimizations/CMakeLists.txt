@@ -3,7 +3,6 @@ find_package(Ceres REQUIRED)
 add_library(
   ${PROJECT_NAME}_optimizations SHARED
   # Optimization Utilities
-  src/ceres_math_utilities.cpp
   src/covariance_types.cpp
   src/covariance_analysis.cpp
   # Optimizations
