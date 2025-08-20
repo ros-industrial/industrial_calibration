@@ -26,7 +26,7 @@ They then try to refine that guess through optimization into a more accurate est
  The deviations from that model, called *distortions*, are estimated as part of *intrinsic calibration* and are used in software to produce an "undistorted" image called the *rectified image*. Most of the calibrations in this package assume they are operating on such a rectified image.
  The ROS  [image_proc](http://wiki.ros.org/image_proc) package will usually do this for you.
 
-@section s_camera The Camera
+@section s_camera Camera
 For 2D images, we use the OpenCV model.
 See [OpenCV's discussion](https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html) at the top of their `calib3d` module.
 In brief:
@@ -40,7 +40,7 @@ Most of the calibrations in this repository assume they are working on an undist
 
 @image html static/pinhole_camera_model.png
 
-@section s_target The Target
+@section s_target Target
 The core calibrations don't make assumptions about the target; instead you just provide correspondences between sensor features (e.g., in 2D) to target features (e.g., in 3D) given a measurement from the sensor (e.g,. a 2D image).
 The @ref industrial_calibration::Target "Target" class provides the definition of the calibration target interface.
 The @ref industrial_calibration::TargetFinder "TargetFinder" class provides the definition of the interface for finding such calibration targets.
@@ -48,7 +48,7 @@ The @ref industrial_calibration::TargetFinder "TargetFinder" class provides the 
 A number of @ref target_finders_opencv "OpenCV-based target finders" are provided.
 Each target type has its advantages and disadvantages; see the documentation for more details.
 
-@section s_calibration_types Types of calibrations
+@section s_calibration_types Types of Calibrations
 
 This repository provides several calibration optimizations for the following types of problems:
 - @ref optimizations_camera_intrinsic "Camera Intrinsic Calibration"
@@ -67,8 +67,5 @@ If you take 3000 images from the exact same position, you'll get good convergenc
 
 This repository includes a number of tools in the @ref analysis "analysis module" for helping determine whether or not a calibration is good.
 See the documentation in this section for more details on the available analysis tools.
-
-@section s_advice Some Advice
- - Take lots of samples in lots of different positions. It's not uncommon to require tens of images from all over your workspace to get a good calibration.
 
 */
