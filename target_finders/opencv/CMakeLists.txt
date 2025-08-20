@@ -5,6 +5,7 @@ add_library(
   ${PROJECT_NAME}_target_finders_opencv SHARED
   src/utils.cpp
   src/circle_detector.cpp
+  src/target_finder.cpp
   src/modified_circle_grid_target_finder.cpp
   src/aruco_grid_target_finder.cpp
   src/charuco_grid_target_finder.cpp)

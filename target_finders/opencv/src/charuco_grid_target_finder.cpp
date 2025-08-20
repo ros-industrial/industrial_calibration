@@ -70,7 +70,7 @@ std::vector<Correspondence2D3D> CharucoGridTarget::createCorrespondences(const T
 }
 
 CharucoGridBoardTargetFinder::CharucoGridBoardTargetFinder(const CharucoGridTarget& target)
-  : TargetFinder(), target_(target)
+  : TargetFinderOpenCV(), target_(target)
 {
 }
 
@@ -130,6 +130,9 @@ cv::Mat CharucoGridBoardTargetFinder::drawTargetFeatures(const cv::Mat& image,
 
   // Draw the detected corners
   cv::aruco::drawDetectedCornersCharuco(image, charuco_corners, charuco_ids, cv::Scalar(255, 0, 0));
+
+  // Draw the target origin
+  drawTargetOrigin(image, target_features, 2.0 * target_.board->getSquareLength());
 
   return image;
 }

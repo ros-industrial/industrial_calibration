@@ -77,7 +77,8 @@ Correspondence2D3D::Set ArucoGridTarget::createCorrespondences(const TargetFeatu
   return correspondences;
 }
 
-ArucoGridBoardTargetFinder::ArucoGridBoardTargetFinder(const ArucoGridTarget& target) : TargetFinder(), target_(target)
+ArucoGridBoardTargetFinder::ArucoGridBoardTargetFinder(const ArucoGridTarget& target)
+  : TargetFinderOpenCV(), target_(target)
 {
 }
 
@@ -121,6 +122,10 @@ cv::Mat ArucoGridBoardTargetFinder::drawTargetFeatures(const cv::Mat& image,
     marker_corners.push_back(cv_obs);
   }
   cv::aruco::drawDetectedMarkers(image, marker_corners, marker_ids);
+
+  // Draw the target origin
+  drawTargetOrigin(image, target_features, 2.0 * target_.board->getMarkerLength());
+
   return image;
 }
 
