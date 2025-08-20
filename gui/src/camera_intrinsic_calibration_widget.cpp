@@ -384,7 +384,7 @@ void CameraIntrinsicCalibrationWidget::calibrate()
   if (result_->covariance.covariances.empty() && !action_use_opencv->isChecked())
     ss << "Failed to compute covariance" << std::endl;
   else if (!action_use_opencv->isChecked())
-    ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
+    ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.8) << std::endl;
 
   ui_->text_edit_results->clear();
   ui_->text_edit_results->append(QString::fromStdString(ss.str()));

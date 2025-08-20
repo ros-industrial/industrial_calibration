@@ -288,7 +288,7 @@ void ExtrinsicHandEyeCalibrationWidget::calibrate()
   // Report results
   std::stringstream ss;
   ss << *result_ << std::endl;
-  ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.5) << std::endl;
+  ss << result_->covariance.printCorrelationCoeffAboveThreshold(0.8) << std::endl;
 
   // Compute the projected 3D error for comparison
   ss << analyze3dProjectionError(problem, *result_) << std::endl << std::endl;
