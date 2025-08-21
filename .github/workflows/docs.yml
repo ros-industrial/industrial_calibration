@@ -37,7 +37,7 @@ jobs:
         working-directory: docs
         run: |
           apt update -y -qq
-          apt install -y -qq doxygen graphviz texlive-latex-extra
+          apt install -y -qq doxygen graphviz texlive-latex-extra ghostscript
           doxygen Doxyfile
           touch build/html/.nojekyll
 
