@@ -451,7 +451,7 @@ std::vector<Eigen::Vector3d> ModifiedCircleGridTarget::createPoints() const
 
 ModifiedCircleGridTargetFinder::ModifiedCircleGridTargetFinder(const ModifiedCircleGridTarget& target,
                                                                const CircleDetectorParams& params)
-  : TargetFinder(), target_(target), params_(params)
+  : TargetFinderOpenCV(), target_(target), params_(params)
 {
   assert(target_.cols > 0);
   assert(target_.rows > 0);
@@ -484,6 +484,9 @@ TargetFeatures2D ModifiedCircleGridTargetFinder::findTargetFeatures(const cv::Ma
 cv::Mat ModifiedCircleGridTargetFinder::drawTargetFeatures(const cv::Mat& image,
                                                            const TargetFeatures2D& target_features) const
 {
+  // Draw the target origin
+  drawTargetOrigin(image, target_features, 2.0 * target_.spacing);
+
   // Draw all detected circles
   CircleDetector circle_detector_(params_);
   cv::Mat out_image = circle_detector_.drawDetectedCircles(image);

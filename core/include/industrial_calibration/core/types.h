@@ -5,6 +5,12 @@
 
 using VectorEigenIsometry = std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>;
 
+template <typename T>
+using VectorVector2 = std::vector<Eigen::Matrix<T, 2, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, 2, 1>>>;
+
+template <typename T>
+using VectorVector3 = std::vector<Eigen::Matrix<T, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, 3, 1>>>;
+
 namespace industrial_calibration
 {
 /**
