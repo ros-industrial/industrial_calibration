@@ -144,4 +144,71 @@ homography_threshold: 2.0
 static_camera: true
 ```
 
+@section s_tips Tips for Getting an Accurate Calibration
+
+@subsection ss_before_calibration Before Calibration
+
+- Verify that the dimensions of the physical calibration target match the parameters specified in the target detector configuration file
+- Verify that the camera intrinsic calibration is accurate.
+See @ref page_camera_intrinsic_calibration for more details about performing camera intrinsic calibration.
+- Configure the camera to produce the largest possible image size
+- Configure the camera or image pipeline to produce rectified images
+
+@subsection ss_during_calibration During Calibration
+
+- Take lots of samples in lots of different positions
+It's not uncommon to require tens of images from all over your workspace to get a good calibration.
+- Ensure the camera is fully stationary when acquiring images
+- Ensure the collected images are rectified
+- Acquire images in such a way that the calibration target takes up as much of the image as possible
+- Ensure the measurement of the transform from the target mount frame to the camera mount frame is as accurate as possible.
+For example, most robot manipulators will report their calibrated tool flange frames
+
+@section s_analyzing_results Evaluating the Results
+
+@subsection s_residual_error Residual Error
+
+Residual error is the average *squared* error between the detected and expected target features remaining at the end of the calibration optimization.
+In the case of this optimization, the units of the residual error are *squared* pixels.
+
+@note The corresponding value reported in the GUI is the square root of the residual error, which is in the more meaningful units of pixels.
+
+Residual error generally scales with the size (in pixels) of each target feature (e.g., a checkerboard intersection) in the image.
+
+For example, in the case of a high resolution camera, a 10x10 neighborhood of pixels might represent a checkboard intersection.
+In a lower reslution camera, however, the same checkboard intersection might only be represented by a 2x2 neighborhood of pixels.
+Calibration with the high resolution camera will likely result in a higher residual error because a distance in physical space (e.g., mm) maps to a greater number of pixels in image space.
+
+@subsection s_3d_reprojection_error 3D Reprojection Error
+
+In addition to evaluating error in image space, it is possible to project that error back into physical 3D space (under the assumption that the calibration target is planar).
+Like residual error, this measure of error reports the average distance between a detected target feature and its expected location.
+However, this error metric is generally more meaningful than residual error because it reports average error in physical units (e.g., mm) and is not influenced by the resolution of the calibration images.
+
+@subsection s_pnp_comparison Comparison to PnP Optimizations
+
+This calibration algorithm assumes that the measurement of the pose from the target mount frame to the camera mount frame (\f$ T_{m} \f$) is perfectly accurate.
+Generally this is not actually the case: robots are not perfectly rigid, models do not perfectly match as-built hardware, etc.
+
+To understand the generally effect of this "perfect pose measurement" assumption, we run a PnP optimization for each acquired image and compare its reported camera-to-target transform (\f$ T_{pnp} \f$ ) to that predicted by this calibration (\f$ T_{cal} \f$).
+The PnP optimization simply tries to find the optimal placement of the camera relative to the target and is not constrained or influenced by the geometry of the robot holding the camera/target.
+
+If the measurement of \f$ T_{m} \f$ is perfect, then the difference between \f$ T_{pnp} \f$ and \f$ T_{cal} \f$ should be similar to the 3D reprojection error.
+If the difference is significantly higher than the 3D reprojection error, this is an indication that \f$ T_{m} \f$ may not have been accurate enough.
+
+@subsection s_correlation_coefficients Correlation Coefficients
+
+A correlation coefficient is a number on [-1, 1] describing how interrelated two variables are to one another.
+- A value of 0 means that a change in one variable has no effect on the second variable.
+- A value of 1 means that an increase in one variable produces the same size increase in the secibd variable.
+- A value of -1 means that an increase in one variable produces the same size *decrease* in the second variable.
+
+In the context of a calibration optimization problem, ideally all calibration variables are independent of one another, and all correlation coefficients should therefore be 0.
+
+In practice, this is generally not true, but all correlation coefficients should be relatively low.
+A very high correlation coefficient between any two variables (typically > 0.8) generally means that two variables play the same role in reducing the overall optimization cost and cannot be accurately distinguished from one another.
+
+High correlation coefficients in the context of extrinsic hand-eye calibration typically indicate that not enough variety of camera poses were used for the calibration.
+To correct, add images from camera poses that look at the calibration target from a variety of different angles.
+
 */
