@@ -10,6 +10,7 @@ namespace industrial_calibration
 {
 /**
  * @brief Projects a 3D point (relative to the camera frame) into image coordinates
+ * @ingroup core
  */
 template <typename T>
 inline void projectPoint(const CameraIntrinsics& intr, const T point[3], T xy_image[2])
@@ -39,6 +40,7 @@ inline void projectPoint(const CameraIntrinsics& intr, const T point[3], T xy_im
 
 /**
  * @brief Projects a 3D point (relative to the camera frame) into image coordinates
+ * @ingroup core
  */
 template <typename T>
 inline Eigen::Matrix<T, 2, 1> projectPoint(const CameraIntrinsics& intr, const Eigen::Matrix<T, 3, 1>& point)
@@ -71,6 +73,7 @@ inline Eigen::Matrix<T, 2, 1> projectPoint(const CameraIntrinsics& intr, const E
 
 /**
  * @brief Projects a vector of 3D points (relative to the camera frame) into a vector of image coordinates
+ * @ingroup core
  */
 template <typename T>
 VectorVector2<T> projectPoints(const Eigen::Transform<T, 3, Eigen::Isometry>& camera_to_target,
@@ -90,6 +93,7 @@ VectorVector2<T> projectPoints(const Eigen::Transform<T, 3, Eigen::Isometry>& ca
  * @param camera_intr Camera intrinsic parameters with distortion (size 9). See CalibCameraIntrinsics for details.
  * @param pt_in_camera 3D point in the camera frame (size 3)
  * @param pt_in_image (Output) 2D image coordinates (size 2)
+ * @ingroup core
  */
 template <typename T>
 void projectPoints2(const T* const camera_intr, const T* const pt_in_camera, T* pt_in_image)
@@ -156,13 +160,25 @@ Pose6d poseEigenToCal(const Eigen::Isometry3d& pose);
 
 Eigen::Isometry3d poseCalToEigen(const Pose6d& pose);
 
-/*
+/**
  * @brief Computes the homography matrix of a set of correspondences
  * @details There is a 3x3 homography matrix, H, that can transform a point from one plane onto a different plane
  *
- * | u | = k * | H00 H01 H02 | * | x |
- * | v |       | H10 H11 H12 |   | y |
- * | 1 |       | H20 H12  1  |   | 1 |
+ * \f[
+ * \left[ {\begin{array}{c}
+ * u \\ v \\ 1 \\
+ * \end{array} } \right]
+ * = k *
+ * \left[ {\begin{array}{ccc}
+ * H_{00} & H_{01} & H_{02} \\
+ * H_{10} & H_{11} & H_{12} \\
+ * H_{20} & H_{21} & 1 \\
+ * \end{array} } \right]
+ * *
+ * \left[ {\begin{array}{c}
+ * x \\  y \\ 1 \\
+ * \end{array} } \right]
+ * \f]
  *
  * In our case we have 2 sets of known corresponding planar points: points on the planar target, and points in the
  * image plane Therefore, there is some matrix, H, which can transform target points into the image plane. If the
@@ -176,19 +192,29 @@ Eigen::Isometry3d poseCalToEigen(const Pose6d& pose);
  * These 8 values of the homography matrix can be solved for, given a set of (at least) 8 corresponding planar
  * vectors, by rearranging the above equations:
  *
- * A * H = b, where
- * H = inv(A) * b
+ * \f$ A * H = b \f$, where \f$ H = inv(A) * b \f$
  *   - A is matrix (size 2*n x 8), where n is the number of corresponding vectors
  *   - H is a vector (size 8 x 1) of the unknown elements of the homography matrix
  *   - B is a vector (size 2*n x 1) representing the elements of one set of planar vectors
  *
- *                  A               *              H    =    b
- * |-x0 -y0  -1   0    0    0   u0*x0   u0*y0 | * | H00 | = | -u0 |
- * | 0   0   0  -x0   -y0  -1   v0*x0   v0*y0 | * | H01 | = | -v0 |
- *                              ...
- * |-x7 -y7  -1   0    0    0   u7*x7   u7*y7 | * | H20 | = | -u7 |
- * | 0   0   0  -x7   -y7  -1   v7*x7   v7*y7 | * | H21 | = | -v7 |
+ * \f[
+ * \left[ {\begin{array}{cccccccc}
+ * -x_{i} & -y_{i} & -1 & 0 & 0 & 0 & u_{i}x_{i} & u_{i}y_{i} \\
+ * 0 & 0 & 0 & -x_{i} & -y_{i} & -1 & v_{i}x_{i} & v_{i}y_{i} \\
+ * ... & ... & ... & ... & ... & ... & ... & ... \\
+ * -x_{n} & -y_{n} & -1 & 0 & 0 & 0 & u_{n}x_{n} & u_{n}y_{n} \\
+ * 0 & 0 & 0 & -x_{n} & -y_{n} & -1 & v_{n}x_{n} & v_{n}y_{n} \\
+ * \end{array} } \right]
+ * *
+ * \left[ {\begin{array}{c}
+ * H_{00} \\ H_{01} \\ H_{02} \\ H_{10} \\ H_{11} \\ H_{12} \\ H_{20} \\ H_{21} \\
+ * \end{array} } \right]
+ * =
+ * \left[ {\begin{array}{c}
+ * -u_{i} \\ -v_{i} \\ ... \\ ... \\ -u_{n} \\ -v_{n}
+ * \end{array} } \right] \f]
  *
+ * @ingroup core
  */
 Eigen::Matrix<double, 3, 3, Eigen::RowMajor> calculateHomography(const Correspondence2D3D::Set correspondences);
 
@@ -196,6 +222,7 @@ Eigen::Matrix<double, 3, 3, Eigen::RowMajor> calculateHomography(const Correspon
  * @brief Projects a set of planar 2D points in world coordinates into image coordinates using a homography matrix
  * @param H Homography matrix
  * @param xy 2D planar points in world coordinates
+ * @ingroup core
  */
 Eigen::Matrix2Xd projectHomography(const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>& H, const Eigen::Matrix2Xd& xy);
 
