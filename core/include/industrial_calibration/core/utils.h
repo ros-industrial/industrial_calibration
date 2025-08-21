@@ -180,13 +180,13 @@ Eigen::Isometry3d poseCalToEigen(const Pose6d& pose);
  * \end{array} } \right]
  * \f]
  *
- * In our case we have 2 sets of known corresponding planar points: points on the planar target, and points in the
- * image plane Therefore, there is some matrix, H, which can transform target points into the image plane. If the
- * target points and camera points actually match, we should be able to:
+ * In our case we have 2 sets of known corresponding planar points: points on the planar target, and points in the image
+ * plane. Therefore, there is some matrix, H, which can transform target points into the image plane. If the target
+ * points and camera points actually match, we should be able to:
  *   1. Calculate H for a subset of corresponding points
  *   2. Transform the remaining target points by H to obtain estimates of their locations in the image plane
- *   3. Compare the calculated estimations to the actual image points to make sure they are very close. If they are
- * not close, we know that the correspondences are not valid
+ *   3. Compare the calculated estimations to the actual image points to make sure they are very close.
+ *   If they are not close, we know that the correspondences are not valid
  *
  * The matrix H has 8 unique values.
  * These 8 values of the homography matrix can be solved for, given a set of (at least) 8 corresponding planar
@@ -214,6 +214,7 @@ Eigen::Isometry3d poseCalToEigen(const Pose6d& pose);
  * -u_{i} \\ -v_{i} \\ ... \\ ... \\ -u_{n} \\ -v_{n}
  * \end{array} } \right] \f]
  *
+ * @note At least 4 correspondences are required (2 equations per correspondence x 4 correspondences = 8 unknowns)
  * @ingroup core
  */
 Eigen::Matrix<double, 3, 3, Eigen::RowMajor> calculateHomography(const Correspondence2D3D::Set correspondences);

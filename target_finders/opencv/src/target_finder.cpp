@@ -11,6 +11,10 @@ void TargetFinderOpenCV::drawTargetOrigin(const cv::Mat& image, const TargetFeat
   // Compute the correspondences for the given target features
   Correspondence2D3D::Set correspondences = target().createCorrespondences(target_features);
 
+  // At least 4 correspondences required to compute homography
+  if (correspondences.size() < 4)
+    return;
+
   // Compute the homography matrix
   auto H = calculateHomography(correspondences);
 

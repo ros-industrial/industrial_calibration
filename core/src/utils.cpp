@@ -1,4 +1,5 @@
 #include <industrial_calibration/core/utils.h>
+#include <industrial_calibration/core/exceptions.h>
 
 namespace industrial_calibration
 {
@@ -52,6 +53,9 @@ Eigen::Isometry3d poseCalToEigen(const Pose6d& pose)
 
 Eigen::Matrix<double, 3, 3, Eigen::RowMajor> calculateHomography(const Correspondence2D3D::Set correspondences)
 {
+  if (correspondences.size() < 4)
+    throw ICalException("At least 4 correspondences required to calculate homography");
+
   Eigen::MatrixXd A(2 * correspondences.size(), 8);
   Eigen::MatrixXd b(2 * correspondences.size(), 1);
 
