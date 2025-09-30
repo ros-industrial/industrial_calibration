@@ -327,6 +327,9 @@ void ExtrinsicHandEyeCalibrationWidget::saveResults(const std::string& file)
                         "calibration");
 
   std::ofstream f(file);
+  if (!f)
+    throw ICalException("Failed to open file: '" + file + "' for writing");
+
   f << YAML::Node(*result_);
 }
 

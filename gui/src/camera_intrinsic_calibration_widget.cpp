@@ -413,6 +413,9 @@ void CameraIntrinsicCalibrationWidget::saveResults(const std::string& file) cons
                         "calibration");
 
   std::ofstream f(file);
+  if (!f)
+    throw ICalException("Failed to open file: '" + file + "' for writing");
+
   f << YAML::Node(*result_);
 }
 
@@ -452,6 +455,9 @@ void CameraIntrinsicCalibrationWidget::saveROSFormat(const std::string& file) co
 
   YAML::Node node = toROSFormat(*result_, image_width, image_height);
   std::ofstream f(file);
+  if (!f)
+    throw ICalException("Failed to open file: '" + file + "' for writing");
+
   f << node;
 }
 
