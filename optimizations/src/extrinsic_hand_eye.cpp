@@ -248,14 +248,20 @@ Node convert<ExtrinsicHandEyeResult>::encode(const ExtrinsicHandEyeResult& rhs)
   node["converged"] = rhs.converged;
   node["initial_cost_per_obs"] = rhs.initial_cost_per_obs;
   node["final_cost_per_obs"] = rhs.final_cost_per_obs;
-  node["target_mount_to_target_pos"] = Eigen::Vector3d(rhs.target_mount_to_target.translation());
-  node["camera_mount_to_camera_pos"] = Eigen::Vector3d(rhs.camera_mount_to_camera.translation());
+
+  node["target_mount_to_target"] = rhs.target_mount_to_target;
+  node["camera_mount_to_camera"] = rhs.camera_mount_to_camera;
 
   // Serialize transform orientation in RPY for convenience
   node["target_mount_to_target_rpy"] =
       Eigen::Vector3d(rhs.target_mount_to_target.rotation().eulerAngles(2, 1, 0).reverse());
   node["camera_mount_to_camera_rpy"] =
       Eigen::Vector3d(rhs.camera_mount_to_camera.rotation().eulerAngles(2, 1, 0).reverse());
+
+  // [Deprecated] serialization of translations
+  node["target_mount_to_target_pos"] = Eigen::Vector3d(rhs.target_mount_to_target.translation());
+  node["camera_mount_to_camera_pos"] = Eigen::Vector3d(rhs.camera_mount_to_camera.translation());
+
   return node;
 }
 
@@ -265,13 +271,29 @@ bool convert<ExtrinsicHandEyeResult>::decode(const YAML::Node& node, ExtrinsicHa
   rhs.initial_cost_per_obs = getMember<decltype(rhs.initial_cost_per_obs)>(node, "initial_cost_per_obs");
   rhs.final_cost_per_obs = getMember<decltype(rhs.final_cost_per_obs)>(node, "final_cost_per_obs");
 
-  Eigen::Vector3d target_mount_to_target_pos = getMember<Eigen::Vector3d>(node, "target_mount_to_target_pos");
-  Eigen::Vector3d target_mount_to_target_rpy = getMember<Eigen::Vector3d>(node, "target_mount_to_target_rpy");
-  rhs.target_mount_to_target = toIsometry<double>(target_mount_to_target_pos, target_mount_to_target_rpy.reverse());
+  if (node["target_mount_to_target"])
+  {
+    rhs.target_mount_to_target = getMember<Eigen::Isometry3d>(node, "target_mount_to_target");
+  }
+  else
+  {
+    // [Deprecated] parsing of transform from position and RPY
+    Eigen::Vector3d target_mount_to_target_pos = getMember<Eigen::Vector3d>(node, "target_mount_to_target_pos");
+    Eigen::Vector3d target_mount_to_target_rpy = getMember<Eigen::Vector3d>(node, "target_mount_to_target_rpy");
+    rhs.target_mount_to_target = toIsometry<double>(target_mount_to_target_pos, target_mount_to_target_rpy.reverse());
+  }
 
-  Eigen::Vector3d camera_mount_to_camera_pos = getMember<Eigen::Vector3d>(node, "camera_mount_to_camera_pos");
-  Eigen::Vector3d camera_mount_to_camera_rpy = getMember<Eigen::Vector3d>(node, "camera_mount_to_camera_rpy");
-  rhs.camera_mount_to_camera = toIsometry<double>(camera_mount_to_camera_pos, camera_mount_to_camera_rpy.reverse());
+  if (node["camera_mount_to_camera"])
+  {
+    rhs.camera_mount_to_camera = getMember<Eigen::Isometry3d>(node, "camera_mount_to_camera");
+  }
+  else
+  {
+    // [Deprecated] parsing of transform from position and RPY
+    Eigen::Vector3d camera_mount_to_camera_pos = getMember<Eigen::Vector3d>(node, "camera_mount_to_camera_pos");
+    Eigen::Vector3d camera_mount_to_camera_rpy = getMember<Eigen::Vector3d>(node, "camera_mount_to_camera_rpy");
+    rhs.camera_mount_to_camera = toIsometry<double>(camera_mount_to_camera_pos, camera_mount_to_camera_rpy.reverse());
+  }
 
   return true;
 }
