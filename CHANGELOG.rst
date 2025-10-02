@@ -2,8 +2,8 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.0 (2025-10-02)
+------------------
 * Added serialization of transforms in extrinsic hand-eye calibration result with quaternions
 * Added check for validity before writing calibration results files
 * Moved projection utilities into core module
