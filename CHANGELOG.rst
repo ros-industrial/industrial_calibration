@@ -2,6 +2,18 @@
 Changelog for package industrial_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added serialization of transforms in extrinsic hand-eye calibration result with quaternions
+* Added check for validity before writing calibration results files
+* Moved projection utilities into core module
+* Moved homography calculation utilties from analysis module into core
+* Added function to target finder draw method to draw the target origin
+* Increased reported correlation coefficient value in GUI applications
+* Added docker compose override file
+* Updated image name in docker compose file
+* Contributors: Michael Ripperger
+
 1.1.0 (2025-07-31)
 ------------------
 * Revised camera calibration widgets/applications (`#219 <https://github.com/marip8/industrial_calibration/issues/219>`_)
