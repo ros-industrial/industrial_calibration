@@ -5,6 +5,7 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(boost_plugin_loader REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common io)
 
 # Add widget plugin
 add_library(
@@ -35,21 +36,29 @@ add_library(
   # Extrinsic hand-eye calibration widget
   include/industrial_calibration/gui/extrinsic_hand_eye_calibration_widget.h
   src/extrinsic_hand_eye_calibration_widget.cpp
+  src/extrinsic_hand_eye_calibration_3d_widget.ui
+  src/extrinsic_hand_eye_calibration_3d_widget.cpp
   # Camera intrinsic calibration widget
   include/industrial_calibration/gui/camera_intrinsic_calibration_widget.h
   src/camera_intrinsic_calibration_widget.cpp)
 target_include_directories(${PROJECT_NAME}_gui PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                                                      "$<INSTALL_INTERFACE:include>")
+                                                      "$<INSTALL_INTERFACE:include>"
+                                                      ${PCL_INCLUDE_DIRS})
 target_link_libraries(
   ${PROJECT_NAME}_gui
   PUBLIC Qt5::Widgets
          boost_plugin_loader::boost_plugin_loader
          ${PROJECT_NAME}_analysis
-         ${PROJECT_NAME}_target_finders_opencv)
+         ${PROJECT_NAME}_target_finders_opencv
+         ${PCL_LIBRARIES})
 
 # Add extrinsic hand-eye calibration application
 add_executable(${PROJECT_NAME}_extrinsic_hand_eye_calibration_app src/app/extrinsic_hand_eye_calibration_app.cpp)
 target_link_libraries(${PROJECT_NAME}_extrinsic_hand_eye_calibration_app PRIVATE ${PROJECT_NAME}_gui)
+
+# Add extrinsic hand-eye calibration application
+add_executable(${PROJECT_NAME}_extrinsic_hand_eye_calibration_3d_app src/app/extrinsic_hand_eye_calibration_3d_app.cpp)
+target_link_libraries(${PROJECT_NAME}_extrinsic_hand_eye_calibration_3d_app PRIVATE ${PROJECT_NAME}_gui)
 
 # Add camera intrinsic calibration application
 add_executable(${PROJECT_NAME}_camera_intrinsic_calibration_app src/app/camera_intrinsic_calibration_app.cpp)
@@ -69,6 +78,7 @@ configure_component(
   TARGETS
   ${PROJECT_NAME}_gui
   ${PROJECT_NAME}_extrinsic_hand_eye_calibration_app
+  ${PROJECT_NAME}_extrinsic_hand_eye_calibration_3d_app
   ${PROJECT_NAME}_camera_intrinsic_calibration_app
   DEPENDENCIES
   "industrial_calibration COMPONENTS analysis target_finders_opencv"
