@@ -51,18 +51,18 @@ std::string CovarianceResult::toString() const
 
 std::string CovarianceResult::printCorrelationCoeffAboveThreshold(const std::double_t& threshold) const
 {
+  if (!error_message.empty())
+    return error_message;
+
   auto above_thresh = getCorrelationCoeffOutsideThreshold(threshold);
 
   if (above_thresh.size() == 0)
-  {
     return std::string("No correlation coefficients with magnitude > " + std::to_string(threshold) + "\n");
-  }
 
   std::string out("\nCorrelation Coeff. > " + std::to_string(threshold) + ":\n");
   for (auto corr : above_thresh)
-  {
     out.append(corr.toString() + "\n");
-  }
+
   return out;
 }
 

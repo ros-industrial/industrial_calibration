@@ -278,6 +278,7 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& param
   }
   catch (const ICalException& ex)
   {
+    result.covariance.error_message = ex.what();
   }
 
   return result;
@@ -482,6 +483,7 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblemPose6D& par
   }
   catch (const ICalException& ex)
   {
+    result.covariance.error_message = ex.what();
   }
 
   return result;

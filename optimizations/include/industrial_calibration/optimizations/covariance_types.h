@@ -59,6 +59,10 @@ struct CovarianceResult
    * @return
    */
   std::string printCorrelationCoeffAboveThreshold(const std::double_t& threshold) const;
+
+  /** @brief Error message from the computation of the covariance result
+   */
+  std::string error_message;
 };
 
 }  // namespace industrial_calibration

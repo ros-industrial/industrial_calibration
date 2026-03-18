@@ -121,6 +121,7 @@ ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem2D3D& params)
   }
   catch (const ICalException& ex)
   {
+    result.covariance.error_message = ex.what();
   }
 
   return result;
@@ -194,6 +195,7 @@ ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem3D3D& params)
   }
   catch (const ICalException& ex)
   {
+    result.covariance.error_message = ex.what();
   }
 
   return result;

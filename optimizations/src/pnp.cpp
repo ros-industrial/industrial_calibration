@@ -86,6 +86,7 @@ PnPResult optimize(const PnPProblem& params)
   }
   catch (const ICalException& ex)
   {
+    result.covariance.error_message = ex.what();
   }
 
   return result;
@@ -154,6 +155,7 @@ PnPResult optimize(const PnPProblem3D& params)
   }
   catch (const ICalException& ex)
   {
+    result.covariance.error_message = ex.what();
   }
 
   return result;

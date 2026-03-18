@@ -101,6 +101,7 @@ ExtrinsicMultiStaticCameraMovingTargetResult optimize(const ExtrinsicMultiStatic
   }
   catch (const ICalException& ex)
   {
+    result.covariance.error_message = ex.what();
   }
 
   return result;
