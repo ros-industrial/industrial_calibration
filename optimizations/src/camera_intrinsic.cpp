@@ -212,6 +212,7 @@ CameraIntrinsicResult optimize(const CameraIntrinsicProblem& params)
   result.initial_cost_per_obs = summary.initial_cost / summary.num_residuals;
   result.final_cost_per_obs = summary.final_cost / summary.num_residuals;
 
+  // Optionally compute covariance
   try
   {
     std::map<const double*, std::vector<int>> param_masks;

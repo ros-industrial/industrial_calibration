@@ -107,11 +107,21 @@ ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem2D3D& params)
     labels_target_mount_to_target.emplace_back(params.label_target_mount_to_target + "_" + label_isometry);
   }
 
-  std::map<const double*, std::vector<std::string>> param_labels;
-  param_labels[internal_camera_to_wrist.values.data()] = labels_camera_mount_to_camera;
-  param_labels[internal_base_to_target.values.data()] = labels_target_mount_to_target;
+  // Optionally compute covariance
+  try
+  {
+    std::map<const double*, std::vector<std::string>> param_labels;
+    param_labels[internal_camera_to_wrist.values.data()] = labels_camera_mount_to_camera;
+    param_labels[internal_base_to_target.values.data()] = labels_target_mount_to_target;
 
-  result.covariance = computeCovariance(problem, param_labels);
+    std::map<const double*, std::vector<int>> param_masks;
+    ceres::Covariance::Options cov_options = DefaultCovarianceOptions();
+    cov_options.null_space_rank = -1;  // automatically drop terms below min_reciprocal_condition_number
+    result.covariance = computeCovariance(problem, param_labels, param_masks, cov_options);
+  }
+  catch (const ICalException& ex)
+  {
+  }
 
   return result;
 }
@@ -170,13 +180,13 @@ ExtrinsicHandEyeResult optimize(const ExtrinsicHandEyeProblem3D3D& params)
     labels_target_mount_to_target.emplace_back(params.label_target_mount_to_target + "_" + label_isometry);
   }
 
-  std::map<const double*, std::vector<std::string>> param_labels;
-  param_labels[internal_camera_to_wrist.values.data()] = labels_camera_mount_to_camera;
-  param_labels[internal_base_to_target.values.data()] = labels_target_mount_to_target;
-
   // Optionally compute covariance
   try
   {
+    std::map<const double*, std::vector<std::string>> param_labels;
+    param_labels[internal_camera_to_wrist.values.data()] = labels_camera_mount_to_camera;
+    param_labels[internal_base_to_target.values.data()] = labels_target_mount_to_target;
+
     std::map<const double*, std::vector<int>> param_masks;
     ceres::Covariance::Options cov_options = DefaultCovarianceOptions();
     cov_options.null_space_rank = -1;  // automatically drop terms below min_reciprocal_condition_number
