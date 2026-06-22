@@ -278,6 +278,7 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblem2D3D& param
   }
   catch (const ICalException& ex)
   {
+    result.covariance.error_message = ex.what();
   }
 
   return result;
@@ -474,9 +475,16 @@ KinematicCalibrationResult optimize(const KinematicCalibrationProblemPose6D& par
   else
     result.target_chain_dh_offsets = target_chain_dh_offsets;
 
-  ceres::Covariance::Options cov_options = DefaultCovarianceOptions();
-  cov_options.null_space_rank = -1;  // automatically drop terms below min_reciprocal_condition_number
-  result.covariance = computeCovariance(problem, param_labels, param_masks, cov_options);
+  try
+  {
+    ceres::Covariance::Options cov_options = DefaultCovarianceOptions();
+    cov_options.null_space_rank = -1;  // automatically drop terms below min_reciprocal_condition_number
+    result.covariance = computeCovariance(problem, param_labels, param_masks, cov_options);
+  }
+  catch (const ICalException& ex)
+  {
+    result.covariance.error_message = ex.what();
+  }
 
   return result;
 }
