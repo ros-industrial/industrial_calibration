@@ -10,7 +10,11 @@ namespace industrial_calibration
 std::string NamedParam::toString() const
 {
   std::stringstream ss;
-  ss << names.first.c_str() << " " << names.second.c_str() << " " << value;
+  ss << names.first.c_str() << " " << names.second.c_str() << " ";
+  if (std::isfinite(value))
+    ss << value;
+  else
+    ss << "undefined";
   return ss.str();
 }
 
