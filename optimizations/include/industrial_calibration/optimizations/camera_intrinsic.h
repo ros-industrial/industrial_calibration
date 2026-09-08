@@ -20,7 +20,7 @@ struct CameraIntrinsicProblem
   std::string label_extr = "pose";
   const std::array<std::string, 9> labels_intrinsic_params = { { "fx", "fy", "cx", "cy", "k1", "k2", "p1", "p2",
                                                                  "k3" } };
-  const std::array<std::string, 6> labels_isometry3d = { { "x", "y", "z", "rx", "ry", "rz" } };
+  const std::array<std::string, 6> labels_isometry3d = { { "rx", "ry", "rz", "x", "y", "z" } };
 };
 
 /**

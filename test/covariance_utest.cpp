@@ -669,6 +669,51 @@ TEST(CovarianceAnalysis, CovarianceAnalysisFunctions)
                CovarianceException);
 }
 
+TEST(CovarianceAnalysis, CorrelationsWithZeroVarianceAreUndefined)
+{
+  Eigen::Matrix2d covariance;
+  covariance << 0.0, 2.0, 2.0, 4.0;
+
+  const Eigen::MatrixXd correlations = computeCorrelationsFromCovariance(covariance);
+
+  EXPECT_DOUBLE_EQ(correlations(0, 0), 0.0);
+  EXPECT_DOUBLE_EQ(correlations(1, 1), 2.0);
+  EXPECT_TRUE(std::isnan(correlations(0, 1)));
+  EXPECT_TRUE(std::isnan(correlations(1, 0)));
+}
+
+TEST(CovarianceAnalysis, CorrelationsWithNegativeVarianceAreUndefined)
+{
+  Eigen::Matrix2d covariance;
+  covariance << -1.0, 0.5, 0.5, 9.0;
+
+  const Eigen::MatrixXd correlations = computeCorrelationsFromCovariance(covariance);
+
+  EXPECT_TRUE(std::isnan(correlations(0, 0)));
+  EXPECT_DOUBLE_EQ(correlations(1, 1), 3.0);
+  EXPECT_TRUE(std::isnan(correlations(0, 1)));
+  EXPECT_TRUE(std::isnan(correlations(1, 0)));
+}
+
+TEST(CovarianceAnalysis, UndefinedCorrelationsAreLabeledInReports)
+{
+  CovarianceResult result;
+
+  NamedParam std_dev;
+  std_dev.names = std::make_pair(std::string("x"), std::string(""));
+  std_dev.value = 0.0;
+  result.standard_deviations.push_back(std_dev);
+
+  NamedParam corr;
+  corr.names = std::make_pair(std::string("x"), std::string("y"));
+  corr.value = std::numeric_limits<double>::quiet_NaN();
+  result.correlation_coeffs.push_back(corr);
+
+  const std::string report = result.toString();
+  EXPECT_NE(report.find("x y undefined"), std::string::npos);
+  EXPECT_EQ(report.find("x y nan"), std::string::npos);
+}
+
 int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);

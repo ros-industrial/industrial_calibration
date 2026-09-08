@@ -1,3 +1,4 @@
+find_package(glog REQUIRED)
 find_package(Ceres REQUIRED)
 
 add_library(

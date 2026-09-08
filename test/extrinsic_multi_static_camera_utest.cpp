@@ -158,6 +158,16 @@ TEST(ExtrinsicMultiStaticCamera, single_camera)
   EXPECT_EQ(opt_result.covariance.covariances.size(), 66);
   EXPECT_EQ(opt_result.covariance.correlation_coeffs.size(), 66);
 
+  const std::array<std::string, 12> expected_labels = {
+    { "base_to_camera0_rx", "base_to_camera0_ry", "base_to_camera0_rz", "base_to_camera0_x", "base_to_camera0_y",
+      "base_to_camera0_z", "wrist_to_target_rx", "wrist_to_target_ry", "wrist_to_target_rz", "wrist_to_target_x",
+      "wrist_to_target_y", "wrist_to_target_z" }
+  };
+  for (std::size_t i = 0; i < expected_labels.size(); ++i)
+  {
+    EXPECT_EQ(opt_result.covariance.standard_deviations[i].names.first, expected_labels[i]);
+  }
+
   printResults(opt_result);
 }
 

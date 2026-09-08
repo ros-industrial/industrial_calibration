@@ -173,6 +173,27 @@ TYPED_TEST(HandEyeTest, PerfectInitialConditions)
   EXPECT_EQ(result.covariance.covariances.size(), 66);
   EXPECT_EQ(result.covariance.correlation_coeffs.size(), 66);
 
+  const std::array<std::string, 6> expected_camera_labels = {
+    { "camera_mount_to_camera_rx", "camera_mount_to_camera_ry", "camera_mount_to_camera_rz", "camera_mount_to_camera_x",
+      "camera_mount_to_camera_y", "camera_mount_to_camera_z" }
+  };
+  const std::array<std::string, 6> expected_target_labels = {
+    { "target_mount_to_target_rx", "target_mount_to_target_ry", "target_mount_to_target_rz", "target_mount_to_target_x",
+      "target_mount_to_target_y", "target_mount_to_target_z" }
+  };
+
+  const bool camera_block_first = result.covariance.standard_deviations.front().names.first.find("camera_mount_to_"
+                                                                                                 "camera_") == 0;
+  const auto& first_expected_block = camera_block_first ? expected_camera_labels : expected_target_labels;
+  const auto& second_expected_block = camera_block_first ? expected_target_labels : expected_camera_labels;
+
+  for (std::size_t i = 0; i < expected_camera_labels.size(); ++i)
+  {
+    EXPECT_EQ(result.covariance.standard_deviations[i].names.first, first_expected_block[i]);
+    EXPECT_EQ(result.covariance.standard_deviations[i + expected_camera_labels.size()].names.first,
+              second_expected_block[i]);
+  }
+
   this->printResults(result);
 }
 

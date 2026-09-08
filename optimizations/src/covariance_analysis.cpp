@@ -1,6 +1,8 @@
 ﻿#include <industrial_calibration/optimizations/covariance_analysis.h>
 #include <industrial_calibration/core/exceptions.h>
 
+#include <cmath>
+#include <limits>
 #include <sstream>
 
 namespace industrial_calibration
@@ -13,25 +15,31 @@ Eigen::MatrixXd computeCorrelationsFromCovariance(const Eigen::MatrixXd& covaria
   Eigen::Index num_vars = covariance_matrix.rows();
 
   Eigen::MatrixXd out(num_vars, num_vars);
+  const double nan = std::numeric_limits<double>::quiet_NaN();
 
   for (Eigen::Index i = 0; i < num_vars; i++)
   {
-    double sigma_i = sqrt(fabs(covariance_matrix(i, i)));  // standard deviation at the diagonal element in row i
+    const double variance_i = covariance_matrix(i, i);
+    const bool variance_i_is_finite = std::isfinite(variance_i);
+    const bool variance_i_is_nonnegative = variance_i >= 0.0;
+    const double sigma_i = (variance_i_is_finite && variance_i_is_nonnegative) ? std::sqrt(variance_i) : nan;
 
     for (Eigen::Index j = 0; j < num_vars; j++)
     {
-      double sigma_j = sqrt(fabs(covariance_matrix(j, j)));  // standard deviation at the diagonal element in column j
+      const double variance_j = covariance_matrix(j, j);
+      const bool variance_j_is_finite = std::isfinite(variance_j);
+      const bool variance_j_is_nonnegative = variance_j >= 0.0;
+      const double sigma_j = (variance_j_is_finite && variance_j_is_nonnegative) ? std::sqrt(variance_j) : nan;
 
       if (i == j)  // if out(i,j) is a diagonal element
         out(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) = sigma_i;
       else
       {
-        if (sigma_i < std::numeric_limits<double>::epsilon())
-          sigma_i = 1;
-        if (sigma_j < std::numeric_limits<double>::epsilon())
-          sigma_j = 1;
+        const bool sigma_i_is_usable = std::isfinite(sigma_i) && sigma_i > std::numeric_limits<double>::epsilon();
+        const bool sigma_j_is_usable = std::isfinite(sigma_j) && sigma_j > std::numeric_limits<double>::epsilon();
 
-        out(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) = covariance_matrix(i, j) / (sigma_i * sigma_j);
+        out(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) =
+            (sigma_i_is_usable && sigma_j_is_usable) ? (covariance_matrix(i, j) / (sigma_i * sigma_j)) : nan;
       }
     }
   }

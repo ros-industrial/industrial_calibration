@@ -50,7 +50,7 @@ struct ExtrinsicMultiStaticCameraMovingTargetProblem
   /** @brief Your best guess at the "base frame" to "camera frame" transform; one for each camera */
   VectorEigenIsometry base_to_camera_guess;
 
-  const std::array<std::string, 6> labels_isometry3d = { { "x", "y", "z", "rx", "ry", "rz" } };
+  const std::array<std::string, 6> labels_isometry3d = { { "rx", "ry", "rz", "x", "y", "z" } };
   std::string label_wrist_to_target = "wrist_to_target";
   std::string label_base_to_camera = "base_to_camera";
 
@@ -131,7 +131,7 @@ struct ExtrinsicMultiStaticCameraOnlyProblem
   /** @brief Your best guess at the "base frame" to "camera frame" transform; one for each camera */
   VectorEigenIsometry base_to_camera_guess;
 
-  std::array<std::string, 6> labels_isometry3d = { { "x", "y", "z", "rx", "ry", "rz" } };
+  std::array<std::string, 6> labels_isometry3d = { { "rx", "ry", "rz", "x", "y", "z" } };
   std::string label_base_to_target = "base_to_target";
   std::string label_base_to_camera = "base_to_camera";
 
@@ -209,7 +209,7 @@ struct ExtrinsicMultiStaticCameraMovingTargetWristOnlyProblem
    */
   VectorEigenIsometry base_to_camera_guess;
 
-  const std::array<std::string, 6> labels_isometry3d = { { "x", "y", "z", "rx", "ry", "rz" } };
+  const std::array<std::string, 6> labels_isometry3d = { { "rx", "ry", "rz", "x", "y", "z" } };
   std::string label_wrist_to_target = "wrist_to_target";
   std::string label_base_to_camera = "base_to_camera";
 
