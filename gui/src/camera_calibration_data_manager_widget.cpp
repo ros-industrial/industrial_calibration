@@ -99,7 +99,7 @@ CameraCalibrationDataManagerWidget::CameraCalibrationDataManagerWidget(QWidget* 
           &CameraCalibrationDataManagerWidget::drawImage);
 
   // Set up the plugin loader
-  loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
+  loader_.search_libraries.insert(loader_.search_libraries.end(), INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
   loader_.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
 }
 
