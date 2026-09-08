@@ -96,7 +96,7 @@ std::tuple<ExtrinsicHandEyeResult, ExtrinsicHandEyeAnalysisStats> run(const path
 
   // Load the target finder
   boost_plugin_loader::PluginLoader loader;
-  loader.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
+  loader.search_libraries.insert(loader.search_libraries.end(), INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
   loader.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
 
   YAML::Node target_finder_config = getMember<YAML::Node>(config, "target_finder");
